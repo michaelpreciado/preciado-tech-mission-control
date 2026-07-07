@@ -8,7 +8,6 @@ import type { MissionTask } from '@/lib/types'
 
 const CommandHeader = dynamic(() => import('./DashboardViews').then(m => m.CommandHeader), { ssr: false, loading: () => <SkeletonPanel label="loading header" /> })
 const ActionFeed = dynamic(() => import('./ActionFeed').then(m => m.ActionFeed), { ssr: false })
-const CrewOffice = dynamic(() => import('./DashboardViews').then(m => m.CrewOffice), { ssr: false, loading: () => <SkeletonPanel label="loading office" /> })
 const CalendarList = dynamic(() => import('./DashboardViews').then(m => m.CalendarList), { ssr: false, loading: () => <SkeletonPanel label="loading schedule" /> })
 const GithubPanel = dynamic(() => import('./DashboardViews').then(m => m.GithubPanel), { ssr: false, loading: () => <SkeletonPanel label="loading github" /> })
 const CostsPanel = dynamic(() => import('./DashboardViews').then(m => m.CostsPanel), { ssr: false, loading: () => <SkeletonPanel label="loading costs" /> })
@@ -98,9 +97,6 @@ export function HomeDeck() {
         <>
           <SectionHead label="TASKS" />
           <DeckTaskPreview />
-
-          <SectionHead label="VISUAL OFFICE" />
-          <CrewOffice />
 
           <SectionHead label="SCHEDULER" />
           <CalendarList limit={5} />

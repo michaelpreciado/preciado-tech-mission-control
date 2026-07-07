@@ -83,11 +83,6 @@ function Sidebar() {
         <span className={`mc-led ${isLive ? 'green' : ''}`} />
         <span>MISSION CTRL {isLive ? 'ONLINE' : 'OFFLINE'}</span>
       </div>
-      <div className="mc-status-pill" style={{ display: 'none', marginTop: -6, fontSize: 9 }}>
-        <span className="mc-led" />
-        <span>MP Live</span>
-      </div>
-
       {NAV.map((sec) => (
         <div key={sec.section} className="mc-side-section">
           <div className="mc-side-label">&gt; {sec.section}</div>

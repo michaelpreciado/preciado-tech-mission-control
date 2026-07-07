@@ -3082,6 +3082,56 @@ html[data-theme="friday"] .mc-pipe-name { color: var(--pt-neon-bright); text-sha
 .mc-drawer-meta { display: flex; gap: 12px; flex-wrap: wrap; font-size: 9px; color: var(--pt-text-dim); letter-spacing: 0.08em; margin-bottom: 12px; align-items: center; }
 .mc-drawer-section { margin-top: 16px; }
 .mc-drawer-section .lbl { font-size: 9px; letter-spacing: 0.22em; color: var(--pt-text-dim); margin-bottom: 8px; }
+/* ── Centered detail modal (ML content idea details) ────── */
+.mc-modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(3px);
+  z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.mc-modal {
+  position: relative;
+  width: min(560px, 100%);
+  max-height: min(80vh, 640px);
+  overflow-y: auto;
+  background: linear-gradient(180deg, rgba(13,2,18,0.99), rgba(8,1,12,0.99));
+  border: 1px solid var(--pt-border);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.6), var(--pt-glow-sm);
+  padding: 18px 20px 24px;
+  animation: drawer-in 0.22s var(--pt-ease, ease) both;
+  font-size: 11px;
+  color: var(--pt-text);
+  line-height: 1.6;
+}
+.mc-modal h3 {
+  font-size: 13px; font-weight: 700;
+  color: var(--pt-neon-bright);
+  text-shadow: var(--pt-glow-sm);
+  margin: 0 32px 12px 0;
+}
+.mc-modal p { margin: 8px 0; color: var(--pt-text-dim); }
+.mc-modal strong { color: var(--pt-text-high); letter-spacing: 0.06em; }
+.mc-modal a { color: var(--pt-neon-bright); }
+.mc-modal-close {
+  position: absolute; top: 12px; right: 12px;
+  width: 34px; height: 34px;
+  border: 1px solid var(--pt-border-dim);
+  border-radius: var(--pt-r-sm);
+  background: transparent;
+  color: var(--pt-text-dim);
+  cursor: pointer;
+}
+.mc-modal-close:hover { color: var(--pt-text); border-color: var(--pt-border); }
+.mc-modal-tweet {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 1px dashed var(--pt-border-dim);
+  color: var(--pt-text-dim);
+  font-size: 10px;
+}
+
 .mc-hk-run, .mc-hk-comment, .mc-hk-event {
   font-size: 10px;
   padding: 7px 0;

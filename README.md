@@ -46,12 +46,18 @@ Requires **Node.js ≥ 22**. The demo seed (`npm run seed-demo`) fills the board
 
 ## What's on the deck
 
-- **Deck** — live stats, a "NEEDS YOU" strip of everything awaiting a decision, agent crew status
+- **Deck** — live stats, a "NEEDS YOU" strip of everything awaiting a decision, scheduler, system health
 - **Approvals** — the Go/No-Go inbox: pipeline gates, email sign-offs, blocked tasks, one-tap approve/reject
 - **Tasks** — a read-only window into your agents' kanban DB (SQLite), with live SSE updates
-- **Pipeline** — 6-stage lead-to-launch kanban fed by an external skill; the board renders, agents act
+- **Calendar** — every scheduled job with next/last run, plus optional Google Calendar events
+- **Chat** — talk to your agents through your local gateway
+- **GitHub** — contributions heatmap, repo grid, and recent events via your own `gh` CLI
 - **Costs** — 30-day model burn across providers (session JSONL logs + optional OpenRouter live billing)
-- **Calendar / GitHub / Ideas / Missions / Memory / Ops** — the rest of your operational picture
+- **Projects** — active repos, workspaces, and vault projects with task counts
+- **Pipeline** — 6-stage lead-to-launch kanban fed by an external skill; the board renders, agents act
+- **ML Content** — script → film → edit → post content production board
+- **Memory** — recent promotions from your agents' memory files and notes vault
+- **Team** — the agent crew: live office floor, status, and per-agent cards
 - **Setup** — configure everything from the browser; unconfigured integrations show "connect" cards, never broken widgets
 
 ![Costs](docs/screenshots/costs.png)

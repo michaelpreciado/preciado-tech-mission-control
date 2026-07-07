@@ -25,13 +25,14 @@ async function execAllowlistInfo(): Promise<ApprovalItem[]> {
     if (!agents.length) return []
     const rules = agents.map(([agent, v]) => {
       const list = (v as { allowlist?: unknown[] })?.allowlist
-      return `${agent}: ${Array.isArray(list) ? list.length : 0} rule(s)`
+      const n = Array.isArray(list) ? list.length : 0
+      return `agent "${agent}" may run ${n} pre-approved command${n === 1 ? '' : 's'}`
     })
     return [{
       id: 'openclaw:exec-allowlist',
       kind: 'exec_allowlist',
       title: 'OpenClaw exec allowlist',
-      summary: rules.join(' · '),
+      summary: `Standing permissions — ${rules.join(' · ')}. Edit the allowlist file to change.`,
       source: '~/.openclaw/exec-approvals.json',
       actionable: false,
     }]

@@ -106,7 +106,7 @@ function hashId(seed: string) {
 function ownerFor(text: string): CrewId {
   const s = text.toLowerCase()
   if (/stock|ticker|market|nvda|ionq|qubt|asti|serv|portfolio/.test(s)) return 'ticker'
-  if (/study|course|university|wilmington|citation|research|school|cta|assignment/.test(s)) return 'sage'
+  if (/study|course|university|citation|research|school|cta|assignment/.test(s)) return 'sage'
   if (/code|github|repo|dashboard|next|react|firmware|robot|bug|build|test|openclaw|ollama/.test(s)) return 'forge'
   if (/memory|vault|obsidian|journal|daily|archive|recall/.test(s)) return 'echo'
   return 'friday'
@@ -172,6 +172,27 @@ type HermesCronJob = {
   deliver?: string | null
 }
 
+/** Strip absolute filesystem paths and internal URLs from client-bound text.
+ *  Anything under a unix home/system root collapses to a placeholder so runtime
+ *  errors and job prompts never ship the operator's directory layout. Path
+ *  segments may contain spaces, so eat trailing "word word/" continuations too. */
+function sanitizeText(text: string): string {
+  return text
+    .replace(/https?:\/\/(?:localhost|127\.0\.0\.1|0\.0\.0\.0|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|100\.\d+\.\d+\.\d+)(?::\d+)?\S*/g, '[internal url]')
+    .replace(/\/(?:home|Users|root|var|etc|opt|tmp|srv)\/(?:[^\s'"`)\]]|[ ](?=[^\s'"`)\]/]*\/))*/g, '[configured path]')
+}
+
+/** Map raw scheduler errors to actionable copy — never upstream dumps or paths. */
+function cronErrorCopy(raw: string): string {
+  if (/429|rate.?limit/i.test(raw)) return 'Provider rate-limited — retries on the next scheduled run'
+  if (/model\s+'[^']*'\s+not\s+found|model.*not.*(?:found|available)/i.test(raw)) return 'Model not available from the configured provider'
+  if (/script not found|no such file|enoent/i.test(raw)) return 'Script missing in configured cron path'
+  if (/404/.test(raw)) return 'Provider endpoint not found (HTTP 404)'
+  if (/401|403|unauthorized|forbidden|invalid.*key/i.test(raw)) return 'Provider rejected credentials — check the configured API key'
+  if (/timeout|timed?\s?out/i.test(raw)) return 'Run timed out'
+  return sanitizeText(raw).slice(0, 160)
+}
+
 function cadence(job: HermesCronJob): MissionCron['cadence'] {
   if (job.schedule?.kind === 'at') return 'one-shot'
   const expr = job.schedule?.expr || ''
@@ -204,8 +225,8 @@ async function collectCron(): Promise<MissionCron[]> {
       nextRunAt: job.next_run_at || undefined,
       lastRunAt: job.last_run_at || undefined,
       lastRunStatus: job.last_status || undefined,
-      description: job.last_status === 'error' && job.last_error ? job.last_error.slice(0, 160) : undefined,
-      payloadPreview: String(job.prompt || '').slice(0, 220),
+      description: job.last_status === 'error' && job.last_error ? cronErrorCopy(job.last_error) : undefined,
+      payloadPreview: sanitizeText(String(job.prompt || '')).slice(0, 220),
       delivery: job.deliver || undefined,
     } satisfies MissionCron
   }).sort((a, b) => Number(b.enabled) - Number(a.enabled) || a.cadence.localeCompare(b.cadence) || a.name.localeCompare(b.name))
@@ -686,7 +707,9 @@ async function collectCosts(): Promise<CostDashboard> {
       warnings.push(`OpenRouter live: $${orUsage.usageUsd.toFixed(4)} used of $${orUsage.limit} limit (${pct}%)`)
     }
     if (loggedOrCost > 0 && Math.abs(orUsage.usageUsd - loggedOrCost) > 0.01) {
-      warnings.push(`OpenRouter log vs API discrepancy: logs=$${loggedOrCost.toFixed(4)}, API=$${orUsage.usageUsd.toFixed(4)}`)
+      // The API number is lifetime spend for the key (authoritative for billing);
+      // local logs only cover sessions recorded on this machine — a gap is expected.
+      warnings.push(`OpenRouter billed $${orUsage.usageUsd.toFixed(2)} lifetime (authoritative); local logs captured $${loggedOrCost.toFixed(2)} — logs only see sessions run on this machine`)
     }
   }
   const claudeUsage = await collectClaudeUsage()
