@@ -1,0 +1,85 @@
+node_modules
+.next
+.vite
+out
+dist
+.env*.local
+.DS_Store
+*.log
+
+/lib/generated/prisma
+
+build/
+out/
+
+# Secrets & env -- NEVER commit these
+.env
+*.local
+.env.production
+.env.staging
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+backend/venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Data files (generated at runtime)
+data/agents.json
+
+# Local-only config written by /setup — holds personal paths & keys. NEVER commit.
+data/config.json
+
+# Runtime/user data lives in-folder but never in git
+data/stocks/
+data/outreach/
+data/demo/
+data/config.json.bak
+missions.json
+
+# Personal agent-workspace leftovers (this repo once doubled as an agent home).
+# They stay on disk for local agents but never ship in the repo.
+# Anchored to the repo root so app/memory/ etc. are unaffected.
+/memory/
+/MEMORY.md
+/USER.md
+/SOUL.md
+/TOOLS.md
+/IDENTITY.md
+/DREAMS.md
+/HEARTBEAT.md
+/AGENTS.md
+/README_INTEGRATION.md
+/ticker-signal-format.md
+/.openclaw/
+/artifacts/
+/design/
+/Landing_page/
+/Planter-repo/
+/agentic-stack/
+/business-page/
+/github-career-work/
+/github-profile-mp/
+/photography-portfolio/
+HANDOFF-*.md
+/mc-audit-out/
+
+# OS
+Thumbs.db
+
+# Build artifacts
+tsconfig.tsbuildinfo
+
+# Claude agent local state
+.claude/agent-memory/
+.claude/settings.local.json
+
+# Claude Code local project tooling
+/.claude/

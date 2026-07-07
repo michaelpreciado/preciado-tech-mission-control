@@ -1,0 +1,37 @@
+{
+  "name": "friday",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev -H 0.0.0.0 -p 4175",
+    "build": "next build",
+    "start": "next start -H 0.0.0.0 -p 4175",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/*.test.mjs",
+    "seed-demo": "node scripts/seed-demo.mjs"
+  },
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.2.4",
+    "googleapis": "^171.4.0",
+    "next": "^16.2.10",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "tailwindcss": "^4.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.9.3"
+  },
+  "description": "F.R.I.D.A.Y. — Framework for Running Intelligent Deployed Agents. Local-first mission-control dashboard for your AI agents.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/michaelpreciado/friday.git"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
