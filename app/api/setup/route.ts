@@ -14,6 +14,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { CONFIG_FILE, getConfig, isConfigured, resetConfigCache, type ConfigFile } from '@/lib/config'
 import { getClientIpFromHeaders, isLoopbackIp, checkRateLimit } from '@/lib/mission-api'
+import { isHexColor } from '@/lib/theme'
 import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -38,6 +39,7 @@ export async function GET() {
       github: cfg.github,
       paths: cfg.paths,
       services: cfg.services,
+      appearance: cfg.appearance,
       // Never return key material — only whether a key is present.
       keysSet: { openrouterApiKey: Boolean(cfg.keys.openrouterApiKey) },
     },
@@ -57,6 +59,7 @@ const NESTED: Record<string, readonly string[]> = {
   ],
   services: ['eventbusUrl', 'openclawGatewayUrl', 'ollamaUrl', 'llmsterUrl'],
   keys: ['openrouterApiKey'],
+  appearance: ['accentColor'],
 }
 
 function cleanString(v: unknown, field: string): string | { error: string } {
@@ -90,6 +93,9 @@ function validate(body: unknown): { ok: true; patch: ConfigFile } | { ok: false;
       if (!fields.includes(k)) continue // unknown keys ignored
       const cleaned = cleanString(v, `${section}.${k}`)
       if (typeof cleaned !== 'string') return { ok: false, error: cleaned.error }
+      if (k === 'accentColor' && cleaned !== '' && !isHexColor(cleaned)) {
+        return { ok: false, error: 'appearance.accentColor must be a #rrggbb hex color' }
+      }
       out[k] = cleaned
     }
     if (Object.keys(out).length) patch[section] = out

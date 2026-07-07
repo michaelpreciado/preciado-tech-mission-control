@@ -12,10 +12,9 @@ const CrewOffice = dynamic(() => import('./DashboardViews').then(m => m.CrewOffi
 const CalendarList = dynamic(() => import('./DashboardViews').then(m => m.CalendarList), { ssr: false, loading: () => <SkeletonPanel label="loading schedule" /> })
 const GithubPanel = dynamic(() => import('./DashboardViews').then(m => m.GithubPanel), { ssr: false, loading: () => <SkeletonPanel label="loading github" /> })
 const CostsPanel = dynamic(() => import('./DashboardViews').then(m => m.CostsPanel), { ssr: false, loading: () => <SkeletonPanel label="loading costs" /> })
-const IdeasPanel = dynamic(() => import('./DashboardViews').then(m => m.IdeasPanel), { ssr: false, loading: () => <SkeletonPanel label="loading ideas" /> })
 const OperationsPanel = dynamic(() => import('./DashboardViews').then(m => m.OperationsPanel), { ssr: false, loading: () => <SkeletonPanel label="loading ops" /> })
 const ProjectGrid = dynamic(() => import('./DashboardViews').then(m => m.ProjectGrid), { ssr: false, loading: () => <SkeletonPanel label="loading projects" /> })
-const MissionsPanel = dynamic(() => import('./DashboardViews').then(m => m.MissionsPanel), { ssr: false, loading: () => <SkeletonPanel label="loading missions" /> })
+const SystemHealthPanel = dynamic(() => import('./SystemHealthPanel').then(m => m.SystemHealthPanel), { ssr: false, loading: () => <SkeletonPanel label="loading system health" /> })
 
 const tabs = [
   { id: 'overview', label: 'Overview', glyph: '■' },
@@ -114,19 +113,17 @@ export function HomeDeck() {
           <GithubPanel />
           <SectionHead label="COSTS" />
           <CostsPanel />
-          <SectionHead label="IDEAS" />
-          <IdeasPanel />
         </>
       )}
 
       {tab === 'operations' && (
         <>
+          <SectionHead label="SYSTEM HEALTH" />
+          <SystemHealthPanel />
           <SectionHead label="OPS / LIVE STREAM" />
           <OperationsPanel />
           <SectionHead label="PROJECTS" />
           <ProjectGrid limit={6} />
-          <SectionHead label="MISSIONS" />
-          <MissionsPanel />
         </>
       )}
     </>

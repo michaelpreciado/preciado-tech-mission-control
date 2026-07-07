@@ -65,6 +65,16 @@ export interface FridayServices {
   llmsterUrl: string
 }
 
+export interface FridayAppearance {
+  /** Accent hex color (#rrggbb) driving the whole neon token set. */
+  accentColor: string
+}
+
+export interface FridayChat {
+  /** Agent CLI binary used by the /chat tab ('' = chat disabled). Must support `-z <prompt>` one-shot mode (Hermes-compatible). */
+  command: string
+}
+
 export interface FridayKeys {
   /** OpenRouter API key for live billing data ('' = disabled). Never logged, never returned by APIs. */
   openrouterApiKey: string
@@ -86,6 +96,8 @@ export interface FridayConfig {
   paths: FridayPaths
   services: FridayServices
   keys: FridayKeys
+  appearance: FridayAppearance
+  chat: FridayChat
 }
 
 /** Shape of data/config.json — everything optional; unknown keys ignored. */
@@ -95,6 +107,8 @@ export type ConfigFile = Partial<
     paths: Partial<FridayPaths>
     services: Partial<FridayServices>
     keys: Partial<FridayKeys>
+    appearance: Partial<FridayAppearance>
+    chat: Partial<FridayChat>
   }
 >
 
@@ -160,6 +174,12 @@ function buildConfig(): FridayConfig {
     },
     keys: {
       openrouterApiKey: str(env.OPENROUTER_API_KEY, str(file.keys?.openrouterApiKey, '')),
+    },
+    appearance: {
+      accentColor: str(env.NEXT_PUBLIC_ACCENT_COLOR, str(file.appearance?.accentColor, '#ff10f0')),
+    },
+    chat: {
+      command: str(env.FRIDAY_CHAT_COMMAND, str(file.chat?.command, 'hermes')),
     },
   }
 }

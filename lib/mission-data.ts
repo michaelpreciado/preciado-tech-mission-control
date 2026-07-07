@@ -690,7 +690,12 @@ async function collectCosts(): Promise<CostDashboard> {
     }
   }
   const claudeUsage = await collectClaudeUsage()
-  const allCostUsd = models.reduce((s, m) => s + m.estimatedCostUsd, 0) + (orLive ? orLive.estimatedCostUsd : 0)
+  // OpenRouter's live billing number is lifetime spend and already CONTAINS
+  // whatever OpenRouter usage the local logs captured — only add the portion
+  // the logs missed, otherwise overlapping spend is double-counted.
+  const loggedOrCostAll = models.filter(m => /openrouter/i.test(`${m.provider} ${m.model}`)).reduce((s, m) => s + m.estimatedCostUsd, 0)
+  const orUnloggedCost = orLive ? Math.max(0, orLive.estimatedCostUsd - loggedOrCostAll) : 0
+  const allCostUsd = models.reduce((s, m) => s + m.estimatedCostUsd, 0) + orUnloggedCost
   return {
     source: `${rel(ROOTS.agentSessions)} session usage logs`,
     totalRequests: models.reduce((s, m) => s + m.requests, 0),

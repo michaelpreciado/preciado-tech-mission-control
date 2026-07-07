@@ -45,13 +45,11 @@ const NAV = [
     { id: '/calendar', label: 'Calendar', glyph: '📅' },
   ]},
   { section: 'Intelligence', items: [
+    { id: '/chat', label: 'Chat', glyph: '💬' },
     { id: '/github', label: 'GitHub', glyph: '🐙' },
     { id: '/costs', label: 'Costs', glyph: '📊' },
-    { id: '/ideas', label: 'Ideas', glyph: '💡' },
   ]},
   { section: 'Operations', items: [
-    { id: '/ops', label: 'Ops', glyph: '⚙' },
-    { id: '/missions', label: 'Missions', glyph: '🎯' },
     { id: '/projects', label: 'Projects', glyph: '📁' },
     { id: '/pipeline', label: 'Web Dev Pipeline', glyph: '🌐' },
     { id: '/ml-content', label: 'ML Content', glyph: '🤖' },

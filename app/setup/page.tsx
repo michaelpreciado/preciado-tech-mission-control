@@ -7,6 +7,7 @@
  */
 import { useEffect, useState } from 'react'
 import { SectionHead } from '@/components/ui'
+import { ACCENT_PRESETS } from '@/lib/theme'
 
 type SetupConfig = {
   appName: string
@@ -15,6 +16,7 @@ type SetupConfig = {
   github: { username: string; projectRepo: string }
   paths: Record<string, string>
   services: Record<string, string>
+  appearance: { accentColor: string }
   keysSet: { openrouterApiKey: boolean }
 }
 
@@ -87,11 +89,11 @@ export default function SetupPage() {
       .catch(() => setFlash({ tone: 'err', text: 'Could not load current config.' }))
   }, [])
 
-  const set = (section: keyof SetupConfig | 'root', key: string, value: string) => {
+  const set = (section: keyof SetupConfig | 'root' | 'appearance', key: string, value: string) => {
     setCfg(prev => {
       if (!prev) return prev
       if (section === 'root') return { ...prev, [key]: value }
-      const branch = prev[section as 'github' | 'paths' | 'services'] as Record<string, string>
+      const branch = prev[section as 'github' | 'paths' | 'services' | 'appearance'] as Record<string, string>
       return { ...prev, [section]: { ...branch, [key]: value } }
     })
   }
@@ -106,6 +108,7 @@ export default function SetupPage() {
       github: cfg.github,
       paths: cfg.paths,
       services: cfg.services,
+      appearance: cfg.appearance,
     }
     if (openrouterKey.trim()) body.keys = { openrouterApiKey: openrouterKey.trim() }
     try {
@@ -179,6 +182,28 @@ export default function SetupPage() {
                 <span>Tagline</span>
                 <input value={cfg.appTagline} onChange={e => set('root', 'appTagline', e.target.value)} maxLength={80} />
               </label>
+              <div className="mc-setup-field">
+                <span>Accent color</span>
+                <div className="mc-setup-swatches">
+                  {ACCENT_PRESETS.map(p => (
+                    <button
+                      key={p.hex}
+                      type="button"
+                      title={p.name}
+                      className={`mc-swatch ${cfg.appearance.accentColor.toLowerCase() === p.hex ? 'is-active' : ''}`}
+                      style={{ background: p.hex, boxShadow: `0 0 10px ${p.hex}88` }}
+                      onClick={() => set('appearance', 'accentColor', p.hex)}
+                    />
+                  ))}
+                  <input
+                    type="color"
+                    aria-label="Custom accent color"
+                    value={/^#[0-9a-fA-F]{6}$/.test(cfg.appearance.accentColor) ? cfg.appearance.accentColor : '#ff10f0'}
+                    onChange={e => set('appearance', 'accentColor', e.target.value)}
+                  />
+                </div>
+                <em>recolors the entire neon token system · restart the server to apply everywhere</em>
+              </div>
             </div>
 
             <div className="mc-setup-group">

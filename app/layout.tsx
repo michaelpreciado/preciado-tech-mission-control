@@ -4,6 +4,7 @@ import Script from 'next/script'
 import './globals.css'
 import { Shell } from '@/components/Shell'
 import { getConfig } from '@/lib/config'
+import { buildAccentCss } from '@/lib/theme'
 
 const config = getConfig()
 
@@ -44,10 +45,13 @@ export const viewport: Viewport = {
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  // Custom accent (from /setup) recolors the whole token system at runtime.
+  const accentCss = buildAccentCss(getConfig().appearance.accentColor)
   return (
     <html lang="en" data-theme="friday">
       <head>
         <link rel="manifest" href="/manifest.json" />
+        {accentCss && <style id="friday-accent">{accentCss}</style>}
       </head>
       <body className={mono.variable}>
         <Shell appName={config.appName} appTagline={config.appTagline}>{children}</Shell>

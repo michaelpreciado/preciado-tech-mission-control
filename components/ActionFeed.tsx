@@ -48,8 +48,8 @@ export function ActionFeed() {
     rows.push({ id: item.id, tone: 'urgent', glyph: '⏳', text: item.title, href: '/approvals' })
   }
   for (const svc of health?.services ?? []) {
-    if (svc.status === 'down') rows.push({ id: `svc:${svc.id}`, tone: 'urgent', glyph: '✕', text: `${svc.name} — ${svc.detail}`, href: '/ops' })
-    else if (svc.status === 'warn') rows.push({ id: `svc:${svc.id}`, tone: 'warn', glyph: '⚠', text: `${svc.name} — ${svc.detail}`, href: '/ops' })
+    if (svc.status === 'down') rows.push({ id: `svc:${svc.id}`, tone: 'urgent', glyph: '✕', text: `${svc.name} — ${svc.detail}`, href: '/' })
+    else if (svc.status === 'warn') rows.push({ id: `svc:${svc.id}`, tone: 'warn', glyph: '⚠', text: `${svc.name} — ${svc.detail}`, href: '/' })
   }
   for (const member of data?.crew ?? []) {
     if (member.status === 'attention') {
@@ -60,7 +60,7 @@ export function ActionFeed() {
     rows.push({ id: `task:${task.id}`, tone: 'warn', glyph: '≡', text: `${task.title} (${task.ownerName})`, href: '/tasks' })
   }
   for (const [i, warning] of (data?.warnings ?? []).entries()) {
-    rows.push({ id: `warn:${i}`, tone: 'note', glyph: '◇', text: warning, href: '/ops' })
+    rows.push({ id: `warn:${i}`, tone: 'note', glyph: '◇', text: warning, href: '/' })
   }
   for (const item of (approvals?.info ?? []).filter(it => it.kind === 'task_attention').slice(0, 3)) {
     rows.push({ id: item.id, tone: 'warn', glyph: '⚠', text: item.title, href: item.href ?? '/tasks' })

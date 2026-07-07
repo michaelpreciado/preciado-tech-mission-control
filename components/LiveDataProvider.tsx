@@ -86,7 +86,9 @@ export function LiveDataProvider({ children }: { children: React.ReactNode }) {
     } catch (caught) {
       const err = caught as Error
       if (err.name !== 'AbortError') {
-        console.error('[LiveData]', err.message)
+        // warn, not error: "Failed to fetch" here is usually just a fetch
+        // cancelled by navigation, and offline states are surfaced in the UI
+        console.warn('[LiveData]', err.message)
         setIsLive(false)
         setError(err.message || 'Could not refresh live data.')
       }
