@@ -8,7 +8,7 @@ import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import path from 'node:path'
 import { resetConfigCache } from '@/lib/config'
-import { getClientIpFromHeaders, isLoopbackIp, checkRateLimit } from '@/lib/mission-api'
+import { getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv, checkRateLimit } from '@/lib/mission-api'
 import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -20,7 +20,7 @@ function isAuthorized(req: NextRequest): boolean {
   const secret = process.env.INTERNAL_API_SECRET
   if (secret) return req.headers.get('authorization') === `Bearer ${secret}`
   const ip = getClientIpFromHeaders(req.headers)
-  return isLoopbackIp(ip === 'unknown' ? '127.0.0.1' : ip)
+  return isTrustedIp(ip === 'unknown' ? '127.0.0.1' : ip, trustedRangesFromEnv())
 }
 
 export async function POST(req: NextRequest) {

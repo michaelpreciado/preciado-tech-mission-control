@@ -262,7 +262,11 @@ export async function collectPipeline(): Promise<PipelineData> {
     const pool = leads.filter(l => l.stage === stage)
     if (stage === 'leads_found') {
       pool.sort((a, b) =>
-        (b.score ?? -1) - (a.score ?? -1)
+        // Direct client records must remain visible even when the bulk lead
+        // scanner has filled the column. They are operationally active, not
+        // disposable prospects.
+        (a.id.startsWith('client-') ? -1 : 0) - (b.id.startsWith('client-') ? -1 : 0)
+        || (b.score ?? -1) - (a.score ?? -1)
         || (b.rating ?? 0) - (a.rating ?? 0)
         || (b.reviewCount ?? 0) - (a.reviewCount ?? 0))
       display.push(...pool.slice(0, LEADS_FOUND_CAP))

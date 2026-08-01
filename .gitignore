@@ -70,6 +70,8 @@ missions.json
 /photography-portfolio/
 HANDOFF-*.md
 /mc-audit-out/
+# Local internal scratch (changelog/cleanup notes with machine-specific paths)
+/TODO.md
 
 # OS
 Thumbs.db

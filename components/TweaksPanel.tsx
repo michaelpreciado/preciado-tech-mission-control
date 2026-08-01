@@ -6,7 +6,6 @@ import React from 'react';
 
 type TweakValues = Record<string, any>;
 type SetTweak = (key: string, val: any) => void;
-type SetTweakBatch = (edits: Record<string, any>) => void;
 
 interface TweaksPanelProps {
   title?: string;

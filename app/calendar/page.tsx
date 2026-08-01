@@ -2,8 +2,14 @@
 
 import dynamic from 'next/dynamic'
 
-const SchedulerView = dynamic(() => import('@/components/DashboardViews').then(m => m.SchedulerView), { ssr: false })
+const CommandHeader = dynamic(() => import('@/components/views/CommandHeader').then(m => m.CommandHeader), { ssr: false })
+const TickTickCalendar = dynamic(() => import('@/components/TickTickCalendar').then(m => m.TickTickCalendar), { ssr: false })
 
 export default function CalendarPage() {
-  return <SchedulerView />
+  return (
+    <>
+      <CommandHeader />
+      <TickTickCalendar />
+    </>
+  )
 }

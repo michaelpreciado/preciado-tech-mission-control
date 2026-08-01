@@ -171,8 +171,6 @@ export function StackedBarChart({ data, h = 80 }: StackedBarChartProps) {
   return (
     <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', height: h, display: 'block', overflow: 'visible' }}>
       {data.map((d, i) => {
-        const total = d.segments.reduce((s, sg) => s + sg.value, 0)
-        const fullH = (total / maxVal) * (h - 12)
         let yOff = h - 12
         return (
           <g key={i} transform={`translate(${i * (barW + gap)},0)`}>

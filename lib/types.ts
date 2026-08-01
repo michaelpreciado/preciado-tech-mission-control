@@ -64,7 +64,6 @@ export type CrewMember = {
   lastRun?: string
   nextRun?: string
   accent: string
-  sprite: string[]
   agent_id?: AgentId
 }
 
@@ -145,6 +144,8 @@ export type CostDashboard = {
   openRouterModels: ModelUsage[]
   openRouterLive?: {
     usageUsd: number
+    /** Lifetime spend for the key — never mixed into monthly/total figures. */
+    usageLifetime: number
     usageMonthly: number
     usageWeekly: number
     usageDaily: number
@@ -480,4 +481,49 @@ export type MLContentIdea = {
 export type MLContentData = {
   generated_at: string
   ideas: MLContentIdea[]
+}
+
+/* ── TickTick weekly calendar ─────────────────────────── */
+
+export type TickTickTask = {
+  id: string
+  title: string
+  /** ISO timestamp — the day the task is anchored to for the week grid. */
+  date: string
+  isAllDay?: boolean
+  /** 0 = normal, 2 = completed (TickTick Open API convention). */
+  status?: number
+  priority?: number
+  projectName?: string
+}
+
+/* ── Live agent activity (office floor) ───────────────── */
+
+/** What an occupied desk is doing; 'idle' means nobody is there. */
+export type WorkKind = 'building' | 'research' | 'content' | 'thinking' | 'idle'
+
+export type AgentChannel = {
+  id: string
+  label: string
+  /** True only when a session on this channel produced a message very recently. */
+  live: boolean
+  kind: WorkKind
+  sessionCount: number
+  lastActivityAt: string | null
+  model: string | null
+  /** Transport reachability where knowable (telegram gateway, tty present). */
+  connected?: boolean
+}
+
+export type AgentActivity = {
+  generatedAt: string
+  channels: AgentChannel[]
+  terminals: { tty: string; from: string }[]
+  gatewayRunning: boolean
+}
+
+export type TickTickWeekData = {
+  configured: boolean
+  tasks: TickTickTask[]
+  error?: string
 }

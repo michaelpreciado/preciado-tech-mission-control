@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { getCachedMissionData } from '@/lib/server-cache'
-import { checkRateLimit, getClientIpFromHeaders, isLoopbackIp, RATE_LIMIT, RATE_WINDOW_MS } from '@/lib/mission-api'
+import { checkRateLimit, getClientIpFromHeaders, isLoopbackIp } from '@/lib/mission-api'
 import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'

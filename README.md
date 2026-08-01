@@ -1,18 +1,18 @@
-# F.R.I.D.A.Y.
+# Preciado Tech Mission Control
 
-**Framework for Running Intelligent Deployed Agents** — a local-first mission-control dashboard for the AI agents that run your work and your life.
+**Mission Control for your AI agents** — a local-first operational dashboard for the AI agents that run your work and your life.
 
-![F.R.I.D.A.Y. command deck](docs/screenshots/deck.png)
+![Command deck](docs/screenshots/deck.png)
 
-![Local-first](https://img.shields.io/badge/local--first-%E2%9C%93-ff10f0) ![Setup](https://img.shields.io/badge/setup-~5%20min-ff10f0) ![Keys](https://img.shields.io/badge/keys-bring%20your%20own-ff10f0) ![License](https://img.shields.io/badge/license-MIT-ff10f0)
+![Local-first](https://img.shields.io/badge/local--first-%E2%9C%93-1e90ff) ![Setup](https://img.shields.io/badge/setup-~5%20min-1e90ff) ![Keys](https://img.shields.io/badge/keys-bring%20your%20own-1e90ff) ![License](https://img.shields.io/badge/license-MIT-1e90ff)
 
 ## In three lines
 
-Your agents already write their state to disk — task queues, session logs, cron schedules, pipeline stores. F.R.I.D.A.Y. turns that into one glanceable command deck: what's running, what broke, what it costs, and **what's waiting on you**. Everything stays on your machine; the only keys involved are your own.
+Your agents already write their state to disk — task queues, session logs, cron schedules, pipeline stores. Mission Control turns that into one glanceable command deck: what's running, what broke, what it costs, and **what's waiting on you**. Everything stays on your machine; the only keys involved are your own.
 
 ## The Flight Director methodology
 
-F.R.I.D.A.Y. is built on a simple operating pattern we call **Flight Director**: agents do the flying, you make the calls.
+The dashboard is built on a simple operating pattern we call **Flight Director**: agents do the flying, you make the calls.
 
 1. **Own your agents.** They run on your hardware, under your command — not on someone else's platform.
 2. **Review all work.** Outbound work passes a **Go/No-Go gate** — the approvals inbox is the heart of the dashboard, not an afterthought.
@@ -31,8 +31,8 @@ F.R.I.D.A.Y. is built on a simple operating pattern we call **Flight Director**:
 
 | Step | Command | Time |
 |---|---|---|
-| 1. Clone | `git clone https://github.com/michaelpreciado/friday.git && cd friday` | 30s |
-| 2. Launch with demo data | `./start.sh --demo` (Windows: `start.bat --demo`) | ~2 min |
+| 1. Clone | `git clone https://github.com/michaelpreciado/preciado-tech-mission-control.git && cd preciado-tech-mission-control` | 30s |
+| 2. Launch with demo data | `./start.sh --demo` | ~2 min |
 | 3. Explore | Browser opens a fully populated deck — approvals, pipeline, costs, tasks | 2 min |
 | 4. Make it yours | Open **/setup**, point the paths at your own agents' files, add keys | ~5 min |
 
@@ -66,7 +66,7 @@ Requires **Node.js ≥ 22**. The demo seed (`npm run seed-demo`) fills the board
 
 ```
             ┌─────────────────────────────────────────────┐
-            │             F.R.I.D.A.Y. (Next.js)          │
+            │         Mission Control (Next.js)          │
             │                                             │
   Browser ──►  pages ── /api/* collectors ── lib/config   │
             │                │                    │       │
@@ -78,7 +78,7 @@ Requires **Node.js ≥ 22**. The demo seed (`npm run seed-demo`) fills the board
       cron jobs.json      notes vault     localhost services (SSE bus, Ollama, …)
 ```
 
-Your agents **write**; F.R.I.D.A.Y. **renders**. Every collector degrades gracefully — a missing file or dead service means an empty panel, never a crash. The single write path back into agent-land is the approvals gate.
+Your agents **write**; Mission Control **renders**. Every collector degrades gracefully — a missing file or dead service means an empty panel, never a crash. The single write path back into agent-land is the approvals gate.
 
 ## Configuration
 
@@ -93,7 +93,7 @@ Everything is configurable three ways, in order of precedence: **env var → `da
 
 ## Cost & transparency
 
-F.R.I.D.A.Y. itself costs nothing to run — it's a Next.js app reading your local files. It makes **zero** network calls except: the optional OpenRouter billing check (your key, server-side), optional GitHub stats via your own authenticated `gh` CLI, and optional Google Calendar via your own service account. No telemetry, no analytics, no accounts.
+Mission Control itself costs nothing to run — it's a Next.js app reading your local files. It makes **zero** network calls except: the optional OpenRouter billing check (your key, server-side), optional GitHub stats via your own authenticated `gh` CLI, and optional Google Calendar via your own service account. No telemetry, no analytics, no accounts.
 
 ## Directory structure
 
@@ -104,7 +104,7 @@ lib/            config resolution, data layer, canonical event schema
 scripts/        seed-demo.mjs — the demo dataset generator
 data/           YOUR local data: config.json, demo/, runtime stores (gitignored)
 docs/           screenshots
-start.sh|bat    one-command startup
+start.sh       one-command startup
 ```
 
 ## Security posture
@@ -125,8 +125,8 @@ v1 is deliberately **just the dashboard**. Planned next:
 
 ## Star history
 
-[![Star History Chart](https://api.star-history.com/svg?repos=michaelpreciado/friday&type=Date)](https://star-history.com/#michaelpreciado/friday&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=michaelpreciado/preciado-tech-mission-control&type=Date)](https://star-history.com/#michaelpreciado/preciado-tech-mission-control&Date)
 
 ## License
 
-[MIT](LICENSE) — built by [Michael Preciado](https://github.com/michaelpreciado). If F.R.I.D.A.Y. runs your crew, I'd love to hear about it.
+[MIT](LICENSE) — built by [Michael Preciado](https://github.com/michaelpreciado). If Mission Control runs your crew, I'd love to hear about it.

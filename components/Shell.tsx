@@ -71,7 +71,7 @@ function Sidebar() {
 
   return (
     <aside className="mc-side" aria-label="Main navigation">
-      <div className="mc-brand" style={{ padding: '8px 12px', fontSize: '14px' }}>
+      <div className="mc-brand">
         <div className="mc-brand-mark">🏠</div>
         <div className="mc-brand-text">
           <div className="mc-brand-name">

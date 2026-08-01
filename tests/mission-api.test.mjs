@@ -4,7 +4,9 @@ import {
   checkRateLimit,
   getClientIpFromHeaders,
   isLoopbackIp,
+  isTrustedIp,
   normalizeStream,
+  parseTrustedIps,
   streamPayload,
 } from '../lib/mission-api.ts'
 
@@ -78,4 +80,34 @@ test('checkRateLimit resets after the window expires', () => {
   checkRateLimit(bucket, 'unknown', 0, 1, 100)
   assert.equal(checkRateLimit(bucket, 'unknown', 50, 1, 100).allowed, false)
   assert.equal(checkRateLimit(bucket, 'unknown', 101, 1, 100).allowed, true)
+})
+
+test('parseTrustedIps parses CIDRs and plain IPs, ignoring junk', () => {
+  assert.deepEqual(parseTrustedIps(''), [])
+  assert.deepEqual(parseTrustedIps('  '), [])
+  assert.deepEqual(parseTrustedIps('10.0.0.5'), [{ base: 167772165, bits: 32 }])
+  assert.deepEqual(parseTrustedIps('100.64.0.0/10'), [{ base: 1681915904, bits: 10 }])
+  // whitespace, empty segments, malformed entries and bad prefixes are dropped
+  assert.deepEqual(parseTrustedIps('nonsense, 10.0.0.5 ,, 1.2.3.4/99, 300.1.1.1'), [{ base: 167772165, bits: 32 }])
+})
+
+test('isTrustedIp always trusts loopback regardless of allowlist', () => {
+  assert.equal(isTrustedIp('127.0.0.1', []), true)
+  assert.equal(isTrustedIp('::1', []), true)
+  // Next.js always sets x-forwarded-for, so 'unknown' should NOT be auto-trusted
+  assert.equal(isTrustedIp('unknown', []), false)
+})
+
+test('isTrustedIp honors the configured allowlist', () => {
+  const tailnet = parseTrustedIps('100.64.0.0/10')
+  // an address inside the tailnet CGNAT range is trusted
+  assert.equal(isTrustedIp('100.64.0.2', tailnet), true)
+  assert.equal(isTrustedIp('100.64.0.0', tailnet), true)
+  assert.equal(isTrustedIp('100.127.255.255', tailnet), true)
+  // just outside the CGNAT range, and the public internet
+  assert.equal(isTrustedIp('100.128.0.1', tailnet), false)
+  assert.equal(isTrustedIp('8.8.8.8', tailnet), false)
+  assert.equal(isTrustedIp('203.0.113.1', tailnet), false)
+  // an empty allowlist trusts nothing beyond loopback
+  assert.equal(isTrustedIp('100.64.0.2', []), false)
 })

@@ -5,15 +5,15 @@
  * POST → validates + merges a partial config into data/config.json
  *        (local-only, gitignored). Config hot-reloads via lib/config.ts.
  *
- * Security: writes require loopback origin, or a bearer token when
- * INTERNAL_API_SECRET is set (then the token is required from everywhere).
- * POSTs are rate-limited.
+ * Security: writes require a loopback origin (or an IP in FRIDAY_TRUSTED_IPS),
+ * or a bearer token when INTERNAL_API_SECRET is set (then the token is
+ * required from everywhere). POSTs are rate-limited.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { CONFIG_FILE, getConfig, isConfigured, resetConfigCache, type ConfigFile } from '@/lib/config'
-import { getClientIpFromHeaders, isLoopbackIp, checkRateLimit } from '@/lib/mission-api'
+import { getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv, checkRateLimit } from '@/lib/mission-api'
 import { isHexColor } from '@/lib/theme'
 import { logger } from '@/lib/logger'
 
@@ -24,7 +24,8 @@ const rateBucket = new Map<string, { count: number; resetAt: number }>()
 function isAuthorized(req: NextRequest): boolean {
   const secret = process.env.INTERNAL_API_SECRET
   if (secret) return req.headers.get('authorization') === `Bearer ${secret}`
-  return isLoopbackIp(getClientIpFromHeaders(req.headers) === 'unknown' ? '127.0.0.1' : getClientIpFromHeaders(req.headers))
+  const ip = getClientIpFromHeaders(req.headers)
+  return isTrustedIp(ip === 'unknown' ? '127.0.0.1' : ip, trustedRangesFromEnv())
 }
 
 export async function GET() {
@@ -41,7 +42,10 @@ export async function GET() {
       services: cfg.services,
       appearance: cfg.appearance,
       // Never return key material — only whether a key is present.
-      keysSet: { openrouterApiKey: Boolean(cfg.keys.openrouterApiKey) },
+      keysSet: {
+        openrouterApiKey: Boolean(cfg.keys.openrouterApiKey),
+        ticktickToken: Boolean(cfg.keys.ticktickToken),
+      },
     },
   }, { headers: { 'Cache-Control': 'no-store' } })
 }
@@ -54,11 +58,11 @@ const NESTED: Record<string, readonly string[]> = {
   paths: [
     'agentsDir', 'workspaceDir', 'projectWorkspaceDir', 'repoDir', 'vaultDir',
     'projectVaultDir', 'usageLogsDir', 'inboxDir', 'cronJobsFile', 'kanbanDbFile',
-    'openclawConfigFile', 'gatewayStateFile', 'providerEnvFile', 'pipelineDir',
+    'openclawConfigFile', 'gatewayStateFile', 'providerEnvFile', 'pipelineDir', 'agentStateDbFile',
     'mlContentIdeasDir', 'eventbusEnvFile', 'googleCalendarCredsFile',
   ],
   services: ['eventbusUrl', 'openclawGatewayUrl', 'ollamaUrl', 'llmsterUrl'],
-  keys: ['openrouterApiKey'],
+  keys: ['openrouterApiKey', 'ticktickToken'],
   appearance: ['accentColor'],
 }
 

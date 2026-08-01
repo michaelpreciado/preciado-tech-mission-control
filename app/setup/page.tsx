@@ -7,7 +7,7 @@
  */
 import { useEffect, useState } from 'react'
 import { SectionHead } from '@/components/ui'
-import { ACCENT_PRESETS } from '@/lib/theme'
+import { ACCENT_PRESETS, DEFAULT_ACCENT } from '@/lib/theme'
 
 type SetupConfig = {
   appName: string
@@ -17,7 +17,7 @@ type SetupConfig = {
   paths: Record<string, string>
   services: Record<string, string>
   appearance: { accentColor: string }
-  keysSet: { openrouterApiKey: boolean }
+  keysSet: { openrouterApiKey: boolean; ticktickToken: boolean }
 }
 
 type Field = { section: 'github' | 'paths' | 'services'; key: string; label: string; hint?: string }
@@ -79,6 +79,7 @@ export default function SetupPage() {
   const [cfg, setCfg] = useState<SetupConfig | null>(null)
   const [configured, setConfigured] = useState(false)
   const [openrouterKey, setOpenrouterKey] = useState('')
+  const [ticktickKey, setTicktickKey] = useState('')
   const [busy, setBusy] = useState(false)
   const [flash, setFlash] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null)
 
@@ -110,12 +111,16 @@ export default function SetupPage() {
       services: cfg.services,
       appearance: cfg.appearance,
     }
-    if (openrouterKey.trim()) body.keys = { openrouterApiKey: openrouterKey.trim() }
+    const keys: Record<string, string> = {}
+    if (openrouterKey.trim()) keys.openrouterApiKey = openrouterKey.trim()
+    if (ticktickKey.trim()) keys.ticktickToken = ticktickKey.trim()
+    if (Object.keys(keys).length) body.keys = keys
     try {
       const res = await fetch('/api/setup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const j = await res.json()
       if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`)
       setOpenrouterKey('')
+      setTicktickKey('')
       setConfigured(true)
       setFlash({ tone: 'ok', text: j.note || 'Saved.' })
     } catch (err) {
@@ -198,7 +203,7 @@ export default function SetupPage() {
                   <input
                     type="color"
                     aria-label="Custom accent color"
-                    value={/^#[0-9a-fA-F]{6}$/.test(cfg.appearance.accentColor) ? cfg.appearance.accentColor : '#ff10f0'}
+                    value={/^#[0-9a-fA-F]{6}$/.test(cfg.appearance.accentColor) ? cfg.appearance.accentColor : DEFAULT_ACCENT}
                     onChange={e => set('appearance', 'accentColor', e.target.value)}
                   />
                 </div>
@@ -218,6 +223,17 @@ export default function SetupPage() {
                   autoComplete="off"
                 />
                 <em>used server-side for live billing on the Costs tab · never returned by any API</em>
+              </label>
+              <label className="mc-setup-field">
+                <span>TickTick API token {cfg.keysSet.ticktickToken && <b className="is-set">· configured ✓</b>}</span>
+                <input
+                  type="password"
+                  value={ticktickKey}
+                  onChange={e => setTicktickKey(e.target.value)}
+                  placeholder={cfg.keysSet.ticktickToken ? '•••••••• (leave blank to keep)' : 'OAuth bearer token'}
+                  autoComplete="off"
+                />
+                <em>used server-side for the weekly ASCII calendar on the Calendar tab · never returned by any API</em>
               </label>
             </div>
 

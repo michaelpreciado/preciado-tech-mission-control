@@ -7,8 +7,8 @@
  * from the UI rotates it. One run at a time: agent turns are heavyweight,
  * so concurrent sends get a 409 instead of queuing silently.
  *
- * Security: same posture as /api/setup — loopback-only unless
- * INTERNAL_API_SECRET is set (then bearer required). The binary comes from
+ * Security: same posture as /api/setup — loopback (plus FRIDAY_TRUSTED_IPS)
+ * unless INTERNAL_API_SECRET is set (then bearer required). The binary comes from
  * operator config only; the user message is passed as a single argv element
  * (no shell), validated and length-capped.
  */
@@ -16,7 +16,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { getConfig } from '@/lib/config'
-import { getClientIpFromHeaders, isLoopbackIp, checkRateLimit } from '@/lib/mission-api'
+import { getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv, checkRateLimit } from '@/lib/mission-api'
 import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -35,7 +35,7 @@ function isAuthorized(req: NextRequest): boolean {
   const secret = process.env.INTERNAL_API_SECRET
   if (secret) return req.headers.get('authorization') === `Bearer ${secret}`
   const ip = getClientIpFromHeaders(req.headers)
-  return isLoopbackIp(ip === 'unknown' ? '127.0.0.1' : ip)
+  return isTrustedIp(ip === 'unknown' ? '127.0.0.1' : ip, trustedRangesFromEnv())
 }
 
 async function checkAvailable(command: string): Promise<boolean> {

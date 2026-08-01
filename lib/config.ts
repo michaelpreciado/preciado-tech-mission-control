@@ -38,6 +38,8 @@ export interface FridayPaths {
   cronJobsFile: string
   /** Multi-agent kanban SQLite DB (Hermes-compatible schema). */
   kanbanDbFile: string
+  /** Agent session store (Hermes profile state.db) driving the live office view ('' = disabled). */
+  agentStateDbFile: string
   /** OpenClaw gateway config file. */
   openclawConfigFile: string
   /** Agent gateway state file probed for system health. */
@@ -78,6 +80,8 @@ export interface FridayChat {
 export interface FridayKeys {
   /** OpenRouter API key for live billing data ('' = disabled). Never logged, never returned by APIs. */
   openrouterApiKey: string
+  /** TickTick Open API bearer token for the weekly ASCII calendar ('' = disabled). Never logged, never returned by APIs. */
+  ticktickToken: string
 }
 
 export interface FridayConfig {
@@ -158,6 +162,7 @@ function buildConfig(): FridayConfig {
       inboxDir: str(env.FRIDAY_INBOX_DIR, str(p.inboxDir, '')),
       cronJobsFile: str(env.FRIDAY_CRON_JOBS_FILE, str(p.cronJobsFile, path.join(home, '.hermes/cron/jobs.json'))),
       kanbanDbFile: str(env.MC_HERMES_KANBAN_DB, str(p.kanbanDbFile, path.join(home, '.hermes/kanban.db'))),
+      agentStateDbFile: str(env.FRIDAY_AGENT_STATE_DB, str(p.agentStateDbFile, path.join(home, '.hermes/profiles/jarvis/state.db'))),
       openclawConfigFile: str(env.FRIDAY_OPENCLAW_CONFIG, str(p.openclawConfigFile, path.join(home, '.openclaw/openclaw.json'))),
       gatewayStateFile: str(env.FRIDAY_GATEWAY_STATE_FILE, str(p.gatewayStateFile, path.join(home, '.hermes/gateway_state.json'))),
       providerEnvFile: str(env.FRIDAY_PROVIDER_ENV_FILE, str(p.providerEnvFile, path.join(home, '.hermes/.env'))),
@@ -174,6 +179,7 @@ function buildConfig(): FridayConfig {
     },
     keys: {
       openrouterApiKey: str(env.OPENROUTER_API_KEY, str(file.keys?.openrouterApiKey, '')),
+      ticktickToken: str(env.TICKTICK_API_TOKEN, str(file.keys?.ticktickToken, '')),
     },
     appearance: {
       accentColor: str(env.NEXT_PUBLIC_ACCENT_COLOR, str(file.appearance?.accentColor, '#ff10f0')),

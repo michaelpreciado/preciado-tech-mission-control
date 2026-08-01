@@ -6,13 +6,13 @@ import { SectionHead, SkeletonPanel } from './ui'
 import dynamic from 'next/dynamic'
 import type { MissionTask } from '@/lib/types'
 
-const CommandHeader = dynamic(() => import('./DashboardViews').then(m => m.CommandHeader), { ssr: false, loading: () => <SkeletonPanel label="loading header" /> })
+const CommandHeader = dynamic(() => import('./views/CommandHeader').then(m => m.CommandHeader), { ssr: false, loading: () => <SkeletonPanel label="loading header" /> })
 const ActionFeed = dynamic(() => import('./ActionFeed').then(m => m.ActionFeed), { ssr: false })
-const CalendarList = dynamic(() => import('./DashboardViews').then(m => m.CalendarList), { ssr: false, loading: () => <SkeletonPanel label="loading schedule" /> })
-const GithubPanel = dynamic(() => import('./DashboardViews').then(m => m.GithubPanel), { ssr: false, loading: () => <SkeletonPanel label="loading github" /> })
-const CostsPanel = dynamic(() => import('./DashboardViews').then(m => m.CostsPanel), { ssr: false, loading: () => <SkeletonPanel label="loading costs" /> })
-const OperationsPanel = dynamic(() => import('./DashboardViews').then(m => m.OperationsPanel), { ssr: false, loading: () => <SkeletonPanel label="loading ops" /> })
-const ProjectGrid = dynamic(() => import('./DashboardViews').then(m => m.ProjectGrid), { ssr: false, loading: () => <SkeletonPanel label="loading projects" /> })
+const CalendarList = dynamic(() => import('./views/CalendarList').then(m => m.CalendarList), { ssr: false, loading: () => <SkeletonPanel label="loading schedule" /> })
+const GithubPanel = dynamic(() => import('./views/GithubPanel').then(m => m.GithubPanel), { ssr: false, loading: () => <SkeletonPanel label="loading github" /> })
+const CostsPanel = dynamic(() => import('./views/CostsPanel').then(m => m.CostsPanel), { ssr: false, loading: () => <SkeletonPanel label="loading costs" /> })
+const OperationsPanel = dynamic(() => import('./views/OpsViews').then(m => m.OperationsPanel), { ssr: false, loading: () => <SkeletonPanel label="loading ops" /> })
+const ProjectGrid = dynamic(() => import('./views/ProjectGrid').then(m => m.ProjectGrid), { ssr: false, loading: () => <SkeletonPanel label="loading projects" /> })
 const SystemHealthPanel = dynamic(() => import('./SystemHealthPanel').then(m => m.SystemHealthPanel), { ssr: false, loading: () => <SkeletonPanel label="loading system health" /> })
 
 const tabs = [
