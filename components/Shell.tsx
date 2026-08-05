@@ -40,8 +40,8 @@ function usePendingApprovals(): number {
 const NAV = [
   { section: 'Overview', items: [
     { id: '/', label: 'Deck', glyph: '🏠' },
+    { id: '/kanban', label: 'Kanban', glyph: '⛁' },
     { id: '/approvals', label: 'Approvals', glyph: '✅' },
-    { id: '/tasks', label: 'Tasks', glyph: '📋' },
     { id: '/calendar', label: 'Calendar', glyph: '📅' },
   ]},
   { section: 'Intelligence', items: [

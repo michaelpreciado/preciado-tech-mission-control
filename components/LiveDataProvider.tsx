@@ -137,11 +137,30 @@ export function LiveDataProvider({ children }: { children: React.ReactNode }) {
     window.addEventListener('online', onOnline)
     window.addEventListener('offline', onOffline)
 
+    // Live refresh: subscribe to the same-origin /api/events SSE firehose and
+    // refresh when agent activity flows, so cost/leaderboard data updates in
+    // near-real-time instead of only on the poll interval. Debounced to avoid
+    // flooding the API (EventSource auto-reconnects, so onerror is a no-op).
+    let es: EventSource | null = null
+    let lastEvt = 0
+    const onBusEvent = () => {
+      const now = Date.now()
+      if (now - lastEvt < 6000) return
+      lastEvt = now
+      if (document.visibilityState === 'visible' && navigator.onLine) void refreshThrottled()
+    }
+    try {
+      es = new EventSource('/api/events')
+      es.onmessage = onBusEvent
+      es.onerror = () => { /* EventSource reconnects on its own */ }
+    } catch { /* noop */ }
+
     return () => {
       clearInterval(timer)
       document.removeEventListener('visibilitychange', onVisible)
       window.removeEventListener('online', onOnline)
       window.removeEventListener('offline', onOffline)
+      es?.close()
       inFlight.current?.abort()
       if (rafId.current) cancelAnimationFrame(rafId.current)
     }

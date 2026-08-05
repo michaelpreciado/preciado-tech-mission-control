@@ -12,7 +12,7 @@ const OUT = process.argv[5] ?? null
 if (OUT) fs.mkdirSync(OUT, { recursive: true })
 
 const TABS = [
-  ['deck', '/'], ['approvals', '/approvals'], ['tasks', '/tasks'],
+  ['deck', '/'], ['approvals', '/approvals'], ['kanban', '/kanban'],
   ['calendar', '/calendar'], ['chat', '/chat'], ['github', '/github'],
   ['costs', '/costs'], ['projects', '/projects'], ['pipeline', '/pipeline'],
   ['ml-content', '/ml-content'], ['memory', '/memory'], ['team', '/team'],

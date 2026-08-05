@@ -1,23 +1,27 @@
 import path from 'node:path'
 import type { CostDashboard, ModelUsage } from '../types'
 import { getConfig } from '../config'
+import { readOrMonthlyHistory, recordOrMonthly } from '../or-history'
 import { ROOTS, readText, walk, rel } from './shared'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSONL log lines have unbounded shape
 function usageFromObject(obj: Record<string, any>) {
   const message = obj?.message || obj?.response || obj
-  const usage = message?.usage || obj?.usage || obj?.response?.usage
+  // OpenClaw "model.completed" trace events nest usage under data.usage and
+  // name fields differently (modelId, ts) — support both the legacy shape and
+  // the current one so recent sessions stop being dropped as "no usage".
+  const usage = message?.usage || obj?.usage || obj?.response?.usage || obj?.data?.usage
   if (!usage) return null
 
   const input = usage.input_tokens ?? usage.inputTokens ?? usage.prompt_tokens ?? usage.promptTokens ?? usage.input ?? 0
   const output = usage.output_tokens ?? usage.outputTokens ?? usage.completion_tokens ?? usage.completionTokens ?? usage.output ?? 0
   const cacheRead = usage.cache_read_tokens ?? usage.cacheReadTokens ?? usage.cacheRead ?? 0
   const cacheWrite = usage.cache_write_tokens ?? usage.cacheWriteTokens ?? usage.cacheWrite ?? 0
-  const explicitTotal = usage.total_tokens ?? usage.totalTokens
+  const explicitTotal = usage.total_tokens ?? usage.totalTokens ?? usage.total
   const total = Number(explicitTotal ?? (Number(input) + Number(output) + Number(cacheRead) + Number(cacheWrite))) || 0
   const billableTokens = (Number(input) || 0) + (Number(output) || 0) + (Number(cacheWrite) || 0)
 
-  const model = message.model || obj.model || usage.model || obj.providerMetadata?.model || 'unknown'
+  const model = message.model || obj.model || obj.modelId || usage.model || obj.providerMetadata?.model || obj.data?.model || 'unknown'
   const provider = message.provider || obj.provider || message.api || obj.api || obj.providerName || (String(model).includes('/') ? String(model).split('/')[0] : 'unknown')
   const costObj = usage.cost || {}
   const costInput = Math.max(0, Number(costObj.input ?? 0) || 0)
@@ -28,9 +32,9 @@ function usageFromObject(obj: Record<string, any>) {
   // Some provider logs use negative placeholder values when billing metadata is unavailable.
   // Treat those as unknown/zero so dashboard totals do not show impossible negative spend.
   const cost = Number.isFinite(rawCost) && rawCost > 0 ? rawCost : 0
-  const timestamp = obj.timestamp || message.timestamp || obj.createdAt || message.createdAt
+  const timestamp = obj.timestamp || message.timestamp || obj.createdAt || message.createdAt || obj.ts || obj.data?.ts || obj.data?.timestamp
   const iso = typeof timestamp === 'number' ? new Date(timestamp).toISOString() : String(timestamp || '')
-  const failed = Boolean(message.errorMessage || message.stopReason === 'error' || obj.error || obj.status === 'error')
+  const failed = Boolean(message.errorMessage || message.stopReason === 'error' || obj.error || obj.status === 'error' || obj.data?.error)
 
   return {
     model: String(model),
@@ -236,6 +240,74 @@ export async function collectCosts(): Promise<CostDashboard> {
   // total that contradicted the "this month" figure rendered beside it. Lifetime
   // stays available on openRouterLive.usageLifetime for reference instead.
   const allCostUsd = models.reduce((s, m) => s + m.estimatedCostUsd, 0)
+
+  // ── Freshness / self-healing staleness check ────────────────────────────
+  // Track the newest parsed session so the cost view can warn when it goes
+  // stale (e.g. a log-format change silently stops new sessions from parsing —
+  // the exact failure we hit). `freshness` gives the dashboard/data layer a
+  // signal to alert on before anyone trusts outdated numbers.
+  const lastTimes = models.map(m => m.lastUsedAt).filter((t): t is string => Boolean(t))
+  const lastLoggedAt = lastTimes.length ? lastTimes.sort().pop()! : null
+  let staleDays: number | null = null
+  if (lastLoggedAt) {
+    staleDays = Math.floor((Date.now() - new Date(lastLoggedAt).getTime()) / 86400000)
+    if (staleDays > 3) {
+      warnings.push(`⚠ cost data may be stale — no usage parsed in ${staleDays} days (newest session ${lastLoggedAt.slice(0, 10)}).`)
+    }
+  }
+
+  // ── Subscription & real-billing reconciliation ─────────────────────────
+  // A flat Claude plan is real money moved every month, independent of per-token
+  // logging. Attach the plan (so the UI can name it) and fold its cost into that
+  // month so the cost view reconciles with the actual bill. OpenRouter's billed $
+  // for the CURRENT month comes from the live key API; past months have no
+  // per-month API figure, so they're null (lifetime still ships on openRouterLive).
+  const billCfg = getConfig().billing
+  const SUBSCRIPTIONS = billCfg.subscriptions
+  const DEFAULT_PLAN = billCfg.defaultPlan
+  const nowD = new Date()
+  const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+  const provOf = new Map(models.map(m => [m.model, m.provider]))
+  const tokOf = (v: unknown) => (v && typeof v === 'object' && typeof (v as { tokens?: number }).tokens === 'number' ? (v as { tokens: number }).tokens : 0)
+  // Snapshot the current month's real OR billed $ so future months accumulate a
+  // genuine per-month OpenRouter history (the key API exposes no history).
+  if (orUsage?.usageMonthly != null) {
+    recordOrMonthly(monthKey(new Date(nowD.getFullYear(), nowD.getMonth(), 1)), orUsage.usageMonthly)
+  }
+  const orHistory = readOrMonthlyHistory()
+
+  const billing: CostDashboard['billing'] = []
+  for (const back of [0, 1]) {
+    const d = new Date(nowD.getFullYear(), nowD.getMonth() - back, 1)
+    const key = monthKey(d)
+    const plan = SUBSCRIPTIONS[key] ?? DEFAULT_PLAN
+    let api = 0, local = 0, logCost = 0
+    for (const day of byDay.values()) {
+      if (day.date.slice(0, 7) !== key) continue
+      logCost += day.cost
+      for (const [model, v] of Object.entries(day.byModel ?? {})) {
+        const tk = tokOf(v)
+        if (provOf.get(model) === 'ollama') local += tk
+        else api += tk
+      }
+    }
+    let claudeTk = 0
+    for (const cday of claudeUsage?.daily ?? []) {
+      if (String(cday.date).slice(0, 7) === key) claudeTk += cday.tokens
+    }
+    billing.push({
+      month: key,
+      plan: plan.plan,
+      planAmount: plan.amount,
+      openRouterUsd: orHistory[key] ?? (back === 0 ? (orUsage?.usageMonthly ?? null) : null),
+      apiTokens: api,
+      claudeTokens: claudeTk,
+      localTokens: local,
+      totalTokens: api + local + claudeTk,
+      logCost,
+    })
+  }
+
   return {
     source: `${rel(ROOTS.agentSessions)} session usage logs`,
     totalRequests: models.reduce((s, m) => s + m.requests, 0),
@@ -251,6 +323,9 @@ export async function collectCosts(): Promise<CostDashboard> {
     models,
     openRouterModels: models.filter(m => /openrouter/i.test(`${m.provider} ${m.model}`)),
     daily: [...byDay.values()].sort((a, b) => a.date.localeCompare(b.date)).slice(-30),
+    billing,
+    subscription: billing[0] ? { month: billing[0].month, plan: billing[0].plan, amount: billing[0].planAmount } : undefined,
+    freshness: { lastLoggedAt, staleDays },
     warnings,
   }
 }

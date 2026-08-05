@@ -11,7 +11,7 @@ fs.mkdirSync(OUT, { recursive: true })
 const TABS = [
   ['deck', '/'],
   ['approvals', '/approvals'],
-  ['tasks', '/tasks'],
+  ['kanban', '/kanban'],
   ['calendar', '/calendar'],
   ['chat', '/chat'],
   ['github', '/github'],

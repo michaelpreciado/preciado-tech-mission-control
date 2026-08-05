@@ -33,6 +33,8 @@ backend/venv/
 
 # Data files (generated at runtime)
 data/agents.json
+# OpenRouter per-month history store (forward snapshots)
+data/or-monthly.json
 
 # Local-only config written by /setup — holds personal paths & keys. NEVER commit.
 data/config.json

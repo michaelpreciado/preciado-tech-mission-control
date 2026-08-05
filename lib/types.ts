@@ -162,6 +162,24 @@ export type CostDashboard = {
     daily: { date: string; tokens: number; byModel: Record<string, number> }[]
   }
   daily: { date: string; requests: number; tokens: number; billableTokens: number; cost: number; byModel: Record<string, { tokens: number; cost: number }>; agent_id?: AgentId }[]
+  /** Per-month billing reconciliation: Claude subscription plan + flat cost for
+   * that month, real OpenRouter billed $ (current month only — the key API only
+   * exposes the current month + lifetime), and token/buildings per source. */
+  billing?: {
+    month: string
+    plan: string
+    planAmount: number
+    openRouterUsd: number | null
+    apiTokens: number
+    claudeTokens: number
+    localTokens: number
+    totalTokens: number
+    logCost: number
+  }[]
+  /** The Claude subscription in effect for the current month. */
+  subscription?: { month: string; plan: string; amount: number }
+  /** Freshness of the usage data (newest parsed session timestamp). Used for self-healing staleness alerts. */
+  freshness?: { lastLoggedAt: string | null; staleDays: number | null }
   warnings: string[]
   agent_id?: AgentId
 }
@@ -372,6 +390,8 @@ export type HermesTask = {
   lastHeartbeatAt?: string
   currentRunId?: number
   sessionId?: string
+  /** Which board this task came from: the local hostname or a remote name (e.g. 'friday-macbook'). */
+  origin?: string
 }
 
 export type HermesTaskRun = {
@@ -414,6 +434,18 @@ export type HermesKanbanSnapshot = {
   available: boolean
   counts: Record<string, number>
   tasks: HermesTask[]
+}
+
+/** Per-board status for the multi-machine kanban mirror (origin + availability). */
+export type KanbanSourceStatus = {
+  name: string
+  origin: string
+  available: boolean
+  counts: Record<string, number>
+}
+
+export type KanbanMultiSnapshot = HermesKanbanSnapshot & {
+  sources: KanbanSourceStatus[]
 }
 
 /* ── Approvals inbox ───────────────────────────────────── */

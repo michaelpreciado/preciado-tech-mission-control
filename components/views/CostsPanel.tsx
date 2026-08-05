@@ -95,25 +95,25 @@ function TokenTreemap({ models, height = 160 }: { models: ModelUsage[], height?:
   const total = sorted.reduce((s, m) => s + m.totalTokens, 0)
   if (!total) return null
 
-  // Simple squarified treemap — single row layout
-  const rects: { m: ModelUsage, x: number, w: number, color: string }[] = []
-  let x = 0
-  for (const m of sorted) {
-    const w = (m.totalTokens / total) * 100
-    rects.push({ m, x, w, color: providerColor(m.provider) })
-    x += w
-  }
+  // Cap the treemap to the top models; roll the long tail of dust-sized models
+  // into one "OTHER" slice so the single-row layout stays proportional instead
+  // of degrading into a band of equal min-width slivers at the end.
+  const TOP = 7
+  const heads = sorted.slice(0, TOP)
+  const tailTokens = sorted.slice(TOP).reduce((s, m) => s + m.totalTokens, 0)
+  const rects: { label: string; tokens: number; w: number; color: string; model?: ModelUsage }[] =
+    heads.map(m => ({ label: m.model.split('/').pop() ?? m.model, tokens: m.totalTokens, w: (m.totalTokens / total) * 100, color: providerColor(m.provider), model: m }))
+  if (tailTokens > 0) rects.push({ label: `+${sorted.length - TOP} more`, tokens: tailTokens, w: (tailTokens / total) * 100, color: OTHER_COLOR })
 
   return (
     <div style={{ position: 'relative', height, overflow: 'hidden', borderRadius: 4, cursor: 'crosshair' }}>
       <div style={{ display: 'flex', height: '100%', gap: 2 }}>
-        {rects.map(({ m, w, color }) => {
-          const isHovered = hovered === m.model
-          const label = m.model.split('/').pop() ?? m.model
+        {rects.map(({ label, tokens, w, color }) => {
+          const isHovered = hovered === label
           return (
             <div
-              key={m.model}
-              onMouseEnter={() => setHovered(m.model)}
+              key={label}
+              onMouseEnter={() => setHovered(label)}
               onMouseLeave={() => setHovered(null)}
               style={{
                 flex: `0 0 ${w}%`,
@@ -136,7 +136,7 @@ function TokenTreemap({ models, height = 160 }: { models: ModelUsage[], height?:
                     {label}
                   </div>
                   <div style={{ fontSize: 8, color: 'var(--pt-text-dim)', letterSpacing: '0.1em', marginTop: 2 }}>
-                    {fmtTokens(m.totalTokens)}
+                    {fmtTokens(tokens)}
                   </div>
                 </>
               )}
@@ -146,9 +146,9 @@ function TokenTreemap({ models, height = 160 }: { models: ModelUsage[], height?:
       </div>
       {/* Hover tooltip */}
       {hovered && (() => {
-        const m = sorted.find(m => m.model === hovered)
-        if (!m) return null
-        const pct = ((m.totalTokens / total) * 100).toFixed(1)
+        const e = rects.find(r => r.label === hovered)
+        if (!e) return null
+        const pct = ((e.tokens / total) * 100).toFixed(1)
         return (
           <div style={{
             position: 'absolute', top: 6, right: 6,
@@ -158,15 +158,19 @@ function TokenTreemap({ models, height = 160 }: { models: ModelUsage[], height?:
             boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
             pointerEvents: 'none', maxWidth: 220,
           }}>
-            <div style={{ color: providerColor(m.provider), fontWeight: 700, letterSpacing: '0.08em', marginBottom: 4 }}>
-              {m.model.split('/').pop()}
+            <div style={{ color: e.color, fontWeight: 700, letterSpacing: '0.08em', marginBottom: 4 }}>
+              {e.label}
             </div>
             <div style={{ color: 'var(--pt-text-dim)', lineHeight: 1.6 }}>
-              <span style={{ color: 'var(--pt-text-mute)' }}>provider</span> {shortProvider(m.provider)}<br/>
-              <span style={{ color: 'var(--pt-text-mute)' }}>tokens</span> {fmtTokens(m.totalTokens)} ({pct}%)<br/>
-              <span style={{ color: 'var(--pt-text-mute)' }}>requests</span> {m.requests.toLocaleString()}<br/>
-              {m.estimatedCostUsd > 0 && <><span style={{ color: 'var(--pt-text-mute)' }}>cost</span> {money(m.estimatedCostUsd)}<br/></>}
-              {m.estimatedCostUsd === 0 && <span style={{ color: CATEGORICAL[2], fontSize: 9 }}>FREE / LOCAL</span>}
+              <span style={{ color: 'var(--pt-text-mute)' }}>tokens</span> {fmtTokens(e.tokens)} ({pct}%)<br/>
+              {e.model ? (<>
+                <span style={{ color: 'var(--pt-text-mute)' }}>provider</span> {shortProvider(e.model.provider)}<br/>
+                <span style={{ color: 'var(--pt-text-mute)' }}>requests</span> {e.model.requests.toLocaleString()}<br/>
+                {e.model.estimatedCostUsd > 0 && <><span style={{ color: 'var(--pt-text-mute)' }}>cost</span> {money(e.model.estimatedCostUsd)}<br/></>}
+                {e.model.estimatedCostUsd === 0 && <span style={{ color: CATEGORICAL[2], fontSize: 9 }}>FREE / LOCAL</span>}
+              </>) : (
+                <span style={{ color: 'var(--pt-text-mute)', fontSize: 9 }}>aggregated long tail — top models shown individually</span>
+              )}
             </div>
           </div>
         )
@@ -489,6 +493,46 @@ function MonthlyBurnHero({ costs }: { costs: CostDashboard }) {
   )
 }
 
+/* ── Monthly billing reconciliation: plan + real cost per month ── */
+function MonthlyBilling({ costs }: { costs: CostDashboard }) {
+  const billing = costs.billing ?? []
+  if (!billing.length) return null
+  const subMonth = costs.subscription?.month
+  return (
+    <>
+      <SectionHead label="MONTHLY BILLING · PLAN & REAL COST" />
+      <div className="mc-viz-grid" style={{ gridTemplateColumns: `repeat(${Math.min(billing.length, 2)},1fr)` }}>
+        {billing.map(b => {
+          const or = b.openRouterUsd
+          const realCost = b.planAmount + (or ?? 0)
+          const isCurrent = subMonth === b.month
+          return (
+            <Window key={b.month} tag="$" title={`${b.month} · ${b.plan.toUpperCase()}`}
+              meta={isCurrent ? 'current plan' : 'previous month'}>
+              <div style={{ padding: '12px 16px 14px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
+                  <span style={{ fontSize: 10, color: 'var(--pt-text-mute)', letterSpacing: '0.16em' }}>CLAUDE PLAN</span>
+                  <span style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--font-mono)', color: CATEGORICAL[isCurrent ? 3 : 0] }}>{money(b.planAmount)}</span>
+                </div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: 'var(--pt-text-dim)', lineHeight: 1.85, marginTop: 4 }}>
+                  <div><span style={{ color: 'var(--pt-text-mute)' }}>plan</span> · {b.plan}</div>
+                  <div><span style={{ color: 'var(--pt-text-mute)' }}>tokens</span> · {fmtTokens(b.totalTokens)} <span style={{ color: 'var(--pt-text-mute)', fontSize: 9 }}>({fmtTokens(b.claudeTokens)} claude · {fmtTokens(b.apiTokens)} api · {fmtTokens(b.localTokens)} local)</span></div>
+                  <div><span style={{ color: 'var(--pt-text-mute)' }}>openrouter billed</span> · {or != null ? money(or) : <span style={{ fontSize: 9 }}>n/a (key API has no per-month history)</span>}</div>
+                  <div><span style={{ color: 'var(--pt-text-mute)' }}>logged session cost</span> · {money(b.logCost)}</div>
+                </div>
+                <div style={{ marginTop: 12, paddingTop: 11, borderTop: '1px solid var(--pt-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                  <span style={{ fontSize: 9, color: 'var(--pt-text-mute)', letterSpacing: '0.18em' }}>REAL MONTH COST</span>
+                  <span style={{ fontSize: 18, fontWeight: 700, fontFamily: 'var(--font-mono)', color: STATUS.warn }}>≈ {money(realCost)}</span>
+                </div>
+              </div>
+            </Window>
+          )
+        })}
+      </div>
+    </>
+  )
+}
+
 export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = {}) {
   const { data } = useLiveData()
   const costs = data?.costs ?? initialCosts
@@ -561,66 +605,8 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
       {/* ── 30-DAY BURN HERO ── */}
       <MonthlyBurnHero costs={costs} />
 
-      {/* ── ALL MODELS OVERVIEW ── */}
-      {allModels.length > 0 && (
-        <>
-          <SectionHead label="ALL MODELS · OVERVIEW" />
-          <Window tag="◈" title="MODEL UNIVERSE" meta={`${allModels.length} models · ${allModels.filter(m => m.totalTokens > 0).length} active`}>
-            <div style={{ padding: '10px 14px 6px' }}>
-              {/* Tab switcher */}
-              <div style={{ display: 'flex', gap: 4, marginBottom: 12 }}>
-                {([['treemap', 'TREEMAP'], ['providers', 'BY PROVIDER'], ['timeline', 'TIMELINE']] as const).map(([key, label]) => (
-                  <button key={key} onClick={() => setOverviewTab(key)}
-                    style={{
-                      padding: '5px 12px', fontSize: 9, letterSpacing: '0.14em',
-                      // Follow the configured accent. These were hardcoded to the
-                      // old neon pink, so the active tab stayed pink after the
-                      // theme moved to dodger blue.
-                      background: overviewTab === key ? 'rgba(var(--pt-neon-rgb),0.15)' : 'transparent',
-                      border: `1px solid ${overviewTab === key ? 'rgba(var(--pt-neon-rgb),0.4)' : 'var(--pt-border-dim)'}`,
-                      borderRadius: 4, color: overviewTab === key ? CATEGORICAL[0] : 'var(--pt-text-mute)',
-                      cursor: 'pointer', transition: 'all 0.15s',
-                      fontFamily: 'var(--pt-font-mono)',
-                    }}>
-                    {label}
-                  </button>
-                ))}
-              </div>
-
-              {overviewTab === 'treemap' && <TokenTreemap models={allModels} height={170} />}
-              {overviewTab === 'providers' && <ProviderRing models={allModels} />}
-              {overviewTab === 'timeline' && <DailyHeatstrip daily={costs.daily} />}
-            </div>
-            <ScopeNote>
-              ALL-TIME TOTALS FROM LOCAL SESSION LOGS — LOGGED COST EXCLUDES SPEND FROM OTHER MACHINES
-              {or ? ` (OPENROUTER BILLED ${money(or.usageLifetime)} LIFETIME)` : ''}.
-            </ScopeNote>
-
-            {/* Quick stats row */}
-            <div style={{ display: 'flex', gap: 0, borderTop: '1px solid var(--pt-border)' }}>
-              {[
-                // These are all-time log totals, not the 30D window charted above.
-                { label: 'TOKENS · ALL-TIME', value: fmtTokens(costs.totalTokens), color: CATEGORICAL[0] },
-                { label: 'REQUESTS', value: costs.totalRequests.toLocaleString(), color: CATEGORICAL[4] },
-                { label: 'LOGGED COST', value: money(costs.estimatedCostUsd), color: STATUS.warn },
-                { label: 'LOCAL (FREE)', value: fmtTokens(ollamaTotalTokens), color: CATEGORICAL[2] },
-              ].map((stat, i) => (
-                <div key={i} style={{
-                  flex: 1, padding: '10px 12px', textAlign: 'center',
-                  borderRight: i < 3 ? '1px solid var(--pt-border)' : 'none',
-                }}>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: stat.color, fontFamily: 'var(--font-mono)', lineHeight: 1 }}>
-                    {stat.value}
-                  </div>
-                  <div style={{ fontSize: 7, color: 'var(--pt-text-mute)', letterSpacing: '0.16em', marginTop: 4 }}>
-                    {stat.label}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Window>
-        </>
-      )}
+      {/* ── MONTHLY BILLING · PLAN & REAL COST ── */}
+      <MonthlyBilling costs={costs} />
 
       {/* ── OpenRouter: monthly billing + model leaderboard ── */}
       {(or || orMonthlyRows.length > 0) && (
@@ -765,9 +751,8 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
 
       {/* ── Paid API models burn (all-time logs) ── */}
       {paidModels.length > 0 && (
-        // Rows are all-time per-model log totals, so this can't carry a month name.
         <Window tag="$" title="BURN BY MODEL — ALL-TIME LOGS"
-          meta={`total ${money(costs.estimatedCostUsd)}`}>
+          meta={`total ${money(costs.estimatedCostUsd)} · logged`}>
           <div className="mc-cost-rows">
             {paidModels.map(m => (
               <div key={m.model} className="mc-cost-row">
@@ -777,6 +762,17 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
               </div>
             ))}
           </div>
+          {(() => {
+            // Reconcile the panel total against the OpenRouter-only disclaimer below:
+            // this chart sums EVERY logged provider, so split it so the numbers add up.
+            const or = paidModels.filter(m => /openrouter/i.test(`${m.provider} ${m.model}`)).reduce((s, m) => s + m.estimatedCostUsd, 0)
+            const other = costs.estimatedCostUsd - or
+            return (
+              <div style={{ padding: '8px 14px', fontSize: 9, color: 'var(--pt-text-mute)', letterSpacing: '0.1em', borderTop: '1px solid var(--pt-border)', fontFamily: 'var(--font-mono)' }}>
+                split · OpenRouter {money(or)} · {other > 0 ? `other API ${money(other)}` : ''} — logged sessions only, excludes Claude subscription &amp; unlogged/current spend
+              </div>
+            )
+          })()}
           {costs.warnings?.map((w, i) => (
             <div key={i} style={{ padding: '6px 14px', fontSize: 9, color: STATUS.warn, letterSpacing: '0.14em', borderTop: '1px solid var(--pt-border)' }}>
               ⚠ {w}

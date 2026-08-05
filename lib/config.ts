@@ -84,6 +84,30 @@ export interface FridayKeys {
   ticktickToken: string
 }
 
+export interface FridayBilling {
+  /** Claude plan by month 'YYYY-MM' → { plan, amount }. Editable in data/config.json — no code changes to reprice a month. */
+  subscriptions: Record<string, { plan: string; amount: number }>
+  /** Plan used for any month not listed (current lean setup). */
+  defaultPlan: { plan: string; amount: number }
+}
+
+export interface FridayKanbanRemote {
+  /** Display name, shown as the machine badge on each card (e.g. "friday-macbook"). */
+  name: string
+  /** Tailscale hostname or IP of the remote Hermes host. */
+  host: string
+  /** SSH user on the remote host. */
+  user: string
+  /** Remote kanban.db path ('~/.hermes/kanban.db' default). */
+  dbPath?: string
+  /** SSH identity file ('~/.ssh/id_ed25519' default). */
+  keyFile?: string
+  /** Per-fetch timeout in ms (default 8000). */
+  timeoutMs?: number
+  /** Remote results cached for this long (ms) to avoid hammering a sleeping MacBook (default 30000). */
+  cacheMs?: number
+}
+
 export interface FridayConfig {
   /** Brand shown in the UI. Override with NEXT_PUBLIC_APP_NAME or config.json. */
   appName: string
@@ -100,19 +124,24 @@ export interface FridayConfig {
   paths: FridayPaths
   services: FridayServices
   keys: FridayKeys
+  billing: FridayBilling
   appearance: FridayAppearance
   chat: FridayChat
+  /** Remote Hermes kanban DBs to mirror alongside the local board. */
+  kanbanRemotes: FridayKanbanRemote[]
 }
 
 /** Shape of data/config.json — everything optional; unknown keys ignored. */
 export type ConfigFile = Partial<
-  Omit<FridayConfig, 'paths' | 'services' | 'github' | 'keys'> & {
+  Omit<FridayConfig, 'paths' | 'services' | 'github' | 'keys' | 'billing'> & {
     github: Partial<FridayConfig['github']>
     paths: Partial<FridayPaths>
     services: Partial<FridayServices>
     keys: Partial<FridayKeys>
+    billing: Partial<FridayBilling>
     appearance: Partial<FridayAppearance>
     chat: Partial<FridayChat>
+    kanbanRemotes: FridayKanbanRemote[]
   }
 >
 
@@ -181,12 +210,34 @@ function buildConfig(): FridayConfig {
       openrouterApiKey: str(env.OPENROUTER_API_KEY, str(file.keys?.openrouterApiKey, '')),
       ticktickToken: str(env.TICKTICK_API_TOKEN, str(file.keys?.ticktickToken, '')),
     },
+    billing: {
+      subscriptions: file.billing?.subscriptions && typeof file.billing.subscriptions === 'object'
+        ? (file.billing.subscriptions as Record<string, { plan: string; amount: number }>)
+        : {
+            '2026-07': { plan: 'Claude Max', amount: 125 },
+            '2026-08': { plan: 'Claude Pro', amount: 20 },
+          },
+      defaultPlan: file.billing?.defaultPlan ?? { plan: 'Claude Pro', amount: 20 },
+    },
     appearance: {
       accentColor: str(env.NEXT_PUBLIC_ACCENT_COLOR, str(file.appearance?.accentColor, '#ff10f0')),
     },
     chat: {
       command: str(env.FRIDAY_CHAT_COMMAND, str(file.chat?.command, 'hermes')),
     },
+    kanbanRemotes: Array.isArray(file.kanbanRemotes)
+      ? file.kanbanRemotes
+          .filter(r => r && typeof r.name === 'string' && r.name && typeof r.host === 'string' && r.host && typeof r.user === 'string' && r.user)
+          .map(r => ({
+            name: r.name,
+            host: r.host,
+            user: r.user,
+            dbPath: str(r.dbPath, '~/.hermes/kanban.db'),
+            keyFile: str(r.keyFile, '~/.ssh/id_ed25519'),
+            timeoutMs: typeof r.timeoutMs === 'number' && r.timeoutMs > 0 ? r.timeoutMs : 8000,
+            cacheMs: typeof r.cacheMs === 'number' && r.cacheMs > 0 ? r.cacheMs : 30000,
+          }))
+      : [],
   }
 }
 
