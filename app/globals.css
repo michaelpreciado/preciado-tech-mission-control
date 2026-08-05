@@ -3559,31 +3559,45 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   font-size: 9px; letter-spacing: 0.12em;
 }
 
-/* 3D card DOM labels (crisp on mobile, overlay the WebGL scene) */
-.mc-card-label {
+/* 3D card chips (Apple-style glass pills — compact so the full roster row fits) */
+.mc-card-chip {
   display: flex; align-items: center; gap: 6px;
   white-space: nowrap;
-  padding: 2px 8px;
-  border-radius: 6px;
-  background: rgba(7,9,14,0.82);
-  border: 1px solid rgba(122,134,152,0.35);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  padding: 4px 8px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.86);
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25), 0 1px 4px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.9);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   font-family: var(--pt-font-mono);
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
+  transition: box-shadow 160ms ease, transform 160ms ease;
 }
-.mc-card-label.is-root {
-  border-color: rgba(76,175,80,0.6);
-  background: rgba(20,36,22,0.85);
+.mc-card-chip:hover { transform: translateY(-2px); }
+.mc-card-chip.is-root { background: rgba(245,250,242,0.92); }
+.mc-card-chip.state-errored { border-color: rgba(255,95,87,0.7); background: rgba(255,246,245,0.92); }
+.mc-card-chip.state-offline { opacity: 0.6; }
+.mc-card-chip.state-working {
+  background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,255,0.9));
+  box-shadow: 0 8px 22px rgba(0,0,0,0.28), 0 0 0 2px rgba(30,144,255,0.3), inset 0 1px 0 rgba(255,255,255,0.95);
 }
-.mc-card-label.state-errored { border-color: rgba(255,95,87,0.7); }
-.mc-card-label.state-offline { opacity: 0.6; }
-.mc-card-label.is-selected { box-shadow: 0 0 0 2px rgba(30,144,255,0.55); }
-.mc-card-name { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; }
-.mc-card-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.mc-card-dot.state-working { animation: sub-blink 1s steps(2) infinite; }
-.mc-card-dot.state-errored { animation: sub-blink 0.6s steps(2) infinite; }
+.mc-card-chip.is-selected {
+  box-shadow: 0 0 0 2.5px rgba(30,144,255,0.6), 0 8px 22px rgba(0,0,0,0.28);
+}
+.mc-chip-icon {
+  display: grid; place-items: center;
+  width: 24px; height: 24px; flex-shrink: 0;
+  border-radius: 7px;
+}
+.mc-chip-name { font-size: 10.5px; font-weight: 800; letter-spacing: 0.1em; color: #161a24; }
+.mc-chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.mc-chip-dot.state-working { animation: mc-dot-pulse 0.9s ease-in-out infinite; }
+.mc-chip-dot.state-errored { animation: mc-dot-pulse 0.5s ease-in-out infinite; }
+@keyframes mc-dot-pulse { 0%,100% { opacity: 1; transform: scale(1);} 50% { opacity: 0.35; transform: scale(0.75);} }
+
 
 
 
