@@ -1,7 +1,7 @@
 'use client'
 
 import { useLiveData } from '../LiveDataProvider'
-import { Window, EmptyTerminal, SkeletonPanel, fmtDate } from '../ui'
+import { Window, EmptyTerminal, SkeletonPanel, fmtDate, Clamp } from '../ui'
 
 /* ── Memory Stream ────────────────────────────────────── */
 
@@ -18,8 +18,8 @@ export function MemoryStream() {
           <div key={m.id} className="mc-commit">
             <span className="sha">{m.source}</span>
             <div>
-              <div className="msg">{m.title}</div>
-              {m.excerpt && <div className="repo">{m.excerpt.slice(0, 80)}</div>}
+              <div className="msg" title={m.title}>{m.title}</div>
+              {m.excerpt && <Clamp className="repo" text={m.excerpt} lines={2} label="MEMORY EXCERPT" />}
             </div>
             <span className="when">{fmtDate(m.updatedAt)}</span>
           </div>

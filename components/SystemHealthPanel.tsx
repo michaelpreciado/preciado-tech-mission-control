@@ -46,8 +46,8 @@ export function SystemHealthPanel() {
         {services.map(svc => (
           <div key={svc.id} className="mc-health-row">
             <span className={`mc-led ${svc.status === 'up' ? 'green' : svc.status === 'warn' ? 'amber' : 'red'}`} />
-            <span className="mc-health-name">{svc.name}</span>
-            <span className="mc-health-detail">{svc.detail}</span>
+            <span className="mc-health-name" title={svc.name}>{svc.name}</span>
+            <span className="mc-health-detail" title={svc.detail}>{svc.detail}</span>
           </div>
         ))}
       </div>

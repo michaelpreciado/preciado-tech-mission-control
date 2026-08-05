@@ -84,7 +84,7 @@ export function ActionFeed() {
           {shown.map(row => (
             <Link key={row.id} href={row.href} className={`mc-feed-row ${row.tone}`}>
               <span className="mc-feed-glyph">{row.glyph}</span>
-              <span className="mc-feed-text">{row.text}</span>
+              <span className="mc-feed-text" title={row.text}>{row.text}</span>
               <span className="mc-feed-arrow">›</span>
             </Link>
           ))}
