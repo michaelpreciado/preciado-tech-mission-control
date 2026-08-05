@@ -3518,3 +3518,45 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   .mc-hud-stage { grid-template-columns: minmax(0, 1fr) 260px; }
 }
 
+/* ── HoloHud3D: WebGL orbital core (Team tab primary view) ──────────── */
+.mc-hud3d-frame {
+  position: relative;
+  border: 1px solid var(--pt-border);
+  border-radius: var(--pt-r-lg);
+  background:
+    radial-gradient(ellipse 60% 55% at 50% 45%, rgba(255,16,240,0.10), transparent 70%),
+    rgba(0,0,0,0.45);
+  box-shadow: var(--pt-glow-md), inset 0 0 50px rgba(255,16,240,0.05);
+  overflow: hidden;
+  min-width: 0;
+}
+.mc-hud3d {
+  width: 100%;
+  height: clamp(340px, 52vh, 560px);
+  position: relative;
+}
+.mc-hud3d-loading {
+  width: 100%; height: 100%;
+  display: grid; place-items: center;
+  font-size: 11px; letter-spacing: 0.22em; color: var(--pt-text-mute);
+}
+.mc-hud3d-overlay {
+  position: absolute; inset: 0;
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 12px 14px;
+  pointer-events: none;
+}
+.mc-hud3d-hudtag {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 10px; letter-spacing: 0.22em; color: var(--pt-text-dim);
+  background: rgba(0,0,0,0.45); padding: 4px 8px; border-radius: var(--pt-r-sm);
+  border: 1px solid var(--pt-border-dim);
+}
+.mc-hud3d-counters {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+  background: rgba(0,0,0,0.45); padding: 4px 8px; border-radius: var(--pt-r-sm);
+  border: 1px solid var(--pt-border-dim);
+  font-size: 9px; letter-spacing: 0.12em;
+}
+
+
