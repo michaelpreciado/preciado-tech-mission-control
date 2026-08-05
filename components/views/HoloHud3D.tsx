@@ -61,7 +61,7 @@ function lighten(hex: string, f: number): string {
 
 /** Agent i horizontal position (evenly spaced, deterministic). */
 function agentX(i: number, total: number): number {
-  return (i - (total - 1) / 2) * 2.55
+  return (i - (total - 1) / 2) * 2.85
 }
 
 /** Depth is intentionally flat — a clean, legible org row (Apple clarity). */
@@ -277,9 +277,9 @@ function Scene({ nodes, selectedId, onSelect }: { nodes: AgentNode[]; selectedId
         minDistance={4}
         maxDistance={13}
         autoRotate
-        autoRotateSpeed={0.35}
+        autoRotateSpeed={0.12}
         enableDamping
-        dampingFactor={0.12}
+        dampingFactor={0.15}
       />
     </>
   )
