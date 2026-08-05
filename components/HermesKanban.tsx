@@ -7,9 +7,10 @@ import { SkeletonPanel, fmtDate } from './ui'
 const POLL_MS = 15_000
 
 const STATUS_TONE: Record<string, string> = {
-  running: 'run', in_progress: 'run',
-  done: 'done', completed: 'done',
-  blocked: 'bad', failed: 'bad', crashed: 'bad', timed_out: 'bad',
+  running: 'run', in_progress: 'run', queued: 'run', pending: 'run',
+  done: 'done', completed: 'done', success: 'done', ok: 'done',
+  blocked: 'warn', waiting: 'warn', needs_input: 'warn',
+  failed: 'bad', crashed: 'bad', timed_out: 'bad', error: 'bad', canceled: 'bad',
 }
 
 function TaskDrawer({ id, onClose }: { id: string; onClose: () => void }) {
