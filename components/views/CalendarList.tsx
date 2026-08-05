@@ -9,6 +9,16 @@ import { EmptyTerminal, SkeletonPanel, fmtDate } from '../ui'
    events" panel and the Scheduler filter view that used to sit here were
    removed. Cron jobs are still surfaced by <CalendarList /> on the Deck. */
 
+/** Map a cron last-run status string to a semantic tone (ok/warn/error/info). */
+function lastRunTone(s?: string): string {
+  const v = (s || '').toLowerCase()
+  if (!v) return ''
+  if (/error|fail|down|offline|crash|timeout|unreachable|not found|404|5\d\d/.test(v)) return 'error'
+  if (/warn|rate.?limit|retry|overdue|degraded|slow/.test(v)) return 'warn'
+  if (/ok|done|success|up|healthy|live|ran/.test(v)) return 'ok'
+  return 'info'
+}
+
 export function CalendarList({ limit }: { limit?: number } = {}) {
   const { data } = useLiveData()
   if (!data) return <SkeletonPanel label="loading scheduler" />
@@ -28,7 +38,7 @@ export function CalendarList({ limit }: { limit?: number } = {}) {
           </div>
           {s.description && <div className="mc-cal-desc">{s.description}</div>}
           <div className="mc-cal-foot">
-            {s.lastRunStatus && <span>last: {s.lastRunStatus}</span>}
+            {s.lastRunStatus && <span className={`mc-status-text ${lastRunTone(s.lastRunStatus)}`}>last: {s.lastRunStatus}</span>}
             {s.nextRunAt && <span>next: {fmtDate(s.nextRunAt)}</span>}
           </div>
         </div>

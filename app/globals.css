@@ -49,6 +49,19 @@
   --mc-warn: #febc2e;
   --mc-crit: #ff5f57;
 
+  /* ── Semantic status tokens (single source for ok/warn/error/info).
+     Every status chip/text resolves through these so the four states are
+     unambiguous and consistent across themes. red=error, amber=warning,
+     green=success, accent/blue=info. */
+  --pt-ok:      var(--mc-ok);
+  --pt-ok-ink:  #2be36b;
+  --pt-warn:    var(--mc-warn);
+  --pt-warn-ink:#ffc857;
+  --pt-error:   var(--mc-crit);
+  --pt-error-ink: #ff8a83;
+  --pt-info:    var(--pt-neon-bright);
+  --pt-info-ink: var(--pt-neon-bright);
+
   --pt-neon-rgb:        255,16,240;
   --pt-neon-bright-rgb: 255,125,248;
   --pt-text-rgb:        248,236,247;
@@ -487,8 +500,10 @@ html[data-theme="friday"] .mc-agent-card-status {
   font-weight: 700;
 }
 html[data-theme="friday"] .mc-refresh-btn:hover { background: var(--pt-neon); color: #08010c; text-shadow: none; }
-html[data-theme="friday"] .mc-task-tag.alert { color: #ffb347; border-color: rgba(255,179,71,0.6); background: rgba(255,179,71,0.08); text-shadow: 0 0 4px rgba(255,179,71,0.5); }
-html[data-theme="friday"] .mc-task-tag.done  { color: var(--pt-neon-bright); border-color: var(--pt-border); }
+html[data-theme="friday"] .mc-task-tag.alert { color: var(--pt-warn-ink); border-color: rgba(254,188,46,0.6); background: rgba(254,188,46,0.08); text-shadow: 0 0 4px rgba(254,188,46,0.5); }
+html[data-theme="friday"] .mc-task-tag.done  { color: var(--pt-ok-ink); border-color: rgba(40,200,64,0.5); background: rgba(40,200,64,0.08); text-shadow: 0 0 4px rgba(40,200,64,0.4); }
+html[data-theme="friday"] .mc-task-tag.error { color: var(--pt-error-ink); border-color: rgba(255,95,87,0.6); background: rgba(255,95,87,0.08); text-shadow: 0 0 4px rgba(255,95,87,0.5); }
+html[data-theme="friday"] .mc-task-tag.info  { color: var(--pt-info-ink); border-color: var(--pt-border); }
 
 /* Cards: square corners across the board */
 html[data-theme="friday"] .mc-task,
@@ -507,14 +522,16 @@ html[data-theme="friday"] .mc-cell:hover {
   box-shadow: var(--pt-glow-sm);
 }
 
-/* LEDs all phosphor */
+/* LEDs all phosphor — BUT keep warn/error semantically distinct so a glance
+   still reads a failure. green/ok resolves to the theme accent. */
 html[data-theme="friday"] .mc-led,
 html[data-theme="friday"] .mc-led.green {
   background: var(--pt-neon-bright);
   box-shadow: 0 0 6px var(--pt-neon-glow), 0 0 12px var(--pt-neon-glow-soft);
 }
-html[data-theme="friday"] .mc-led.amber { background: #ffb347; box-shadow: 0 0 6px rgba(255,179,71,0.6); }
-html[data-theme="friday"] .mc-led.red { background: #ff7066; box-shadow: 0 0 6px rgba(255,112,102,0.7); }
+html[data-theme="friday"] .mc-led.amber { background: var(--pt-warn); box-shadow: 0 0 6px rgba(254,188,46,0.6); }
+html[data-theme="friday"] .mc-led.red { background: var(--pt-error); box-shadow: 0 0 6px rgba(255,95,87,0.7); }
+html[data-theme="friday"] .mc-led.blue { background: var(--pt-info); box-shadow: 0 0 6px var(--pt-neon-glow); }
 
 /* Mute per-agent tint colors so the whole UI reads Pip-Boy green */
 html[data-theme="friday"] .mc-agent-card-name { color: var(--pt-neon-bright) !important; text-shadow: var(--pt-glow-sm) !important; }
@@ -666,7 +683,6 @@ body {
   position: relative;
   overflow: hidden;
   text-decoration: none;
-  transition: color 160ms var(--pt-ease, ease-out), background 160ms var(--pt-ease, ease-out), letter-spacing 220ms var(--pt-ease, ease-out), padding-left 220ms var(--pt-ease, ease-out);
   border-radius: var(--pt-r-sm);
   border: 1px solid transparent;
   color: var(--pt-text-dim);
@@ -678,16 +694,29 @@ body {
   font-family: var(--pt-font-mono);
   text-align: left; width: 100%;
 }
-.mc-nav-item:hover { color: var(--pt-text-high); border-color: var(--pt-border-dim); background: rgba(var(--pt-neon-rgb),0.06); padding-left: 16px; letter-spacing: 0.06em; }
-.mc-nav-item:hover .mc-nav-ic { opacity: 1; transform: translateX(2px) scale(1.15); color: var(--pt-neon-bright); text-shadow: var(--pt-glow-sm); }
-.mc-nav-item:hover .mc-nav-rail { transform: scaleY(1); }
+/* ── Hover = "preview / pointer here". Deliberately quiet: a faint wash and a
+   colour lift, NO filled box and NO border, so it can never be confused with
+   the selected item. The rail slides in as a soft hint, not a hard highlight. */
+.mc-nav-item:hover {
+  color: var(--pt-text-high);
+  background: rgba(var(--pt-neon-rgb),0.05);
+  padding-left: 14px;
+}
+.mc-nav-item:hover .mc-nav-ic { color: var(--pt-neon-bright); }
+.mc-nav-item:hover .mc-nav-rail { transform: scaleY(0.6); opacity: 0.5; }
 .mc-nav-item:hover .mc-nav-scan { animation: nav-scan 0.7s var(--pt-ease, ease-out); }
-.mc-nav-item .mc-nav-ic { width: 14px; opacity: 0.7; transition: transform 220ms var(--pt-ease, ease-out), color 200ms, text-shadow 200ms; }
+.mc-nav-item .mc-nav-ic {
+  width: 16px; height: 16px;
+  display: grid; place-items: center;
+  opacity: 0.75;
+  transition: transform 220ms var(--pt-ease, ease-out), color 200ms;
+}
 .mc-nav-item .mc-nav-rail {
   position: absolute; left: 0; top: 6px; bottom: 6px; width: 2px;
   background: var(--pt-neon-bright); box-shadow: 0 0 6px var(--pt-neon-glow);
   transform: scaleY(0); transform-origin: top center;
-  transition: transform 220ms var(--pt-ease, ease-out);
+  opacity: 0;
+  transition: transform 220ms var(--pt-ease, ease-out), opacity 220ms var(--pt-ease, ease-out);
 }
 .mc-nav-item .mc-nav-scan {
   position: absolute; inset: 0; pointer-events: none;
@@ -698,22 +727,22 @@ body {
   0%   { transform: translateX(-110%); }
   100% { transform: translateX(110%); }
 }
-.mc-nav-item.is-active .mc-nav-rail { transform: scaleY(1); }
+/* ── Active = selected. Unmistakable: solid accent fill + dark glyph/label and
+   a full-height rail. The one and only "you are here" signal in the rail. */
+.mc-nav-item.is-active .mc-nav-rail { transform: scaleY(1); opacity: 1; }
 .mc-nav-item.is-active {
-  background: rgba(var(--pt-neon-rgb),0.10);
-  border-color: var(--pt-border);
-  color: var(--pt-neon-bright);
-  box-shadow: var(--pt-glow-sm);
-  text-shadow: var(--pt-glow-sm);
+  background: var(--pt-neon);
+  border-color: var(--pt-neon-bright);
+  color: var(--pt-active-ink, #08010c);
+  box-shadow: 0 0 0 1px var(--pt-neon-bright), 0 0 14px var(--pt-neon-glow);
+  text-shadow: none;
 }
-.mc-nav-item.is-active::after {
-  content: '◆'; margin-left: auto;
-  color: var(--pt-neon-bright);
-  text-shadow: var(--pt-glow-sm);
-  font-size: 10px;
-  animation: pulse-fade 1.6s ease-in-out infinite;
+.mc-nav-item.is-active .mc-nav-ic {
+  color: var(--pt-active-ink, #08010c);
+  opacity: 1;
+  text-shadow: none;
 }
-@keyframes pulse-fade { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+.mc-nav-item.is-active .mc-nav-rail { background: var(--pt-neon-bright); opacity: 1; }
 
 .mc-side-footer {
   margin-top: auto;
@@ -1105,11 +1134,12 @@ body {
   flex-shrink: 0;
 }
 .mc-led.amber {
-  background: #febc2e;
+  background: var(--pt-warn);
   box-shadow: 0 0 6px rgba(254,188,46,0.55), 0 0 12px rgba(254,188,46,0.2);
 }
-.mc-led.green { background: #28c840; box-shadow: 0 0 6px rgba(40,200,64,0.7), 0 0 12px rgba(40,200,64,0.25); }
-.mc-led.red { background: #ff5f57; box-shadow: 0 0 6px rgba(255,95,87,0.7), 0 0 12px rgba(255,95,87,0.25); }
+.mc-led.green { background: var(--pt-ok); box-shadow: 0 0 6px rgba(40,200,64,0.7), 0 0 12px rgba(40,200,64,0.25); }
+.mc-led.red { background: var(--pt-error); box-shadow: 0 0 6px rgba(255,95,87,0.7), 0 0 12px rgba(255,95,87,0.25); }
+.mc-led.blue { background: var(--pt-info); box-shadow: 0 0 6px rgba(var(--pt-neon-rgb),0.6), 0 0 12px rgba(var(--pt-neon-rgb),0.25); }
 .mc-led.dim { animation: none; opacity: 0.45; }
 @keyframes led-pulse {
   0%, 100% { transform: scale(1); filter: brightness(1); }
@@ -1259,8 +1289,10 @@ body {
   flex-shrink: 0;
   text-shadow: var(--pt-glow-sm);
 }
-.mc-task-tag.alert { color: #febc2e; border-color: rgba(254,188,46,0.5); background: rgba(254,188,46,0.08); text-shadow: 0 0 4px rgba(254,188,46,0.5); }
-.mc-task-tag.done { color: #28c840; border-color: rgba(40,200,64,0.5); background: rgba(40,200,64,0.08); text-shadow: 0 0 4px rgba(40,200,64,0.5); }
+.mc-task-tag.alert { color: var(--pt-warn-ink); border-color: rgba(254,188,46,0.5); background: rgba(254,188,46,0.08); text-shadow: 0 0 4px rgba(254,188,46,0.5); }
+.mc-task-tag.done { color: var(--pt-ok-ink); border-color: rgba(40,200,64,0.5); background: rgba(40,200,64,0.08); text-shadow: 0 0 4px rgba(40,200,64,0.5); }
+.mc-task-tag.error { color: var(--pt-error-ink); border-color: rgba(255,95,87,0.5); background: rgba(255,95,87,0.08); text-shadow: 0 0 4px rgba(255,95,87,0.5); }
+.mc-task-tag.info { color: var(--pt-info-ink); border-color: var(--pt-border); }
 .mc-task-meta {
   margin-top: 8px;
   display: flex; align-items: center; gap: 8px;
@@ -2499,9 +2531,19 @@ html[data-theme="friday"] .mc-pipe-name { color: var(--pt-neon-bright); text-sha
   color: var(--pt-text-dim);
   flex-shrink: 0;
 }
-.mc-hk-status.run  { color: var(--pt-neon-bright); border-color: var(--pt-border); text-shadow: var(--pt-glow-sm); }
-.mc-hk-status.done { color: #28c840; border-color: rgba(40,200,64,0.5); }
-.mc-hk-status.bad  { color: #ff8a83; border-color: rgba(255,95,87,0.5); }
+.mc-hk-status.run  { color: var(--pt-info-ink); border-color: var(--pt-border); text-shadow: var(--pt-glow-sm); }
+.mc-hk-status.done { color: var(--pt-ok-ink); border-color: rgba(40,200,64,0.5); }
+.mc-hk-status.bad  { color: var(--pt-error-ink); border-color: rgba(255,95,87,0.5); }
+.mc-hk-status.warn { color: var(--pt-warn-ink); border-color: rgba(254,188,46,0.5); }
+
+/* ── Semantic inline status text (unbordered — for "last: error" readouts
+   and any status string rendered as plain copy). Drives SYS-05: a failure
+   reads as a failure, not as another calm-blue row. */
+.mc-status-text { font-weight: 700; letter-spacing: 0.06em; }
+.mc-status-text.ok    { color: var(--pt-ok-ink); text-shadow: 0 0 4px rgba(40,200,64,0.4); }
+.mc-status-text.warn  { color: var(--pt-warn-ink); text-shadow: 0 0 4px rgba(254,188,46,0.4); }
+.mc-status-text.error { color: var(--pt-error-ink); text-shadow: 0 0 5px rgba(255,95,87,0.5); }
+.mc-status-text.info  { color: var(--pt-info-ink); text-shadow: 0 0 4px rgba(var(--pt-neon-rgb),0.4); }
 
 .mc-drawer-overlay {
   position: fixed; inset: 0;

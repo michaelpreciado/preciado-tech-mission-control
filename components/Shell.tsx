@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LiveDataProvider, useLiveData } from './LiveDataProvider'
+import { Icon, type IconName } from './icons'
 
 /** Brand identity resolved server-side in lib/config.ts, provided by <Shell>. */
 const BrandContext = createContext<{ appName: string; appTagline: string }>({
@@ -37,27 +38,27 @@ function usePendingApprovals(): number {
   return count
 }
 
-const NAV = [
+const NAV: { section: string; items: { id: string; label: string; icon: IconName }[] }[] = [
   { section: 'Overview', items: [
-    { id: '/', label: 'Deck', glyph: '🏠' },
-    { id: '/kanban', label: 'Kanban', glyph: '⛁' },
-    { id: '/approvals', label: 'Approvals', glyph: '✅' },
-    { id: '/calendar', label: 'Calendar', glyph: '📅' },
+    { id: '/', label: 'Deck', icon: 'deck' },
+    { id: '/kanban', label: 'Kanban', icon: 'kanban' },
+    { id: '/approvals', label: 'Approvals', icon: 'approvals' },
+    { id: '/calendar', label: 'Calendar', icon: 'calendar' },
   ]},
   { section: 'Intelligence', items: [
-    { id: '/chat', label: 'Chat', glyph: '💬' },
-    { id: '/github', label: 'GitHub', glyph: '🐙' },
-    { id: '/costs', label: 'Costs', glyph: '📊' },
+    { id: '/chat', label: 'Chat', icon: 'chat' },
+    { id: '/github', label: 'GitHub', icon: 'github' },
+    { id: '/costs', label: 'Costs', icon: 'costs' },
   ]},
   { section: 'Operations', items: [
-    { id: '/projects', label: 'Projects', glyph: '📁' },
-    { id: '/pipeline', label: 'Web Dev Pipeline', glyph: '🌐' },
-    { id: '/ml-content', label: 'ML Content', glyph: '🤖' },
+    { id: '/projects', label: 'Projects', icon: 'projects' },
+    { id: '/pipeline', label: 'Web Dev Pipeline', icon: 'pipeline' },
+    { id: '/ml-content', label: 'ML Content', icon: 'ml' },
   ]},
   { section: 'System', items: [
-    { id: '/memory', label: 'Memory', glyph: '🧠' },
-    { id: '/team', label: 'Team', glyph: '👥' },
-    { id: '/setup', label: 'Setup', glyph: '🛠' },
+    { id: '/memory', label: 'Memory', icon: 'memory' },
+    { id: '/team', label: 'Team', icon: 'team' },
+    { id: '/setup', label: 'Setup', icon: 'setup' },
   ]},
 ]
 
@@ -72,7 +73,7 @@ function Sidebar() {
   return (
     <aside className="mc-side" aria-label="Main navigation">
       <div className="mc-brand">
-        <div className="mc-brand-mark">🏠</div>
+        <div className="mc-brand-mark"><Icon name="brand" size={20} /></div>
         <div className="mc-brand-text">
           <div className="mc-brand-name">
             {appName.split(' ').map(word => <span key={word} style={{ display: 'block' }}>{word}</span>)}
@@ -95,7 +96,7 @@ function Sidebar() {
               style={{ '--i': idx } as React.CSSProperties}
             >
               <span className="mc-nav-rail" />
-              <span className="mc-nav-ic">{it.glyph}</span>
+              <span className="mc-nav-ic"><Icon name={it.icon} size={16} /></span>
               <span className="mc-nav-label">{it.label}</span>
               {it.id === '/approvals' && pending > 0 && (
                 <span className="mc-nav-badge">{pending}</span>
@@ -135,7 +136,7 @@ function MobileNav() {
             <Link key={item.id} href={item.id} aria-current={active ? 'page' : undefined}
               className={`mc-mobile-item ${active ? 'is-active' : ''}`}>
               <span className="mc-mobile-glyph">
-                {item.glyph}
+                <Icon name={item.icon} size={20} />
                 {item.id === '/approvals' && pending > 0 && (
                   <span className="mc-mobile-badge">{pending > 9 ? '9+' : pending}</span>
                 )}
