@@ -58,7 +58,7 @@ export type CrewMember = {
   role: string
   station: string
   room: string
-  status: 'active' | 'standby' | 'sleeping' | 'on-demand' | 'attention'
+  status: 'active' | 'standby' | 'sleeping' | 'on-demand' | 'attention' | 'offline'
   model?: string
   signal: string
   lastRun?: string

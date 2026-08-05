@@ -7,8 +7,12 @@ import type { SystemHealthData } from '@/lib/types'
 
 /* ── Cockpit (stat header) ────────────────────────────── */
 
+// Recency threshold for the LIVE badge — a poll older than this is stale, not
+// live. Mirrors the crew staleness window in lib/collectors/crew.ts (SYS-07).
+const STALE_MS = 1000 * 60 * 60 * 24 // 24h
+
 export function CommandHeader() {
-  const { data, isLive, refresh } = useLiveData()
+  const { data, isLive, refresh, lastUpdated } = useLiveData()
   const { appName, appTagline } = useBrand()
   const [now, setNow] = useState(() => new Date())
   const [spinning, setSpinning] = useState(false)
@@ -62,6 +66,19 @@ export function CommandHeader() {
   const time = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true })
   const allTasks = data?.tasks ?? []
   const cron = data?.cron ?? []
+  const crew = data?.crew ?? []
+
+  // SYS-06: the "agents online" chip must be derived from the SAME crew statuses
+  // the Team roster renders — not a raw crew.length that silently claims every
+  // agent is online while the roster shows OFFLINE/SLEEPING. "Online" here means
+  // present in the mesh: any status except offline (no activity > stale window)
+  // or sleeping (never configured). This keeps header and body in agreement.
+  const onlineAgents = crew.filter(c => c.status !== 'offline' && c.status !== 'sleeping').length
+
+  // SYS-07: degrade the LIVE badge when the last successful poll is itself stale.
+  const updatedAgoMs = lastUpdated ? Date.now() - lastUpdated : data ? Date.now() - Date.parse(data.generatedAt) : null
+  const dataStale = updatedAgoMs !== null && updatedAgoMs > STALE_MS
+  const liveState = !isLive ? 'offline' : dataStale ? 'stale' : 'live'
 
   // Every chip is something you might act on. `alert` flips it amber, so a
   // glance at the colour is enough — you only read the numbers if one is lit.
@@ -104,8 +121,9 @@ export function CommandHeader() {
                 <div className="mc-stat-val">{s.value}</div>
               </div>
             ))}
-            <div className="mc-live-badge">
-              <span className={`mc-led ${isLive ? 'green' : ''}`} /> {isLive ? 'LIVE' : 'OFFLINE'}
+            <div className="mc-live-badge" data-state={liveState}>
+              <span className={`mc-led ${liveState === 'live' ? 'green' : liveState === 'stale' ? 'amber' : ''}`} />
+              {liveState === 'live' ? 'LIVE' : liveState === 'stale' ? 'STALE' : 'OFFLINE'}
               <span style={{ color: 'var(--pt-text-mute)', marginLeft: 6, letterSpacing: '0.06em' }}>
                 last&nbsp;{time}
               </span>
@@ -122,7 +140,7 @@ export function CommandHeader() {
           <span className="mc-cock-sub" style={{ color: 'var(--pt-neon)', textShadow: 'var(--pt-glow-sm)' }}>
             {appName} / {appTagline}
           </span>
-          <span className="mc-cock-sub">// agents: {data?.crew?.length ?? '—'} — {isLive ? 'online' : 'offline'}</span>
+          <span className="mc-cock-sub">// agents: {crew.length ? `${onlineAgents} online / ${crew.length}` : '—'} — {liveState}</span>
           {data?.warnings?.length ? (
             <div className="mc-cockpit-warn">⚠ {data.warnings[0]}</div>
           ) : null}

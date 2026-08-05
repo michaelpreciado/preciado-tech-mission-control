@@ -14,6 +14,7 @@ export function statusLabel(s?: string) {
   if (s === 'sleeping') return 'SLEEPING'
   if (s === 'on-demand') return 'ON-DEMAND'
   if (s === 'attention') return 'ATTENTION'
+  if (s === 'offline') return 'OFFLINE'
   return (s || 'STANDBY').toUpperCase()
 }
 

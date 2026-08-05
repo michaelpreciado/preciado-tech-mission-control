@@ -32,6 +32,7 @@ function accentToTint(accent: string) {
 function AgentCard({ agent }: { agent: CrewMember }) {
   const tint = accentToTint(agent.accent)
   const live = agent.status === 'active' || agent.status === 'on-demand'
+  const offline = agent.status === 'offline'
   return (
     <div className="mc-agent-card">
       <div className="mc-agent-card-pix">
@@ -39,9 +40,9 @@ function AgentCard({ agent }: { agent: CrewMember }) {
       </div>
       <div className="mc-agent-card-info">
         <div className="mc-agent-card-row">
-          <span className={`mc-led ${live ? '' : 'dim'}`} style={{ background: tint.fr, boxShadow: `0 0 6px ${tint.glow}` }} />
+          <span className={`mc-led ${live ? '' : 'dim'} ${offline ? 'red' : ''}`} style={{ background: offline ? undefined : tint.fr, boxShadow: offline ? undefined : `0 0 6px ${tint.glow}` }} />
           <span className="mc-agent-card-name" style={{ color: tint.fr, textShadow: `0 0 6px ${tint.glow}` }}>{agent.name}</span>
-          <span className={`mc-agent-card-status ${live ? 'live' : ''}`}>{statusLabel(agent.status)}</span>
+          <span className={`mc-agent-card-status ${live ? 'live' : ''} ${offline ? 'offline' : ''}`}>{statusLabel(agent.status)}</span>
         </div>
         <div className="mc-agent-card-role">{agent.role}</div>
         <div className="mc-agent-card-meta">
