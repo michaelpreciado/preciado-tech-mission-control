@@ -212,9 +212,9 @@ function Scene({ nodes, selectedId, onSelect }: { nodes: AgentNode[]; selectedId
         minDistance={4}
         maxDistance={13}
         autoRotate
-        autoRotateSpeed={0.6}
+        autoRotateSpeed={0.35}
         enableDamping
-        dampingFactor={0.1}
+        dampingFactor={0.12}
       />
     </>
   )
