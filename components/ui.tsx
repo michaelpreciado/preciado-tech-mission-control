@@ -87,7 +87,6 @@ export function Window({ tag, title, meta, children, style }: {
       onDoubleClick={floating ? dock : undefined}
       {...(floating ? drag : {})}
     >
-      <div className="mc-window-dots"><span /><span /><span /></div>
       <div className="mc-window-title">
         {tag && <span className="mc-win-tag">{tag}</span>}
         <span>{title}</span>
@@ -111,7 +110,6 @@ export function Window({ tag, title, meta, children, style }: {
       <>
         <div className="mc-window mc-window-ghost" style={style}>
           <div className="mc-window-head">
-            <div className="mc-window-dots"><span /><span /><span /></div>
             <div className="mc-window-title">
               {tag && <span className="mc-win-tag">{tag}</span>}
               <span>{title}</span>
