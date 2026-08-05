@@ -406,9 +406,6 @@ html[data-theme="friday"] .mc-window-head {
   background: linear-gradient(180deg, rgba(var(--pt-neon-rgb),0.18), rgba(var(--pt-neon-rgb),0.04));
   border-bottom: 1px solid var(--pt-border);
 }
-html[data-theme="friday"] .mc-window-dots span { background: var(--pt-neon-deep) !important; border-color: var(--pt-border); }
-html[data-theme="friday"] .mc-window-dots span:nth-child(2) { background: var(--pt-neon) !important; }
-html[data-theme="friday"] .mc-window-dots span:nth-child(3) { background: var(--pt-neon-bright) !important; }
 html[data-theme="friday"] .mc-window-title,
 html[data-theme="friday"] .mc-window-meta { color: var(--pt-text-high); text-shadow: var(--pt-glow-sm); }
 html[data-theme="friday"] .mc-window-title .mc-win-tag { color: var(--pt-neon-bright); }
@@ -440,7 +437,6 @@ html[data-theme="friday"] .mc-stat::after {
 }
 html[data-theme="friday"] .mc-stat-head { color: var(--pt-text-dim); }
 html[data-theme="friday"] .mc-stat-val { font-weight: 700; }
-
 /* Section header — Vault-Tec angle brackets */
 html[data-theme="friday"] .mc-ascii-head {
   font-size: 11px;
@@ -751,7 +747,7 @@ body {
 .mc-cockpit {
   border: 1px solid var(--pt-border-dim);
   border-radius: var(--pt-r-lg);
-  padding: 18px 26px;
+  padding: 8px 16px;
   background: rgba(10,2,12,0.92);
   position: sticky;
   top: 0;
@@ -769,21 +765,18 @@ body {
 .mc-cockpit-corner { display: none; }
 
 .mc-cockpit-row {
-  display: flex; align-items: flex-start; gap: 28px;
+  display: flex; align-items: center; gap: 16px;
   position: relative;
+  min-height: 40px;
 }
-.mc-cockpit-meta {
-  flex: 1;
-  display: flex; flex-direction: column; gap: 4px;
-  padding-top: 12px;
-}
-.mc-cockpit-meta .mc-cock-sub {
-  font-size: 11px; color: var(--pt-text-dim); letter-spacing: 0.04em;
-}
+/* Compact single-line header: brand + stats share one row; the tagline and
+   agent-count lines were dropped (redundant breadcrumbs). Warnings stay but
+   as a slim chip that wraps onto its own line rather than stretching the bar. */
 .mc-cockpit-warn {
-  margin-top: auto;
   font-size: 10px; color: rgba(254, 188, 46, 0.85);
   display: flex; align-items: center; gap: 6px;
+  max-width: 340px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
 /* ── Floating windows ─────────────────────────────────── */
@@ -1013,42 +1006,40 @@ body {
 .mc-hero-brand {
   margin: 0;
   font-family: var(--pt-font-mono);
-  /* clamp keeps long brand names from clipping at 375px */
-  font-size: clamp(26px, 8.5vw, 54px);
-  line-height: 1.05;
+  /* Compact header: brand is a slim label beside the chips, not a hero banner.
+     clamp keeps long brand names from clipping at 375px. */
+  font-size: clamp(15px, 2.2vw, 22px);
+  line-height: 1;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--pt-text-high);
   text-shadow: var(--pt-glow-sm);
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
 }
 
 /* ── Stat tiles ───────────────────────────────────────── */
-.mc-stats { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
+.mc-stats { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-left: auto; }
 .mc-stat {
-  display: flex; align-items: center; gap: 9px;
+  display: flex; align-items: center; gap: 6px;
   border: 1px solid var(--pt-border-dim);
-  border-radius: var(--pt-r-sm);
-  padding: 6px 12px;
+  border-radius: var(--pt-r-pill);
+  padding: 3px 10px;
   background: transparent;
   min-width: 0;
   position: relative;
 }
 .mc-stat-corner { display: none; }
 
-.mc-stat-head {
-  display: flex; align-items: center; gap: 5px;
-  font-size: 9px; letter-spacing: 0.16em;
-  color: var(--pt-text-dim);
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-.mc-stat-head svg, .mc-stat-head .mc-stat-glyph {
+.mc-stat-glyph {
+  font-size: 10px;
   color: var(--pt-neon); text-shadow: var(--pt-glow-sm);
 }
 .mc-stat-val {
-  font-size: 15px; font-weight: 700;
+  font-size: 13px; font-weight: 700;
   color: var(--pt-text-high);
   letter-spacing: 0.02em;
   margin-top: 0;
@@ -1057,24 +1048,23 @@ body {
 /* A lit chip means something wants your attention — colour carries the signal
    so the row is readable without parsing every number. */
 .mc-stat.is-alert { border-color: rgba(254,188,46,0.55); background: rgba(254,188,46,0.07); }
-.mc-stat.is-alert .mc-stat-head { color: rgba(254,188,46,0.85); }
-.mc-stat.is-alert .mc-stat-head .mc-stat-glyph { color: #febc2e; text-shadow: 0 0 6px rgba(254,188,46,0.6); }
+.mc-stat.is-alert .mc-stat-glyph { color: #febc2e; text-shadow: 0 0 6px rgba(254,188,46,0.6); }
 .mc-stat.is-alert .mc-stat-val { color: #febc2e; text-shadow: 0 0 8px rgba(254,188,46,0.45); }
 
 .mc-live-badge {
   display: inline-flex; align-items: center; gap: 6px;
-  padding: 5px 10px;
+  padding: 3px 10px;
   border: 1px solid var(--pt-border);
-  border-radius: var(--pt-r-sm);
+  border-radius: var(--pt-r-pill);
   font-size: 10px; letter-spacing: 0.18em;
   color: var(--pt-text);
   background: rgba(var(--pt-neon-rgb),0.06);
   text-transform: uppercase;
 }
 .mc-refresh-btn {
-  padding: 5px 12px;
+  padding: 3px 10px;
   border: 1px solid var(--pt-border);
-  border-radius: var(--pt-r-sm);
+  border-radius: var(--pt-r-pill);
   background: transparent;
   color: var(--pt-text);
   font-family: var(--pt-font-mono);
@@ -1173,14 +1163,7 @@ body {
   border-bottom: 1px solid var(--pt-border-dim);
   background: linear-gradient(180deg, rgba(var(--pt-neon-rgb),0.06), transparent);
 }
-.mc-window-dots { display: flex; gap: 6px; margin-right: 4px; }
-.mc-window-dots span {
-  width: 10px; height: 10px; border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.15);
-}
-.mc-window-dots span:nth-child(1) { background: var(--pt-tl-red); }
-.mc-window-dots span:nth-child(2) { background: var(--pt-tl-yellow); }
-.mc-window-dots span:nth-child(3) { background: var(--pt-tl-green); }
+.mc-window-dots { display: none; }
 .mc-window-title {
   font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
   color: var(--pt-text); flex: 1;
@@ -1587,12 +1570,10 @@ h1 {
 
 @media (max-width: 1200px) {
   .mc-shell { grid-template-columns: 200px 1fr; }
-  .mc-cockpit { padding: 18px 20px; }
-  .mc-cockpit-row { flex-direction: column; gap: 14px; }
-  .mc-cockpit-meta { padding-top: 0; }
+  .mc-cockpit { padding: 8px 16px; }
   .mc-deck-grid { grid-template-columns: 1fr; }
-  .mc-stat { padding: 6px 11px; }
-  .mc-stat-val { font-size: 15px; }
+  .mc-stat { padding: 3px 9px; }
+  .mc-stat-val { font-size: 13px; }
 }
 
 /* Compact icon rail.
@@ -1859,13 +1840,11 @@ h1 {
   /* Header / cockpit — on a 375×667 screen a pinned header with five chips
      wrapping to 3-4 rows costs ~40% of the viewport before any content shows,
      so let it scroll away and pin the kanban column heads to the top instead. */
-  .mc-cockpit { position: static; padding: 14px; }
+  .mc-cockpit { position: static; padding: 12px 14px; }
   :root { --mc-header-h: 0px; }
-  .mc-cockpit-row { flex-direction: column; gap: 10px; }
-  .mc-cockpit-meta { padding-top: 0; }
-  .mc-stat { padding: 6px 10px; }
-  .mc-stat-val { font-size: 14px; }
-  .mc-stat-head { font-size: 9px; }
+  .mc-cockpit-row { flex-wrap: wrap; gap: 8px; }
+  .mc-stat { padding: 3px 9px; }
+  .mc-stat-val { font-size: 13px; }
   .mc-stats { flex-wrap: wrap; gap: 6px; }
 
   /* Tabs */

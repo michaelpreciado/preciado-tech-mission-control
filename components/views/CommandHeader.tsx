@@ -9,17 +9,11 @@ import type { SystemHealthData } from '@/lib/types'
 
 export function CommandHeader() {
   const { data, isLive, refresh } = useLiveData()
-  const { appName, appTagline } = useBrand()
-  const [now, setNow] = useState(() => new Date())
+  const { appName } = useBrand()
   const [spinning, setSpinning] = useState(false)
   const [approvals, setApprovals] = useState<number | null>(null)
   const [health, setHealth] = useState<SystemHealthData | null>(null)
   const cockpitRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 1000)
-    return () => clearInterval(t)
-  }, [])
 
   // Approvals + service health aren't part of the mission-control poll, so the
   // header pulls them itself. Failures leave the chip at its last known value
@@ -59,7 +53,6 @@ export function CommandHeader() {
     return () => { ro.disconnect(); window.removeEventListener('resize', publish) }
   }, [])
 
-  const time = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true })
   const allTasks = data?.tasks ?? []
   const cron = data?.cron ?? []
 
@@ -88,45 +81,31 @@ export function CommandHeader() {
       <span className="mc-cockpit-corner bl" />
       <span className="mc-cockpit-corner br" />
       <div className="mc-cockpit-row">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <h1 className="mc-hero-brand">{appName}</h1>
-          <div className="mc-stats">
-            {stats.map(s => (
-              <div key={s.key} className={`mc-stat ${s.alert ? 'is-alert' : ''}`}>
-                <span className="mc-stat-corner tl" />
-                <span className="mc-stat-corner tr" />
-                <span className="mc-stat-corner bl" />
-                <span className="mc-stat-corner br" />
-                <div className="mc-stat-head">
-                  <span className="mc-stat-glyph">{s.glyph}</span>
-                  <span>{s.label}</span>
-                </div>
-                <div className="mc-stat-val">{s.value}</div>
-              </div>
-            ))}
-            <div className="mc-live-badge">
-              <span className={`mc-led ${isLive ? 'green' : ''}`} /> {isLive ? 'LIVE' : 'OFFLINE'}
-              <span style={{ color: 'var(--pt-text-mute)', marginLeft: 6, letterSpacing: '0.06em' }}>
-                last&nbsp;{time}
-              </span>
+        <h1 className="mc-hero-brand">{appName}</h1>
+        <div className="mc-stats">
+          {stats.map(s => (
+            <div key={s.key} className={`mc-stat ${s.alert ? 'is-alert' : ''}`} title={s.label}>
+              <span className="mc-stat-corner tl" />
+              <span className="mc-stat-corner tr" />
+              <span className="mc-stat-corner bl" />
+              <span className="mc-stat-corner br" />
+              <span className="mc-stat-glyph">{s.glyph}</span>
+              <span className="mc-stat-val">{s.value}</span>
             </div>
-            <button
-              className={`mc-refresh-btn ${spinning ? 'spin' : ''}`}
-              onClick={() => { setSpinning(true); refresh(); setTimeout(() => setSpinning(false), 800) }}
-            >
-              ↻ refresh
-            </button>
+          ))}
+          <div className="mc-live-badge">
+            <span className={`mc-led ${isLive ? 'green' : ''}`} /> {isLive ? 'LIVE' : 'OFFLINE'}
           </div>
+          <button
+            className={`mc-refresh-btn ${spinning ? 'spin' : ''}`}
+            onClick={() => { setSpinning(true); refresh(); setTimeout(() => setSpinning(false), 800) }}
+          >
+            ↻
+          </button>
         </div>
-        <div className="mc-cockpit-meta">
-          <span className="mc-cock-sub" style={{ color: 'var(--pt-neon)', textShadow: 'var(--pt-glow-sm)' }}>
-            {appName} / {appTagline}
-          </span>
-          <span className="mc-cock-sub">// agents: {data?.crew?.length ?? '—'} — {isLive ? 'online' : 'offline'}</span>
-          {data?.warnings?.length ? (
-            <div className="mc-cockpit-warn">⚠ {data.warnings[0]}</div>
-          ) : null}
-        </div>
+        {data?.warnings?.length ? (
+          <div className="mc-cockpit-warn">⚠ {data.warnings[0]}</div>
+        ) : null}
       </div>
     </div>
   )
