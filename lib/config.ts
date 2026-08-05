@@ -72,9 +72,30 @@ export interface FridayAppearance {
   accentColor: string
 }
 
+export interface FridayChatRemote {
+  /** Display name, shown as the device badge on each conversation (e.g. "friday-macbook"). */
+  name: string
+  /** Tailscale hostname or IP of the remote Hermes host. */
+  host: string
+  /** SSH user on the remote host. */
+  user: string
+  /** Remote state.db paths to read ('~/.hermes/state.db' + named profiles). */
+  dbPaths?: string[]
+  /** SSH identity file ('~/.ssh/id_ed25519' default). */
+  keyFile?: string
+  /** Per-fetch timeout in ms (default 8000). */
+  timeoutMs?: number
+  /** Remote results cached for this long (ms) to avoid hammering a sleeping MacBook (default 30000). */
+  cacheMs?: number
+}
+
 export interface FridayChat {
-  /** Agent CLI binary used by the /chat tab ('' = chat disabled). Must support `-z <prompt>` one-shot mode (Hermes-compatible). */
+  /** Agent CLI binary used by the chat ('' = chat disabled). Must support `-z <prompt>` one-shot mode and `--resume <id>` (Hermes-compatible). */
   command: string
+  /** Remote Hermes profiles whose conversations should be mirrored (default: []). */
+  remotes: FridayChatRemote[]
+  /** Optional explicit list of named local profiles to include ('' = auto-discover ~/.hermes/profiles/*). */
+  profiles?: string[]
 }
 
 export interface FridayKeys {
@@ -224,6 +245,20 @@ function buildConfig(): FridayConfig {
     },
     chat: {
       command: str(env.FRIDAY_CHAT_COMMAND, str(file.chat?.command, 'hermes')),
+      remotes: Array.isArray(file.chat?.remotes)
+        ? file.chat!.remotes!
+          .filter(r => r && typeof r.name === 'string' && r.name && typeof r.host === 'string' && r.host && typeof r.user === 'string' && r.user)
+          .map(r => ({
+            name: r.name,
+            host: r.host,
+            user: r.user,
+            dbPaths: Array.isArray(r.dbPaths) && r.dbPaths.length ? r.dbPaths : ['~/.hermes/state.db'],
+            keyFile: str(r.keyFile, '~/.ssh/id_ed25519'),
+            timeoutMs: typeof r.timeoutMs === 'number' && r.timeoutMs > 0 ? r.timeoutMs : 8000,
+            cacheMs: typeof r.cacheMs === 'number' && r.cacheMs > 0 ? r.cacheMs : 30000,
+          }))
+        : [],
+      profiles: Array.isArray(file.chat?.profiles) ? file.chat!.profiles!.filter(p => typeof p === 'string' && p) : [],
     },
     kanbanRemotes: Array.isArray(file.kanbanRemotes)
       ? file.kanbanRemotes

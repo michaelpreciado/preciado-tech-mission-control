@@ -4098,3 +4098,248 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   .mc-home-tile-value { font-size: 26px; }
   .mc-home-clock { font-size: 19px; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   CHAT CONSOLE (cc-*) — all Hermes conversations, every agent/device.
+   Two-pane console on desktop; single paned stack on mobile.
+   Performance: internal-pane scrolling + content-visibility so only
+   on-screen rows/bubbles are painted (compositor-smooth ~120fps scroll).
+   ═══════════════════════════════════════════════════════════ */
+:root {
+  --cc-pane-h: calc(100dvh - 132px);
+}
+.cc {
+  display: grid;
+  grid-template-columns: minmax(320px, 380px) 1fr;
+  gap: 14px;
+  height: var(--cc-pane-h);
+  min-height: 420px;
+}
+.cc-listpane, .cc-threadpane {
+  display: flex; flex-direction: column; gap: 10px;
+  border: 1px solid var(--pt-border-dim);
+  border-radius: var(--pt-r-lg);
+  background: rgba(10,2,12,0.55);
+  min-width: 0; min-height: 0;
+  overflow: hidden;
+}
+/* ── Toolbar / search ── */
+.cc-toolbar { display: flex; gap: 8px; padding: 12px 12px 0; }
+.cc-search {
+  flex: 1; display: flex; align-items: center; gap: 8px;
+  border: 1px solid var(--pt-border-dim); border-radius: 10px;
+  padding: 0 10px; color: var(--pt-text-mute); background: rgba(0,0,0,0.35);
+}
+.cc-search input { flex: 1; background: none; border: none; outline: none;
+  color: var(--pt-text-high); font-family: var(--pt-font-mono); font-size: 12px; padding: 10px 0; }
+.cc-newbtn {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--pt-border); border-radius: 10px;
+  padding: 0 12px; font-size: 11px; letter-spacing: 0.08em;
+  color: var(--pt-neon); background: rgba(var(--pt-neon-rgb),0.08);
+  cursor: pointer; white-space: nowrap;
+}
+.cc-newbtn:active { transform: scale(0.97); }
+/* ── Filters ── */
+.cc-filters { display: flex; gap: 6px; padding: 0 12px; align-items: center; }
+.cc-filters select, .cc-new-fields select {
+  flex: 1; min-width: 0;
+  background: rgba(0,0,0,0.4); color: var(--pt-text); border: 1px solid var(--pt-border-dim);
+  border-radius: 8px; padding: 8px 8px; font-family: var(--pt-font-mono); font-size: 11px;
+}
+.cc-clear { background: none; border: none; color: var(--pt-text-mute); cursor: pointer; font-size: 13px; padding: 6px; }
+/* ── Conversation list ── */
+.cc-list { flex: 1; overflow-y: auto; padding: 6px 8px 12px; min-height: 0;
+  overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.cc-list::-webkit-scrollbar { width: 5px; }
+.cc-list::-webkit-scrollbar-thumb { background: var(--pt-border-dim); border-radius: 3px; }
+.cc-row {
+  display: flex; gap: 10px; width: 100%; text-align: left;
+  background: none; border: 1px solid transparent; border-radius: 12px;
+  padding: 10px 10px; cursor: pointer; margin-bottom: 4px; color: inherit;
+  content-visibility: auto; contain-intrinsic-size: auto 62px;
+}
+.cc-row:hover { background: rgba(var(--pt-neon-rgb),0.05); }
+.cc-row.is-active { border-color: var(--pt-border); background: rgba(var(--pt-neon-rgb),0.09); }
+.cc-row-side { display: flex; flex-direction: column; align-items: center; padding-top: 6px; }
+.cc-led { width: 8px; height: 8px; border-radius: 50%; background: var(--pt-text-mute); flex: none; }
+.cc-led.is-live { background: #38e07a; box-shadow: 0 0 6px #38e07a; }
+.cc-row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.cc-row-top { display: flex; align-items: baseline; gap: 8px; }
+.cc-row-title { flex: 1; font-size: 12.5px; font-weight: 600; color: var(--pt-text-high);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cc-row-time { font-size: 10px; color: var(--pt-text-mute); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cc-row-preview { font-size: 11px; color: var(--pt-text-dim); line-height: 1.45;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cc-row-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.cc-chip { font-size: 9px; letter-spacing: 0.06em; padding: 2px 7px; border-radius: 20px;
+  border: 1px solid var(--pt-border-dim); color: var(--pt-text-dim); text-transform: uppercase; }
+.cc-chip-dev { border-color: rgba(var(--pt-neon-rgb),0.35); color: var(--pt-neon); }
+.cc-chip-agent { border-color: rgba(117,168,255,0.35); color: #79a8ff; }
+.cc-row-model { font-size: 9px; color: var(--pt-text-mute); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px; }
+.cc-row-count { margin-left: auto; font-size: 9px; color: var(--pt-text-mute); }
+/* ── Empty states ── */
+.cc-empty { color: var(--pt-text-mute); font-size: 11px; line-height: 1.6;
+  padding: 28px 16px; text-align: center; }
+.cc-empty-thread { display: flex; flex-direction: column; align-items: center; gap: 12px;
+  color: var(--pt-text-dim); padding: 60px 24px; }
+/* ── Thread pane ── */
+.cc-thread-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px 10px; border-bottom: 1px solid var(--pt-border-dim);
+}
+.cc-back { display: none; }
+.cc-thread-title { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cc-thread-name { font-size: 13px; font-weight: 700; color: var(--pt-text-high);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cc-thread-sub { font-size: 10px; color: var(--pt-text-mute); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cc-thread { flex: 1; overflow-y: auto; padding: 14px 14px 8px; min-height: 0;
+  display: flex; flex-direction: column; gap: 8px;
+  overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.cc-thread::-webkit-scrollbar { width: 5px; }
+.cc-thread::-webkit-scrollbar-thumb { background: var(--pt-border-dim); border-radius: 3px; }
+.cc-bubble {
+  border: 1px solid var(--pt-border-dim); border-radius: 12px;
+  padding: 8px 12px; max-width: 94%; background: rgba(var(--pt-neon-rgb),0.03);
+  content-visibility: auto; contain-intrinsic-size: auto 44px;
+}
+.cc-bubble.is-user { align-self: flex-end; border-color: var(--pt-border); background: rgba(var(--pt-neon-rgb),0.08); }
+.cc-bubble.is-assistant { align-self: flex-start; }
+.cc-bubble.is-tool { align-self: center; max-width: 96%; border-color: rgba(255,184,77,0.25); background: rgba(255,184,77,0.04); }
+.cc-bubble-head { display: flex; justify-content: space-between; gap: 12px;
+  font-size: 9px; letter-spacing: 0.12em; color: var(--pt-text-mute); margin-bottom: 5px; }
+.cc-bubble.is-user .cc-bubble-head span:first-child { color: var(--pt-neon); }
+.cc-msg-body { font-size: 12px; line-height: 1.62; white-space: pre-wrap; word-break: break-word; }
+.cc-meta { font-size: 10px; color: var(--pt-text-mute); text-align: center; padding: 4px 0; }
+.cc-thinking { color: var(--pt-text-dim); }
+/* Collapsible tool log */
+.cc-tool { border: 1px solid var(--pt-border-dim); border-radius: 8px; overflow: hidden; }
+.cc-tool-head { display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  width: 100%; background: none; border: none; color: #ffb84d; font-size: 10px;
+  letter-spacing: 0.06em; padding: 6px 10px; cursor: pointer; font-family: var(--pt-font-mono); }
+.cc-tool-toggle { color: var(--pt-text-mute); font-size: 12px; }
+.cc-tool-body { margin: 0; padding: 8px 10px; font-size: 10px; line-height: 1.5;
+  color: var(--pt-text-dim); background: rgba(0,0,0,0.35);
+  max-height: 220px; overflow: auto; white-space: pre-wrap; word-break: break-word; }
+/* ── New conversation panel ── */
+.cc-new-panel { border: 1px solid var(--pt-border); border-radius: 12px; padding: 12px 14px;
+  background: rgba(var(--pt-neon-rgb),0.06); }
+.cc-new-title { font-size: 11px; letter-spacing: 0.16em; color: var(--pt-neon);
+  text-shadow: var(--pt-glow-sm); margin-bottom: 10px; }
+.cc-new-fields { display: flex; gap: 8px; margin-bottom: 8px; }
+.cc-new-hint { font-size: 10px; color: var(--pt-text-dim); line-height: 1.5; }
+/* ── Composer ── */
+.cc-composer {
+  display: flex; gap: 8px; align-items: flex-end;
+  border-top: 1px solid var(--pt-border-dim); padding: 10px 12px;
+  background: rgba(var(--pt-neon-rgb),0.04);
+}
+.cc-composer textarea {
+  flex: 1; resize: none; background: rgba(0,0,0,0.45); color: var(--pt-text-high);
+  border: 1px solid var(--pt-border-dim); border-radius: 10px;
+  padding: 10px 10px; font-family: var(--pt-font-mono); font-size: 12px; line-height: 1.5;
+  min-height: 44px; max-height: 140px;
+}
+.cc-composer textarea:focus { outline: none; border-color: var(--pt-neon); box-shadow: 0 0 8px var(--pt-neon-glow); }
+.cc-send {
+  border: 1px solid var(--pt-border); border-radius: 10px; padding: 0 16px;
+  height: 44px; font-size: 11px; letter-spacing: 0.08em;
+  color: var(--pt-neon); background: rgba(var(--pt-neon-rgb),0.1); cursor: pointer; white-space: nowrap;
+}
+.cc-send:disabled { opacity: 0.4; cursor: default; }
+
+/* ── Responsive: stacked panes on phone/tablet ── */
+@media (max-width: 900px) {
+  :root { --cc-pane-h: calc(100dvh - 128px); }
+  .cc { grid-template-columns: 1fr; height: var(--cc-pane-h); }
+  .cc-listpane, .cc-threadpane { grid-row: 1 / -1; grid-column: 1 / -1; }
+  /* Thread replaces the list on mobile when open; back button appears. */
+  .cc-listpane.is-hidden-mobile { display: none; }
+  .cc-threadpane.is-empty .cc-thread { display: none; }
+  .cc-threadpane.is-empty .cc-composer { display: none; }
+  .cc-back { display: inline-flex; align-items: center; gap: 2px;
+    background: none; border: 1px solid var(--pt-border-dim); border-radius: 8px;
+    color: var(--pt-text); cursor: pointer; padding: 6px 8px; font-size: 12px; }
+  .cc-newbtn { width: 44px; justify-content: center; }
+  .cc-newbtn span, .cc-newbtn svg { display: block; }
+}
+@media (max-width: 520px) {
+  :root { --cc-pane-h: calc(100dvh - 122px); }
+  .cc-row { padding: 9px 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cc-row, .cc-bubble { content-visibility: auto; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   GLOBAL 120fps RENDERING LAYER (added 2026-08-05)
+   Applies to every tab via the shared list/card classes.
+   - content-visibility:auto skips layout+paint for off-screen list
+     items → the browser only ever processes the visible window, so
+     long lists (kanban, commits, feed, calendar, agents, pipeline,
+     home tiles) scroll compositor-smooth at high refresh rates.
+   - contain-intrinsic-size gives the browser a stable estimated
+     height so it doesn't rezise scrollbars/jump while you scroll.
+   - GPU-friendly: animations stay on transform/opacity only.
+   ═══════════════════════════════════════════════════════════ */
+.mc-task,
+.mc-commit,
+.mc-cal-card,
+.mc-agent-card,
+.mc-feed-row,
+.mc-kb-card,
+.mc-pipe-row,
+.mc-home-tile,
+.mc-tile,
+.mc-tile-grid > *,
+.mc-tcol-body > * {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 64px;
+  contain: layout style;
+}
+/* Items that are genuinely taller (window/panel rows, tiles with big bodies)
+   get a more realistic intrinsic height so the scrollbar tracks smoothly. */
+.mc-window { content-visibility: auto; contain-intrinsic-size: auto 260px; contain: layout style; }
+.mc-drawer-row, .mc-task-msg { content-visibility: auto; contain-intrinsic-size: auto 48px; contain: layout style; }
+
+/* High-refresh smoothing for every scroll container: momentum + no scroll
+   jank, no overscroll chaining bouncing between stacked panes. */
+.mc-main,
+.mc-tcol-body,
+.mc-kb-col-body,
+.mc-list,
+.mc-thread,
+.mc-drawer,
+.mc-home-activity-list {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* Animated list-enter and hovers already run on transform/opacity; make sure
+   nothing forces a layout read on the hot path. */
+.mc-task,
+.mc-agent-card,
+.mc-cal-card,
+.mc-commit,
+.mc-kb-card,
+.mc-home-tile {
+  will-change: transform;
+}
+
+/* Coarse pointers get zero backdrop-blur on the moving surface (blur is the
+   single biggest frame-cost on phone GPUs). These already sit over dark fills. */
+@media (pointer: coarse) {
+  .mc-window,
+  .mc-chat-input,
+  .cc-composer,
+  .mc-cockpit {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mc-task, .mc-agent-card, .mc-cal-card, .mc-commit, .mc-kb-card, .mc-home-tile {
+    will-change: auto;
+  }
+}
