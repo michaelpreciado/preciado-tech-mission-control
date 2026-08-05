@@ -57,11 +57,13 @@ function ApprovalCard({ item, onDecide, busy }: {
         {item.actionable && (
           <span className="mc-appr-actions">
             <button className={`mc-appr-btn reject ${confirming === 'reject' ? 'confirm' : ''}`}
-              disabled={busy} onClick={() => tap('reject')}>
+              disabled={busy} onClick={() => tap('reject')}
+              aria-label={confirming === 'reject' ? `Confirm reject — ${item.title}` : `Reject — ${item.title}`}>
               {confirming === 'reject' ? 'TAP TO CONFIRM ✗' : 'REJECT'}
             </button>
             <button className={`mc-appr-btn approve ${confirming === 'approve' ? 'confirm' : ''}`}
-              disabled={busy} onClick={() => tap('approve')}>
+              disabled={busy} onClick={() => tap('approve')}
+              aria-label={confirming === 'approve' ? `Confirm approve — ${item.title}` : `Approve — ${item.title}`}>
               {confirming === 'approve' ? 'TAP TO CONFIRM ✓' : 'APPROVE'}
             </button>
           </span>
@@ -123,8 +125,8 @@ export function ApprovalsInbox() {
 
   return (
     <>
-      {error && <div className="mc-pipe-error">⚠ approvals unreachable — {error}</div>}
-      {flash && <div className="mc-appr-flash">{flash}</div>}
+      {error && <div className="mc-pipe-error" role="alert">⚠ approvals unreachable — {error}</div>}
+      {flash && <div className="mc-appr-flash" role="status" aria-live="polite">{flash}</div>}
 
       <div className="mc-window mc-appr-col">
         <div className={`mc-tcol-head ${pending.length ? 'alert' : ''}`}>

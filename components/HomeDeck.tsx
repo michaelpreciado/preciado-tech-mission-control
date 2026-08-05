@@ -125,8 +125,8 @@ function AgentPulse() {
         const bad = a.status === 'attention'
         const down = a.status === 'offline'
         return (
-          <Link key={a.id} href="/team" className={`mc-home-agent${live ? ' is-live' : ''}${bad ? ' is-bad' : ''}`} title={`${a.name} · ${a.status}`}>
-            <span className="mc-home-agent-dot" style={{
+          <Link key={a.id} href="/team" className={`mc-home-agent${live ? ' is-live' : ''}${bad ? ' is-bad' : ''}`} title={`${a.name} · ${a.status}`} aria-label={`${a.name} — ${a.status}`}>
+            <span className="mc-home-agent-dot" aria-hidden="true" style={{
               background: live ? a.accent : bad ? '#ff5f57' : down ? '#5b6474' : a.accent,
               boxShadow: live ? `0 0 10px ${a.accent}` : 'none',
               opacity: down ? 0.4 : 1,
@@ -205,9 +205,9 @@ function HealthSummary() {
         const tone = i.status === 'connected' ? 'ok' : i.status === 'attention' ? 'warn' : i.status === 'missing' ? 'err' : 'info'
         return (
           <div key={i.name} className={`mc-home-health-chip tone-${tone}`}>
-            <span className={`mc-led ${i.status === 'connected' ? 'green' : i.status === 'attention' ? 'amber' : i.status === 'missing' ? 'red' : ''}`} />
+            <span className={`mc-led ${i.status === 'connected' ? 'green' : i.status === 'attention' ? 'amber' : i.status === 'missing' ? 'red' : ''}`} aria-hidden="true" />
             <span className="mc-home-health-name">{i.name}</span>
-            <span className="mc-home-health-detail">{i.detail}</span>
+            <span className="mc-home-health-detail">{i.status}{i.detail ? ` · ${i.detail}` : ''}</span>
           </div>
         )
       })}

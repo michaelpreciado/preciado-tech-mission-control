@@ -92,6 +92,7 @@ function Sidebar() {
               key={it.id}
               href={it.id}
               aria-current={isActive(it.id) ? 'page' : undefined}
+              aria-label={it.id === '/approvals' && pending > 0 ? `${it.label}, ${pending} pending` : undefined}
               className={`mc-nav-item ${isActive(it.id) ? 'is-active' : ''}`}
               style={{ '--i': idx } as React.CSSProperties}
             >
@@ -131,6 +132,12 @@ const PRIMARY_IDS = new Set(PRIMARY.map(p => p.id))
 function MoreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const pathname = usePathname()
   const isActive = (href: string) => href === '/' ? pathname === '/' : pathname.startsWith(href)
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, onClose])
   if (!open) return null
   return (
     <div className="mc-more-layer" role="dialog" aria-modal="true" aria-label="More destinations">
@@ -196,6 +203,7 @@ function MobileNav() {
             const active = isActive(item.id)
             return (
               <Link key={item.id} href={item.id} aria-current={active ? 'page' : undefined}
+                aria-label={item.id === '/approvals' && pending > 0 ? `${item.label}, ${pending} pending` : undefined}
                 className={`mc-mobile-item ${active ? 'is-active' : ''}`}>
                 <span className="mc-mobile-glyph">
                   <Icon name={item.icon} size={20} />
@@ -208,6 +216,7 @@ function MobileNav() {
             )
           })}
           <button type="button" aria-haspopup="true" aria-expanded={moreOpen}
+            aria-label={moreOpen ? 'Close more destinations' : 'Open more destinations'}
             className={`mc-mobile-item mc-more-btn ${(moreOpen || inMore) ? 'is-active' : ''}`}
             onClick={() => setMoreOpen(o => !o)}>
             <span className="mc-mobile-glyph"><Icon name="more" size={20} /></span>

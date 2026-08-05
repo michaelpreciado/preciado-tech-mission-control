@@ -188,6 +188,13 @@ export function Clamp({ text, lines = 2, label = 'FULL TEXT', className }: {
     setOpen(true)
   }
 
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open])
+
   return (
     <>
       <span
@@ -205,8 +212,8 @@ export function Clamp({ text, lines = 2, label = 'FULL TEXT', className }: {
       </span>
       {open && mounted && createPortal(
         <div className="mc-modal-overlay" onClick={() => setOpen(false)}>
-          <div className="mc-modal" onClick={e => e.stopPropagation()}>
-            <button className="mc-modal-close" onClick={() => setOpen(false)}>✕</button>
+          <div className="mc-modal" role="dialog" aria-modal="true" aria-label={label} onClick={e => e.stopPropagation()}>
+            <button className="mc-modal-close" aria-label="Close preview" onClick={() => setOpen(false)}>✕</button>
             <h3>{label}</h3>
             <div className="mc-preview-body">{text}</div>
           </div>

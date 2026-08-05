@@ -56,6 +56,12 @@ function DetailDrawer({ id, onClose, onChanged }: { id: string; onClose: () => v
   useEffect(() => { void load() }, [load])
 
   useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  useEffect(() => {
     const es = new EventSource('/api/events')
     const onAny = (ev: MessageEvent) => {
       try {
@@ -92,7 +98,7 @@ function DetailDrawer({ id, onClose, onChanged }: { id: string; onClose: () => v
 
   return (
     <div className="mc-drawer-overlay" onClick={onClose}>
-      <div className="mc-drawer" onClick={e => e.stopPropagation()}>
+      <div className="mc-drawer" role="dialog" aria-modal="true" aria-label={detail?.title ?? 'Task detail'} onClick={e => e.stopPropagation()}>
         <div className="mc-drawer-head">
           <span className="mc-drawer-title">
             {detail ? (
@@ -128,17 +134,19 @@ function DetailDrawer({ id, onClose, onChanged }: { id: string; onClose: () => v
               <div className="lbl">ACTIONS</div>
               <div className="mc-kb-actions">
                 {(detail.status === 'blocked' || detail.status === 'failed') && (
-                  <button className="mc-kb-action" disabled={!!busy} onClick={() => void act('unblock', { reason: 'unblocked from Mission Control' })}>
+                  <button className="mc-kb-action" disabled={!!busy} onClick={() => void act('unblock', { reason: 'unblocked from Mission Control' })}
+                    aria-label={`Unblock ${detail.title}`}>
                     {busy === 'unblock' ? 'unblocking…' : '⊘ unblock'}
                   </button>
                 )}
                 {detail.status !== 'done' && detail.status !== 'archived' && (
-                  <button className="mc-kb-action is-primary" disabled={!!busy} onClick={() => void act('complete', { result: 'completed from Mission Control' })}>
+                  <button className="mc-kb-action is-primary" disabled={!!busy} onClick={() => void act('complete', { result: 'completed from Mission Control' })}
+                    aria-label={`Mark ${detail.title} complete`}>
                     {busy === 'complete' ? 'completing…' : '✓ complete'}
                   </button>
                 )}
               </div>
-              {actErr && <div className="mc-kb-acterr">⚠ {actErr}</div>}
+              {actErr && <div className="mc-kb-acterr" role="alert">⚠ {actErr}</div>}
             </div>
 
             {/* Comment composer */}
@@ -149,10 +157,12 @@ function DetailDrawer({ id, onClose, onChanged }: { id: string; onClose: () => v
                   value={msg}
                   onChange={e => setMsg(e.target.value)}
                   placeholder="Write a comment…"
+                  aria-label="Write a comment"
                   rows={2}
                   maxLength={4000}
                 />
-                <button className="mc-kb-action is-primary" disabled={!!busy || !msg.trim()} onClick={() => void act('comment', { body: msg })}>
+                <button className="mc-kb-action is-primary" disabled={!!busy || !msg.trim()} onClick={() => void act('comment', { body: msg })}
+                  aria-label={`Post comment on ${detail.title}`}>
                   {busy === 'comment' ? 'posting…' : 'send ▸'}
                 </button>
               </div>
@@ -357,6 +367,7 @@ export function KanbanBoard() {
             <input
               className="mc-kb-input"
               placeholder="Task title…"
+              aria-label="Task title"
               value={createForm.title}
               onChange={e => setCreateForm(f => ({ ...f, title: e.target.value }))}
               maxLength={200}
@@ -364,6 +375,7 @@ export function KanbanBoard() {
             <textarea
               className="mc-kb-input"
               placeholder="Brief (optional)…"
+              aria-label="Task brief (optional)"
               value={createForm.body}
               onChange={e => setCreateForm(f => ({ ...f, body: e.target.value }))}
               rows={2}
@@ -373,12 +385,14 @@ export function KanbanBoard() {
               <input
                 className="mc-kb-input"
                 placeholder="assignee (profile)…"
+                aria-label="Assignee (profile)"
                 value={createForm.assignee}
                 onChange={e => setCreateForm(f => ({ ...f, assignee: e.target.value }))}
                 maxLength={80}
               />
               <select
                 className="mc-kb-input"
+                aria-label="Origin"
                 value={createForm.origin}
                 onChange={e => setCreateForm(f => ({ ...f, origin: e.target.value }))}
               >
@@ -387,11 +401,12 @@ export function KanbanBoard() {
                   <option key={s.origin} value={s.origin}>{s.origin}</option>
                 ))}
               </select>
-              <button className="mc-kb-action is-primary" disabled={createBusy || !createForm.title.trim()} onClick={() => void submitCreate()}>
+              <button className="mc-kb-action is-primary" disabled={createBusy || !createForm.title.trim()} onClick={() => void submitCreate()}
+                aria-label="Create task">
                 {createBusy ? 'creating…' : 'create ▸'}
               </button>
             </div>
-            {createErr && <div className="mc-kb-acterr">⚠ {createErr}</div>}
+            {createErr && <div className="mc-kb-acterr" role="alert">⚠ {createErr}</div>}
           </div>
         )}
 

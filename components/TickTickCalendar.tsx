@@ -146,7 +146,7 @@ export function TickTickCalendar() {
         </span>
       </div>
 
-      {data.error && <div className="mc-week-error">⚠ {data.error}</div>}
+      {data.error && <div className="mc-week-error" role="alert">⚠ {data.error}</div>}
 
       {weekCount === 0 ? (
         <EmptyState
@@ -164,7 +164,7 @@ export function TickTickCalendar() {
           {days.map(d => {
             const items = byDay.get(d.key) ?? []
             return (
-              <div key={d.key} className={`mc-week-day ${d.isToday ? 'is-today' : ''} ${d.isWeekend ? 'is-weekend' : ''} ${items.length === 0 ? 'is-empty' : ''}`}>
+              <div key={d.key} className={`mc-week-day ${d.isToday ? 'is-today' : ''} ${d.isWeekend ? 'is-weekend' : ''} ${items.length === 0 ? 'is-empty' : ''}`} aria-current={d.isToday ? 'date' : undefined}>
                 <div className="mc-week-dayhead">
                   <span className="mc-week-dayname">{d.name}</span>
                   <span className="mc-week-daynum">{d.dayNum}</span>
@@ -193,7 +193,7 @@ export function TickTickCalendar() {
           {days.map(d => {
             const items = byDay.get(d.key) ?? []
             return (
-              <div key={d.key} className={`mc-week-agenda-day ${d.isToday ? 'is-today' : ''} ${d.isWeekend ? 'is-weekend' : ''}`}>
+              <div key={d.key} className={`mc-week-agenda-day ${d.isToday ? 'is-today' : ''} ${d.isWeekend ? 'is-weekend' : ''}`} aria-current={d.isToday ? 'date' : undefined}>
                 <div className="mc-week-agenda-dayhead">
                   <span className="mc-week-dayname">{d.name}</span>
                   <span className="mc-week-daynum">{d.dayNum}</span>

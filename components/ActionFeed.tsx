@@ -80,12 +80,13 @@ export function ActionFeed() {
         <Link href="/approvals" className="mc-feed-open">approvals ↗</Link>
       </div>
       {shown.length > 0 && (
-        <div className="mc-feed-body">
+        <div className="mc-feed-body" role="status" aria-live="polite">
           {shown.map(row => (
-            <Link key={row.id} href={row.href} className={`mc-feed-row ${row.tone}`}>
-              <span className="mc-feed-glyph">{row.glyph}</span>
+            <Link key={row.id} href={row.href} className={`mc-feed-row ${row.tone}`}
+              aria-label={`${row.tone === 'urgent' ? 'Urgent — ' : row.tone === 'warn' ? 'Warning — ' : ''}${row.text}`}>
+              <span className="mc-feed-glyph" aria-hidden="true">{row.glyph}</span>
               <span className="mc-feed-text" title={row.text}>{row.text}</span>
-              <span className="mc-feed-arrow">›</span>
+              <span className="mc-feed-arrow" aria-hidden="true">›</span>
             </Link>
           ))}
           {extra > 0 && (
