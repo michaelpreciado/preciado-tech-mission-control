@@ -132,10 +132,10 @@ export function GithubPanel() {
         {repos.map(repo => (
           <a key={repo.name} className="mc-repo-card" href={repo.url} target="_blank" rel="noreferrer">
             <div className="mc-repo-head">
-              <span className="mc-repo-name">{repo.name}</span>
+              <span className="mc-repo-name" title={repo.name}>{repo.name}</span>
               {repo.private && <span className="mc-repo-private">PRIVATE</span>}
             </div>
-            {repo.description && <div className="mc-repo-desc">{repo.description}</div>}
+            {repo.description && <div className="mc-repo-desc" title={repo.description}>{repo.description}</div>}
             <div className="mc-repo-meta">
               {repo.language && (
                 <span className="mc-repo-lang">

@@ -2338,6 +2338,73 @@ a:focus-visible,
   .mc-pipe-col { min-height: 240px; }
 }
 
+/* ── SYS-02: content clipping / overflow handling ─────────
+   Three rules the whole card system leans on:
+   1. Every scrollable card body gets the themed custom scrollbar (no default
+      grey chrome anywhere).
+   2. Kanban-style columns scroll *internal-body* with the head pinned, so a
+      tall column never runs off the viewport with the bottom cards clipped
+      off-screen and unreachable.
+   3. Long unbroken strings (URLs, aggregate titles) wrap within the card
+      instead of forcing horizontal overflow that clips mid-token. */
+.mc-pipeline::-webkit-scrollbar { height: 8px; }
+.mc-pipeline::-webkit-scrollbar-track { background: transparent; }
+.mc-pipeline::-webkit-scrollbar-thumb { background: var(--pt-border); border: 2px solid rgba(0,0,0,0.25); }
+.mc-pipeline { scrollbar-width: thin; scrollbar-color: var(--pt-border) transparent; }
+
+.mc-pipe-col-body::-webkit-scrollbar,
+.mc-tcol-body::-webkit-scrollbar,
+.mc-health-body::-webkit-scrollbar,
+.mc-hk-body::-webkit-scrollbar,
+.mc-window-float-body::-webkit-scrollbar,
+.mc-drawer::-webkit-scrollbar,
+.mc-pipe-draft::-webkit-scrollbar,
+.mc-modal::-webkit-scrollbar { width: 8px; height: 8px; }
+.mc-pipe-col-body::-webkit-scrollbar-track,
+.mc-tcol-body::-webkit-scrollbar-track,
+.mc-health-body::-webkit-scrollbar-track,
+.mc-hk-body::-webkit-scrollbar-track,
+.mc-window-float-body::-webkit-scrollbar-track,
+.mc-drawer::-webkit-scrollbar-track,
+.mc-pipe-draft::-webkit-scrollbar-track,
+.mc-modal::-webkit-scrollbar-track { background: transparent; }
+.mc-pipe-col-body::-webkit-scrollbar-thumb,
+.mc-tcol-body::-webkit-scrollbar-thumb,
+.mc-health-body::-webkit-scrollbar-thumb,
+.mc-hk-body::-webkit-scrollbar-thumb,
+.mc-window-float-body::-webkit-scrollbar-thumb,
+.mc-drawer::-webkit-scrollbar-thumb,
+.mc-pipe-draft::-webkit-scrollbar-thumb,
+.mc-modal::-webkit-scrollbar-thumb { background: var(--pt-border); border: 2px solid rgba(0,0,0,0.25); }
+.mc-pipe-col-body::-webkit-scrollbar-thumb:hover,
+.mc-drawer::-webkit-scrollbar-thumb:hover,
+.mc-modal::-webkit-scrollbar-thumb:hover { background: var(--pt-neon-deep); }
+.mc-pipe-col-body,
+.mc-health-body,
+.mc-hk-body,
+.mc-window-float-body,
+.mc-drawer,
+.mc-pipe-draft,
+.mc-modal { scrollbar-width: thin; scrollbar-color: var(--pt-border) transparent; }
+
+/* Independent column scroll — head stays pinned, cards scroll in-body. */
+.mc-pipe-col { max-height: min(600px, calc(100vh - 260px)); }
+.mc-pipe-col-body { overflow-y: auto; min-height: 0; -webkit-overflow-scrolling: touch; }
+
+/* Never clip long unbroken strings inside cards. */
+.mc-pipe-card,
+.mc-pipe-name,
+.mc-pipe-row,
+.mc-pipe-meta,
+.mc-pipe-when,
+.mc-task-title { min-width: 0; overflow-wrap: anywhere; }
+
+/* Multi-line clamp with a soft expand affordance (SYS-02 ellipsis). */
+.mc-clamp { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+.mc-clamp-btn { cursor: pointer; border-bottom: 1px dotted var(--pt-border); }
+.mc-clamp-btn:hover { color: var(--pt-neon-bright); border-bottom-color: var(--pt-neon); text-shadow: var(--pt-glow-sm); }
+.mc-preview-body { white-space: pre-wrap; word-break: break-word; max-height: min(60vh, 480px); overflow-y: auto; }
+
 html[data-theme="friday"] .mc-pipe-card,
 html[data-theme="friday"] .mc-pipe-approval,
 html[data-theme="friday"] .mc-pipe-social,

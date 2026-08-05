@@ -40,7 +40,7 @@ function AgentCard({ agent }: { agent: CrewMember }) {
       <div className="mc-agent-card-info">
         <div className="mc-agent-card-row">
           <span className={`mc-led ${live ? '' : 'dim'}`} style={{ background: tint.fr, boxShadow: `0 0 6px ${tint.glow}` }} />
-          <span className="mc-agent-card-name" style={{ color: tint.fr, textShadow: `0 0 6px ${tint.glow}` }}>{agent.name}</span>
+          <span className="mc-agent-card-name" title={agent.name} style={{ color: tint.fr, textShadow: `0 0 6px ${tint.glow}` }}>{agent.name}</span>
           <span className={`mc-agent-card-status ${live ? 'live' : ''}`}>{statusLabel(agent.status)}</span>
         </div>
         <div className="mc-agent-card-role">{agent.role}</div>

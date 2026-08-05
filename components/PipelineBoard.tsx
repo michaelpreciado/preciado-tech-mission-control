@@ -93,7 +93,7 @@ function LeadCard({ lead, liveNote }: { lead: PipelineLead; liveNote?: string })
   return (
     <div className="mc-pipe-card" data-stage={lead.stage}>
       <div className="mc-pipe-card-head">
-        <span className="mc-pipe-name">{lead.businessName}</span>
+        <span className="mc-pipe-name" title={lead.businessName}>{lead.businessName}</span>
         <ScoreChip score={lead.score} />
       </div>
       <div className="mc-pipe-meta">

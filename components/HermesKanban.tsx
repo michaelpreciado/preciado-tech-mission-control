@@ -68,7 +68,7 @@ function TaskDrawer({ id, onClose }: { id: string; onClose: () => void }) {
                 {detail.lastFailureError ? ` — ${detail.lastFailureError.slice(0, 300)}` : ''}
               </div>
             )}
-            {detail.body && <div className="mc-drawer-section"><div className="lbl">BRIEF</div><div className="mc-pipe-draft">{detail.body.slice(0, 1200)}</div></div>}
+            {detail.body && <div className="mc-drawer-section"><div className="lbl">BRIEF</div><div className="mc-pipe-draft">{detail.body}</div></div>}
 
             <div className="mc-drawer-section">
               <div className="lbl">RUNS ({detail.runs.length})</div>
@@ -78,8 +78,8 @@ function TaskDrawer({ id, onClose }: { id: string; onClose: () => void }) {
                   <span className={`mc-hk-status ${STATUS_TONE[run.outcome ?? run.status] ?? ''}`}>{run.outcome ?? run.status}</span>
                   <span className="dim">{run.profile ?? ''}</span>
                   <span className="dim">{run.startedAt ? fmtDate(run.startedAt) : ''}</span>
-                  {run.summary && <div className="mc-hk-run-summary">{run.summary.slice(0, 240)}</div>}
-                  {run.error && <div className="mc-hk-run-error">{run.error.slice(0, 240)}</div>}
+                  {run.summary && <div className="mc-hk-run-summary">{run.summary}</div>}
+                  {run.error && <div className="mc-hk-run-error">{run.error}</div>}
                 </div>
               ))}
             </div>
@@ -91,7 +91,7 @@ function TaskDrawer({ id, onClose }: { id: string; onClose: () => void }) {
                 <div key={c.id} className="mc-hk-comment">
                   <span className="who">{c.author}</span>
                   <span className="dim">{c.createdAt ? fmtDate(c.createdAt) : ''}</span>
-                  <div>{c.body.slice(0, 400)}</div>
+                  <div className="mc-pipe-draft">{c.body}</div>
                 </div>
               ))}
             </div>
@@ -103,7 +103,7 @@ function TaskDrawer({ id, onClose }: { id: string; onClose: () => void }) {
                 <div key={e.id} className="mc-hk-event">
                   <span className="kind">{e.kind}</span>
                   <span className="dim">{e.createdAt ? fmtDate(e.createdAt) : ''}</span>
-                  {e.payload && <span className="dim payload">{e.payload.slice(0, 120)}</span>}
+                  {e.payload && <span className="dim payload" title={e.payload}>{e.payload}</span>}
                 </div>
               ))}
             </div>
@@ -174,7 +174,7 @@ export function HermesKanban() {
           {tasks.map((t: HermesTask) => (
             <button key={t.id} className="mc-hk-row" onClick={() => setOpenId(t.id)}>
               <span className={`mc-hk-status ${STATUS_TONE[t.status] ?? ''}`}>{t.status}</span>
-              <span className="mc-hk-title">{t.title}</span>
+              <span className="mc-hk-title" title={t.title}>{t.title}</span>
               <span className="mc-hk-meta">
                 {t.assignee && <span>{t.assignee}</span>}
                 {t.consecutiveFailures > 0 && <span className="bad">⚠ {t.consecutiveFailures}</span>}

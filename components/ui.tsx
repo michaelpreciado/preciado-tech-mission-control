@@ -154,6 +154,71 @@ export function SkeletonPanel({ label }: { label: string }) {
   )
 }
 
+/* ── SYS-02: expandable clamped text ─────────────────────
+   Renders `text` clamped to `lines` with an ellipsis. When the content
+   actually overflows it becomes a soft affordance (dotted underline) that
+   opens a full-preview modal. The preview portals to <body> — .mc-main
+   carries a CSS transform that would otherwise hijack position:fixed —
+   so expanding never shifts the surrounding layout. A native title tooltip
+   gives an affordance on any non-interactive host. */
+export function Clamp({ text, lines = 2, label = 'FULL TEXT', className }: {
+  text: string
+  lines?: number
+  label?: string
+  className?: string
+}) {
+  const [open, setOpen] = useState(false)
+  const [overflows, setOverflows] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const ref = useRef<HTMLSpanElement>(null)
+
+  useEffect(() => { setMounted(true) }, [])
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const measure = () => setOverflows(el.scrollHeight > el.clientHeight + 1)
+    measure()
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null
+    ro?.observe(el)
+    return () => ro?.disconnect()
+  }, [text, lines])
+
+  const openPreview = (e: { preventDefault: () => void; stopPropagation: () => void }) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setOpen(true)
+  }
+
+  return (
+    <>
+      <span
+        ref={ref}
+        className={`mc-clamp ${overflows ? 'mc-clamp-btn' : ''} ${className ?? ''}`}
+        style={{ WebkitLineClamp: lines }}
+        title={text}
+        onClick={overflows ? openPreview : undefined}
+        onKeyDown={overflows ? (e) => { if (e.key === 'Enter' || e.key === ' ') openPreview(e) } : undefined}
+        role={overflows ? 'button' : undefined}
+        tabIndex={overflows ? 0 : undefined}
+        aria-expanded={overflows ? open : undefined}
+      >
+        {text}
+      </span>
+      {open && mounted && createPortal(
+        <div className="mc-modal-overlay" onClick={() => setOpen(false)}>
+          <div className="mc-modal" onClick={e => e.stopPropagation()}>
+            <button className="mc-modal-close" onClick={() => setOpen(false)}>✕</button>
+            <h3>{label}</h3>
+            <div className="mc-preview-body">{text}</div>
+          </div>
+        </div>,
+        document.body,
+      )}
+    </>
+  )
+}
+
 export function EmptyTerminal({ label }: { label: string }) {
   return (
     <div className="mc-window" style={{ padding: 24, textAlign: 'center' }}>

@@ -70,7 +70,7 @@ function TaskPreviewCol({ headLabel, headGlyph, alert, items }: {
         ) : items.map(t => (
           <div key={t.id} className="mc-task">
             <div className="mc-task-head">
-              <div className="mc-task-title">{t.title}</div>
+              <div className="mc-task-title" title={t.title}>{t.title}</div>
             </div>
             <div className="mc-task-meta">
               <span className="agent">{t.ownerName}</span>
