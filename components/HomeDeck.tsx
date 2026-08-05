@@ -1,51 +1,139 @@
 'use client'
 
-import { useState } from 'react'
+/**
+ * HOME — the command center.
+ *
+ * Rebuilt from the old 3-tab "Deck" (which just re-mounted the full Github/
+ * Costs/SystemHealth panels, making it a second copy of every tab). Home is now
+ * ONE at-a-glance surface that answers the three questions every visit asks:
+ *   1. What needs me right now?   → ActionFeed (needs-you strip)
+ *   2. What is live?              → status tiles + agent pulse + scheduler
+ *   3. Where do I go?             → quick-launch grid (deep links)
+ *
+ * Every tile is tappable and navigates to its page. Real data only — nothing
+ * fabricated. Mobile-first: stacks clean on the Pixel Fold, thumb-reachable.
+ */
+import Link from 'next/link'
+import { useMemo } from 'react'
 import { useLiveData } from './LiveDataProvider'
 import { SectionHead, SkeletonPanel } from './ui'
+import { Icon, type IconName } from './icons'
 import dynamic from 'next/dynamic'
 import type { MissionTask } from '@/lib/types'
 
 const CommandHeader = dynamic(() => import('./views/CommandHeader').then(m => m.CommandHeader), { ssr: false, loading: () => <SkeletonPanel label="loading header" /> })
 const ActionFeed = dynamic(() => import('./ActionFeed').then(m => m.ActionFeed), { ssr: false })
-const CalendarList = dynamic(() => import('./views/CalendarList').then(m => m.CalendarList), { ssr: false, loading: () => <SkeletonPanel label="loading schedule" /> })
-const GithubPanel = dynamic(() => import('./views/GithubPanel').then(m => m.GithubPanel), { ssr: false, loading: () => <SkeletonPanel label="loading github" /> })
-const CostsPanel = dynamic(() => import('./views/CostsPanel').then(m => m.CostsPanel), { ssr: false, loading: () => <SkeletonPanel label="loading costs" /> })
-const OperationsPanel = dynamic(() => import('./views/OpsViews').then(m => m.OperationsPanel), { ssr: false, loading: () => <SkeletonPanel label="loading ops" /> })
-const ProjectGrid = dynamic(() => import('./views/ProjectGrid').then(m => m.ProjectGrid), { ssr: false, loading: () => <SkeletonPanel label="loading projects" /> })
-const SystemHealthPanel = dynamic(() => import('./SystemHealthPanel').then(m => m.SystemHealthPanel), { ssr: false, loading: () => <SkeletonPanel label="loading system health" /> })
 
-const tabs = [
-  { id: 'overview', label: 'Overview', glyph: '■' },
-  { id: 'intel', label: 'Intel', glyph: '◆' },
-  { id: 'operations', label: 'Operations', glyph: '▶' },
-] as const
-
-type TabId = typeof tabs[number]['id']
-
-/** Priority → existing mc-task-tag tone: high reads as attention, low as neutral. */
+/** Priority → existing mc-task-tag tone. */
 const PRIORITY_TONE: Record<MissionTask['priority'], string> = {
-  high: 'alert',
-  normal: '',
-  low: 'info',
+  high: 'alert', normal: '', low: 'info',
 }
 
-function DeckTabs({ active, onChange }: { active: TabId; onChange: (t: TabId) => void }) {
+/* ── Live status tiles (tappable → deep link) ────────────────────────── */
+
+type TileDef = { key: string; label: string; glyph: string; href: string; value: string; sub: string; tone: 'ok' | 'warn' | 'err' | 'info' }
+
+function StatusTiles() {
+  const { data } = useLiveData()
+  const done = useMemo(() => {
+    if (!data) return []
+    const crew = data.crew ?? []
+    const working = crew.filter(c => c.status === 'active' || c.status === 'on-demand')
+    const offline = crew.filter(c => c.status === 'offline' || c.status === 'sleeping')
+    const tasks = data.tasks ?? []
+    const open = data.counts?.openTasks ?? tasks.filter(t => t.status !== 'done').length
+    const cronFails = (data.cron ?? []).filter(c => c.lastRunStatus === 'error').length
+    const billing = data.costs?.billing?.[0]
+    const costMonth = billing ? `$${(billing.planAmount + (billing.openRouterUsd ?? 0)).toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—'
+    const ghStreak = data.github?.currentStreak ?? 0
+    const pending = open > 0 ? open : 0
+
+    const tiles: TileDef[] = [
+      { key: 'working', label: 'WORKING NOW', glyph: '▶', href: '/team', value: String(working.length), sub: `${offline.length} offline`, tone: working.length ? 'ok' : 'info' },
+      { key: 'open', label: 'OPEN TASKS', glyph: '≡', href: '/kanban', value: String(pending), sub: 'kanban board', tone: pending ? 'warn' : 'ok' },
+      { key: 'cron', label: 'CRON FAILS', glyph: '○', href: '/calendar', value: `${cronFails}/${data.cron.length}`, sub: 'scheduler', tone: cronFails ? 'err' : 'ok' },
+      { key: 'cost', label: 'COST · THIS MO', glyph: '$', href: '/costs', value: costMonth, sub: 'plan + OR', tone: 'info' },
+      { key: 'gh', label: 'GH STREAK', glyph: '★', href: '/github', value: `${ghStreak}d`, sub: 'contributions', tone: ghStreak ? 'ok' : 'info' },
+    ]
+    return tiles
+  }, [data])
+
+  if (!data) return <SkeletonPanel label="loading status" />
   return (
-    <div className="mc-tabs">
-      {tabs.map(t => (
-        <button key={t.id}
-          className={`mc-tab ${active === t.id ? 'is-active' : ''}`}
-          onClick={() => onChange(t.id)}>
-          <span className="mc-tab-glyph">{t.glyph}</span>{t.label}
-        </button>
+    <div className="mc-home-tiles">
+      {done.map(t => (
+        <Link key={t.key} href={t.href} className={`mc-home-tile tone-${t.tone}`}>
+          <span className="mc-home-tile-glyph">{t.glyph}</span>
+          <span className="mc-home-tile-mid">
+            <span className="mc-home-tile-label">{t.label}</span>
+            <span className="mc-home-tile-sub">{t.sub}</span>
+          </span>
+          <span className="mc-home-tile-value">{t.value}</span>
+        </Link>
       ))}
     </div>
   )
 }
 
-/* Two-column task preview for the deck (needs + active only) */
-function DeckTaskPreview() {
+/* ── Live agent pulse ────────────────────────────────────────────────── */
+
+function AgentPulse() {
+  const { data } = useLiveData()
+  const crew = data?.crew ?? []
+  if (!data) return <SkeletonPanel label="loading agents" />
+  if (!crew.length) return null
+  return (
+    <div className="mc-home-agents">
+      {crew.map(a => {
+        const live = a.status === 'active' || a.status === 'on-demand'
+        const bad = a.status === 'attention'
+        const down = a.status === 'offline'
+        return (
+          <Link key={a.id} href="/team" className={`mc-home-agent${live ? ' is-live' : ''}${bad ? ' is-bad' : ''}`} title={`${a.name} · ${a.status}`}>
+            <span className="mc-home-agent-dot" style={{
+              background: bad ? '#ff5f57' : down ? '#5b6474' : live ? a.accent : a.accent,
+              boxShadow: live ? `0 0 8px ${a.accent}` : 'none',
+              opacity: down ? 0.4 : 1,
+            }} />
+            <span className="mc-home-agent-name">{a.name}</span>
+          </Link>
+        )
+      })}
+    </div>
+  )
+}
+
+/* ── Quick-launch grid ───────────────────────────────────────────────── */
+
+const LAUNCH: { href: string; label: string; icon: IconName; desc: string }[] = [
+  { href: '/kanban', label: 'Kanban', icon: 'kanban', desc: 'Board & tasks' },
+  { href: '/approvals', label: 'Approvals', icon: 'approvals', desc: 'Waiting on you' },
+  { href: '/costs', label: 'Costs', icon: 'costs', desc: 'Spend & billing' },
+  { href: '/team', label: 'Team', icon: 'team', desc: 'Agent mesh' },
+  { href: '/memory', label: 'Memory', icon: 'memory', desc: 'Steward ledger' },
+  { href: '/calendar', label: 'Scheduler', icon: 'calendar', desc: 'Cron jobs' },
+]
+
+function LaunchGrid() {
+  return (
+    <div className="mc-home-launch">
+      {LAUNCH.map(l => (
+        <Link key={l.href} href={l.href} className="mc-home-launch-card">
+          <span className="mc-home-launch-ic"><Icon name={l.icon} size={18} /></span>
+          <span className="mc-home-launch-body">
+            <span className="mc-home-launch-name">{l.label}</span>
+            <span className="mc-home-launch-desc">{l.desc}</span>
+          </span>
+          <span className="mc-home-launch-arrow">›</span>
+        </Link>
+      ))}
+    </div>
+  )
+}
+
+/* ── Task preview (needs + active) ───────────────────────────────────── */
+
+function TaskPreview() {
   const { data } = useLiveData()
   if (!data) return <SkeletonPanel label="loading tasks" />
   const tasks = data.tasks ?? []
@@ -53,13 +141,13 @@ function DeckTaskPreview() {
   const active = tasks.filter(t => t.status === 'active').slice(0, 5)
   return (
     <div className="mc-deck-grid">
-      <TaskPreviewCol headLabel="NEEDS ATTENTION" headGlyph="⚠" alert items={needs} />
-      <TaskPreviewCol headLabel="ACTIVE" headGlyph="▶" items={active} />
+      <TaskCol headLabel="NEEDS ATTENTION" headGlyph="⚠" alert items={needs} />
+      <TaskCol headLabel="ACTIVE" headGlyph="▶" items={active} />
     </div>
   )
 }
 
-function TaskPreviewCol({ headLabel, headGlyph, alert, items }: {
+function TaskCol({ headLabel, headGlyph, alert, items }: {
   headLabel: string; headGlyph: string; alert?: boolean; items: MissionTask[]
 }) {
   return (
@@ -88,44 +176,29 @@ function TaskPreviewCol({ headLabel, headGlyph, alert, items }: {
   )
 }
 
-export function HomeDeck() {
-  const [tab, setTab] = useState<TabId>('overview')
+/* ── Home — the command center ───────────────────────────────────────── */
 
+export function HomeDeck() {
   return (
     <>
       <CommandHeader />
+
+      {/* 1 · What needs me */}
       <ActionFeed />
-      <DeckTabs active={tab} onChange={setTab} />
 
-      {tab === 'overview' && (
-        <>
-          <SectionHead label="TASKS" />
-          <DeckTaskPreview />
+      {/* 2 · What is live — status tiles */}
+      <SectionHead label="SYSTEM PULSE" />
+      <StatusTiles />
 
-          <SectionHead label="SCHEDULER" />
-          <CalendarList limit={5} />
-        </>
-      )}
+      {/* agents */}
+      <AgentPulse />
 
-      {tab === 'intel' && (
-        <>
-          <SectionHead label="GITHUB" />
-          <GithubPanel />
-          <SectionHead label="COSTS" />
-          <CostsPanel />
-        </>
-      )}
+      {/* 3 · Where do I go — quick launch */}
+      <SectionHead label="COMMAND CENTER" />
+      <LaunchGrid />
 
-      {tab === 'operations' && (
-        <>
-          <SectionHead label="SYSTEM HEALTH" />
-          <SystemHealthPanel />
-          <SectionHead label="OPS / LIVE STREAM" />
-          <OperationsPanel />
-          <SectionHead label="PROJECTS" />
-          <ProjectGrid limit={6} />
-        </>
-      )}
+      <SectionHead label="TASKS" />
+      <TaskPreview />
     </>
   )
 }
