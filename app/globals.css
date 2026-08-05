@@ -10,169 +10,6 @@
 
 /* JetBrains Mono loaded via next/font/google — no duplicate @import needed */
 
-:root {
-  /* Inline padding of .mc-main; steps down with the breakpoint ladder. */
-  --mc-gutter:          36px;
-
-  /* ── Chart palette ──────────────────────────────────────
-     Categorical slots, assigned in fixed order and never cycled. Validated
-     against the dark chart surface (#0a020c) with the dataviz six checks:
-     lightness band, chroma floor, CVD separation (worst adjacent ΔE 11.3,
-     deutan), normal-vision floor (27.1), contrast — all PASS.
-     Slot 1 is the brand accent, so charts read as part of the UI.
-     NOTE: this is a *fixed* palette, deliberately not derived from
-     --pt-neon: eight hues generated from one accent would be a lightness
-     ramp, which encodes magnitude, not identity. Only slots 1-3 are
-     all-pairs safe — forms where any two marks can touch (treemap, scatter)
-     must use the sequential ramp below instead. */
-  --mc-cat-1: #1e90ff;  /* blue    — brand accent */
-  --mc-cat-2: #db2777;  /* magenta */
-  --mc-cat-3: #65a30d;  /* lime    */
-  --mc-cat-4: #7c3aed;  /* violet  */
-  --mc-cat-5: #0d9488;  /* teal    */
-  --mc-cat-6: #c2410c;  /* orange  */
-  --mc-cat-7: #0891b2;  /* sky     */
-  --mc-cat-8: #e11d48;  /* red     */
-
-  /* Sequential ramp (one hue, light→dark) for magnitude: treemaps, heat
-     cells, usage bars. Identity there comes from the label, not the hue. */
-  --mc-seq-1: #bae0ff;
-  --mc-seq-2: #7cc0ff;
-  --mc-seq-3: #3b9dff;
-  --mc-seq-4: #1e90ff;
-  --mc-seq-5: #0b7fe8;
-  --mc-seq-6: #0369a1;
-  --mc-seq-7: #075985;
-
-  /* Status — reserved meaning, never reused as a categorical slot. */
-  --mc-ok:   #28c840;
-  --mc-warn: #febc2e;
-  --mc-crit: #ff5f57;
-
-  /* ── Semantic status tokens (single source for ok/warn/error/info).
-     Every status chip/text resolves through these so the four states are
-     unambiguous and consistent across themes. red=error, amber=warning,
-     green=success, accent/blue=info. */
-  --pt-ok:      var(--mc-ok);
-  --pt-ok-ink:  #2be36b;
-  --pt-warn:    var(--mc-warn);
-  --pt-warn-ink:#ffc857;
-  --pt-error:   var(--mc-crit);
-  --pt-error-ink: #ff8a83;
-  --pt-info:    var(--pt-neon-bright);
-  --pt-info-ink: var(--pt-neon-bright);
-
-  --pt-neon-rgb:        255,16,240;
-  --pt-neon-bright-rgb: 255,125,248;
-  --pt-text-rgb:        248,236,247;
-  --pt-bg-tint:         #1f0526;
-  /* ── Core surfaces ─────────────────────────────────────── */
-  --pt-bg:              #000000;   /* void black, the deepest stop  */
-  --pt-bg-soft:         #070109;   /* panels sitting above the void */
-  --pt-surface:         rgba(16,6,20, 0.6);   /* generic panel surface  */
-  --pt-surface-2:       rgba(24,10,30, 0.72); /* raised / hover surface */
-  --pt-bg-terminal:     rgba(10,2,12, 0.78);  /* glass window body */
-  --pt-bg-terminal-solid: #0b0110;
-
-  /* ── Text ──────────────────────────────────────────────── */
-  --pt-text:            #f8ecf7;   /* crisp near-white body copy    */
-  --pt-text-high:       #ffffff;   /* pure white for emphasis       */
-  --pt-text-dim:        rgba(var(--pt-text-rgb), 0.55);
-  --pt-text-mute:       rgba(var(--pt-text-rgb), 0.35);
-
-  /* ── Neon blue — the signature accent ──────────────────── */
-  --pt-neon:            #ff10f0;   /* primary neon blue              */
-  --pt-neon-bright:     #ff7df8;   /* hover / highlight              */
-  --pt-neon-deep:       #c400ba;   /* pressed / deeper emphasis      */
-  --pt-neon-glow:       rgba(var(--pt-neon-rgb), 0.55);
-  --pt-neon-glow-soft:  rgba(var(--pt-neon-rgb), 0.18);
-  --pt-neon-wash:       rgba(var(--pt-neon-rgb), 0.08); /* panel tint      */
-
-  /* ── Terminal traffic lights ───────────────────────────── */
-  --pt-tl-red:    #ff5f57;
-  --pt-tl-yellow: #febc2e;
-  --pt-tl-green:  #28c840;
-
-  /* ── Lines, borders ────────────────────────────────────── */
-  --pt-border:          rgba(var(--pt-neon-rgb), 0.35);
-  --pt-border-strong:   rgba(var(--pt-neon-rgb), 0.65);
-  --pt-border-dim:      rgba(var(--pt-neon-rgb), 0.15);
-  --pt-rule:            rgba(var(--pt-neon-rgb), 0.22);
-
-  /* ── Glow / shadow system ──────────────────────────────── */
-  --pt-glow-sm:   0 0 6px rgba(var(--pt-neon-rgb), 0.45);
-  --pt-glow-md:   0 0 14px rgba(var(--pt-neon-rgb), 0.55),
-                  0 0 2px rgba(var(--pt-neon-rgb), 0.9);
-  --pt-glow-lg:   0 0 28px rgba(var(--pt-neon-rgb), 0.55),
-                  0 0 6px  rgba(var(--pt-neon-rgb), 0.75),
-                  inset 0 0 18px rgba(var(--pt-neon-rgb), 0.08);
-  --pt-glow-text: 0 0 6px rgba(var(--pt-neon-bright-rgb), 0.65),
-                  0 0 14px rgba(var(--pt-neon-rgb), 0.45);
-
-  --pt-shadow-window: 0 24px 80px rgba(0, 0, 0, 0.8),
-                      0 0 24px rgba(var(--pt-neon-rgb), 0.35);
-
-  /* ── Matrix binary rain (applied to body::before usually) ─ */
-  --pt-bg-gradient:
-    radial-gradient(ellipse at top, rgba(var(--pt-neon-rgb), 0.1), transparent 55%),
-    linear-gradient(180deg, #000000 0%, #060009 100%);
-
-  /* ── Radii — terminals are crisp, corners are modest ───── */
-  --pt-r-sm:   4px;
-  --pt-r-md:   8px;
-  --pt-r-lg:   12px;   /* window chrome standard              */
-  --pt-r-pill: 999px;
-
-  /* ── Spacing scale ─────────────────────────────────────── */
-  --pt-s-1: 0.25rem;
-  --pt-s-2: 0.5rem;
-  --pt-s-3: 0.75rem;
-  --pt-s-4: 1rem;
-  --pt-s-5: 1.25rem;
-  --pt-s-6: 1.5rem;
-  --pt-s-8: 2rem;
-  --pt-s-10: 2.5rem;
-  --pt-s-12: 3rem;
-  --pt-s-16: 4rem;
-  --pt-s-20: 5rem;
-
-  /* ── Type — monospace, always ──────────────────────────── */
-  --pt-font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace,
-                  SFMono-Regular, Menlo, Consolas, 'Courier New', monospace;
-  --pt-font-sans: var(--pt-font-mono);   /* alias — this system IS mono */
-
-  /* ── Type scale ────────────────────────────────────────── */
-  --pt-fs-display:  clamp(2.2rem, 5.5vw, 4.25rem);  /* h1 hero    */
-  --pt-fs-h2:       clamp(1.5rem, 3.2vw, 2.15rem);  /* section    */
-  --pt-fs-h3:       1.05rem;                        /* card head  */
-  --pt-fs-body:     0.95rem;
-  --pt-fs-sm:       0.85rem;
-  --pt-fs-xs:       0.78rem;
-  --pt-fs-kicker:   0.75rem;                        /* eyebrow   */
-
-  --pt-lh-tight:  1.08;    /* hero                             */
-  --pt-lh-snug:   1.2;     /* h2                               */
-  --pt-lh-body:   1.65;    /* long-form paragraph              */
-  --pt-lh-ui:     1.5;
-
-  --pt-ls-tight:   -0.02em;
-  --pt-ls-kicker:   0.22em;  /* eyebrow tracking is wide        */
-  --pt-ls-prompt:   0.02em;  /* body copy gets a hair of space  */
-
-  /* ── Motion ────────────────────────────────────────────── */
-  --pt-ease:        cubic-bezier(0.2, 0.7, 0.2, 1);
-  --pt-dur-fast:    0.15s;
-  --pt-dur-med:     0.28s;
-
-  /* ── Scan / grid overlays (optional utilities) ─────────── */
-  --pt-scanline: repeating-linear-gradient(
-      to bottom,
-      rgba(var(--pt-neon-rgb), 0.04) 0px,
-      rgba(var(--pt-neon-rgb), 0.04) 1px,
-      transparent 1px,
-      transparent 3px
-  );
-}
 
 /* ============================================================
    Semantic element styles
@@ -185,7 +22,9 @@ body {
   min-width: 320px;
   color: var(--pt-text);
   background: var(--pt-bg-gradient);
-  font-family: var(--pt-font-mono);
+  /* Phase 1 type role: body prose is UI sans; mono is reserved for
+     labels, IDs, paths, cron, and numerals via explicit classes. */
+  font-family: var(--pt-font-sans);
   font-weight: 400;
   line-height: var(--pt-lh-ui);
   letter-spacing: var(--pt-ls-prompt);
@@ -242,40 +81,6 @@ code, kbd, samp, pre { font-family: var(--pt-font-mono); }
    CRT phosphor in neon pink (var(--pt-neon)), heavy scanlines,
    curved barrel mask, jitter, chromatic edge, segmented bars.
    ──────────────────────────────────────────────────────── */
-html[data-theme="friday"] {
-  --pt-neon-rgb:        255,16,240;
-  --pt-neon-bright-rgb: 255,125,248;
-  --pt-text-rgb:        244,205,240;
-  --pt-bg-tint:         #1f0526;
-  --pt-text:           #f4cdf0;
-  --pt-text-high:      #ffe9fc;
-  --pt-text-dim:       rgba(var(--pt-text-rgb),0.55);
-  --pt-text-mute:      rgba(var(--pt-text-rgb),0.32);
-  --pt-neon:           #ff10f0;
-  --pt-neon-bright:    #ff7df8;
-  --pt-neon-deep:      #c400ba;
-  --pt-neon-glow:      rgba(var(--pt-neon-rgb),0.6);
-  --pt-neon-glow-soft: rgba(var(--pt-neon-rgb),0.2);
-  --pt-neon-wash:      rgba(var(--pt-neon-rgb),0.08);
-  --pt-border:         rgba(var(--pt-neon-rgb),0.55);
-  --pt-border-strong:  rgba(var(--pt-neon-rgb),0.85);
-  --pt-border-dim:     rgba(var(--pt-neon-rgb),0.28);
-  --pt-rule:           rgba(var(--pt-neon-rgb),0.35);
-  --pt-bg:             #0d0212;
-  --pt-bg-soft:        #150322;
-  --pt-bg-terminal:    rgba(13,2,18,0.96);
-  --pt-glow-sm:        0 0 6px rgba(var(--pt-neon-rgb),0.65);
-  --pt-glow-md:        0 0 14px rgba(var(--pt-neon-rgb),0.6), 0 0 2px rgba(var(--pt-neon-rgb),0.95);
-  --pt-glow-text:      0 0 6px rgba(var(--pt-neon-bright-rgb),0.75), 0 0 14px rgba(var(--pt-neon-rgb),0.55);
-  --pt-scanline: repeating-linear-gradient(
-      to bottom,
-      rgba(var(--pt-neon-rgb),0.10) 0px,
-      rgba(var(--pt-neon-rgb),0.10) 1px,
-      transparent 1px,
-      transparent 3px
-  );
-  font-feature-settings: "ss01", "zero";
-}
 html[data-theme="friday"] body {
   background: radial-gradient(ellipse 70% 50% at 50% 50%, var(--pt-bg-tint) 0%, #08010c 70%, #000 100%);
   color: var(--pt-text);
@@ -545,7 +350,7 @@ body {
   margin: 0;
   background: var(--pt-bg);
   color: var(--pt-text);
-  font-family: var(--pt-font-mono);
+  font-family: var(--pt-font-sans);
   overflow: hidden;
 }
 
@@ -4584,3 +4389,75 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   font-size: 12px; color: var(--pt-text-mute); letter-spacing: 0.3em;
   padding: 4px 2px;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   STYLEGUIDE (sg-*) — design-system specimen wall. Renders every
+   token + component variant from lib/tokens.ts. Data-free, static.
+   ═══════════════════════════════════════════════════════════ */
+.sg {
+  display: flex; flex-direction: column; gap: 26px;
+  padding-bottom: 48px;
+}
+.sg-count { color: var(--pt-text-dim); font-size: 10px; letter-spacing: 0.18em; }
+.sg-desc { color: var(--pt-text-dim); font-size: 12px; max-width: 640px; line-height: 1.6; margin: 4px 0 12px; font-family: var(--pt-font-sans); }
+.sg-desc--dim { color: var(--pt-text-mute); }
+.sg-subhead { margin: 18px 0 8px; font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--pt-neon-bright); font-family: var(--pt-font-mono); }
+.sg-anchor { scroll-margin-top: 20px; }
+
+/* ── grids ── */
+.sg-grid { display: grid; gap: 12px; }
+.sg-grid--4 { grid-template-columns: repeat(4, minmax(0,1fr)); }
+.sg-grid--8 { grid-template-columns: repeat(8, minmax(0,1fr)); }
+.sg-grid--11 { grid-template-columns: repeat(11, minmax(0,1fr)); }
+.sg-grid--3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+@media (max-width: 980px) { .sg-grid--8 { grid-template-columns: repeat(4, minmax(0,1fr)); } }
+@media (max-width: 700px) { .sg-grid--4, .sg-grid--11, .sg-grid--3 { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+
+/* ── swatches ── */
+.sg-swatch {
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--pt-r-md);
+  padding: 18px 14px;
+  min-height: 74px;
+  display: flex; flex-direction: column; gap: 6px;
+  font-family: var(--pt-font-mono);
+}
+.sg-swatch-name { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.85; }
+.sg-swatch-hex { font-size: 11px; opacity: 0.75; }
+
+/* ── token rows ── */
+.sg-row { display: flex; align-items: baseline; gap: 14px; padding: 7px 4px; border-bottom: 1px dashed var(--pt-border-dim); }
+.sg-k { font-size: 11px; font-family: var(--pt-font-mono); color: var(--pt-text-high); min-width: 220px; }
+.sg-v { font-size: 11px; font-family: var(--pt-font-mono); color: var(--pt-text-dim); word-break: break-all; }
+.sg-kind { margin-left: auto; font-size: 9px; letter-spacing: 0.16em; color: var(--pt-text-mute); text-transform: uppercase; }
+.sg-rows { display: flex; flex-direction: column; }
+
+/* ── type role specimens ── */
+.sg-display { font-size: 40px; font-family: var(--pt-font-display); color: var(--pt-neon-bright); text-shadow: var(--pt-glow-sm); font-weight: 700; }
+.sg-micro { font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--pt-neon-bright); font-family: var(--pt-font-mono); font-weight: 700; }
+.sg-prose { font-size: 15px; line-height: 1.65; color: var(--pt-text); font-family: var(--pt-font-sans); max-width: 680px; margin: 0; }
+
+/* ── stacks & variant cards ── */
+.sg-stack { display: flex; flex-direction: column; gap: 8px; }
+.sg-stack--lg { gap: 18px; }
+.sg-var {
+  border: 1px solid var(--pt-border-dim);
+  border-radius: var(--pt-r-md);
+  background: var(--pt-surface);
+  padding: 12px 14px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.sg-var-title { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--pt-text-mute); font-family: var(--pt-font-mono); }
+.sg-var-body { display: flex; flex-direction: column; gap: 8px; }
+
+/* ── spacing scale ── */
+.sg-space { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; font-family: var(--pt-font-mono); font-size: 10px; color: var(--pt-text-dim); }
+.sg-space-bar { background: var(--pt-neon); border-radius: 2px; box-shadow: var(--pt-glow-sm); }
+.sg-space .sg-space-bar[style*="0.25rem"] { width: 0.25rem; }
+.sg-space .sg-space-bar[style*="5rem"] { width: 5rem; }
+
+/* ── radius ── */
+.sg-radius { border: 1px solid var(--pt-border); width: 72px; height: 72px; background: var(--pt-surface-2); display: flex; align-items: center; justify-content: center; font-family: var(--pt-font-mono); font-size: 10px; color: var(--pt-text-dim); }
+
+/* ── elevations ── */
+.sg-elev { padding: 20px; border-radius: var(--pt-r-md); border: 1px solid var(--pt-border-dim); font-family: var(--pt-font-mono); font-size: 11px; color: var(--pt-text-high); display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
