@@ -1,26 +1,26 @@
 'use client'
 
 /**
- * Sub-agent dispatch tree — the Team tab visualization.
+ * Sub-agent dispatch HUD — the Team tab visualization.
  *
- * Primary view: a deterministic dispatch tree (Hermes root → sub-agents →
- * task leaves), NOT a force graph. Layout is fixed by roster order so nodes
- * never drift between renders.
+ * Rebuilt as a holographic command-core (HoloHUD):
+ *   HERMES sits at the center of a rotating orbital core. Agents orbit on a
+ *   fixed ring (positions never drift between renders). Energy beams pulse
+ *   from the core to whichever agent is genuinely working. A live mission
+ *   readout spotlights the active task with a running elapsed timer.
  *
- * Encoding rules (from the brief):
+ * Encoding rules (preserved from the brief):
  *  - State is carried by color AND shape, never color alone.
  *  - Motion is reserved for genuinely active agents; idle agents are static.
- *  - Animated flow runs along the parent→child edge only while a dispatch is
- *    actually in flight (working/waiting agents).
- *  - Stale agents (no heartbeat in the expected interval) render desaturated
- *    with an explicit "last seen" label.
- *  - Errored agents are the loudest thing on screen.
+ *  - Animated energy flow runs along the dirty agent's beam only.
+ *  - Stale agents (no heartbeat in interval) render desaturated + "last seen".
+ *  - Errored agents are the loudest thing on screen (flash + audible shape).
  *  - Offline nodes (desktop asleep) are a normal state, distinct from errors.
  *
- * Mobile-first: tree fits a 390px viewport, pinch-zoom + pan, reset-to-fit,
- * 44px tap targets, and a compact list view below 640px.
+ * Mobile-first: the orbital HUD fits a 360px portrait viewport (Pixel Fold
+ * cover display) with zero zoom, and the list view is one thumb-tap away.
  */
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { RelativeTime } from '../RelativeTime'
 import {
   HEARTBEAT_STALE_MS,
@@ -42,41 +42,18 @@ const STATE_META: Record<AgentState, { label: string; glyph: string }> = {
 /** Deterministic rank used for list sorting (active → waiting → errored → idle → offline). */
 const STATE_RANK: Record<AgentState, number> = { working: 0, waiting: 1, errored: 2, idle: 3, offline: 4 }
 
-/* ── Layout constants (deterministic, fixed px in SVG user space) ──────── */
+/* ── HoloHUD orbital geometry (fixed SVG user-space, deterministic) ───── */
 
-const COL_W = 92
-const ROOT_X = 92 * 4 // Hermes centered above 8 columns (0..7)
-const ROOT_Y = 52
-const AGENT_Y = 148
-const TASK_ROW = 46
-const NODE_W = 84
-const NODE_H = 46
-const TOTAL_W = COL_W * 8
+const CX = 240   // core x
+const CY = 216   // core y
+const CORE_R = 30
+const ORBIT_R = 138
+const NODE_R = 21
 
-function shapeFor(state: AgentState, accent: string, stale: boolean): { d: string; fill: string; stroke: string; dash?: string } {
-  const cx = 0
-  const cy = 0
-  const w = NODE_W / 2 - 4
-  const h = NODE_H / 2 - 4
-  const base = stale ? '#3a3f4a' : accent
-  const dim = stale ? '#2a2e38' : accent
-  switch (state) {
-    case 'working':
-      // Diamond — active pulse.
-      return { d: `M 0 -${h + 6} L ${w + 4} 0 L 0 ${h + 6} L -${w + 4} 0 Z`, fill: `${base}22`, stroke: base, dash: undefined }
-    case 'waiting':
-      // Hexagon — queued, not moving.
-      return { d: `M ${w} 0 L ${w / 2} -${h} L -${w / 2} -${h} L -${w} 0 L -${w / 2} ${h} L ${w / 2} ${h} Z`, fill: `${base}18`, stroke: base, dash: undefined }
-    case 'errored':
-      // Triangle pointing up — loud + red, never confused with a square.
-      return { d: `M 0 -${h + 8} L ${w + 6} ${h} L -${w - 6} ${h} Z`, fill: 'rgba(255,95,87,0.14)', stroke: '#ff5f57', dash: undefined }
-    case 'offline':
-      // Dashed square — asleep node, normal state.
-      return { d: `M -${w} -${h} H ${w} V ${h} H -${w} Z`, fill: 'rgba(120,128,148,0.06)', stroke: '#788094', dash: '5 4' }
-    default:
-      // Idle — static rounded square.
-      return { d: `M -${w} -${h} H ${w} V ${h} H -${w} Z`, fill: `${base}10`, stroke: dim, dash: undefined }
-  }
+function orbitPoint(i: number, total: number): { x: number; y: number } {
+  // Start at 12 o'clock, clock clockwise. Fixed by roster index → no drift.
+  const a = (i / Math.max(1, total)) * Math.PI * 2 - Math.PI / 2
+  return { x: CX + ORBIT_R * Math.cos(a), y: CY + ORBIT_R * Math.sin(a) }
 }
 
 function elapsedOnTask(n: AgentNode): number | null {
@@ -84,213 +61,223 @@ function elapsedOnTask(n: AgentNode): number | null {
   return n.currentTask.startedAt > 1e12 ? n.currentTask.startedAt : n.currentTask.startedAt * 1000
 }
 
-/* ── SVG node ──────────────────────────────────────────────────────────── */
+function isStaleNode(n: AgentNode): boolean {
+  if (n.state === 'offline' || n.state === 'working') return false
+  if (n.lastSeenAt === null) return false
+  const ts = n.lastSeenAt > 1e12 ? n.lastSeenAt : n.lastSeenAt * 1000
+  return Date.now() - ts > HEARTBEAT_STALE_MS
+}
 
-function AgentNodeMark({
-  node,
-  agentX,
+/** Rough shape glyph for a node — shape encodes state (never color alone). */
+function nodeShape(state: AgentState): string {
+  switch (state) {
+    case 'working': return '◆'   // diamond
+    case 'waiting': return '⬢'   // hexagon
+    case 'errored': return '▲'   // triangle
+    case 'offline': return '◇'   // hollow diamond
+    default:        return '●'   // circle
+  }
+}
+
+/* ── Orbital HUD (primary/mobile-first view) ──────────────────────────── */
+
+function HudView({
+  nodes,
   selected,
-  onTap,
+  onSelect,
 }: {
-  node: AgentNode
-  agentX: number
-  selected: boolean
-  onTap: (id: string) => void
+  nodes: AgentNode[]
+  selected: string | null
+  onSelect: (id: string) => void
 }) {
-  const now = Date.now()
-  const stale =
-    node.state !== 'offline' &&
-    node.lastSeenAt !== null &&
-    now - (node.lastSeenAt > 1e12 ? node.lastSeenAt : node.lastSeenAt * 1000) > HEARTBEAT_STALE_MS &&
-    node.state !== 'working'
-  const shape = shapeFor(node.state, node.accent, stale)
-  const isActive = node.state === 'working' || node.state === 'errored'
+  // HERMES owns the core; the other agents orbit it.
+  const orbitAgents = useMemo(() => nodes.filter(n => n.id !== 'hermes'), [nodes])
+  const hermes = useMemo(() => nodes.find(n => n.id === 'hermes') ?? null, [nodes])
+  const total = Math.max(1, orbitAgents.length)
+
+  const active = orbitAgents.filter(n => n.state === 'working' || n.state === 'errored')
+  const working = orbitAgents.find(n => n.state === 'working')
 
   return (
-    <g
-      className={`mc-sub-node state-${node.state}${isActive ? ' is-active' : ''}${stale ? ' is-stale' : ''}${selected ? ' is-selected' : ''}`}
-      transform={`translate(${agentX}, ${AGENT_Y})`}
-      onClick={() => onTap(node.id)}
-      style={{ cursor: 'pointer' }}
-      role="button"
-      aria-label={`${node.name} · ${STATE_META[node.state].label}`}
-      tabIndex={0}
-      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTap(node.id) } }}
-    >
-      {/* dispatch edge from root while in flight */}
-      {node.state === 'working' || node.state === 'waiting' ? (
-        <line
-          x1={ROOT_X} y1={ROOT_Y + 18} x2={ROOT_X} y2={AGENT_Y - 22}
-          className="mc-sub-edge"
-          stroke={node.accent}
-          strokeWidth={1.5}
-          strokeDasharray="6 5"
-        />
-      ) : (
-        <line x1={ROOT_X} y1={ROOT_Y + 18} x2={ROOT_X} y2={AGENT_Y - 22} stroke="rgba(120,128,148,0.25)" strokeWidth={1} />
-      )}
-
-      {/* node body */}
-      <path d={shape.d} fill={shape.fill} stroke={shape.stroke} strokeWidth={node.state === 'errored' ? 2.2 : 1.6} strokeDasharray={shape.dash} className="mc-sub-node-shape" />
-
-      {/* status glyph + name */}
-      <text x={0} y={-2} textAnchor="middle" className="mc-sub-glyph" fill={node.state === 'errored' ? '#ff5f57' : node.accent}>
-        {STATE_META[node.state].glyph}
-      </text>
-      <text x={0} y={16} textAnchor="middle" className="mc-sub-name" fill={stale ? 'var(--pt-text-mute)' : 'var(--pt-text-high)'}>
-        {node.name}
-      </text>
-    </g>
-  )
-}
-
-/* ── Task leaf ─────────────────────────────────────────────────────────── */
-
-function TaskLeaf({ node, agentX, onTap }: { node: AgentNode; agentX: number; onTap: (id: string) => void }) {
-  const tasks = useMemo(
-    () => [...node.tasks].sort((a, b) => (b.startedAt ?? 0) - (a.startedAt ?? 0)),
-    [node.tasks],
-  )
-  return (
-    <g>
-      {tasks.slice(0, 3).map((t, i) => {
-        const y = AGENT_Y + 30 + i * TASK_ROW
-        const failed = t.failed || t.status === 'blocked' || t.status === 'gave_up'
-        return (
-          <g
-            key={t.id}
-            transform={`translate(${agentX}, ${y})`}
-            className={`mc-sub-task${failed ? ' is-failed' : ''}`}
-            onClick={() => onTap(node.id)}
-            role="button"
-            aria-label={`${node.name} task: ${t.title}`}
-            tabIndex={0}
-            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTap(node.id) } }}
-          >
-            <rect x={-40} y={-14} width={80} height={26} rx={5} fill={failed ? 'rgba(255,95,87,0.08)' : 'rgba(30,144,255,0.05)'} stroke={failed ? 'rgba(255,95,87,0.5)' : 'rgba(120,128,148,0.3)'} strokeWidth={1} />
-            <text x={0} y={2} textAnchor="middle" className="mc-sub-task-title" fill={failed ? '#ff9a95' : 'var(--pt-text)'}>
-              {t.title.length > 22 ? `${t.title.slice(0, 20)}…` : t.title}
-            </text>
-            <text x={0} y={15} textAnchor="middle" className="mc-sub-task-meta">
-              {t.status ?? 'ready'}{t.startedAt ? ' · ' : ''}{t.startedAt ? <RelativeTime ts={t.startedAt} frame="elapsed" /> : null}
-            </text>
-          </g>
-        )
-      })}
-      {tasks.length > 3 && (
-        <text x={agentX} y={AGENT_Y + 30 + 3 * TASK_ROW} textAnchor="middle" className="mc-sub-task-meta">
-          +{tasks.length - 3} more
-        </text>
-      )}
-    </g>
-  )
-}
-
-/* ── Tree view (SVG, deterministic) ────────────────────────────────────── */
-
-function TreeView({ nodes, onSelect }: { nodes: AgentNode[]; onSelect: (id: string) => void }) {
-  const maxTasks = Math.max(1, ...nodes.map(n => n.tasks.length))
-  const height = AGENT_Y + 40 + maxTasks * TASK_ROW + 30
-  const [view, setView] = useState({ x: 0, y: 0, k: 1 })
-  const [selected, setSelected] = useState<string | null>(null)
-  const touchRef = useRef<{ mode: 'pan' | 'pinch' | null; x: number; y: number; dist: number; sx: number; sy: number; sk: number } | null>(null)
-
-  const handleTap = (id: string) => {
-    setSelected(prev => (prev === id ? null : id))
-    onSelect(id)
-  }
-
-  // Pointer pan (mouse drag) + pinch (two pointers).
-  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.pointerType === 'touch') return // touch handled by gesture handlers below
-    const el = e.currentTarget
-    el.setPointerCapture(e.pointerId)
-    touchRef.current = { mode: 'pan', x: e.clientX, y: e.clientY, dist: 0, sx: view.x, sy: view.y, sk: view.k }
-  }
-  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    const t = touchRef.current
-    if (!t || t.mode !== 'pan') return
-    setView(v => ({ ...v, x: t.sx + (e.clientX - t.x), y: t.sy + (e.clientY - t.y) }))
-  }
-  const onPointerUp = () => { touchRef.current = null }
-
-  const onTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (e.touches.length === 1) {
-      const t = e.touches[0]
-      touchRef.current = { mode: 'pan', x: t.clientX, y: t.clientY, dist: 0, sx: view.x, sy: view.y, sk: view.k }
-    } else if (e.touches.length === 2) {
-      const a = e.touches[0], b = e.touches[1]
-      touchRef.current = { mode: 'pinch', x: 0, y: 0, dist: Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY), sx: view.x, sy: view.y, sk: view.k }
-    }
-  }
-  const onTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    const t = touchRef.current
-    if (!t) return
-    if (t.mode === 'pan' && e.touches.length === 1) {
-      const p = e.touches[0]
-      setView(v => ({ ...v, x: t.sx + (p.clientX - t.x), y: t.sy + (p.clientY - t.y) }))
-    } else if (t.mode === 'pinch' && e.touches.length === 2) {
-      const a = e.touches[0], b = e.touches[1]
-      const dist = Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY)
-      const k = Math.min(4, Math.max(0.4, t.sk * (dist / Math.max(1, t.dist))))
-      setView(v => ({ ...v, k }))
-    }
-  }
-  const onTouchEnd = () => { touchRef.current = null }
-
-  const resetFit = () => setView({ x: 0, y: 0, k: 1 })
-
-  return (
-    <div className="mc-sub-tree-wrap">
-      <div className="mc-sub-tree-tools">
-        <button type="button" className="mc-sub-btn" onClick={resetFit} aria-label="Reset view to fit">⌂ FIT</button>
-        <span className="mc-sub-zoom">{Math.round(view.k * 100)}%</span>
+    <div className="mc-hud" role="region" aria-label="Sub-agent orbital dispatch HUD">
+      {/* top status telemetry strip */}
+      <div className="mc-hud-toprow">
+        <div className="mc-hud-hudtag">
+          <span className="mc-hud-brack">◤</span>
+          <span className="mc-hud-kicker">SYNC ARRAY</span>
+          <span className="mc-hud-brack">◢</span>
+        </div>
+        <div className="mc-hud-counters">
+          <span className="mc-hud-count is-working">{active.filter(a => a.state === 'working').length} ✦ WORKING</span>
+          <span className="mc-hud-count is-errored">{active.filter(a => a.state === 'errored').length} ✕ ERR</span>
+        </div>
       </div>
-      <div
-        className="mc-sub-tree-pane"
-        style={{ touchAction: 'none' }}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerLeave={onPointerUp}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-      >
-        <div style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
-          <svg
-            viewBox={`0 0 ${TOTAL_W} ${height}`}
-            width="100%"
-            height="100%"
-            preserveAspectRatio="xMidYMin meet"
-            style={{ transform: `translate(${view.x}px, ${view.y}px) scale(${view.k})`, transformOrigin: 'top left', transition: touchRef.current ? 'none' : 'transform 120ms ease' }}
-            className="mc-sub-svg"
-          >
-            {/* Hermes root */}
-            <g transform={`translate(${ROOT_X}, ${ROOT_Y})`} className="mc-sub-root">
-              <circle r={22} fill="rgba(30,144,255,0.14)" stroke="#1e90ff" strokeWidth={2} />
-              <text x={0} y={4} textAnchor="middle" className="mc-sub-glyph" fill="#1e90ff">⌂</text>
-              <text x={0} y={34} textAnchor="middle" className="mc-sub-name" fill="var(--pt-text-high)">HERMES</text>
-            </g>
 
-            {/* agents */}
-            {nodes.map((n, i) => {
-              const agentX = i * COL_W + COL_W / 2
-              return (
-                <g key={n.id}>
-                  <AgentNodeMark node={n} agentX={agentX} selected={selected === n.id} onTap={handleTap} />
-                  <TaskLeaf node={n} agentX={agentX} onTap={handleTap} />
+      <div className="mc-hud-stage">
+        {/* rotating scan grid underlay (pure CSS) */}
+        <div className="mc-hud-grid" aria-hidden="true" />
+
+        <svg
+          viewBox="0 0 480 432"
+          className="mc-hud-svg"
+          role="img"
+          aria-label="Orbital dispatch constellation"
+        >
+          <defs>
+            <radialGradient id="mc-hud-core-glow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ff7df8" stopOpacity="0.9" />
+              <stop offset="55%" stopColor="#ff10f0" stopOpacity="0.28" />
+              <stop offset="100%" stopColor="#ff10f0" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+
+          {/* orbit rings */}
+          <circle cx={CX} cy={CY} r={ORBIT_R} className="mc-hud-ring" />
+          <circle cx={CX} cy={CY} r={ORBIT_R - 26} className="mc-hud-ring is-faint" />
+          <circle cx={CX} cy={CY} r={ORBIT_R + 26} className="mc-hud-ring is-faint" />
+          {/* rotating hatch ring */}
+          <circle cx={CX} cy={CY} r={ORBIT_R} className="mc-hud-ring-rot" />
+
+          {/* crosshair ticks */}
+          {[0, 45, 90, 135, 180, 225, 270, 315].map(deg => {
+            const a = (deg * Math.PI) / 180
+            const x1 = CX + Math.cos(a) * (ORBIT_R + 34)
+            const y1 = CY + Math.sin(a) * (ORBIT_R + 34)
+            const x2 = CX + Math.cos(a) * (ORBIT_R + 44)
+            const y2 = CY + Math.sin(a) * (ORBIT_R + 44)
+            return <line key={deg} x1={x1} y1={y1} x2={x2} y2={y2} className="mc-hud-tick" />
+          })}
+
+          {/* HERMES core */}
+          {hermes && (
+            <g className="mc-hud-core">
+              <circle cx={CX} cy={CY} r={CORE_R + 14} fill="url(#mc-hud-core-glow)" />
+              <circle cx={CX} cy={CY} r={CORE_R} className="mc-hud-core-ring" />
+              <circle cx={CX} cy={CY} r={CORE_R - 6} className={`mc-hud-core-inner state-${hermes.state}`} />
+              <text x={CX} y={CY + 1} textAnchor="middle" className="mc-hud-core-glyph">⟟</text>
+              <text x={CX} y={CY + CORE_R + 22} textAnchor="middle" className="mc-hud-core-label">HERMES</text>
+            </g>
+          )}
+
+          {/* energy beams + orbiting agent nodes */}
+          {orbitAgents.map((n, i) => {
+            const p = orbitPoint(i, total)
+            const stale = isStaleNode(n)
+            const glowing = n.state === 'working' || n.state === 'errored'
+            const beamTo = n.state === 'working' || n.state === 'waiting'
+            return (
+              <g key={n.id}>
+                {/* energy beam from core → active agent */}
+                {beamTo && (
+                  <line
+                    x1={CX} y1={CY} x2={p.x} y2={p.y}
+                    className={`mc-hud-beam state-${n.state}`}
+                    stroke={n.state === 'errored' ? '#ff5f57' : n.accent}
+                  />
+                )}
+                {/* node */}
+                <g
+                  transform={`translate(${p.x}, ${p.y})`}
+                  className={`mc-hud-node state-${n.state}${glowing ? ' is-glowing' : ''}${stale ? ' is-stale' : ''}${selected === n.id ? ' is-selected' : ''}`}
+                  onClick={() => onSelect(n.id)}
+                  role="button"
+                  aria-label={`${n.name} · ${STATE_META[n.state].label}${n.currentTask ? ` · ${n.currentTask.title}` : ''}`}
+                  tabIndex={0}
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(n.id) } }}
+                >
+                  {/* selected halo */}
+                  {selected === n.id && <circle r={NODE_R + 8} className="mc-hud-selected-halo" />}
+                  {/* working pulse ring */}
+                  {n.state === 'working' && <circle r={NODE_R + 6} className="mc-hud-pulse" />}
+                  <circle r={NODE_R} className="mc-hud-node-ring" stroke={n.state === 'errored' ? '#ff5f57' : n.accent} />
+                  <text x={0} y={1} textAnchor="middle" className="mc-hud-node-glyph" fill={n.state === 'errored' ? '#ff5f57' : n.accent}>
+                    {nodeShape(n.state)}
+                  </text>
+                  <text x={0} y={NODE_R + 14} textAnchor="middle" className="mc-hud-node-name">{n.name}</text>
                 </g>
-              )
-            })}
-          </svg>
+              </g>
+            )
+          })}
+        </svg>
+
+        {/* side legend (desktop only) */}
+        <div className="mc-hud-legend">
+          <div className="mc-hud-legend-title">AGENT STATES</div>
+          {(Object.keys(STATE_META) as AgentState[]).map(s => (
+            <div key={s} className={`mc-hud-legend-row state-${s}`}>
+              <span className="mc-hud-legend-glyph">{STATE_META[s].glyph}</span>
+              <span>{STATE_META[s].label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* live mission spotlight — pins to the active task */}
+        <div className="mc-hud-spotlight">
+          <div className="mc-hud-spot-kicker">
+            {working ? '▸ LIVE MISSION' : errorsBrief(active) ? '⚠ TASK ERROR' : '◌ MESH IDLE'}
+          </div>
+          {working ? (
+            <LiveMission node={working} />
+          ) : (
+            <div className="mc-hud-idle">
+              <span className="mc-hud-idle-line">NO AGENT WORKING — MESH STANDBY</span>
+              <span className="mc-hud-idle-sub">{orbitAgents.length} nodes on array · {nodes.filter(n => n.state === 'offline').length} offline</span>
+            </div>
+          )}
         </div>
       </div>
     </div>
   )
 }
 
-/* ── Compact list view (<640px toggle) ─────────────────────────────────── */
+function errorsBrief(active: AgentNode[]): AgentNode | null {
+  return active.find(a => a.state === 'errored') ?? null
+}
+
+/* ── Live mission readout ─────────────────────────────────────────────── */
+
+function LiveMission({ node }: { node: AgentNode }) {
+  const task = node.currentTask
+  const [now, setNow] = useState(() => Date.now())
+  const started = useMemo(() => elapsedOnTask(node), [node])
+
+  useEffect(() => {
+    if (started == null) return
+    const id = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [started])
+
+  if (!task) {
+    return (
+      <div className="mc-hud-mission">
+        <div className="mc-hud-mission-name" style={{ color: node.accent }}>{node.name}</div>
+        <div className="mc-hud-mission-status working">WORKING — NO TASK LABEL</div>
+      </div>
+    )
+  }
+
+  const elapsed =
+    started != null
+      ? Math.max(0, Math.floor((now - started) / 1000))
+      : 0
+  const mm = String(Math.floor(elapsed / 60)).padStart(2, '0')
+  const ss = String(elapsed % 60).padStart(2, '0')
+
+  return (
+    <div className="mc-hud-mission">
+      <div className="mc-hud-mission-name" style={{ color: node.accent }}>{node.name}</div>
+      <div className="mc-hud-mission-title">{task.title}</div>
+      <div className="mc-hud-mission-meta">
+        <span className={`mc-hud-status state-${node.state}`}>{node.state}</span>
+        <span className="mc-hud-elapsed"><span className="mc-hud-elapsed-num">{mm}:{ss}</span> elapsed</span>
+        {node.host && <span className="mc-hud-host">@{node.host}</span>}
+      </div>
+      {task.status && <div className="mc-hud-progress"><span className="mc-hud-progress-fill" /> <span className="mc-hud-progress-lbl">{task.status}</span></div>}
+    </div>
+  )
+}
+
+/* ── Compact list view (mobile toggle) ────────────────────────────────── */
 
 function ListView({ nodes, onSelect }: { nodes: AgentNode[]; onSelect: (id: string) => void }) {
   const sorted = useMemo(
@@ -319,7 +306,7 @@ function ListView({ nodes, onSelect }: { nodes: AgentNode[]; onSelect: (id: stri
   )
 }
 
-/* ── Detail sheet ──────────────────────────────────────────────────────── */
+/* ── Detail sheet ─────────────────────────────────────────────────────── */
 
 function DetailSheet({ node, onClose }: { node: AgentNode; onClose: () => void }) {
   if (!node) return null
@@ -365,7 +352,7 @@ function DetailSheet({ node, onClose }: { node: AgentNode; onClose: () => void }
   )
 }
 
-/* ── Main panel ────────────────────────────────────────────────────────── */
+/* ── Main panel ───────────────────────────────────────────────────────── */
 
 const STREAM_META: Record<string, { label: string; cls: string }> = {
   connecting: { label: 'CONNECTING', cls: 'amber' },
@@ -388,7 +375,7 @@ export function SubAgentPanel() {
     <div className="mc-sub-panel">
       <div className="mc-sub-bar">
         <div className="mc-sub-bar-title">
-          <span className="mc-sub-kicker">TELEMETRY · DISPATCH TREE</span>
+          <span className="mc-sub-kicker">HOLO DISPATCH · ORBITAL MESH</span>
           <span className={`mc-led ${stream.cls}`} />
           <span className={`mc-sub-stream state-${snap.stream}`}>{stream.label}</span>
         </div>
@@ -400,7 +387,7 @@ export function SubAgentPanel() {
             onClick={() => setListMode(v => !v)}
             aria-label="Toggle list view"
           >
-            {listMode ? 'TREE' : 'LIST'}
+            {listMode ? 'HOLO' : 'LIST'}
           </button>
         </div>
       </div>
@@ -412,7 +399,7 @@ export function SubAgentPanel() {
       {listMode ? (
         <ListView nodes={snap.tree} onSelect={setSelectedId} />
       ) : (
-        <TreeView nodes={snap.tree} onSelect={setSelectedId} />
+        <HudView nodes={snap.tree} selected={selectedId} onSelect={setSelectedId} />
       )}
 
       {selected && <DetailSheet node={selected} onClose={() => setSelectedId(null)} />}

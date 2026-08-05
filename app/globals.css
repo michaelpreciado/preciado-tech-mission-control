@@ -3292,3 +3292,229 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   .mc-sub-tree-pane { min-height: 380px; }
   .mc-sub-bar-meta { font-size: 10px; }
 }
+
+/* ── HoloHUD: orbital dispatch (Team tab primary view) ──────────────── */
+.mc-hud {
+  display: flex; flex-direction: column; gap: 8px;
+  width: 100%;
+}
+.mc-hud-toprow {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 6px 2px;
+}
+.mc-hud-hudtag { display: flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.22em; }
+.mc-hud-brack { color: var(--pt-neon); text-shadow: var(--pt-glow-text); opacity: 0.9; }
+.mc-hud-kicker { color: var(--pt-text-dim); text-transform: uppercase; }
+.mc-hud-counters { display: flex; gap: 12px; font-size: 10px; letter-spacing: 0.12em; }
+.mc-hud-count.is-working { color: var(--pt-ok-ink); }
+.mc-hud-count.is-errored { color: var(--pt-error-ink); animation: sub-blink 1s steps(2) infinite; }
+
+.mc-hud-stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto;
+  border: 1px solid var(--pt-border);
+  border-radius: var(--pt-r-lg);
+  background:
+    radial-gradient(ellipse 60% 55% at 50% 44%, rgba(255,16,240,0.10), transparent 70%),
+    rgba(0,0,0,0.45);
+  box-shadow: var(--pt-glow-md), inset 0 0 40px rgba(255,16,240,0.05);
+  overflow: hidden;
+  min-width: 0;
+}
+/* rotating scan grid underlay */
+.mc-hud-grid {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,16,240,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,16,240,0.06) 1px, transparent 1px);
+  background-size: 26px 26px;
+  mix-blend-mode: screen;
+  animation: mc-hud-drift 24s linear infinite;
+  opacity: 0.5;
+}
+@keyframes mc-hud-drift {
+  from { background-position: 0 0, 0 0; }
+  to   { background-position: 26px 26px, 26px 26px; }
+}
+
+.mc-hud-svg {
+  display: block; width: 100%; height: auto;
+  min-height: 340px;
+}
+
+/* rings */
+.mc-hud-ring {
+  fill: none; stroke: rgba(255,16,240,0.3); stroke-width: 1;
+  stroke-dasharray: 2 6;
+}
+.mc-hud-ring.is-faint { stroke: rgba(255,16,240,0.10); stroke-dasharray: 1 10; }
+.mc-hud-ring-rot {
+  fill: none; stroke: rgba(255,125,248,0.5); stroke-width: 1.5;
+  stroke-dasharray: 40 14 6 14;
+  transform-origin: 240px 216px;
+  animation: spin 28s linear infinite;
+}
+.mc-hud-tick { stroke: rgba(255,125,248,0.35); stroke-width: 1; }
+
+/* core */
+.mc-hud-core-ring {
+  fill: none; stroke: #ff10f0; stroke-width: 2;
+  filter: drop-shadow(0 0 6px rgba(255,16,240,0.9));
+}
+.mc-hud-core-inner { fill: rgba(255,16,240,0.16); }
+.mc-hud-core-inner.state-working {
+  fill: rgba(40,200,64,0.2);
+  animation: sub-pulse 1.6s ease-in-out infinite;
+}
+.mc-hud-core-glyph {
+  font-size: 22px; font-family: var(--pt-font-mono);
+  fill: #ff7df8; filter: drop-shadow(0 0 6px rgba(255,16,240,0.9));
+}
+.mc-hud-core-label {
+  font-size: 10px; letter-spacing: 0.2em; font-family: var(--pt-font-mono);
+  fill: var(--pt-text-high);
+}
+
+/* beams */
+.mc-hud-beam {
+  stroke-width: 1.6;
+  stroke-dasharray: 5 7;
+  opacity: 0.9;
+  animation: mc-hud-beam 0.6s linear infinite;
+  filter: drop-shadow(0 0 3px currentColor);
+}
+.mc-hud-beam.state-working { stroke: var(--pt-ok); }
+.mc-hud-beam.state-errored {
+  stroke: #ff5f57; stroke-width: 2.2;
+  animation: mc-hud-beam 0.25s linear infinite, sub-flash 0.9s steps(2) infinite;
+}
+@keyframes mc-hud-beam { to { stroke-dashoffset: -24; } }
+
+/* orbital nodes */
+.mc-hud-node { cursor: pointer; outline: none; }
+.mc-hud-node-ring {
+  fill: rgba(0,0,0,0.55);
+  stroke-width: 1.6;
+  transition: stroke-width 120ms ease;
+}
+.mc-hud-node:nth-child(2) .mc-hud-node-ring { stroke: currentColor; }
+.mc-hud-node-glyph { font-size: 17px; font-family: var(--pt-font-mono); }
+.mc-hud-node-name {
+  font-size: 9px; letter-spacing: 0.12em; font-family: var(--pt-font-mono);
+  fill: var(--pt-text-high);
+}
+
+/* per-state node ring stroke — set via inline attribute fallback in JSX */
+.mc-hud-node.state-working .mc-hud-node-ring { animation: sub-pulse 1.6s ease-in-out infinite; }
+.mc-hud-node.state-working .mc-hud-node-glyph { animation: sub-pulse 1.6s ease-in-out infinite; }
+.mc-hud-node.state-errored .mc-hud-node-ring {
+  filter: drop-shadow(0 0 6px rgba(255,95,87,0.9));
+  animation: sub-flash 0.9s steps(2) infinite;
+}
+.mc-hud-node.is-stale { opacity: 0.45; filter: grayscale(0.8); }
+.mc-hud-node.is-selected .mc-hud-node-ring { stroke-width: 3; filter: drop-shadow(0 0 8px currentColor); }
+
+.mc-hud-pulse {
+  fill: none; stroke: currentColor; stroke-width: 1.5;
+  animation: mc-hud-pulse 1.6s ease-out infinite;
+}
+@keyframes mc-hud-pulse {
+  0%   { transform: scale(0.8); opacity: 0.9; }
+  100% { transform: scale(1.7); opacity: 0; }
+}
+.mc-hud-selected-halo {
+  fill: none; stroke: var(--pt-neon-bright); stroke-width: 1;
+  filter: drop-shadow(0 0 8px rgba(255,16,240,0.8));
+}
+
+/* legend (side) */
+.mc-hud-legend {
+  display: none;
+}
+
+/* spotlight (mission readout) */
+.mc-hud-spotlight {
+  padding: 12px 14px;
+  border-top: 1px solid var(--pt-border-dim);
+  background: linear-gradient(180deg, rgba(255,16,240,0.06), rgba(0,0,0,0.1));
+}
+.mc-hud-spot-kicker {
+  font-size: 10px; letter-spacing: 0.22em; color: var(--pt-warn-ink);
+  text-transform: uppercase; margin-bottom: 6px;
+}
+.mc-hud-spot-kicker:has(+ * .mc-hud-status.state-working),
+.mc-hud-spotlight .mc-hud-mission:has(.mc-hud-status.state-working) ~ * { }
+.mc-hud-mission-name {
+  font-size: 15px; font-weight: 700; letter-spacing: 0.14em;
+  font-family: var(--pt-font-mono); text-transform: uppercase;
+}
+.mc-hud-mission-title {
+  font-size: 13px; color: var(--pt-text-high); letter-spacing: 0.02em;
+  margin-top: 3px; line-height: 1.4;
+  overflow: hidden; text-overflow: ellipsis;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
+.mc-hud-mission-meta {
+  display: flex; align-items: center; gap: 12px;
+  margin-top: 8px; font-size: 10px; letter-spacing: 0.1em;
+}
+.mc-hud-status {
+  padding: 2px 8px; border: 1px solid; border-radius: var(--pt-r-pill);
+  text-transform: uppercase; font-size: 9px; letter-spacing: 0.14em;
+}
+.mc-hud-status.state-working { color: var(--pt-ok-ink); border-color: rgba(40,200,64,0.5); }
+.mc-hud-status.state-waiting { color: var(--pt-warn-ink); border-color: rgba(254,188,46,0.5); }
+.mc-hud-status.state-errored { color: var(--pt-error-ink); border-color: rgba(255,95,87,0.6); animation: sub-blink 1s steps(2) infinite; }
+.mc-hud-elapsed { color: var(--pt-text); }
+.mc-hud-elapsed-num { font-variant-numeric: tabular-nums; color: var(--pt-neon-bright); text-shadow: var(--pt-glow-text); font-size: 13px; }
+.mc-hud-host { color: var(--pt-text-mute); }
+.mc-hud-progress {
+  margin-top: 8px; display: flex; align-items: center; gap: 8px;
+}
+.mc-hud-progress-fill {
+  flex: 1; height: 4px; border-radius: 999px;
+  background:
+    repeating-linear-gradient(90deg, var(--pt-neon) 0 4px, transparent 4px 8px);
+  background-size: 8px 4px;
+  box-shadow: var(--pt-glow-sm);
+  animation: mc-hud-marquee 1.2s linear infinite;
+}
+@keyframes mc-hud-marquee { to { background-position: 8px 0; } }
+.mc-hud-progress-lbl { font-size: 9px; letter-spacing: 0.14em; color: var(--pt-text-mute); text-transform: uppercase; }
+
+/* idle state */
+.mc-hud-idle { display: flex; flex-direction: column; gap: 3px; }
+.mc-hud-idle-line { font-size: 12px; letter-spacing: 0.12em; color: var(--pt-text-dim); }
+.mc-hud-idle-sub { font-size: 10px; letter-spacing: 0.08em; color: var(--pt-text-mute); }
+
+/* state ring color populated from JSX inline stroke; ensure glyph contrast */
+.mc-hud-node.state-offline .mc-hud-node-ring { stroke-dasharray: 4 4; }
+
+/* === Responsive ladder === */
+/* ≥ 860px: two-column stage — orbit left, spotlight right beside legend */
+@media (min-width: 860px) {
+  .mc-hud-stage {
+    grid-template-columns: minmax(0, 1fr) 236px;
+    grid-template-rows: 1fr;
+  }
+  .mc-hud-svg { grid-column: 1; grid-row: 1; height: 100%; }
+  .mc-hud-legend {
+    display: flex; flex-direction: column; gap: 8px;
+    grid-column: 2; grid-row: 1;
+    padding: 14px 16px;
+    border-left: 1px solid var(--pt-border-dim);
+    align-self: start;
+  }
+  .mc-hud-legend-title { font-size: 9px; letter-spacing: 0.18em; color: var(--pt-text-mute); text-transform: uppercase; margin-bottom: 4px; }
+  .mc-hud-legend-row { display: flex; align-items: center; gap: 8px; font-size: 10px; letter-spacing: 0.1em; color: var(--pt-text-dim); }
+  .mc-hud-legend-glyph { width: 16px; text-align: center; color: var(--pt-text); }
+  .mc-hud-spotlight {
+    grid-column: 1 / -1; grid-row: 2;
+  }
+}
+@media (min-width: 1180px) {
+  .mc-hud-stage { grid-template-columns: minmax(0, 1fr) 260px; }
+}
+
