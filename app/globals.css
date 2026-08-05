@@ -1061,6 +1061,22 @@ body {
   background: rgba(var(--pt-neon-rgb),0.06);
   text-transform: uppercase;
 }
+/* SYS-07: a stale poll degrades the LIVE badge to amber, distinct from the
+   green LIVE and the plain (red/off) offline state. */
+.mc-live-badge[data-state="stale"] {
+  border-color: rgba(254,188,46,0.55);
+  color: #febc2e;
+  background: rgba(254,188,46,0.08);
+}
+.mc-live-badge[data-state="offline"] { color: var(--pt-text-dim); }
+.mc-live-badge[data-state="offline"] .mc-led { animation: none; opacity: 0.4; }
+/* SYS-07: OFFLINE roster status — clearly degraded, never the calm blue used
+   for healthy STANDBY rows. */
+.mc-agent-card-status.offline {
+  color: var(--pt-text-dim);
+  border-color: rgba(255,95,87,0.4);
+  opacity: 0.7;
+}
 .mc-refresh-btn {
   padding: 3px 10px;
   border: 1px solid var(--pt-border);

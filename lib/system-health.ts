@@ -29,9 +29,23 @@ function freshnessFiles(): { id: string; name: string; file: string; staleAfterM
   const paths = getConfig().paths
   return [
     { id: 'kanban-db', name: 'Kanban DB', file: paths.kanbanDbFile, staleAfterMin: null },
-    { id: 'pipeline-store', name: 'Pipeline store', file: path.join(paths.pipelineDir, 'pipeline.json'), staleAfterMin: null },
-    { id: 'cron-jobs', name: 'Cron jobs.json', file: paths.cronJobsFile, staleAfterMin: null },
+    // SYS-07: these stores are written by agents/cron; if they've gone quiet past
+    // their recency threshold they must degrade to warn, not keep reporting "up".
+    // Thresholds are overridable via env (minutes), defaulting to 7d for stores
+    // that backend the web-dev pipeline / scheduler.
+    { id: 'pipeline-store', name: 'Pipeline store', file: path.join(paths.pipelineDir, 'pipeline.json'), staleAfterMin: storeStaleMin('MC_PIPELINE_STALE_MIN', 7) },
+    { id: 'cron-jobs', name: 'Cron jobs.json', file: paths.cronJobsFile, staleAfterMin: storeStaleMin('MC_CRON_STALE_MIN', 7) },
   ]
+}
+
+/** Parse a stale threshold env override (minutes), falling back to `days`. */
+function storeStaleMin(envName: string, days: number): number | null {
+  const raw = process.env[envName]
+  if (raw !== undefined) {
+    const n = Number(raw)
+    if (!Number.isNaN(n) && n >= 0) return n
+  }
+  return days * 24 * 60
 }
 
 async function httpProbe(p: { id: string; name: string; url: string }): Promise<ServiceHealth> {

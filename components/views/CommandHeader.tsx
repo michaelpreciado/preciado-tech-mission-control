@@ -7,8 +7,12 @@ import type { SystemHealthData } from '@/lib/types'
 
 /* ── Cockpit (stat header) ────────────────────────────── */
 
+// Recency threshold for the LIVE badge — a poll older than this is stale, not
+// live. Mirrors the crew staleness window in lib/collectors/crew.ts (SYS-07).
+const STALE_MS = 1000 * 60 * 60 * 24 // 24h
+
 export function CommandHeader() {
-  const { data, isLive, refresh } = useLiveData()
+  const { data, isLive, refresh, lastUpdated } = useLiveData()
   const { appName } = useBrand()
   const [spinning, setSpinning] = useState(false)
   const [approvals, setApprovals] = useState<number | null>(null)
@@ -56,6 +60,11 @@ export function CommandHeader() {
   const allTasks = data?.tasks ?? []
   const cron = data?.cron ?? []
 
+  // SYS-07: degrade the LIVE badge when the last successful poll is itself stale.
+  const updatedAgoMs = lastUpdated ? Date.now() - lastUpdated : data ? Date.now() - Date.parse(data.generatedAt) : null
+  const dataStale = updatedAgoMs !== null && updatedAgoMs > STALE_MS
+  const liveState = !isLive ? 'offline' : dataStale ? 'stale' : 'live'
+
   // Every chip is something you might act on. `alert` flips it amber, so a
   // glance at the colour is enough — you only read the numbers if one is lit.
   const attention = allTasks.filter(t => t.status === 'attention').length
@@ -93,8 +102,9 @@ export function CommandHeader() {
               <span className="mc-stat-val">{s.value}</span>
             </div>
           ))}
-          <div className="mc-live-badge">
-            <span className={`mc-led ${isLive ? 'green' : ''}`} /> {isLive ? 'LIVE' : 'OFFLINE'}
+          <div className="mc-live-badge" data-state={liveState}>
+            <span className={`mc-led ${liveState === 'live' ? 'green' : liveState === 'stale' ? 'amber' : ''}`} />
+            {liveState === 'live' ? 'LIVE' : liveState === 'stale' ? 'STALE' : 'OFFLINE'}
           </div>
           <button
             className={`mc-refresh-btn ${spinning ? 'spin' : ''}`}
