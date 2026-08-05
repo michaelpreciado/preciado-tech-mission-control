@@ -187,7 +187,7 @@ export function SubAgentPanel() {
     <div className="mc-sub-panel">
       <div className="mc-sub-bar">
         <div className="mc-sub-bar-title">
-          <span className="mc-sub-kicker">HOLO DISPATCH · 3D ORBITAL CORE</span>
+          <span className="mc-sub-kicker">HOLO DISPATCH · 3D TREE</span>
           <span className={`mc-led ${stream.cls}`} />
           <span className={`mc-sub-stream state-${snap.stream}`}>{stream.label}</span>
         </div>

@@ -3559,4 +3559,32 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   font-size: 9px; letter-spacing: 0.12em;
 }
 
+/* 3D card DOM labels (crisp on mobile, overlay the WebGL scene) */
+.mc-card-label {
+  display: flex; align-items: center; gap: 6px;
+  white-space: nowrap;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(7,9,14,0.82);
+  border: 1px solid rgba(122,134,152,0.35);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  font-family: var(--pt-font-mono);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.mc-card-label.is-root {
+  border-color: rgba(76,175,80,0.6);
+  background: rgba(20,36,22,0.85);
+}
+.mc-card-label.state-errored { border-color: rgba(255,95,87,0.7); }
+.mc-card-label.state-offline { opacity: 0.6; }
+.mc-card-label.is-selected { box-shadow: 0 0 0 2px rgba(30,144,255,0.55); }
+.mc-card-name { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; }
+.mc-card-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.mc-card-dot.state-working { animation: sub-blink 1s steps(2) infinite; }
+.mc-card-dot.state-errored { animation: sub-blink 0.6s steps(2) infinite; }
+
+
+
 
