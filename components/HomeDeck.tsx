@@ -3,30 +3,47 @@
 /**
  * HOME — the command center.
  *
- * Rebuilt from the old 3-tab "Deck" (which just re-mounted the full Github/
- * Costs/SystemHealth panels, making it a second copy of every tab). Home is now
- * ONE at-a-glance surface that answers the three questions every visit asks:
- *   1. What needs me right now?   → ActionFeed (needs-you strip)
- *   2. What is live?              → status tiles + agent pulse + scheduler
- *   3. Where do I go?             → quick-launch grid (deep links)
- *
- * Every tile is tappable and navigates to its page. Real data only — nothing
- * fabricated. Mobile-first: stacks clean on the Pixel Fold, thumb-reachable.
+ * One at-a-glance surface answering: what needs me, what is live, what's
+ * scheduled, who's working, and where do I go. Every element is real data and
+ * taps through to its page. 4K-fidelity visuals: layered gradients, soft
+ * glow, crisp 2-up/3-up tile grids, and tasteful micro-motion.
  */
 import Link from 'next/link'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useLiveData } from './LiveDataProvider'
-import { SectionHead, SkeletonPanel } from './ui'
+import { SectionHead, SkeletonPanel, fmtDate } from './ui'
 import { Icon, type IconName } from './icons'
 import dynamic from 'next/dynamic'
 import type { MissionTask } from '@/lib/types'
 
 const CommandHeader = dynamic(() => import('./views/CommandHeader').then(m => m.CommandHeader), { ssr: false, loading: () => <SkeletonPanel label="loading header" /> })
 const ActionFeed = dynamic(() => import('./ActionFeed').then(m => m.ActionFeed), { ssr: false })
+const CalendarList = dynamic(() => import('./views/CalendarList').then(m => m.CalendarList), { ssr: false, loading: () => <SkeletonPanel label="loading schedule" /> })
 
-/** Priority → existing mc-task-tag tone. */
 const PRIORITY_TONE: Record<MissionTask['priority'], string> = {
   high: 'alert', normal: '', low: 'info',
+}
+
+/* ── Live clock + data-freshness readout (presence) ──────────────────── */
+
+function PresenceClock({ generatedAt, isLive }: { generatedAt?: string; isLive: boolean }) {
+  const [now, setNow] = useState(() => new Date())
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1000)
+    return () => clearInterval(t)
+  }, [])
+  const ageMin = generatedAt ? Math.max(0, Math.round((Date.now() - Date.parse(generatedAt)) / 60000)) : null
+  return (
+    <div className="mc-home-presence">
+      <span className="mc-home-clock">{now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+      <span className="mc-home-date">{now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+      <span className="mc-home-live">
+        <span className={`mc-led ${isLive ? 'green' : ''}`} />
+        {isLive ? 'LIVE' : 'OFFLINE'}
+      </span>
+      <span className="mc-home-dataage">data {ageMin === null ? '—' : ageMin === 0 ? 'just now' : `${ageMin}m ago`}</span>
+    </div>
+  )
 }
 
 /* ── Live status tiles (tappable → deep link) ────────────────────────── */
@@ -46,16 +63,17 @@ function StatusTiles() {
     const billing = data.costs?.billing?.[0]
     const costMonth = billing ? `$${(billing.planAmount + (billing.openRouterUsd ?? 0)).toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—'
     const ghStreak = data.github?.currentStreak ?? 0
-    const pending = open > 0 ? open : 0
+    const kb = data.kanban
+    const running = kb?.runningTasks ?? working.length
 
-    const tiles: TileDef[] = [
-      { key: 'working', label: 'WORKING NOW', glyph: '▶', href: '/team', value: String(working.length), sub: `${offline.length} offline`, tone: working.length ? 'ok' : 'info' },
-      { key: 'open', label: 'OPEN TASKS', glyph: '≡', href: '/kanban', value: String(pending), sub: 'kanban board', tone: pending ? 'warn' : 'ok' },
+    return [
+      { key: 'working', label: 'WORKING NOW', glyph: '▶', href: '/team', value: String(running), sub: `${working.length} live · ${offline.length} offline`, tone: running ? 'ok' : 'info' },
+      { key: 'open', label: 'OPEN TASKS', glyph: '≡', href: '/kanban', value: String(open), sub: 'kanban board', tone: open ? 'warn' : 'ok' },
       { key: 'cron', label: 'CRON FAILS', glyph: '○', href: '/calendar', value: `${cronFails}/${data.cron.length}`, sub: 'scheduler', tone: cronFails ? 'err' : 'ok' },
       { key: 'cost', label: 'COST · THIS MO', glyph: '$', href: '/costs', value: costMonth, sub: 'plan + OR', tone: 'info' },
       { key: 'gh', label: 'GH STREAK', glyph: '★', href: '/github', value: `${ghStreak}d`, sub: 'contributions', tone: ghStreak ? 'ok' : 'info' },
-    ]
-    return tiles
+      { key: 'proj', label: 'PROJECTS', glyph: '▤', href: '/projects', value: String(data.counts?.projects ?? data.projects.length), sub: 'active repos', tone: 'info' },
+    ] as TileDef[]
   }, [data])
 
   if (!data) return <SkeletonPanel label="loading status" />
@@ -91,8 +109,8 @@ function AgentPulse() {
         return (
           <Link key={a.id} href="/team" className={`mc-home-agent${live ? ' is-live' : ''}${bad ? ' is-bad' : ''}`} title={`${a.name} · ${a.status}`}>
             <span className="mc-home-agent-dot" style={{
-              background: bad ? '#ff5f57' : down ? '#5b6474' : live ? a.accent : a.accent,
-              boxShadow: live ? `0 0 8px ${a.accent}` : 'none',
+              background: live ? a.accent : bad ? '#ff5f57' : down ? '#5b6474' : a.accent,
+              boxShadow: live ? `0 0 10px ${a.accent}` : 'none',
               opacity: down ? 0.4 : 1,
             }} />
             <span className="mc-home-agent-name">{a.name}</span>
@@ -108,10 +126,16 @@ function AgentPulse() {
 const LAUNCH: { href: string; label: string; icon: IconName; desc: string }[] = [
   { href: '/kanban', label: 'Kanban', icon: 'kanban', desc: 'Board & tasks' },
   { href: '/approvals', label: 'Approvals', icon: 'approvals', desc: 'Waiting on you' },
+  { href: '/chat', label: 'Chat', icon: 'chat', desc: 'Talk to your agent' },
   { href: '/costs', label: 'Costs', icon: 'costs', desc: 'Spend & billing' },
+  { href: '/github', label: 'GitHub', icon: 'github', desc: 'Repos & activity' },
   { href: '/team', label: 'Team', icon: 'team', desc: 'Agent mesh' },
   { href: '/memory', label: 'Memory', icon: 'memory', desc: 'Steward ledger' },
+  { href: '/pipeline', label: 'Pipeline', icon: 'pipeline', desc: 'Web dev flow' },
+  { href: '/ml-content', label: 'ML Content', icon: 'ml', desc: 'Scripts & film' },
   { href: '/calendar', label: 'Scheduler', icon: 'calendar', desc: 'Cron jobs' },
+  { href: '/projects', label: 'Projects', icon: 'projects', desc: 'Active repos' },
+  { href: '/setup', label: 'Setup', icon: 'setup', desc: 'Config & keys' },
 ]
 
 function LaunchGrid() {
@@ -127,6 +151,86 @@ function LaunchGrid() {
           <span className="mc-home-launch-arrow">›</span>
         </Link>
       ))}
+    </div>
+  )
+}
+
+/* ── Live activity stream (what the crew is touching) ────────────────── */
+
+const AREA_GLYPH: Record<string, string> = { workspace: '⌬', vault: '⊡', repo: '⭮', inbox: '▣', cron: '○', logs: '≋' }
+
+function LiveActivity() {
+  const { data } = useLiveData()
+  if (!data) return <SkeletonPanel label="loading activity" />
+  const files = data.operations?.recentFiles ?? data.operations?.inbox ?? []
+  const hotspots = data.operations?.hotspots ?? []
+  if (!files.length && !hotspots.length) {
+    return (
+      <div className="mc-window">
+        <div className="mc-tcol-head"><span className="mc-tcol-glyph">≋</span><span>LIVE ACTIVITY</span><span className="mc-tcol-count">0</span></div>
+        <div className="mc-empty is-compact"><div className="mc-empty-glyph">≋</div><div className="mc-empty-title">NO RECENT ACTIVITY</div>
+          <p className="mc-empty-desc">Agent work will stream in here as it happens.</p></div>
+      </div>
+    )
+  }
+
+  // hotspot chips
+  return (
+    <div className="mc-window mc-home-activity">
+      <div className="mc-tcol-head"><span className="mc-tcol-glyph">≋</span><span>LIVE ACTIVITY</span>
+        <span className="mc-tcol-count">{files.length} SIGNS</span></div>
+      {hotspots.length > 0 && (
+        <div className="mc-hspot-row">
+          {hotspots.map(h => (
+            <span key={h.label} className="mc-hspot-chip">
+              <span className={`mc-led ${h.tone === 'green' ? 'green' : h.tone === 'amber' ? 'amber' : h.tone === 'red' ? 'red' : ''}`} />
+              <span className="mc-hspot-label">{h.label}</span>
+              <span className="mc-hspot-count">{h.count}</span>
+            </span>
+          ))}
+        </div>
+      )}
+      <div className="mc-home-activity-list">
+        {files.slice(0, 12).map((f, i) => (
+          <div key={f.id || i} className="mc-commit">
+            <span className="sha">{AREA_GLYPH[f.area] ?? '·'} {f.ownerName}</span>
+            <div>
+              <div className="msg" title={f.title}>{f.title}</div>
+              <div className="repo">{f.area} · {f.kind}</div>
+            </div>
+            <span className="when">{f.ageMinutes < 60 ? `${Math.max(1, f.ageMinutes)}m` : fmtDate(f.updatedAt)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* ── System health summary ───────────────────────────────────────────── */
+
+function HealthSummary() {
+  const { data } = useLiveData()
+  const integrations = data?.integrations ?? []
+  if (!data) return <SkeletonPanel label="loading health" />
+  if (!integrations.length) return null
+  const up = integrations.filter(i => i.status === 'connected').length
+  const down = integrations.filter(i => i.status === 'attention' || i.status === 'missing').length
+  return (
+    <div className="mc-home-health">
+      {integrations.map(i => {
+        const tone = i.status === 'connected' ? 'ok' : i.status === 'attention' ? 'warn' : i.status === 'missing' ? 'err' : 'info'
+        return (
+          <div key={i.name} className={`mc-home-health-chip tone-${tone}`}>
+            <span className={`mc-led ${i.status === 'connected' ? 'green' : i.status === 'attention' ? 'amber' : i.status === 'missing' ? 'red' : ''}`} />
+            <span className="mc-home-health-name">{i.name}</span>
+            <span className="mc-home-health-detail">{i.detail}</span>
+          </div>
+        )
+      })}
+      <div className="mc-home-health-score">
+        <span className="mc-home-health-count">{up}/{integrations.length}</span>
+        <span className="mc-home-health-lbl">INTEGRATIONS UP{down ? ` · ${down} DOWN` : ''}</span>
+      </div>
     </div>
   )
 }
@@ -179,21 +283,30 @@ function TaskCol({ headLabel, headGlyph, alert, items }: {
 /* ── Home — the command center ───────────────────────────────────────── */
 
 export function HomeDeck() {
+  const { data, isLive } = useLiveData()
   return (
     <>
       <CommandHeader />
+      <PresenceClock generatedAt={data?.generatedAt} isLive={isLive} />
 
       {/* 1 · What needs me */}
       <ActionFeed />
 
-      {/* 2 · What is live — status tiles */}
+      {/* 2 · What is live */}
       <SectionHead label="SYSTEM PULSE" />
       <StatusTiles />
-
-      {/* agents */}
       <AgentPulse />
 
-      {/* 3 · Where do I go — quick launch */}
+      {/* 3 · Live ops + integrations */}
+      <SectionHead label="OPS / LIVE STREAM" />
+      <LiveActivity />
+      <HealthSummary />
+
+      {/* 4 · What's scheduled */}
+      <SectionHead label="SCHEDULER / TODAY" />
+      <CalendarList limit={5} />
+
+      {/* 5 · Where do I go */}
       <SectionHead label="COMMAND CENTER" />
       <LaunchGrid />
 

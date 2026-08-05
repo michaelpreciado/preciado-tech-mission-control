@@ -3996,3 +3996,105 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   .mc-home-tiles { grid-template-columns: repeat(2, minmax(0,1fr)); }
   .mc-home-tile-value { font-size: 22px; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   HOME v2 — 4K-fidelity command center (additions)
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Presence clock / live readout ───────────────────────────────────── */
+.mc-home-presence {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 6px 2px 2px; margin-bottom: 2px;
+}
+.mc-home-clock {
+  font-size: 22px; font-weight: 700; letter-spacing: 0.04em;
+  color: var(--pt-text-high); font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 18px rgba(var(--pt-neon-rgb),0.35);
+}
+.mc-home-date { font-size: 11px; letter-spacing: 0.14em; color: var(--pt-text-dim); text-transform: uppercase; }
+.mc-home-live {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 9px; letter-spacing: 0.2em; color: var(--pt-text-dim);
+  text-transform: uppercase; font-weight: 600;
+}
+.mc-home-dataage { font-size: 9px; letter-spacing: 0.1em; color: var(--pt-text-mute); margin-left: auto; }
+
+/* ── Status tiles — 4K: layered radial glow, sharper value, hairline top bar ── */
+.mc-home-tile {
+  background:
+    radial-gradient(120% 120% at 100% 0%, rgba(var(--pt-neon-rgb),0.14), transparent 55%),
+    radial-gradient(120% 120% at 0% 100%, rgba(30,144,255,0.10), transparent 55%),
+    rgba(8,3,12,0.6);
+  border-color: var(--pt-border-dim);
+}
+.mc-home-tile-value {
+  font-size: 30px;
+  background: linear-gradient(180deg, #ffffff, rgba(255,255,255,0.55));
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent;
+  letter-spacing: 0.01em;
+}
+.mc-home-tile.tone-ok .mc-home-tile-value {
+  background: linear-gradient(180deg, #6af08a, #2be36b);
+  -webkit-background-clip: text; background-clip: text;
+}
+.mc-home-tile.tone-warn .mc-home-tile-value {
+  background: linear-gradient(180deg, #ffe08a, #ffc857);
+  -webkit-background-clip: text; background-clip: text;
+}
+.mc-home-tile.tone-err .mc-home-tile-value {
+  background: linear-gradient(180deg, #ffb0ab, #ff5f57);
+  -webkit-background-clip: text; background-clip: text;
+}
+.mc-home-tiles { gap: 14px; }
+
+/* ── Live activity stream ────────────────────────────────────────────── */
+.mc-home-activity { display: flex; flex-direction: column; }
+.mc-home-activity-list { max-height: 340px; overflow-y: auto; }
+.mc-home-activity-list .mc-commit {
+  padding: 9px 14px;
+  border-left: 2px solid transparent;
+  border-bottom: 1px solid var(--pt-border-dim);
+  transition: background 180ms var(--pt-ease);
+}
+.mc-home-activity-list .mc-commit:hover { background: rgba(var(--pt-neon-rgb),0.05); }
+.mc-home-activity { animation: activity-in 360ms var(--pt-ease) both; }
+@keyframes activity-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Health / integrations summary ───────────────────────────────────── */
+.mc-home-health {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin-top: 14px;
+}
+.mc-home-health-chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--pt-border-dim);
+  border-radius: var(--pt-r-pill);
+  background: rgba(0,0,0,0.25);
+  transition: border-color 200ms var(--pt-ease), box-shadow 200ms var(--pt-ease);
+}
+.mc-home-health-chip:hover { border-color: var(--pt-border); box-shadow: var(--pt-glow-sm); }
+.mc-home-health-name {
+  font-size: 10px; letter-spacing: 0.12em; color: var(--pt-text);
+  text-transform: uppercase; font-weight: 600;
+}
+.mc-home-health-detail { font-size: 10px; color: var(--pt-text-dim); }
+.mc-home-health-score {
+  margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
+}
+.mc-home-health-count {
+  font-size: 22px; font-weight: 800; color: var(--pt-text-high);
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(180deg, #6af08a, #2be36b);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.mc-home-health-lbl { font-size: 8px; letter-spacing: 0.18em; color: var(--pt-text-mute); text-transform: uppercase; }
+
+@media (max-width: 600px) {
+  .mc-home-tile-value { font-size: 26px; }
+  .mc-home-clock { font-size: 19px; }
+}
