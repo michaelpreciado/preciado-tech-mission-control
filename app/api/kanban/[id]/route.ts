@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { assertSameOrigin, getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv } from '@/lib/mission-api'
 import { getTaskDetail } from '@/lib/hermes-kanban'
 import { completeTask, commentTask, unblockTask } from '@/lib/kanban-actions'
 import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
+
+/** Same trusted-client gate as every other write route: bearer INTERNAL_API_SECRET if set, else loopback / FRIDAY_TRUSTED_IPS CIDR. */
+function isAuthorized(req: NextRequest): boolean {
+  const secret = process.env.INTERNAL_API_SECRET
+  if (secret) return req.headers.get('authorization') === `Bearer ${secret}`
+  const ip = getClientIpFromHeaders(req.headers)
+  return isTrustedIp(ip === 'unknown' ? '127.0.0.1' : ip, trustedRangesFromEnv())
+}
 
 /** GET /api/kanban/[id] → full task detail (runs/comments/events) from any board. */
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
@@ -16,6 +25,9 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
 
 /** POST /api/kanban/[id] → actions. Body: { action: 'complete'|'comment'|'unblock', ... }. */
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+  const _origin = assertSameOrigin(req)
+  if (!_origin.ok) return NextResponse.json(_origin.body, { status: _origin.status })
+  if (!isAuthorized(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   try {
     const { id } = await ctx.params
     if (!id || id.length > 128) return NextResponse.json({ error: 'invalid task id' }, { status: 400 })
