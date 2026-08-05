@@ -902,7 +902,15 @@ body {
 .mc-week-day.is-today .mc-week-daynum { color: var(--pt-neon-bright); text-shadow: var(--pt-glow-sm); }
 
 .mc-week-daybody { flex: 1; padding: 7px; display: flex; flex-direction: column; gap: 5px; }
-.mc-week-empty { color: var(--pt-text-mute); opacity: 0.4; font-size: 12px; padding-left: 2px; }
+/* Empty day cells shrink and get an `+ add` affordance instead of a tall void. */
+.mc-week-day.is-empty { min-height: 64px; }
+.mc-week-add {
+  font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--pt-text-mute); opacity: 0.6; text-decoration: none;
+  padding: 2px 4px; border-radius: var(--pt-r-sm); align-self: flex-start;
+  border: 1px dashed transparent; transition: all var(--pt-dur-fast) var(--pt-ease);
+}
+.mc-week-add:hover { opacity: 1; color: var(--pt-neon-bright); border-color: var(--pt-border-strong); }
 .mc-week-task {
   display: flex; gap: 5px;
   font-size: 10px; line-height: 1.45;
@@ -2373,6 +2381,49 @@ html[data-theme="friday"] .mc-pipe-score,
 html[data-theme="friday"] .mc-pipe-bar,
 html[data-theme="friday"] .mc-pipe-draft { border-radius: 0; }
 html[data-theme="friday"] .mc-pipe-name { color: var(--pt-neon-bright); text-shadow: var(--pt-glow-text); }
+
+/* ── Contextual empty state (SYS-08) ─────────────────────
+   Shared guidance card used across Calendar / Chat / Approvals / Kanban.
+   Replaces tall voids with a compact card: why it's empty, a next action,
+   and a subtle dot pattern instead of a blank rectangle. */
+.mc-empty {
+  border: 1px dashed var(--pt-border-dim);
+  border-radius: var(--pt-r-md);
+  padding: 22px 26px;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  gap: 6px;
+  color: var(--pt-text);
+  background:
+    radial-gradient(circle at 1px 1px, rgba(var(--pt-neon-rgb), 0.10) 1px, transparent 1.5px) top left / 20px 20px,
+    rgba(10, 2, 12, 0.45);
+  margin: 12px 0;
+}
+.mc-empty.is-compact { padding: 16px 18px; margin: 0; }
+.mc-empty.is-success { border-color: rgba(var(--pt-neon-rgb), 0.35); }
+.mc-empty.is-info    { border-color: rgba(var(--pt-neon-rgb), 0.28); }
+.mc-empty.is-error   { border-color: rgba(254, 120, 120, 0.4); }
+.mc-empty-glyph {
+  font-size: 20px; line-height: 1; color: var(--pt-neon);
+  text-shadow: var(--pt-glow-sm); margin-bottom: 2px;
+}
+.mc-empty.is-error .mc-empty-glyph { color: #ff8b8b; }
+.mc-empty-title {
+  font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--pt-neon-bright); font-weight: 700;
+}
+.mc-empty.is-error .mc-empty-title { color: #ffb0b0; }
+.mc-empty-desc { margin: 0; max-width: 420px; font-size: 11px; line-height: 1.65; color: var(--pt-text-dim); }
+.mc-empty-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 10px; }
+.mc-empty-btn {
+  padding: 5px 12px; border: 1px solid var(--pt-border); border-radius: var(--pt-r-sm);
+  background: transparent; color: var(--pt-text);
+  font-family: var(--pt-font-mono); font-size: 10px; letter-spacing: 0.16em;
+  text-transform: uppercase; cursor: pointer; text-decoration: none; display: inline-flex;
+  transition: all var(--pt-dur-fast) var(--pt-ease);
+}
+.mc-empty-btn:hover { color: var(--pt-neon-bright); border-color: var(--pt-border-strong); box-shadow: var(--pt-glow-sm); }
+.mc-empty-btn.is-primary { background: var(--pt-neon); color: #08010c; border-color: var(--pt-neon); text-shadow: none; }
+.mc-empty-btn.is-primary:hover { background: var(--pt-neon-bright); box-shadow: var(--pt-glow-sm); }
 
 /* ── Approvals inbox ──────────────────────────────────── */
 .mc-appr-col { display: flex; flex-direction: column; }
