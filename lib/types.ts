@@ -554,6 +554,63 @@ export type AgentActivity = {
   gatewayRunning: boolean
 }
 
+/* ── Sub-agent dispatch mesh (Team tab) ─────────────── */
+
+/** Borrowed from the crew module — how recent an agent's activity must be to
+ *  count as present (hosts the canonical threshold so the mesh and roster agree). */
+export type SubAgentStatus = 'working' | 'idle' | 'waiting' | 'errored' | 'offline'
+
+export type SubAgentTask = {
+  id: string
+  title: string
+  status: string
+  origin: string
+}
+
+export type SubAgentEvent = {
+  ts: string
+  kind: string
+  detail?: string
+}
+
+/** One node in the dispatch mesh. Every field is derived from a live source —
+ *  the session store, kanban, gateway state, or a node reachability probe.
+ *  Nothing is simulated: a node with no live signal reports `offline` stales. */
+export type SubAgentNode = {
+  id: string
+  name: string
+  role: string
+  status: SubAgentStatus
+  /** Host node the agent runs on (arch-desktop / macbook / openclaw). */
+  node: string
+  model?: string
+  currentTask?: SubAgentTask | null
+  /** When the current activity (task or session) started. */
+  startedAt?: string
+  /** Last confirmed liveness signal (heartbeat / kanban event / session msg). */
+  lastSeen?: string
+  /** Dispatch-tree parent id, if this agent was spawned by another. */
+  parent?: string | null
+  /** Recent activity events (kanban transitions, heartbeat, errors). */
+  events?: SubAgentEvent[]
+  /** Transport reachability where knowable (gateway, ssh, tailscale). */
+  connected?: boolean
+  accent: string
+}
+
+export type SubAgentDeck = {
+  generatedAt: string
+  /** Real dispatch tree harvested from the Hermes session store. */
+  tree: SubAgentNode[]
+  /** The fixed sub-agent mesh (Hermes + crew + edge nodes). */
+  mesh: SubAgentNode[]
+  gatewayRunning: boolean
+  openclawUp: boolean
+  /** How recently the strongest liveness signal was seen across the mesh. */
+  lastActivityAt: string | null
+  warnings: string[]
+}
+
 export type TickTickWeekData = {
   configured: boolean
   tasks: TickTickTask[]
