@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LiveDataProvider, useLiveData } from './LiveDataProvider'
@@ -118,35 +118,105 @@ function Sidebar() {
   )
 }
 
-function MobileNav() {
+/** Primary bottom-tabs. Everything else lives behind the More sheet. */
+const PRIMARY: { id: string; label: string; icon: IconName }[] = [
+  { id: '/', label: 'Home', icon: 'deck' },
+  { id: '/kanban', label: 'Kanban', icon: 'kanban' },
+  { id: '/approvals', label: 'Approvals', icon: 'approvals' },
+  { id: '/chat', label: 'Chat', icon: 'chat' },
+]
+
+const PRIMARY_IDS = new Set(PRIMARY.map(p => p.id))
+
+function MoreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const pathname = usePathname()
-  const pending = usePendingApprovals()
-
-  // Flatten all NAV items into a single list for the bottom tab bar
-  const mobileItems = NAV.flatMap(sec => sec.items)
-
   const isActive = (href: string) => href === '/' ? pathname === '/' : pathname.startsWith(href)
-
+  if (!open) return null
   return (
-    <nav className="mc-mobile-nav" aria-label="Mobile navigation">
-      <div className="mc-mobile-nav-inner">
-        {mobileItems.map(item => {
-          const active = isActive(item.id)
+    <div className="mc-more-layer" role="dialog" aria-modal="true" aria-label="More destinations">
+      <div className="mc-more-backdrop" onClick={onClose} />
+      <div className="mc-more-sheet" onClick={e => e.stopPropagation()}>
+        <div className="mc-more-handle" />
+        <div className="mc-more-title">&gt; MORE</div>
+        {NAV.map(sec => {
+          const items = sec.items.filter(it => !PRIMARY_IDS.has(it.id))
+          if (!items.length) return null
           return (
-            <Link key={item.id} href={item.id} aria-current={active ? 'page' : undefined}
-              className={`mc-mobile-item ${active ? 'is-active' : ''}`}>
-              <span className="mc-mobile-glyph">
-                <Icon name={item.icon} size={20} />
-                {item.id === '/approvals' && pending > 0 && (
-                  <span className="mc-mobile-badge">{pending > 9 ? '9+' : pending}</span>
-                )}
-              </span>
-              <span className="mc-mobile-label">{item.label}</span>
-            </Link>
+            <div key={sec.section} className="mc-more-section">
+              <div className="mc-more-seclabel">{sec.section}</div>
+              <div className="mc-more-grid">
+                {items.map(it => (
+                  <Link key={it.id} href={it.id} className={`mc-more-cell ${isActive(it.id) ? 'is-active' : ''}`} onClick={onClose}>
+                    <span className="mc-more-ic"><Icon name={it.icon} size={18} /></span>
+                    <span className="mc-more-lbl">{it.label}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
           )
         })}
       </div>
-    </nav>
+    </div>
+  )
+}
+
+function MobileNav() {
+  const pathname = usePathname()
+  const pending = usePendingApprovals()
+  const [moreOpen, setMoreOpen] = useState(false)
+  const navInnerRef = useRef<HTMLDivElement>(null)
+  const [pill, setPill] = useState<{ left: number; width: number } | null>(null)
+
+  const isActive = (href: string) => href === '/' ? pathname === '/' : pathname.startsWith(href)
+  // The More tab lights up whenever the current route lives behind the sheet.
+  const inMore = NAV.some(sec => sec.items.some(it => !PRIMARY_IDS.has(it.id) && isActive(it.id)))
+
+  // Slide the pill to whichever bottom tab is active (primary or the More toggle).
+  useEffect(() => {
+    const measure = () => {
+      const inner = navInnerRef.current
+      if (!inner) return
+      const active = inner.querySelector<HTMLElement>('.mc-mobile-item.is-active')
+      if (!active) return
+      setPill({ left: active.offsetLeft, width: active.offsetWidth })
+    }
+    // Measure after paint so layout (incl. the mobile bar showing) is settled.
+    const raf = requestAnimationFrame(measure)
+    window.addEventListener('resize', measure)
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', measure) }
+  }, [pathname, moreOpen])
+
+  return (
+    <>
+      <nav className="mc-mobile-nav" aria-label="Mobile navigation">
+        <div className="mc-mobile-nav-inner" ref={navInnerRef}>
+          {/* Sliding active-tab pill — glides to the active item on nav change */}
+          {pill && <span className="mc-mobile-pill" style={{ left: pill.left, width: pill.width }} aria-hidden="true" />}
+          {PRIMARY.map(item => {
+            const active = isActive(item.id)
+            return (
+              <Link key={item.id} href={item.id} aria-current={active ? 'page' : undefined}
+                className={`mc-mobile-item ${active ? 'is-active' : ''}`}>
+                <span className="mc-mobile-glyph">
+                  <Icon name={item.icon} size={20} />
+                  {item.id === '/approvals' && pending > 0 && (
+                    <span className="mc-mobile-badge">{pending > 9 ? '9+' : pending}</span>
+                  )}
+                </span>
+                <span className="mc-mobile-label">{item.label}</span>
+              </Link>
+            )
+          })}
+          <button type="button" aria-haspopup="true" aria-expanded={moreOpen}
+            className={`mc-mobile-item mc-more-btn ${(moreOpen || inMore) ? 'is-active' : ''}`}
+            onClick={() => setMoreOpen(o => !o)}>
+            <span className="mc-mobile-glyph"><Icon name="more" size={20} /></span>
+            <span className="mc-mobile-label">More</span>
+          </button>
+        </div>
+      </nav>
+      <MoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} />
+    </>
   )
 }
 

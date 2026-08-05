@@ -28,6 +28,7 @@ export type IconName =
   | 'memory'    // archive brain
   | 'team'      // users
   | 'setup'     // sliders
+  | 'more'      // vertical three-dot "more" menu
   | 'brand'     // mission-control mark (radar dish, not the Deck house)
   | 'ok'        // check
   | 'warn'      // triangle exclamation
@@ -122,6 +123,13 @@ const P: Record<IconName, React.ReactNode> = {
       <path d="M4 7h9M17 7h3M4 17h3M11 17h9" />
       <circle cx="15" cy="7" r="2.2" />
       <circle cx="9" cy="17" r="2.2" />
+    </>
+  ),
+  more: (
+    <>
+      <circle cx="12" cy="5.5" r="1.55" />
+      <circle cx="12" cy="12" r="1.55" />
+      <circle cx="12" cy="18.5" r="1.55" />
     </>
   ),
   brand: (

@@ -4343,3 +4343,132 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
     will-change: auto;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   P0 · MOBILE NAV RESTRUCTURE — 5 primaries + More sheet
+   (coordinator-owned 2026-08-05)
+   Collapses the 13-tab side-scroll bar to 5 primaries; the other 8
+   routes live in a glass bottom-sheet behind a ⋯ "More" tab. */
+.mc-mobile-nav-inner {
+  overflow-x: visible;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+.mc-mobile-item,
+.mc-more-btn {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.mc-more-btn {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── More bottom sheet ── */
+.mc-more-layer {
+  position: fixed; inset: 0; z-index: 120;
+}
+.mc-more-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  animation: more-fade .2s ease;
+}
+.mc-more-sheet {
+  position: absolute; left: 8px; right: 8px;
+  bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+  max-height: 62vh; overflow-y: auto;
+  border-radius: 22px; padding: 10px 14px 18px;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 100%),
+    rgba(16,3,20,0.94);
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow:
+    0 8px 40px rgba(0,0,0,0.55),
+    0 0 0 0.5px rgba(255,255,255,0.06) inset,
+    0 1px 0 rgba(255,255,255,0.07) inset;
+  backdrop-filter: blur(24px) saturate(1.8);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  animation: more-rise .22s cubic-bezier(.2,.8,.2,1);
+}
+.mc-more-handle {
+  width: 36px; height: 4px; border-radius: 2px;
+  background: rgba(255,255,255,0.25);
+  margin: 4px auto 10px;
+}
+.mc-more-title {
+  font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--pt-text-dim); margin: 0 2px 12px;
+}
+.mc-more-section { margin-bottom: 14px; }
+.mc-more-seclabel {
+  font-size: 9px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--pt-text-dim); margin: 0 2px 8px;
+}
+.mc-more-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.mc-more-cell {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 11px 4px; border-radius: 14px;
+  color: rgba(255,255,255,0.55); text-decoration: none;
+  transition: color .2s ease, background .2s ease, transform .15s ease;
+}
+.mc-more-cell:active { transform: scale(0.94); }
+.mc-more-cell.is-active {
+  color: #fff;
+  background: rgba(var(--pt-neon-rgb),0.14);
+  box-shadow: 0 0 12px rgba(var(--pt-neon-rgb),0.12) inset;
+}
+.mc-more-ic { font-size: 18px; display: flex; }
+.mc-more-lbl {
+  font-size: 10px; letter-spacing: .02em; line-height: 1.25;
+  font-weight: 500;
+  text-align: center;
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+@keyframes more-rise { from { transform: translateY(28px); opacity: 0 } to { transform: none; opacity: 1 } }
+@keyframes more-fade { from { opacity: 0 } to { opacity: 1 } }
+
+/* Coarse pointers: drop the sheet blur (same battery rationale as the bar). */
+@media (pointer: coarse) {
+  .mc-more-sheet { backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mc-more-sheet, .mc-more-backdrop { animation: none; }
+}
+
+/* ── Motion layer: sliding active-tab pill + sheet stagger ── */
+.mc-mobile-nav-inner { position: relative; }
+.mc-mobile-item, .mc-more-btn { position: relative; z-index: 1; }
+.mc-mobile-pill {
+  position: absolute; top: 8px; bottom: 8px; z-index: 0;
+  border-radius: 14px;
+  background: rgba(var(--pt-neon-rgb), 0.15);
+  box-shadow:
+    0 0 14px rgba(var(--pt-neon-rgb), 0.12),
+    0 0 0 0.5px rgba(255,255,255,0.05) inset;
+  pointer-events: none;
+  transition: left .3s cubic-bezier(.2,.8,.2,1), width .3s cubic-bezier(.2,.8,.2,1);
+}
+.mc-more-cell {
+  animation: more-cell-in .3s ease both;
+}
+.mc-more-cell:nth-child(2) { animation-delay: .02s; }
+.mc-more-cell:nth-child(3) { animation-delay: .04s; }
+.mc-more-cell:nth-child(4) { animation-delay: .06s; }
+.mc-more-cell:nth-child(5) { animation-delay: .08s; }
+.mc-more-cell:nth-child(6) { animation-delay: .10s; }
+.mc-more-cell:nth-child(7) { animation-delay: .12s; }
+.mc-more-cell:nth-child(8) { animation-delay: .14s; }
+.mc-more-cell:nth-child(9) { animation-delay: .16s; }
+@keyframes more-cell-in { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
+@media (prefers-reduced-motion: reduce) {
+  .mc-more-cell { animation: none; }
+  .mc-mobile-pill { transition: none; }
+}
