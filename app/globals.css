@@ -3853,3 +3853,25 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   font-variant-numeric: tabular-nums;
   color: var(--pt-text-dim);
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   COSTS / cross-panel wrapper + generic viz grid (added post-delegation)
+   ══════════════════════════════════════════════════════════════════════ */
+.cp-panel {
+  display: flex; flex-direction: column; gap: 22px;
+  /* inherit the shared page-enter motion so the costs page animates in too */
+  animation: mc-rise-in 320ms var(--pt-ease) both;
+}
+.mc-viz-grid {
+  display: grid; gap: 16px;
+}
+
+/* ── Labels/keys used by hotspot chips + tile headers ────────────────── */
+.mc-hspot-label {
+  font-size: 10px; letter-spacing: 0.1em; color: var(--pt-text);
+  text-transform: uppercase;
+}
+.mc-tile-key {
+  font-size: 9px; letter-spacing: 0.16em; color: var(--pt-text-mute);
+  text-transform: uppercase; font-weight: 600;
+}
