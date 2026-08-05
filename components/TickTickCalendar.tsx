@@ -74,9 +74,12 @@ function rangeLabel(monday: Date): string {
   return `${a}–${b}`
 }
 
+type ViewMode = 'grid' | 'agenda'
+
 export function TickTickCalendar() {
   const [data, setData] = useState<TickTickWeekData | null>(null)
   const [offset, setOffset] = useState(0)
+  const [view, setView] = useState<ViewMode>('grid')
   const { days, monday } = useMemo(() => buildWeek(offset), [offset])
 
   const load = useCallback(async () => {
@@ -120,6 +123,22 @@ export function TickTickCalendar() {
         <span className="mc-week-title">▦ TICKTICK</span>
         <span className="mc-week-range">{rangeLabel(monday)}</span>
         <span className="mc-week-count">{weekCount} {weekCount === 1 ? 'task' : 'tasks'}</span>
+        <span className="mc-week-view-toggle">
+          <button
+            className={view === 'grid' ? 'is-active' : ''}
+            onClick={() => setView('grid')}
+            aria-pressed={view === 'grid'}
+          >
+            ▦ GRID
+          </button>
+          <button
+            className={view === 'agenda' ? 'is-active' : ''}
+            onClick={() => setView('agenda')}
+            aria-pressed={view === 'agenda'}
+          >
+            ☰ LIST
+          </button>
+        </span>
         <span className="mc-week-nav">
           <button onClick={() => setOffset(o => o - 1)} aria-label="Previous week">◂</button>
           <button onClick={() => setOffset(0)} disabled={offset === 0}>today</button>
@@ -140,7 +159,7 @@ export function TickTickCalendar() {
             { label: 'Next week ▸', onClick: () => setOffset(o => o + 1) },
           ]}
         />
-      ) : (
+      ) : view === 'grid' ? (
         <div className="mc-week-grid">
           {days.map(d => {
             const items = byDay.get(d.key) ?? []
@@ -155,6 +174,33 @@ export function TickTickCalendar() {
                     <a className="mc-week-add" href="https://www.ticktick.com/webapp/#q/all/today" aria-label="Add an event to this day" title="Add an event">
                       + add
                     </a>
+                  ) : items.map(t => (
+                    <div key={t.id} className={`mc-week-task ${t.status === 2 ? 'is-done' : ''}`} title={t.projectName}>
+                      <span className="mc-week-mark">{t.status === 2 ? '✓' : '▸'}</span>
+                      <span className="mc-week-tasktext">
+                        {timeLabel(t) && <span className="mc-week-time">{timeLabel(t)} </span>}
+                        {t.title}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        <div className="mc-week-agenda">
+          {days.map(d => {
+            const items = byDay.get(d.key) ?? []
+            return (
+              <div key={d.key} className={`mc-week-agenda-day ${d.isToday ? 'is-today' : ''} ${d.isWeekend ? 'is-weekend' : ''}`}>
+                <div className="mc-week-agenda-dayhead">
+                  <span className="mc-week-dayname">{d.name}</span>
+                  <span className="mc-week-daynum">{d.dayNum}</span>
+                </div>
+                <div className="mc-week-agenda-tasks">
+                  {items.length === 0 ? (
+                    <span className="mc-week-agenda-empty">—</span>
                   ) : items.map(t => (
                     <div key={t.id} className={`mc-week-task ${t.status === 2 ? 'is-done' : ''}`} title={t.projectName}>
                       <span className="mc-week-mark">{t.status === 2 ? '✓' : '▸'}</span>
