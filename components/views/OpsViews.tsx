@@ -15,13 +15,13 @@ export function IdeasPanel() {
   const ideas = data.ideas ?? []
   if (!ideas.length) return <EmptyTerminal label="no ideas yet" />
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 }}>
+    <div className="mc-tile-grid">
       {ideas.map((idea, i) => (
         <Window key={i} tag="◇" title={`IDEA · ${String(i + 1).padStart(2, '0')}`}>
-          <div style={{ padding: 14 }}>
-            <div style={{ fontSize: 13, color: 'var(--pt-text-high)', marginBottom: 6 }}>{idea.title}</div>
-            {idea.description && <div style={{ fontSize: 11, color: 'var(--pt-text-dim)', lineHeight: 1.65 }}>{idea.description}</div>}
-            <div style={{ fontSize: 9, color: 'var(--pt-text-mute)', marginTop: 8, letterSpacing: '0.14em' }}>
+          <div className="mc-tile-body">
+            <div className="mc-tile-title">{idea.title}</div>
+            {idea.description && <div className="mc-tile-desc">{idea.description}</div>}
+            <div className="mc-tile-foot">
               {idea.source} · {idea.status}
             </div>
           </div>
@@ -46,13 +46,13 @@ export function OperationsPanel() {
       {/* Hotspot badges */}
       {ops.hotspots?.length > 0 && (
         <Window tag="◉" title="HOTSPOTS" meta={`${ops.hotspots.length} areas`}>
-          <div style={{ padding: '10px 14px', display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+          <div className="mc-hspot-row">
             {ops.hotspots.map(h => (
-              <div key={h.label} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 10px', background: 'var(--pt-surface-2)', borderRadius: 3, fontSize: 10, letterSpacing: '0.12em' }}>
+              <span key={h.label} className="mc-hspot-chip">
                 <span className={`mc-led ${TONE_LED[h.tone] ?? ''}`} />
-                <span style={{ color: 'var(--pt-text-high)' }}>{h.label}</span>
-                <span style={{ color: 'var(--pt-text-mute)' }}>{h.count}</span>
-              </div>
+                <span className="mc-hspot-label">{h.label}</span>
+                <span className="mc-hspot-count">{h.count}</span>
+              </span>
             ))}
           </div>
         </Window>
@@ -78,6 +78,13 @@ export function OperationsPanel() {
 
       {/* Recent activity */}
       <Window tag="▶" title="RECENT ACTIVITY" meta={`${ops.recentFiles?.length ?? 0} files`}>
+        {(ops.recentFiles ?? []).length === 0 ? (
+          <div className="mc-empty is-compact">
+            <div className="mc-empty-glyph">▶</div>
+            <div className="mc-empty-title">NO RECENT ACTIVITY</div>
+            <p className="mc-empty-desc">Agent and file activity will stream in here as it happens.</p>
+          </div>
+        ) : (
         <div>
           {(ops.recentFiles ?? []).slice(0, 15).map(f => (
             <div key={f.id} className="mc-commit">
@@ -90,6 +97,7 @@ export function OperationsPanel() {
             </div>
           ))}
         </div>
+        )}
       </Window>
     </>
   )
@@ -104,16 +112,16 @@ export function MissionsPanel() {
   if (!missions.length) return <EmptyTerminal label="no missions in flight" />
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 }}>
+    <div className="mc-tile-grid">
       {missions.map(m => (
         <Window key={m.id} tag={m.id} title={m.title}>
-          <div style={{ padding: 14 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-              <span style={{ fontSize: 10, letterSpacing: '0.18em', color: 'var(--pt-text-dim)' }}>STATUS</span>
-              <span style={{ fontSize: 12, color: 'var(--pt-neon-bright)', textShadow: 'var(--pt-glow-sm)' }}>{m.status.toUpperCase()}</span>
-              <span style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--pt-text-dim)' }}>{m.priority}</span>
+          <div className="mc-tile-body">
+            <div className="mc-tile-head">
+              <span className="mc-tile-key">STATUS</span>
+              <span className="mc-tile-status">{m.status.toUpperCase()}</span>
+              <span className="mc-tile-right">{m.priority}</span>
             </div>
-            {m.description && <div style={{ fontSize: 11, color: 'var(--pt-text-dim)', lineHeight: 1.6 }}>{m.description}</div>}
+            {m.description && <div className="mc-tile-desc">{m.description}</div>}
           </div>
         </Window>
       ))}
@@ -130,14 +138,16 @@ export function IntegrationsPanel() {
   if (!integrations.length) return null
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+    <div className="mc-tile-grid mc-tile-grid--tri">
       {integrations.map(int => (
-        <div key={int.name} className="mc-window" style={{ padding: 14 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-            <span className={`mc-led ${int.status === 'connected' ? 'green' : int.status === 'attention' ? 'amber' : ''}`} />
-            <span style={{ fontSize: 11, letterSpacing: '0.12em', color: 'var(--pt-text-high)' }}>{int.name}</span>
+        <div key={int.name} className="mc-window mc-tile-card">
+          <div className="mc-tile-body">
+            <div className="mc-tile-head">
+              <span className={`mc-led ${int.status === 'connected' ? 'green' : int.status === 'attention' ? 'amber' : ''}`} />
+              <span className="mc-tile-name">{int.name}</span>
+            </div>
+            <div className="mc-tile-desc">{int.detail}</div>
           </div>
-          <div style={{ fontSize: 10, color: 'var(--pt-text-dim)' }}>{int.detail}</div>
         </div>
       ))}
     </div>

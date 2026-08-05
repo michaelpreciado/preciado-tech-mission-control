@@ -209,7 +209,7 @@ function KanbanCard({ task, onClick }: { task: HermesTask; onClick: () => void }
     <button className="mc-kb-card" onClick={onClick}>
       <div className="mc-kb-card-top">
         <span className={`mc-hk-status ${STATUS_TONE[task.status] ?? ''}`}>{task.status}</span>
-        {task.consecutiveFailures > 0 && <span className="bad">⚠ {task.consecutiveFailures}</span>}
+        {task.consecutiveFailures > 0 && <span className="mc-hk-status bad" title="consecutive failures">⚠ {task.consecutiveFailures}</span>}
       </div>
       <div className="mc-kb-card-title">{task.title}</div>
       <div className="mc-kb-card-meta">
@@ -235,7 +235,7 @@ function Column({ def, tasks, onOpen }: {
       </div>
       <div className="mc-kb-col-body">
         {tasks.length === 0
-          ? <div className="mc-kb-col-empty">— none —</div>
+          ? <div className="mc-kb-col-empty">— empty —</div>
           : tasks.map(t => <KanbanCard key={t.id} task={t} onClick={() => onOpen(t.id)} />)}
       </div>
     </div>

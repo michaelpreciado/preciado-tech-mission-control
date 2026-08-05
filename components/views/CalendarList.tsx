@@ -38,8 +38,10 @@ export function CalendarList({ limit }: { limit?: number } = {}) {
           </div>
           {s.description && <div className="mc-cal-desc">{s.description}</div>}
           <div className="mc-cal-foot">
-            {s.lastRunStatus && <span className={`mc-status-text ${lastRunTone(s.lastRunStatus)}`}>last: {s.lastRunStatus}</span>}
-            {s.nextRunAt && <span>next: {fmtDate(s.nextRunAt)}</span>}
+            {s.lastRunStatus
+              ? <span className={`mc-cal-run ${lastRunTone(s.lastRunStatus)}`}><span className="mc-led" />last: {s.lastRunStatus}</span>
+              : <span className="mc-cal-run"><span className="mc-led dim" />never run</span>}
+            {s.nextRunAt && <span className="mc-cal-next">next: {fmtDate(s.nextRunAt)}</span>}
           </div>
         </div>
       ))}

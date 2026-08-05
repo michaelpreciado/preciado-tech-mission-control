@@ -69,6 +69,8 @@
   /* ── Core surfaces ─────────────────────────────────────── */
   --pt-bg:              #000000;   /* void black, the deepest stop  */
   --pt-bg-soft:         #070109;   /* panels sitting above the void */
+  --pt-surface:         rgba(16,6,20, 0.6);   /* generic panel surface  */
+  --pt-surface-2:       rgba(24,10,30, 0.72); /* raised / hover surface */
   --pt-bg-terminal:     rgba(10,2,12, 0.78);  /* glass window body */
   --pt-bg-terminal-solid: #0b0110;
 
@@ -3602,3 +3604,252 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
 
 
 
+
+/* ══════════════════════════════════════════════════════════════════════
+   FINAL-BUILD POLISH — shared design system pass
+   Coherent minimal motion + refined surfaces that lift every page.
+   Added centrally (single-writer) so all pages inherit it.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Consistent surface: soft top-highlight + crisp radius on windows ── */
+.mc-window {
+  border-radius: var(--pt-r-lg);
+  border-color: var(--pt-border-dim);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: border-color 220ms var(--pt-ease), box-shadow 220ms var(--pt-ease), transform 220ms var(--pt-ease);
+}
+.mc-window::before {
+  content: '';
+  position: absolute; inset: 0 0 auto 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(var(--pt-neon-rgb),0.5), transparent);
+  opacity: 0.55; pointer-events: none;
+}
+.mc-window:hover {
+  border-color: var(--pt-border);
+  box-shadow: var(--pt-glow-md), inset 0 1px 0 rgba(var(--pt-neon-rgb),0.06);
+}
+.mc-window-head {
+  padding: 12px 16px;
+  background: linear-gradient(180deg, rgba(var(--pt-neon-rgb),0.07), rgba(var(--pt-neon-rgb),0.01));
+}
+.mc-window-title { font-size: 11px; letter-spacing: 0.18em; }
+
+/* ── Section head: refined, airier, with a soft active marker ────────── */
+.mc-ascii-head {
+  margin: 30px 0 16px;
+  gap: 16px;
+}
+.mc-ascii-head .label {
+  color: var(--pt-neon-bright);
+  text-shadow: var(--pt-glow-text);
+  letter-spacing: 0.26em;
+  font-weight: 600;
+  padding: 0 2px;
+}
+.mc-ascii-head .rule {
+  border-top: 1px solid var(--pt-border-dim);
+  height: 1px;
+}
+
+/* ── Tabs: sleeker active pill ───────────────────────────────────────── */
+.mc-tabs { gap: 8px; margin: 24px 0 10px; }
+.mc-tab {
+  padding: 10px 16px;
+  min-height: 40px;
+  border-radius: var(--pt-r-pill);
+  transition: all 200ms var(--pt-ease);
+}
+.mc-tab.is-active {
+  border-color: var(--pt-neon);
+  background: rgba(var(--pt-neon-rgb),0.12);
+  box-shadow: 0 0 0 1px rgba(var(--pt-neon-rgb),0.4), var(--pt-glow-sm);
+}
+
+/* ── Nav: softer hover, refining the scan sweep ──────────────────────── */
+.mc-nav-item { border-radius: var(--pt-r-md); }
+.mc-nav-item.is-active {
+  background: linear-gradient(90deg, rgba(var(--pt-neon-rgb),0.14), rgba(var(--pt-neon-rgb),0.03));
+  color: var(--pt-neon-bright);
+  box-shadow: inset 0 0 0 1px rgba(var(--pt-neon-rgb),0.25);
+}
+
+/* ── Task rows / commits / calendar cards: consistent interaction ────── */
+.mc-cal-card,
+.mc-commit,
+.mc-task,
+.mc-agent-card,
+.mc-desk {
+  transition: transform 200ms var(--pt-ease), border-color 200ms var(--pt-ease), box-shadow 200ms var(--pt-ease);
+}
+@media (hover: hover) {
+  .mc-cal-card:hover, .mc-commit:hover, .mc-task:hover,
+  .mc-agent-card:hover, .mc-desk:hover {
+    transform: translateY(-1px);
+    border-color: var(--pt-border);
+    box-shadow: var(--pt-glow-sm);
+  }
+}
+
+/* ── Buttons: unified focus + press feedback ─────────────────────────── */
+.mc-refresh-btn, .mc-sub-btn, .mc-win-float-btn, .mc-tab, [role="button"].mc-task {
+  transition: transform 120ms var(--pt-ease), box-shadow 200ms var(--pt-ease), border-color 200ms var(--pt-ease), background 200ms var(--pt-ease);
+}
+:where(button, [role="button"], a):active { transform: translateY(0); }
+:where(.mc-sub-btn, .mc-refresh-btn):active { transform: translateY(1px); }
+
+/* ── Keyboard focus — always visible, Apple-crisp ────────────────────── */
+:where(button, [role="button"], a, [tabindex]):focus-visible {
+  outline: 2px solid var(--pt-neon-bright);
+  outline-offset: 2px;
+  border-radius: var(--pt-r-sm);
+}
+
+/* ── Consistent input field styling (setup/search/chat) ──────────────── */
+.mc-input, input[type="text"], input[type="search"], input[type="password"], textarea {
+  border: 1px solid var(--pt-border-dim);
+  border-radius: var(--pt-r-md);
+  background: rgba(0,0,0,0.35);
+  color: var(--pt-text);
+  font-family: var(--pt-font-mono);
+  padding: 9px 12px;
+  font-size: 12px;
+  transition: border-color 200ms var(--pt-ease), box-shadow 200ms var(--pt-ease);
+}
+.mc-input:focus, input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--pt-neon);
+  box-shadow: 0 0 0 3px rgba(var(--pt-neon-rgb),0.18), var(--pt-glow-sm);
+}
+
+/* ── Scrollbars: slimmer, quieter ────────────────────────────────────── */
+.mc-main::-webkit-scrollbar { width: 5px; height: 5px; }
+.mc-main::-webkit-scrollbar-track { background: transparent; }
+.mc-main::-webkit-scrollbar-thumb {
+  background: var(--pt-border-dim);
+  border-radius: 99px;
+  border: 1px solid rgba(0,0,0,0.2);
+}
+.mc-main::-webkit-scrollbar-thumb:hover { background: var(--pt-border); }
+
+/* ── Page-enter micro-motion (respects reduced motion) ───────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .mc-main > * {
+    animation: mc-rise-in 320ms var(--pt-ease) both;
+  }
+  .mc-main > *:nth-child(2) { animation-delay: 40ms; }
+  .mc-main > *:nth-child(3) { animation-delay: 80ms; }
+  .mc-main > *:nth-child(n+4) { animation-delay: 60ms; }
+}
+@keyframes mc-rise-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Reduced motion: kill decorative sweep/scan animations ───────────── */
+@media (prefers-reduced-motion: reduce) {
+  .mc-brand::after, .mc-nav-scan, .mc-scanlines, .mc-hud-grid,
+  .mc-hud-ring-rot, .mc-sub-edge, .mc-hud-beam { animation: none !important; }
+  .mc-main > * { animation: none !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   TILE GRID / TILE CARD — shared project-idea-mission-integration surface
+   Introduced by the view-polish pass. One consistent card family.
+   ══════════════════════════════════════════════════════════════════════ */
+.mc-tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 14px;
+}
+.mc-tile-grid--tri { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.mc-tile-card, .mc-window.mc-tile-card { border-radius: var(--pt-r-lg); }
+.mc-tile-body {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 14px 16px;
+}
+.mc-tile-head {
+  display: flex; align-items: center; gap: 8px;
+  min-height: 20px;
+}
+.mc-tile-head .mc-led { flex-shrink: 0; }
+.mc-tile-status {
+  font-size: 9px; letter-spacing: 0.16em;
+  color: var(--pt-neon-bright); text-shadow: var(--pt-glow-sm);
+  text-transform: uppercase; font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.mc-tile-right {
+  margin-left: auto; flex-shrink: 0;
+  font-size: 9px; letter-spacing: 0.1em; color: var(--pt-text-dim);
+  text-transform: uppercase;
+}
+.mc-tile-name {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.12em;
+  color: var(--pt-text-high); text-transform: uppercase;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.mc-tile-title {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.1em;
+  color: var(--pt-text-high); line-height: 1.4;
+}
+.mc-tile-desc {
+  font-size: 11px; line-height: 1.6; color: var(--pt-text-dim);
+}
+.mc-tile-meta {
+  font-size: 10px; letter-spacing: 0.08em; color: var(--pt-text-mute);
+}
+.mc-tile-foot {
+  margin-top: auto; padding-top: 6px;
+  font-size: 9px; letter-spacing: 0.1em; color: var(--pt-text-mute);
+  text-transform: uppercase;
+}
+
+/* ── Shared empty state (the tc-empty family) ────────────────────────── */
+.mc-empty {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 6px; text-align: center;
+  padding: 36px 20px;
+}
+.mc-empty.is-compact { padding: 22px 16px; }
+.mc-empty-glyph {
+  font-size: 18px; color: var(--pt-text-mute);
+  opacity: 0.7;
+}
+.mc-empty-title {
+  font-size: 10px; letter-spacing: 0.22em; color: var(--pt-text-dim);
+  text-transform: uppercase; font-weight: 600;
+}
+.mc-empty-desc {
+  margin: 0; font-size: 10px; line-height: 1.6;
+  color: var(--pt-text-mute); max-width: 340px;
+}
+
+/* ── Hotspot chips (ops) ─────────────────────────────────────────────── */
+.mc-hspot-row {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  padding: 12px 14px;
+}
+.mc-hspot-chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 6px 10px;
+  border: 1px solid var(--pt-border-dim);
+  border-radius: var(--pt-r-pill);
+  background: rgba(0,0,0,0.25);
+  font-size: 10px; letter-spacing: 0.1em;
+  color: var(--pt-text);
+  transition: border-color 200ms var(--pt-ease), box-shadow 200ms var(--pt-ease);
+}
+.mc-hspot-chip:hover { border-color: var(--pt-border); box-shadow: var(--pt-glow-sm); }
+.mc-hspot-chip .mc-led { width: 7px; height: 7px; }
+.mc-hspot-count {
+  font-variant-numeric: tabular-nums;
+  color: var(--pt-neon-bright);
+  font-weight: 700;
+}
+
+/* ── Calendar / cron footer refinements ──────────────────────────────── */
+.mc-cal-next, .mc-cal-run {
+  font-variant-numeric: tabular-nums;
+  color: var(--pt-text-dim);
+}

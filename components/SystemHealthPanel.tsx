@@ -43,13 +43,21 @@ export function SystemHealthPanel() {
       </div>
       <div className="mc-health-body">
         {error && <div className="mc-pipe-error">⚠ {error}</div>}
-        {services.map(svc => (
-          <div key={svc.id} className="mc-health-row">
-            <span className={`mc-led ${svc.status === 'up' ? 'green' : svc.status === 'warn' ? 'amber' : 'red'}`} />
-            <span className="mc-health-name" title={svc.name}>{svc.name}</span>
-            <span className="mc-health-detail" title={svc.detail}>{svc.detail}</span>
+        {services.length === 0 && !error ? (
+          <div className="mc-empty is-compact">
+            <div className="mc-empty-glyph">⚡</div>
+            <div className="mc-empty-title">NO SERVICES</div>
+            <p className="mc-empty-desc">Service status will appear here once the system probe responds.</p>
           </div>
-        ))}
+        ) : (
+          services.map(svc => (
+            <div key={svc.id} className="mc-health-row">
+              <span className={`mc-led ${svc.status === 'up' ? 'green' : svc.status === 'warn' ? 'amber' : 'red'}`} />
+              <span className="mc-health-name" title={svc.name}>{svc.name}</span>
+              <span className="mc-health-detail" title={svc.detail}>{svc.detail}</span>
+            </div>
+          ))
+        )}
       </div>
     </div>
   )

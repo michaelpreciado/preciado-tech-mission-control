@@ -56,6 +56,37 @@ function ScopeNote({ children }: { children: ReactNode }) {
   )
 }
 
+/* ── Statistic block ────────────────────────────────────
+   Centralized value + tracked label pair so every readout row across the
+   panel shares one alignment + type scale. The hero figure is a `Stat`
+   with size="hero" + glow; the accent color is always passed inline so a
+   stat never leaks another metric's hue. */
+function Stat({ value, label, color = 'var(--pt-text-high)', size = 'md', align = 'left', glow = false }: {
+  value: ReactNode
+  label: string
+  color?: string
+  size?: 'hero' | 'lg' | 'md'
+  align?: 'left' | 'right'
+  glow?: boolean
+}) {
+  const fs = size === 'hero' ? 34 : size === 'lg' ? 22 : 17
+  return (
+    <div className="cp-stat" data-align={align} style={{ textAlign: align }}>
+      <div style={{
+        fontSize: fs, fontWeight: 700, lineHeight: 1,
+        fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums',
+        color: glow ? 'var(--pt-neon-bright)' : color,
+        ...(glow ? { textShadow: 'var(--pt-glow-text)' } : {}),
+      }}>
+        {value}
+      </div>
+      <div style={{ fontSize: 7, color: 'var(--pt-text-mute)', letterSpacing: '0.18em', marginTop: 4, whiteSpace: 'nowrap' }}>
+        {label}
+      </div>
+    </div>
+  )
+}
+
 /** Days actually present in a daily series — the real window behind "30D" labels. */
 function loggedDays(daily?: { date: string }[]): number {
   return (daily ?? []).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d.date)).length
@@ -420,25 +451,16 @@ function MonthlyBurnHero({ costs }: { costs: CostDashboard }) {
   return (
     <Window tag="◎" title={`TOKEN BURN · ${windowLabel(n)}`}
       meta={or ? `openrouter billed ${money(or.usageMonthly)} this month` : undefined}>
-      <div style={{ padding: '14px 16px 6px', display: 'flex', gap: 26, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-        <div>
-          <div style={{ fontSize: 34, fontWeight: 700, color: 'var(--pt-neon-bright)', fontFamily: 'var(--font-mono)', lineHeight: 1, textShadow: 'var(--pt-glow-text)' }}>
-            {fmtTokens(totalMonth)}
-          </div>
-          <div style={{ fontSize: 8, color: 'var(--pt-text-mute)', letterSpacing: '0.2em', marginTop: 5 }}>
-            TOKENS BURNED · {n >= 30 ? '30D' : `${n}D`}
-          </div>
-        </div>
+      <div style={{ padding: '14px 16px 8px', display: 'flex', gap: 24, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+        <Stat value={fmtTokens(totalMonth)}
+          label={`TOKENS BURNED · ${n >= 30 ? '30D' : `${n}D`}`} size="hero" glow />
         {[
           { label: 'API', value: fmtTokens(apiMonth), color: CATEGORICAL[0] },
           { label: 'CLAUDE CODE', value: fmtTokens(claudeMonth), color: CATEGORICAL[3] },
           { label: 'LOCAL · FREE', value: fmtTokens(localMonth), color: CATEGORICAL[2] },
           ...(or ? [{ label: 'OPENROUTER $/MO', value: money(or.usageMonthly), color: STATUS.warn }] : []),
         ].map(s => (
-          <div key={s.label}>
-            <div style={{ fontSize: 17, fontWeight: 700, color: s.color, fontFamily: 'var(--font-mono)', lineHeight: 1 }}>{s.value}</div>
-            <div style={{ fontSize: 7, color: 'var(--pt-text-mute)', letterSpacing: '0.18em', marginTop: 4 }}>{s.label}</div>
-          </div>
+          <Stat key={s.label} value={s.value} label={s.label} color={s.color} />
         ))}
       </div>
 
@@ -501,7 +523,7 @@ function MonthlyBilling({ costs }: { costs: CostDashboard }) {
   return (
     <>
       <SectionHead label="MONTHLY BILLING · PLAN & REAL COST" />
-      <div className="mc-viz-grid" style={{ gridTemplateColumns: `repeat(${Math.min(billing.length, 2)},1fr)` }}>
+      <div className="mc-viz-grid" style={{ display: 'grid', gap: 16, gridTemplateColumns: `repeat(${Math.min(billing.length, 2)}, minmax(0, 1fr))` }}>
         {billing.map(b => {
           const or = b.openRouterUsd
           const realCost = b.planAmount + (or ?? 0)
@@ -601,7 +623,7 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
   }))
 
   return (
-    <>
+    <div className="cp-panel">
       {/* ── 30-DAY BURN HERO ── */}
       <MonthlyBurnHero costs={costs} />
 
@@ -615,37 +637,23 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
           {or && (
             <Window tag="⬡" title="OPENROUTER · LIVE BILLING"
               meta={or.limit != null ? `${Math.round((or.usageMonthly / or.limit) * 100)}% of $${or.limit} limit` : 'no limit'}>
-              <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', gap: 24, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-                  <div>
-                    <div style={{ fontSize: 26, fontWeight: 700, color: CATEGORICAL[0], fontFamily: 'var(--font-mono)', lineHeight: 1 }}>
-                      {money(or.usageMonthly)}
-                    </div>
-                    <div style={{ fontSize: 9, color: 'var(--pt-text-mute)', letterSpacing: '0.18em', marginTop: 3 }}>THIS MONTH</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: CATEGORICAL[4], fontFamily: 'var(--font-mono)', lineHeight: 1 }}>
-                      {fmtTokens(orMonthlyTokens)}
-                    </div>
-                    <div style={{ fontSize: 8, color: 'var(--pt-text-mute)', letterSpacing: '0.16em', marginTop: 4 }}>
-                      TOKENS · {dayCount >= 30 ? '30D' : `${dayCount}D LOGGED`}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    <div style={{ fontSize: 11, color: 'var(--pt-text-dim)', fontFamily: 'var(--font-mono)' }}>
+                  <Stat value={money(or.usageMonthly)} label="THIS MONTH" color={CATEGORICAL[0]} size="hero" />
+                  <Stat value={fmtTokens(orMonthlyTokens)}
+                    label={`TOKENS · ${dayCount >= 30 ? '30D' : `${dayCount}D LOGGED`}`} color={CATEGORICAL[4]} size="lg" />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3, paddingBottom: 2 }}>
+                    <div style={{ fontSize: 11, color: 'var(--pt-text-dim)', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
                       <span style={{ color: 'var(--pt-text-mute)', fontSize: 9, letterSpacing: '0.12em' }}>WEEK</span>
                       {' '}{money(or.usageWeekly)}
                     </div>
-                    <div style={{ fontSize: 11, color: 'var(--pt-text-dim)', fontFamily: 'var(--font-mono)' }}>
+                    <div style={{ fontSize: 11, color: 'var(--pt-text-dim)', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
                       <span style={{ color: 'var(--pt-text-mute)', fontSize: 9, letterSpacing: '0.12em' }}>TODAY</span>
                       {' '}{money(or.usageDaily)}
                     </div>
                   </div>
                   {or.limitRemaining != null && (
-                    <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                      <div style={{ fontSize: 13, color: CATEGORICAL[2], fontFamily: 'var(--font-mono)' }}>{money(or.limitRemaining)}</div>
-                      <div style={{ fontSize: 9, color: 'var(--pt-text-mute)', letterSpacing: '0.12em' }}>REMAINING</div>
-                    </div>
+                    <Stat value={money(or.limitRemaining)} label="REMAINING" color={CATEGORICAL[2]} size="lg" align="right" />
                   )}
                 </div>
                 {or.limit != null && (() => {
@@ -721,27 +729,11 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
           <SectionHead label="OLLAMA · LOCAL INFERENCE" />
           <Window tag="◆" title={`OLLAMA · MODEL LEADERBOARD — ${windowLabel(dayCount)}`}
             meta={`${ollamaTotalRequests.toLocaleString()} reqs all-time · $0.00`}>
-            <div style={{ padding: '12px 14px 0', display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-              <div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: CATEGORICAL[2], fontFamily: 'var(--font-mono)', lineHeight: 1 }}>
-                  {fmtTokens(ollamaMonthlyTokens)}
-                </div>
-                <div style={{ fontSize: 8, color: 'var(--pt-text-mute)', letterSpacing: '0.16em', marginTop: 3 }}>
-                  TOKENS · {dayCount >= 30 ? '30D' : `${dayCount}D LOGGED`}
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: CATEGORICAL[2], fontFamily: 'var(--font-mono)', lineHeight: 1 }}>
-                  {fmtTokens(ollamaTotalTokens)}
-                </div>
-                <div style={{ fontSize: 8, color: 'var(--pt-text-mute)', letterSpacing: '0.16em', marginTop: 3 }}>ALL-TIME</div>
-              </div>
-              <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: CATEGORICAL[2], fontFamily: 'var(--font-mono)' }}>
-                  {money(ollamaTotalTokens * 0.0000005)}
-                </div>
-                <div style={{ fontSize: 8, color: 'var(--pt-text-mute)', letterSpacing: '0.12em', marginTop: 2 }}>EST. SAVED vs API</div>
-              </div>
+            <div style={{ padding: '12px 14px 0', display: 'flex', gap: 24, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+              <Stat value={fmtTokens(ollamaMonthlyTokens)}
+                label={`TOKENS · ${dayCount >= 30 ? '30D' : `${dayCount}D LOGGED`}`} color={CATEGORICAL[2]} size="lg" />
+              <Stat value={fmtTokens(ollamaTotalTokens)} label="ALL-TIME" color={CATEGORICAL[2]} size="lg" />
+              <Stat value={money(ollamaTotalTokens * 0.0000005)} label="EST. SAVED vs API" color={CATEGORICAL[2]} size="lg" align="right" />
             </div>
             <ModelLeaderboard rows={ollamaMonthlyRows} color={CATEGORICAL[2]}
               emptyLabel={`no local inference in the ${dayCount} logged days`} />
@@ -784,6 +776,6 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
       {!or && !cu && paidModels.length === 0 && ollamaModels.length === 0 && (
         <EmptyTerminal label="no billing data — set OPENROUTER_API_KEY in .env" />
       )}
-    </>
+    </div>
   )
 }

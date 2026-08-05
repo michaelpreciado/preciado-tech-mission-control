@@ -23,6 +23,13 @@ const tabs = [
 
 type TabId = typeof tabs[number]['id']
 
+/** Priority → existing mc-task-tag tone: high reads as attention, low as neutral. */
+const PRIORITY_TONE: Record<MissionTask['priority'], string> = {
+  high: 'alert',
+  normal: '',
+  low: 'info',
+}
+
 function DeckTabs({ active, onChange }: { active: TabId; onChange: (t: TabId) => void }) {
   return (
     <div className="mc-tabs">
@@ -64,9 +71,7 @@ function TaskPreviewCol({ headLabel, headGlyph, alert, items }: {
       </div>
       <div className="mc-tcol-body">
         {items.length === 0 ? (
-          <div style={{ padding: '12px 0', color: 'var(--pt-text-mute)', fontSize: 10, letterSpacing: '0.18em' }}>
-            — all clear —
-          </div>
+          <div className="mc-tcol-sentinel">— all clear —</div>
         ) : items.map(t => (
           <div key={t.id} className="mc-task">
             <div className="mc-task-head">
@@ -74,8 +79,7 @@ function TaskPreviewCol({ headLabel, headGlyph, alert, items }: {
             </div>
             <div className="mc-task-meta">
               <span className="agent">{t.ownerName}</span>
-              <span>·</span>
-              <span>{t.priority}</span>
+              <span className={`mc-task-tag ${PRIORITY_TONE[t.priority] ?? ''}`}>{t.priority}</span>
             </div>
           </div>
         ))}

@@ -12,16 +12,16 @@ export function ProjectGrid({ limit }: { limit?: number } = {}) {
   if (!projects.length) return <EmptyTerminal label="no projects" />
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+    <div className="mc-tile-grid mc-tile-grid--tri">
       {projects.map(p => (
         <Window key={p.id} tag="▤" title={p.name}>
-          <div style={{ padding: 14, fontSize: 11, color: 'var(--pt-text-dim)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+          <div className="mc-tile-body">
+            <div className="mc-tile-head">
               <span className="mc-led" />
-              <span style={{ color: 'var(--pt-neon-bright)', textShadow: 'var(--pt-glow-sm)', letterSpacing: '0.1em' }} title={p.signal}>{p.signal.toUpperCase()}</span>
-              <span style={{ marginLeft: 'auto', color: 'var(--pt-text-dim)' }}>{p.kind}</span>
+              <span className="mc-tile-status" title={p.signal}>{p.signal.toUpperCase()}</span>
+              <span className="mc-tile-right">{p.kind}</span>
             </div>
-            <div style={{ marginTop: 6 }}>{p.tasks} tasks · {p.source}</div>
+            <div className="mc-tile-meta">{p.tasks} tasks · {p.source}</div>
           </div>
         </Window>
       ))}

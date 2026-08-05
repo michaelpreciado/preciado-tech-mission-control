@@ -13,7 +13,7 @@ export function MemoryStream() {
 
   return (
     <Window tag="⊡" title="STEWARDSHIP LEDGER" meta={`${memory.length} entries`}>
-      <div style={{ padding: 0 }}>
+      <div>
         {memory.map(m => (
           <div key={m.id} className="mc-commit">
             <span className="sha">{m.source}</span>

@@ -128,6 +128,13 @@ export function GithubPanel() {
       )}
 
       <SectionHead label={`GITHUB / REPOSITORIES · ${repos.length} MOST RECENT`} />
+      {repos.length === 0 ? (
+        <div className="mc-empty is-compact">
+          <div className="mc-empty-glyph">▤</div>
+          <div className="mc-empty-title">NO REPOSITORIES</div>
+          <p className="mc-empty-desc">No public repositories are currently being surfaced for @{gh.username}.</p>
+        </div>
+      ) : (
       <div className="mc-repo-grid">
         {repos.map(repo => (
           <a key={repo.name} className="mc-repo-card" href={repo.url} target="_blank" rel="noreferrer">
@@ -151,9 +158,17 @@ export function GithubPanel() {
           </a>
         ))}
       </div>
+      )}
 
       <SectionHead label="GITHUB / RECENT ACTIVITY" />
-      <Window tag="◉" title="RECENT EVENTS">
+      <Window tag="◉" title="RECENT EVENTS" meta={`${(gh.recentEvents ?? []).length} events`}>
+        {(gh.recentEvents ?? []).length === 0 ? (
+          <div className="mc-empty is-compact">
+            <div className="mc-empty-glyph">◉</div>
+            <div className="mc-empty-title">NO RECENT EVENTS</div>
+            <p className="mc-empty-desc">Push, PR and issue activity will appear here as it happens.</p>
+          </div>
+        ) : (
         <div>
           {(gh.recentEvents ?? []).slice(0, 10).map((ev, i) => {
             const pretty = EVENT_LABELS[ev.type] ?? { label: ev.type.replace(/Event$/, '').toLowerCase(), glyph: '·' }
@@ -168,6 +183,7 @@ export function GithubPanel() {
             )
           })}
         </div>
+        )}
       </Window>
     </>
   )
