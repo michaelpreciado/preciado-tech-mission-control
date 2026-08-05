@@ -7,6 +7,7 @@
  */
 import { useEffect, useRef, useState } from 'react'
 import { SectionHead } from '@/components/ui'
+import { EmptyState } from '@/components/EmptyState'
 
 type Msg = { role: 'you' | 'agent' | 'system'; text: string; at: number; elapsedMs?: number }
 
@@ -30,6 +31,7 @@ export default function ChatPage() {
   const [busy, setBusy] = useState(false)
   const [elapsed, setElapsed] = useState(0)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     const s = loadStore()
@@ -84,6 +86,13 @@ export default function ChatPage() {
     setMessages([])
   }
 
+  // Fill the composer with a suggested prompt and focus it — makes the empty
+  // state actionable instead of a dead text block.
+  function seedPrompt(text: string) {
+    setInput(text)
+    inputRef.current?.focus()
+  }
+
   return (
     <>
       <SectionHead label="CHAT / TALK TO YOUR AGENT" />
@@ -99,12 +108,22 @@ export default function ChatPage() {
             <div className="mc-connect-title">◇ CONNECT AN AGENT</div>
             <p>The /chat tab drives a local agent CLI in one-shot mode (Hermes-compatible: <code>{command || 'hermes'} -z &lt;prompt&gt;</code>).
             Install Hermes or point <code>chat.command</code> in data/config.json at your own agent binary.</p>
+            <a href="/setup" className="mc-refresh-btn">🛠 OPEN SETUP</a>
           </div>
         )}
 
         <div className="mc-chat-log" aria-live="polite">
           {messages.length === 0 && available && (
-            <div className="mc-chat-empty">No messages yet — the agent keeps context for this whole session. Ask it about its tasks, memory, or anything on the deck.</div>
+            <EmptyState
+              glyph="▸"
+              title="Start the conversation"
+              desc={<>No messages yet — the agent keeps context for this whole session. Ask it about its tasks, its memory, or anything on the deck.</>}
+              actions={[
+                { label: 'What are you working on?', onClick: () => seedPrompt('What are you working on?') },
+                { label: 'Summarize today', onClick: () => seedPrompt('Summarize today') },
+                { label: '▶ FIRST MESSAGE', primary: true, onClick: () => inputRef.current?.focus() },
+              ]}
+            />
           )}
           {messages.map((m, i) => (
             <div key={i} className={`mc-chat-msg is-${m.role}`}>
@@ -126,6 +145,7 @@ export default function ChatPage() {
 
         <form className="mc-chat-input" onSubmit={e => { e.preventDefault(); void send() }}>
           <textarea
+            ref={inputRef}
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send() } }}

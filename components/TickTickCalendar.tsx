@@ -10,6 +10,7 @@
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { SkeletonPanel } from './ui'
+import { EmptyState } from './EmptyState'
 import type { TickTickTask, TickTickWeekData } from '@/lib/types'
 
 const POLL_MS = 60_000
@@ -128,32 +129,47 @@ export function TickTickCalendar() {
 
       {data.error && <div className="mc-week-error">⚠ {data.error}</div>}
 
-      <div className="mc-week-grid">
-        {days.map(d => {
-          const items = byDay.get(d.key) ?? []
-          return (
-            <div key={d.key} className={`mc-week-day ${d.isToday ? 'is-today' : ''} ${d.isWeekend ? 'is-weekend' : ''}`}>
-              <div className="mc-week-dayhead">
-                <span className="mc-week-dayname">{d.name}</span>
-                <span className="mc-week-daynum">{d.dayNum}</span>
+      {weekCount === 0 ? (
+        <EmptyState
+          glyph="▦"
+          title="No events this week"
+          desc="This week is clear — nothing scheduled. Add a task in TickTick and it appears here, or step to another week."
+          actions={[
+            { label: 'Add to TickTick ↗', href: 'https://www.ticktick.com/webapp/#q/all/today', primary: true },
+            { label: '◂ Last week', onClick: () => setOffset(o => o - 1) },
+            { label: 'Next week ▸', onClick: () => setOffset(o => o + 1) },
+          ]}
+        />
+      ) : (
+        <div className="mc-week-grid">
+          {days.map(d => {
+            const items = byDay.get(d.key) ?? []
+            return (
+              <div key={d.key} className={`mc-week-day ${d.isToday ? 'is-today' : ''} ${d.isWeekend ? 'is-weekend' : ''} ${items.length === 0 ? 'is-empty' : ''}`}>
+                <div className="mc-week-dayhead">
+                  <span className="mc-week-dayname">{d.name}</span>
+                  <span className="mc-week-daynum">{d.dayNum}</span>
+                </div>
+                <div className="mc-week-daybody">
+                  {items.length === 0 ? (
+                    <a className="mc-week-add" href="https://www.ticktick.com/webapp/#q/all/today" aria-label="Add an event to this day" title="Add an event">
+                      + add
+                    </a>
+                  ) : items.map(t => (
+                    <div key={t.id} className={`mc-week-task ${t.status === 2 ? 'is-done' : ''}`} title={t.projectName}>
+                      <span className="mc-week-mark">{t.status === 2 ? '✓' : '▸'}</span>
+                      <span className="mc-week-tasktext">
+                        {timeLabel(t) && <span className="mc-week-time">{timeLabel(t)} </span>}
+                        {t.title}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="mc-week-daybody">
-                {items.length === 0 ? (
-                  <span className="mc-week-empty">·</span>
-                ) : items.map(t => (
-                  <div key={t.id} className={`mc-week-task ${t.status === 2 ? 'is-done' : ''}`} title={t.projectName}>
-                    <span className="mc-week-mark">{t.status === 2 ? '✓' : '▸'}</span>
-                    <span className="mc-week-tasktext">
-                      {timeLabel(t) && <span className="mc-week-time">{timeLabel(t)} </span>}
-                      {t.title}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )
-        })}
-      </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

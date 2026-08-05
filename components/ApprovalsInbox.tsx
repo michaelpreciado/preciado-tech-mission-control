@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { ApprovalItem, ApprovalsData } from '@/lib/types'
 import { SkeletonPanel, fmtDate } from './ui'
+import { EmptyState } from './EmptyState'
 
 const POLL_MS = 12_000
 
@@ -132,7 +133,16 @@ export function ApprovalsInbox() {
           <span className="mc-tcol-count">{pending.length}</span>
         </div>
         <div className="mc-appr-body">
-          {pending.length === 0 && <div className="mc-pipe-empty">— nothing waiting on you —</div>}
+          {pending.length === 0 && (
+            <EmptyState
+              compact
+              tone="success"
+              glyph="✓"
+              title="You're all caught up"
+              desc="No decisions are waiting on you right now. Approvals land here when an agent needs sign-off."
+              actions={[{ label: '↻ Check for new', primary: true, onClick: () => void refresh() }]}
+            />
+          )}
           {pending.map(item => (
             <ApprovalCard key={item.id} item={item} onDecide={decide} busy={busyId === item.id} />
           ))}
@@ -146,7 +156,15 @@ export function ApprovalsInbox() {
           <span className="mc-tcol-count">{info.length}</span>
         </div>
         <div className="mc-appr-body">
-          {info.length === 0 && <div className="mc-pipe-empty">— all nominal —</div>}
+          {info.length === 0 && (
+            <EmptyState
+              compact
+              tone="info"
+              glyph="◇"
+              title="All nominal"
+              desc="No FYI items or flagged notes right now. Anything an agent wants you to see shows up here."
+            />
+          )}
           {info.map(item => (
             <ApprovalCard key={item.id} item={item} onDecide={decide} busy={false} />
           ))}

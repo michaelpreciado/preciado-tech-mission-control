@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { HermesKanbanSnapshot, HermesTask, HermesTaskDetail } from '@/lib/types'
 import { SkeletonPanel, fmtDate } from './ui'
+import { EmptyState } from './EmptyState'
 
 const POLL_MS = 15_000
 
@@ -170,7 +171,23 @@ export function HermesKanban() {
             : 'kanban.db unavailable'}
         </div>
         <div className="mc-hk-body">
-          {tasks.length === 0 && <div className="mc-pipe-empty">— no hermes tasks yet —</div>}
+          {tasks.length === 0 && snap.available && (
+            <EmptyState
+              glyph="⛁"
+              title="No hermes tasks yet"
+              desc="This board is where agents publish and track their work. It'll populate as tasks are dispatched — check back, or refresh now."
+              actions={[{ label: '↻ Refresh', primary: true, onClick: () => void refresh() }]}
+            />
+          )}
+          {tasks.length === 0 && !snap.available && (
+            <EmptyState
+              tone="error"
+              glyph="⛁"
+              title="Kanban store unavailable"
+              desc="Couldn't read ~/.hermes/kanban.db right now. The board will reconnect automatically, or retry manually."
+              actions={[{ label: '↻ Retry', primary: true, onClick: () => void refresh() }]}
+            />
+          )}
           {tasks.map((t: HermesTask) => (
             <button key={t.id} className="mc-hk-row" onClick={() => setOpenId(t.id)}>
               <span className={`mc-hk-status ${STATUS_TONE[t.status] ?? ''}`}>{t.status}</span>
