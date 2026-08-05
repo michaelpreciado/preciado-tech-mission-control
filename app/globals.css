@@ -4497,3 +4497,40 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
 .mc-home-presence-row .mc-home-dataage {
   font-size: 10px;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   P2 · HOME — hero status tile (visual hierarchy)
+   (coordinator CSS for the `is-hero` modifier + `mc-home-tile-hero`
+   wrapper Claude added to HomeDeck.tsx StatusTiles. The single most
+   urgent tile renders full-width with a bigger lead value so the thing
+   that needs Michael dominates the equal-weight row.) */
+.mc-home-tile-hero {
+  width: 100%;
+  margin-bottom: 12px;
+}
+.mc-home-tile.is-hero {
+  width: 100%;
+  padding: 20px 22px;
+  gap: 16px;
+  border-color: rgba(var(--pt-neon-rgb), 0.35);
+  background:
+    linear-gradient(135deg, rgba(var(--pt-neon-rgb),0.12) 0%, rgba(255,255,255,0.02) 100%),
+    rgba(16,3,20,0.72);
+  box-shadow: 0 0 24px rgba(var(--pt-neon-rgb),0.12);
+}
+.mc-home-tile.is-hero .mc-home-tile-value { font-size: 42px; }
+.mc-home-tile.is-hero .mc-home-tile-label { font-size: 10px; }
+.mc-home-tile.is-hero .mc-home-tile-glyph { font-size: 22px; }
+/* tone-err hero gets a stronger urgency ring than the default tile pulse */
+.mc-home-tile.is-hero.tone-err { animation: home-tile-err-hero 1.2s ease-in-out infinite; }
+@keyframes home-tile-err-hero {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,95,87,0.45); }
+  50%      { box-shadow: 0 0 0 8px rgba(255,95,87,0); }
+}
+@media (max-width: 520px) {
+  .mc-home-tile.is-hero { padding: 16px 16px; }
+  .mc-home-tile.is-hero .mc-home-tile-value { font-size: 34px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mc-home-tile.is-hero.tone-err { animation: none; }
+}

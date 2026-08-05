@@ -66,29 +66,48 @@ function StatusTiles() {
     const running = kb?.runningTasks ?? working.length
 
     return [
-      { key: 'working', label: 'WORKING NOW', glyph: '▶', href: '/team', value: String(running), sub: `${working.length} live · ${offline.length} offline`, tone: running ? 'ok' : 'info' },
+      { key: 'working', label: 'WORKING NOW', glyph: '▶', href: '/team', value: String(running), sub: 'agents working', tone: running ? 'ok' : 'info' },
       { key: 'open', label: 'OPEN TASKS', glyph: '≡', href: '/kanban', value: String(open), sub: 'kanban board', tone: open ? 'warn' : 'ok' },
-      { key: 'cron', label: 'CRON FAILS', glyph: '○', href: '/calendar', value: `${cronFails}/${data.cron.length}`, sub: 'scheduler', tone: cronFails ? 'err' : 'ok' },
-      { key: 'cost', label: 'COST · THIS MO', glyph: '$', href: '/costs', value: costMonth, sub: 'plan + OR', tone: 'info' },
+      { key: 'cron', label: 'CRON FAILS', glyph: '○', href: '/calendar', value: String(cronFails), sub: 'jobs failing', tone: cronFails ? 'err' : 'ok' },
+      { key: 'cost', label: 'COST · THIS MO', glyph: '$', href: '/costs', value: costMonth, sub: 'this month', tone: 'info' },
       { key: 'gh', label: 'GH STREAK', glyph: '★', href: '/github', value: `${ghStreak}d`, sub: 'contributions', tone: ghStreak ? 'ok' : 'info' },
       { key: 'proj', label: 'PROJECTS', glyph: '▤', href: '/projects', value: String(data.counts?.projects ?? data.projects.length), sub: 'active repos', tone: 'info' },
     ] as TileDef[]
   }, [data])
 
   if (!data) return <SkeletonPanel label="loading status" />
+
+  const heroIdx = done.findIndex(t => t.tone === 'err')
+  const heroTile = heroIdx >= 0 ? done[heroIdx] : done.find(t => t.tone === 'warn')
+  const rest = heroTile ? done.filter(t => t.key !== heroTile.key) : done
+
   return (
-    <div className="mc-home-tiles">
-      {done.map(t => (
-        <Link key={t.key} href={t.href} className={`mc-home-tile tone-${t.tone}`}>
-          <span className="mc-home-tile-glyph">{t.glyph}</span>
-          <span className="mc-home-tile-mid">
-            <span className="mc-home-tile-label">{t.label}</span>
-            <span className="mc-home-tile-sub">{t.sub}</span>
-          </span>
-          <span className="mc-home-tile-value">{t.value}</span>
-        </Link>
-      ))}
-    </div>
+    <>
+      {heroTile && (
+        <div className="mc-home-tile-hero">
+          <Link href={heroTile.href} className={`mc-home-tile tone-${heroTile.tone} is-hero`}>
+            <span className="mc-home-tile-glyph">{heroTile.glyph}</span>
+            <span className="mc-home-tile-mid">
+              <span className="mc-home-tile-label">{heroTile.label}</span>
+              <span className="mc-home-tile-sub">{heroTile.sub}</span>
+            </span>
+            <span className="mc-home-tile-value">{heroTile.value}</span>
+          </Link>
+        </div>
+      )}
+      <div className="mc-home-tiles">
+        {rest.map(t => (
+          <Link key={t.key} href={t.href} className={`mc-home-tile tone-${t.tone}`}>
+            <span className="mc-home-tile-glyph">{t.glyph}</span>
+            <span className="mc-home-tile-mid">
+              <span className="mc-home-tile-label">{t.label}</span>
+              <span className="mc-home-tile-sub">{t.sub}</span>
+            </span>
+            <span className="mc-home-tile-value">{t.value}</span>
+          </Link>
+        ))}
+      </div>
+    </>
   )
 }
 
