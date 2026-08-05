@@ -12,7 +12,6 @@ import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { useLiveData } from './LiveDataProvider'
 import { SectionHead, SkeletonPanel, fmtDate } from './ui'
-import { Icon, type IconName } from './icons'
 import dynamic from 'next/dynamic'
 import type { MissionTask } from '@/lib/types'
 
@@ -117,40 +116,6 @@ function AgentPulse() {
           </Link>
         )
       })}
-    </div>
-  )
-}
-
-/* ── Quick-launch grid ───────────────────────────────────────────────── */
-
-const LAUNCH: { href: string; label: string; icon: IconName; desc: string }[] = [
-  { href: '/kanban', label: 'Kanban', icon: 'kanban', desc: 'Board & tasks' },
-  { href: '/approvals', label: 'Approvals', icon: 'approvals', desc: 'Waiting on you' },
-  { href: '/chat', label: 'Chat', icon: 'chat', desc: 'Talk to your agent' },
-  { href: '/costs', label: 'Costs', icon: 'costs', desc: 'Spend & billing' },
-  { href: '/github', label: 'GitHub', icon: 'github', desc: 'Repos & activity' },
-  { href: '/team', label: 'Team', icon: 'team', desc: 'Agent mesh' },
-  { href: '/memory', label: 'Memory', icon: 'memory', desc: 'Steward ledger' },
-  { href: '/pipeline', label: 'Pipeline', icon: 'pipeline', desc: 'Web dev flow' },
-  { href: '/ml-content', label: 'ML Content', icon: 'ml', desc: 'Scripts & film' },
-  { href: '/calendar', label: 'Scheduler', icon: 'calendar', desc: 'Cron jobs' },
-  { href: '/projects', label: 'Projects', icon: 'projects', desc: 'Active repos' },
-  { href: '/setup', label: 'Setup', icon: 'setup', desc: 'Config & keys' },
-]
-
-function LaunchGrid() {
-  return (
-    <div className="mc-home-launch">
-      {LAUNCH.map(l => (
-        <Link key={l.href} href={l.href} className="mc-home-launch-card">
-          <span className="mc-home-launch-ic"><Icon name={l.icon} size={18} /></span>
-          <span className="mc-home-launch-body">
-            <span className="mc-home-launch-name">{l.label}</span>
-            <span className="mc-home-launch-desc">{l.desc}</span>
-          </span>
-          <span className="mc-home-launch-arrow">›</span>
-        </Link>
-      ))}
     </div>
   )
 }
@@ -287,28 +252,28 @@ export function HomeDeck() {
   return (
     <>
       <CommandHeader />
-      <PresenceClock generatedAt={data?.generatedAt} isLive={isLive} />
 
       {/* 1 · What needs me */}
       <ActionFeed />
 
-      {/* 2 · What is live */}
+      {/* 2 · Quiet status line */}
+      <div className="mc-home-presence-row">
+        <PresenceClock generatedAt={data?.generatedAt} isLive={isLive} />
+      </div>
+
+      {/* 3 · What is live */}
       <SectionHead label="SYSTEM PULSE" />
       <StatusTiles />
       <AgentPulse />
-
-      {/* 3 · Live ops + integrations */}
-      <SectionHead label="OPS / LIVE STREAM" />
-      <LiveActivity />
-      <HealthSummary />
 
       {/* 4 · What's scheduled */}
       <SectionHead label="SCHEDULER / TODAY" />
       <CalendarList limit={5} />
 
-      {/* 5 · Where do I go */}
-      <SectionHead label="COMMAND CENTER" />
-      <LaunchGrid />
+      {/* 5 · Live ops + integrations */}
+      <SectionHead label="OPS / LIVE STREAM" />
+      <LiveActivity />
+      <HealthSummary />
 
       <SectionHead label="TASKS" />
       <TaskPreview />

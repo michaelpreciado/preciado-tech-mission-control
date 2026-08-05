@@ -4472,3 +4472,28 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   .mc-more-cell { animation: none; }
   .mc-mobile-pill { transition: none; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   P1 · HOME — quiet presence strip
+   (coordinator CSS for the `mc-home-presence-row` wrapper Claude
+   added to HomeDeck.tsx: keeps the clock as a quiet status line
+   between ActionFeed and SYSTEM PULSE, not a hero.) */
+.mc-home-presence-row {
+  display: flex;
+  align-items: center;
+  padding: 4px 2px 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  opacity: 0.85;
+}
+.mc-home-presence-row .mc-home-presence {
+  padding: 0; margin: 0; gap: 12px;
+}
+.mc-home-presence-row .mc-home-clock {
+  font-size: 15px; font-weight: 500;
+}
+.mc-home-presence-row .mc-home-date,
+.mc-home-presence-row .mc-home-live,
+.mc-home-presence-row .mc-home-dataage {
+  font-size: 10px;
+}
