@@ -3399,11 +3399,35 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   width: 24px; height: 24px; flex-shrink: 0;
   border-radius: 7px;
 }
+.mc-chip-txt {
+  display: flex; flex-direction: column; line-height: 1.15;
+}
 .mc-chip-name { font-size: 10.5px; font-weight: 800; letter-spacing: 0.1em; color: #161a24; }
+.mc-chip-sub {
+  font-size: 8px; font-weight: 600; letter-spacing: 0.06em;
+  color: #77829a; text-transform: uppercase;
+}
+/* v2: idle/offline chips stay legible — visible crew, not a void */
+.mc-card-chip.state-offline { opacity: 0.88; filter: saturate(0.6); }
+.mc-card-chip.state-idle { opacity: 1; }
 .mc-chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 .mc-chip-dot.state-working { animation: mc-dot-pulse 0.9s ease-in-out infinite; }
 .mc-chip-dot.state-errored { animation: mc-dot-pulse 0.5s ease-in-out infinite; }
 @keyframes mc-dot-pulse { 0%,100% { opacity: 1; transform: scale(1);} 50% { opacity: 0.35; transform: scale(0.75);} }
+
+/* Command-cluster tags (OPS / CREW) — screen-space labels over the 3D stage */
+.mc-cluster-tag {
+  font-family: var(--pt-font-mono);
+  font-size: 9px; font-weight: 800; letter-spacing: 0.24em;
+  color: rgba(255,255,255,0.55);
+  background: rgba(0,0,0,0.42);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 6px;
+  padding: 3px 9px;
+  text-transform: uppercase;
+  pointer-events: none;
+  white-space: nowrap;
+}
 
 
 
@@ -4461,3 +4485,302 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
 
 /* ── elevations ── */
 .sg-elev { padding: 20px; border-radius: var(--pt-r-md); border: 1px solid var(--pt-border-dim); font-family: var(--pt-font-mono); font-size: 11px; color: var(--pt-text-high); display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+
+/* ═══════════════════════════════════════════════════════════
+   SELF-IMPROVE PASS (2026-08-09) — live data-viz.
+   Adds inline sparklines to Home status tiles so metrics read
+   as live series, not static numbers.
+   ═══════════════════════════════════════════════════════════ */
+.mc-home-tile {
+  position: relative;
+  overflow: hidden;
+}
+.mc-home-tile-spark {
+  position: absolute;
+  right: 10px;
+  bottom: 6px;
+  width: 34%;
+  height: 22px;
+  pointer-events: none;
+  opacity: 0.85;
+}
+.mc-home-tile.is-hero .mc-home-tile-spark {
+  width: 26%;
+  height: 30px;
+  right: 16px;
+  bottom: 10px;
+  opacity: 0.9;
+}
+.mc-spark {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   COMMAND PALETTE (cmdp-*) — ⌘K / Ctrl-K fuzzy finder.
+   Global overlay: backdrop dims the app, glass panel centers.
+   ═══════════════════════════════════════════════════════════ */
+.cmdp-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: min(14vh, 120px);
+  font-family: var(--pt-font-sans);
+}
+.cmdp-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(3px);
+}
+.cmdp {
+  position: relative;
+  width: min(560px, calc(100vw - 32px));
+  background: linear-gradient(180deg, var(--pt-surface-2), var(--pt-bg-terminal));
+  border: 1px solid var(--pt-border-strong);
+  border-radius: var(--pt-r-lg);
+  box-shadow: var(--pt-shadow-window), 0 0 32px rgba(var(--pt-neon-rgb),0.25);
+  overflow: hidden;
+  animation: cmdp-in 160ms var(--pt-ease);
+}
+@keyframes cmdp-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.99); }
+  to   { opacity: 1; transform: none; }
+}
+.cmdp-inputrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--pt-border-dim);
+  background: rgba(var(--pt-neon-rgb),0.06);
+}
+.cmdp-prompt {
+  font-family: var(--pt-font-mono);
+  font-size: 13px;
+  color: var(--pt-neon-bright);
+  text-shadow: var(--pt-glow-sm);
+  white-space: nowrap;
+}
+.cmdp-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--pt-text-high);
+  font-size: 15px;
+  font-family: inherit;
+  caret-color: var(--pt-neon);
+}
+.cmdp-input::placeholder { color: var(--pt-text-mute); }
+.cmdp-kbd {
+  font-family: var(--pt-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--pt-text-dim);
+  border: 1px solid var(--pt-border-dim);
+  border-radius: var(--pt-r-sm);
+  padding: 2px 6px;
+  text-transform: lowercase;
+}
+.cmdp-list {
+  max-height: min(52vh, 400px);
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  padding: 6px;
+}
+.cmdp-group {
+  font-family: var(--pt-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--pt-text-mute);
+  padding: 10px 10px 4px;
+}
+.cmdp-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--pt-r-md);
+  cursor: pointer;
+}
+.cmdp-item.is-active {
+  background: rgba(var(--pt-neon-rgb),0.14);
+  box-shadow: inset 0 0 0 1px var(--pt-border-strong);
+}
+.cmdp-ic {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px; height: 22px;
+  color: var(--pt-neon-bright);
+}
+.cmdp-item.is-active .cmdp-ic { color: var(--pt-text-high); text-shadow: var(--pt-glow-sm); }
+.cmdp-label {
+  font-size: 13px;
+  color: var(--pt-text-high);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cmdp-sub {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-family: var(--pt-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--pt-text-mute);
+}
+.cmdp-empty {
+  padding: 22px;
+  text-align: center;
+  font-family: var(--pt-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--pt-text-mute);
+}
+.cmdp-foot {
+  display: flex;
+  gap: 16px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--pt-border-dim);
+  font-family: var(--pt-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: lowercase;
+  color: var(--pt-text-dim);
+}
+
+/* ── visible ⌘K trigger in the sidebar ── */
+.mc-cmdp-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin: 6px 0 10px;
+  padding: 7px 10px;
+  background: var(--pt-surface);
+  border: 1px solid var(--pt-border-dim);
+  border-radius: var(--pt-r-md);
+  color: var(--pt-text-dim);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  transition: border-color var(--pt-dur-fast) var(--pt-ease), color var(--pt-dur-fast) var(--pt-ease), background var(--pt-dur-fast) var(--pt-ease);
+}
+.mc-cmdp-trigger:hover {
+  border-color: var(--pt-border-strong);
+  color: var(--pt-text-high);
+  background: rgba(var(--pt-neon-rgb),0.08);
+}
+.mc-cmdp-trigger-ic { color: var(--pt-neon-bright); display: inline-flex; }
+.mc-cmdp-trigger-kbd {
+  margin-left: auto;
+  font-family: var(--pt-font-mono);
+  font-size: 9px;
+  color: var(--pt-text-mute);
+  border: 1px solid var(--pt-border-dim);
+  border-radius: var(--pt-r-sm);
+  padding: 1px 5px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DEPTH & HIERARCHY pass — ambient aurora, layered window
+   shadows, gradient hero numerals, glowing section labels.
+   (coordinator Jarvis owns globals.css; purely additive.)
+   ═══════════════════════════════════════════════════════════ */
+
+/* Ambient aurora drifting behind the whole shell.
+   `.mc-shell` becomes its own stacking context so the ::before
+   sits at z-index 0, underneath the sidebar + main panes which
+   move up to z-index 1. The panes' translucent surfaces let the
+   glow breathe through at edges and behind glass windows. */
+.mc-shell { isolation: isolate; }
+.mc-shell::before {
+  content: '';
+  position: absolute;
+  inset: -15%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(42% 38% at 18% 12%, rgba(var(--pt-neon-rgb),0.24), transparent 60%),
+    radial-gradient(40% 36% at 82% 78%, rgba(var(--pt-neon-bright-rgb),0.14), transparent 62%),
+    radial-gradient(34% 30% at 78% 10%, rgba(110,150,255,0.10), transparent 65%);
+  filter: blur(48px);
+  opacity: 0.65;
+  animation: mc-aurora 26s ease-in-out infinite alternate;
+}
+@keyframes mc-aurora {
+  0%   { transform: translate3d(-1.5%, -1%, 0) scale(1);    opacity: 0.55; }
+  50%  { transform: translate3d(1.5%, 1%, 0) scale(1.08);   opacity: 0.85; }
+  100% { transform: translate3d(-0.5%, 1.5%, 0) scale(1.02); opacity: 0.7; }
+}
+.mc-side, .mc-main { position: relative; z-index: 1; }
+
+/* Elevated, layered window shadows — soft depth under panes
+   instead of the old flat edge. Purely additive on the base rule. */
+.mc-window {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    0 1px 2px rgba(0,0,0,0.4),
+    0 14px 34px -18px rgba(0,0,0,0.75),
+    0 0 0 1px rgba(var(--pt-neon-rgb),0.03);
+}
+.mc-window:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    0 4px 10px rgba(0,0,0,0.45),
+    0 26px 60px -20px rgba(0,0,0,0.8),
+    0 0 18px -4px rgba(var(--pt-neon-rgb),0.18);
+}
+.mc-window-title .mc-win-tag {
+  text-shadow: var(--pt-glow-sm), 0 0 16px rgba(var(--pt-neon-rgb),0.35);
+}
+
+/* Glowing section labels — the ascii-section heading gets a neon
+   halo so the page hierarchy reads at a glance. */
+.mc-ascii-head .label {
+  color: var(--pt-text-high);
+  text-shadow: var(--pt-glow-sm), 0 0 22px rgba(var(--pt-neon-rgb),0.30);
+}
+
+/* Gradient-text hero numerals — the status-tile lead value steps
+   up from the flat tone gradient with a richer 3-stop gradient +
+   a soft lift shadow so the hero dominates the deck. */
+.mc-home-tile.is-hero .mc-home-tile-value {
+  text-shadow: 0 0 24px rgba(var(--pt-neon-rgb),0.35);
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.55));
+  background: linear-gradient(180deg, #ffffff 0%, rgba(var(--pt-neon-bright-rgb),0.9) 55%, rgba(var(--pt-neon-rgb),0.55) 100%);
+  -webkit-background-clip: text; background-clip: text;
+}
+.mc-home-tile.is-hero.tone-ok .mc-home-tile-value {
+  background: linear-gradient(180deg, #d6ffdd 0%, #57f08b 55%, #1ebb53 100%);
+  -webkit-background-clip: text; background-clip: text;
+}
+.mc-home-tile.is-hero.tone-warn .mc-home-tile-value {
+  background: linear-gradient(180deg, #fff2cf 0%, #ffd466 55%, #e8a020 100%);
+  -webkit-background-clip: text; background-clip: text;
+}
+.mc-home-tile.is-hero.tone-err .mc-home-tile-value {
+  background: linear-gradient(180deg, #ffe0dd 0%, #ff7d75 55%, #e8402f 100%);
+  -webkit-background-clip: text; background-clip: text;
+}
+
+/* Motion-safety: kill the aurora drift (and any inherited motion)
+   for users who prefer reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  .mc-shell::before { animation: none; opacity: 0.5; }
+  .mc-window, .mc-window:hover { transition: none; }
+}
+
+/* ───────────────────────────────────────────────────────────────
+   (single canonical DEPTH & HIERARCHY pass — see block above)
+   ─────────────────────────────────────────────────────────────── */
+

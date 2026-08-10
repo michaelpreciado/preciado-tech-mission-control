@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LiveDataProvider, useLiveData } from './LiveDataProvider'
+import { CommandPalette } from './CommandPalette'
 import { Icon, type IconName } from './icons'
 
 /** Brand identity resolved server-side in lib/config.ts, provided by <Shell>. */
@@ -80,6 +81,17 @@ function Sidebar() {
           </div>
         </div>
       </div>
+      <button
+        type="button"
+        className="mc-cmdp-trigger"
+        aria-label="Open command palette (Ctrl+K)"
+        title="Jump anywhere — Ctrl/⌘+K  or  /"
+        onClick={() => window.dispatchEvent(new Event('mc:open-cmdp'))}
+      >
+        <span className="mc-cmdp-trigger-ic"><Icon name="chat" size={13} /></span>
+        <span>Jump to…</span>
+        <kbd className="mc-cmdp-trigger-kbd">⌘K</kbd>
+      </button>
       <div className="mc-status-pill" style={{ display: 'none' }}>
         <span className={`mc-led ${isLive ? 'green' : ''}`} />
         <span>MISSION CTRL {isLive ? 'ONLINE' : 'OFFLINE'}</span>
@@ -233,6 +245,7 @@ export function Shell({ appName, appTagline, children }: { appName: string; appT
   return (
     <BrandContext.Provider value={{ appName, appTagline }}>
     <LiveDataProvider>
+      <CommandPalette />
       <a href="#mc-main-content" className="mc-skip-nav">
         Skip to main content
       </a>

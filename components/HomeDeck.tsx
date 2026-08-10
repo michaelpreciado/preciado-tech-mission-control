@@ -12,6 +12,7 @@ import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { useLiveData } from './LiveDataProvider'
 import { SectionHead, SkeletonPanel, fmtDate } from './ui'
+import { Sparkline } from './Sparkline'
 import dynamic from 'next/dynamic'
 import type { MissionTask } from '@/lib/types'
 
@@ -47,7 +48,7 @@ function PresenceClock({ generatedAt, isLive }: { generatedAt?: string; isLive: 
 
 /* ── Live status tiles (tappable → deep link) ────────────────────────── */
 
-type TileDef = { key: string; label: string; glyph: string; href: string; value: string; sub: string; tone: 'ok' | 'warn' | 'err' | 'info' }
+type TileDef = { key: string; label: string; glyph: string; href: string; value: string; sub: string; tone: 'ok' | 'warn' | 'err' | 'info'; spark?: number[] }
 
 function StatusTiles() {
   const { data } = useLiveData()
@@ -65,11 +66,16 @@ function StatusTiles() {
     const kb = data.kanban
     const running = kb?.runningTasks ?? working.length
 
+    // Live cost burn curve (last 30 logged days) — the money sparkline.
+    const costSpark = (data.costs?.daily ?? [])
+      .slice(-30)
+      .map(d => d.cost ?? 0)
+
     return [
       { key: 'working', label: 'WORKING NOW', glyph: '▶', href: '/team', value: String(running), sub: 'agents working', tone: running ? 'ok' : 'info' },
       { key: 'open', label: 'OPEN TASKS', glyph: '≡', href: '/kanban', value: String(open), sub: 'kanban board', tone: open ? 'warn' : 'ok' },
       { key: 'cron', label: 'CRON FAILS', glyph: '○', href: '/calendar', value: String(cronFails), sub: 'jobs failing', tone: cronFails ? 'err' : 'ok' },
-      { key: 'cost', label: 'COST · THIS MO', glyph: '$', href: '/costs', value: costMonth, sub: 'this month', tone: 'info' },
+      { key: 'cost', label: 'COST · THIS MO', glyph: '$', href: '/costs', value: costMonth, sub: 'this month', tone: 'info', spark: costSpark },
       { key: 'gh', label: 'GH STREAK', glyph: '★', href: '/github', value: `${ghStreak}d`, sub: 'contributions', tone: ghStreak ? 'ok' : 'info' },
       { key: 'proj', label: 'PROJECTS', glyph: '▤', href: '/projects', value: String(data.counts?.projects ?? data.projects.length), sub: 'active repos', tone: 'info' },
     ] as TileDef[]
@@ -92,6 +98,9 @@ function StatusTiles() {
               <span className="mc-home-tile-sub">{heroTile.sub}</span>
             </span>
             <span className="mc-home-tile-value">{heroTile.value}</span>
+            {heroTile.spark && heroTile.spark.length > 1 && (
+              <span className="mc-home-tile-spark" aria-hidden="true"><Sparkline points={heroTile.spark} color="var(--pt-neon-bright)" /></span>
+            )}
           </Link>
         </div>
       )}
@@ -104,6 +113,9 @@ function StatusTiles() {
               <span className="mc-home-tile-sub">{t.sub}</span>
             </span>
             <span className="mc-home-tile-value">{t.value}</span>
+            {t.spark && t.spark.length > 1 && (
+              <span className="mc-home-tile-spark" aria-hidden="true"><Sparkline points={t.spark} color="var(--pt-info)" /></span>
+            )}
           </Link>
         ))}
       </div>
