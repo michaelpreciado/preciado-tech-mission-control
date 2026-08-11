@@ -24,7 +24,7 @@ async function cpuLoad(): Promise<{ load1: number; load5: number; load15: number
 async function memInfo(): Promise<{ totalKb: number; availableKb: number } | null> {
   try {
     const raw = await fs.readFile('/proc/meminfo', 'utf8')
-    const get = (k: string) => Number(raw.match(new RegExp(`^${k}:\\s+(\\d+)`))?.[1] ?? 0)
+    const get = (k: string) => Number(raw.match(new RegExp(`^${k}:\\s+(\\d+)`, 'm'))?.[1] ?? 0)
     return { totalKb: get('MemTotal'), availableKb: get('MemAvailable') }
   } catch { return null }
 }

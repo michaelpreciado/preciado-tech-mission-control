@@ -4908,3 +4908,42 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   .mc-window, .mc-window:hover { transition: none; }
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   P4 — 4K / ultrawide / Fold layout pass
+   On very wide displays the shell is full-bleed, so a 3440px ultrawide or a
+   4K panel stretches every row absurdly wide. Dock the whole shell to a
+   centered readable column and nudge type/leading up at true 4K. Mobile
+   (≤820px) is already handled by the existing breakpoint ladder. ════════ */
+@media (min-width: 1800px) {
+  .mc-shell {
+    grid-template-columns: 232px minmax(0, 1600px);
+    justify-content: center;
+    margin: 0 auto;
+    max-width: 100vw;
+  }
+  .mc-main { font-size: 15px; line-height: 1.6; }
+}
+
+/* 4K (≥2560px wide): a touch more breathing room + slightly larger type so
+   dense tables/gauges stay legible without dictating exact pixels. */
+@media (min-width: 2560px) {
+  .mc-main { font-size: 16px; }
+  .mc-core-value { font-size: 26px; }
+  .mc-home-tile-value { font-size: 34px; }
+}
+
+/* Very wide (≥2048px and no later fold): keep the folded/sidebar shell but
+   cap the widest component grids so cards don't stretch into cinema. */
+@media (min-width: 1600px) {
+  .mc-tile-grid--tri { grid-template-columns: repeat(3, minmax(0, 360px)); justify-content: start; }
+  .mc-core-grid { grid-template-columns: repeat(5, minmax(0, 220px)); }
+}
+
+/* Accessibility hardening: never let a row of controls overflow off-screen
+   on any width (Fold cover 280px is the floor — ensure zero h-scroll). */
+@media (max-width: 360px) {
+  .mc-home-presence { gap: 8px; }
+  .mc-core-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+
+

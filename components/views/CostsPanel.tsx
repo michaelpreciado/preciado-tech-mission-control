@@ -300,7 +300,6 @@ function BurnVsCost({ costs }: { costs: CostDashboard }) {
   // Local tokens this month (from the daily series).
   const providerOf = (model: string) => (costs.models ?? []).find(m => m.model === model)?.provider ?? 'unknown'
   let localMonthTokens = 0
-  const dayCount = loggedDays(costs.daily)
   for (const d of costs.daily ?? []) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(d.date)) continue
     for (const [model, v] of Object.entries(d.byModel ?? {})) {
@@ -456,6 +455,9 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
 
   return (
     <div className="cp-panel">
+      {/* ── BURN vs COST · THIS MONTH (P3) ── */}
+      <BurnVsCost costs={costs} />
+
       {/* ── 30-DAY BURN HERO ── */}
       <MonthlyBurnHero costs={costs} />
 
