@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useLiveData } from '../LiveDataProvider'
 import { Window, EmptyTerminal, SkeletonPanel } from '../ui'
+import { Tilt } from '../Tilt'
 
 /* ── Projects Grid ────────────────────────────────────── */
 
@@ -28,8 +29,9 @@ export function ProjectGrid({ limit }: { limit?: number } = {}) {
         const openCount = todo.filter(t => t.status !== 'done').length
         const expanded = open.has(p.id)
         return (
-          <Window key={p.id} tag="▤" title={p.name}>
-            <div className="mc-tile-body">
+          <Tilt key={p.id} className="mc-proj-tilt">
+            <Window tag="▤" title={p.name}>
+              <div className="mc-tile-body">
               <div className="mc-tile-head">
                 <span className="mc-led" />
                 <span className="mc-tile-status" title={p.signal}>{p.signal.toUpperCase()}</span>
@@ -67,7 +69,8 @@ export function ProjectGrid({ limit }: { limit?: number } = {}) {
                 <div className="mc-tile-foot">{p.github.openIssues} open issues</div>
               )}
             </div>
-          </Window>
+            </Window>
+          </Tilt>
         )
       })}
     </div>

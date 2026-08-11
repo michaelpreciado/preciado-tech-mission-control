@@ -18,6 +18,7 @@ import type { MissionTask } from '@/lib/types'
 
 const CommandHeader = dynamic(() => import('./views/CommandHeader').then(m => m.CommandHeader), { ssr: false, loading: () => <SkeletonPanel label="loading header" /> })
 const ActionFeed = dynamic(() => import('./ActionFeed').then(m => m.ActionFeed), { ssr: false })
+const CoreOrb3D = dynamic(() => import('./views/CoreOrb3D').then(m => m.default), { ssr: false, loading: () => null })
 const SystemCore = dynamic(() => import('./views/SystemCore').then(m => m.SystemCore), { ssr: false, loading: () => <SkeletonPanel label="loading system core" /> })
 const CalendarList = dynamic(() => import('./views/CalendarList').then(m => m.CalendarList), { ssr: false, loading: () => <SkeletonPanel label="loading schedule" /> })
 
@@ -298,8 +299,15 @@ export function HomeDeck() {
       </div>
 
       {/* 3 · What is live */}
-      <SectionHead label="SYSTEM CORE · RIG" />
-      <SystemCore />
+      <div className="mc-home-corewrap">
+        <div className="mc-home-coreorb-holder">
+          <CoreOrb3D />
+        </div>
+        <div className="mc-home-corebody">
+          <SectionHead label="SYSTEM CORE · RIG" />
+          <SystemCore />
+        </div>
+      </div>
 
       <SectionHead label="SYSTEM PULSE" />
       <StatusTiles />

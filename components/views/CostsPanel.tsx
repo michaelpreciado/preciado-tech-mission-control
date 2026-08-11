@@ -3,9 +3,12 @@
 import { useState, type ReactNode } from 'react'
 import { useLiveData } from '../LiveDataProvider'
 import { SectionHead, Window, EmptyTerminal, SkeletonPanel } from '../ui'
+import dynamic from 'next/dynamic'
 import { StackedBarChart } from '../Viz'
 import { CATEGORICAL, STATUS } from '@/lib/chart-colors'
 import type { CostDashboard, ModelUsage } from '@/lib/types'
+
+const BurnVol3D = dynamic(() => import('./BurnVol3D').then(m => m.default), { ssr: false, loading: () => null })
 
 function money(n?: number) {
   if (n == null) return '—'
@@ -460,6 +463,14 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
 
       {/* ── 30-DAY BURN HERO ── */}
       <MonthlyBurnHero costs={costs} />
+
+      {/* ── 3D BURN LANDSCAPE (C) — a distinct volumetric view ── */}
+      <SectionHead label="3D BURN LANDSCAPE · LAST 14 DAYS" />
+      <Window tag="▦" title="BURN VOLUME · API / CLAUDE / LOCAL" meta="drag to orbit · scroll to zoom">
+        <div className="mc-burnvol-wrap">
+          <BurnVol3D costs={costs} />
+        </div>
+      </Window>
 
       {/* ── MONTHLY BILLING · PLAN & REAL COST ── */}
       <MonthlyBilling costs={costs} />

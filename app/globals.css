@@ -367,6 +367,19 @@ body {
   z-index: 1; pointer-events: none; opacity: 0.55;
   mix-blend-mode: screen;
 }
+/* Ambient neural field — fixed WebGL backdrop beneath the shell. */
+.mc-ambient3d {
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  z-index: 1; pointer-events: none; opacity: 0.5;
+}
+/* On coarse pointers / small screens the field is a static frame — keep it
+   faint so it stays a texture, never a distraction or a battery drain. */
+@media (pointer: coarse) {
+  .mc-ambient3d { opacity: 0.22; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mc-ambient3d { opacity: 0.14; }
+}
 .mc-scanlines {
   position: fixed; inset: 0; z-index: 2; pointer-events: none;
   background: var(--pt-scanline);
@@ -3613,6 +3626,25 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   gap: 14px;
 }
 .mc-tile-grid--tri { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* Holographic tilt wrapper fills its grid cell + gains depth on hover. */
+.mc-tilt {
+  transform-style: preserve-3d;
+  transition: transform .18s ease;
+}
+.mc-proj-tilt { display: flex; position: relative; }
+.mc-proj-tilt .mc-window, .mc-proj-tilt .mc-tile-card { flex: 1; }
+.mc-proj-tilt:hover { z-index: 2; }
+/* A soft edge highlight that tracks the tilt angle. */
+.mc-proj-tilt::after {
+  content: '';
+  position: absolute; inset: 0; border-radius: var(--pt-r-lg); pointer-events: none;
+  background: radial-gradient(120% 120% at var(--tilt-rx,0) var(--tilt-ry,0), rgba(var(--pt-neon-rgb),0.14), transparent 60%);
+  opacity: 0; transition: opacity .2s ease;
+}
+.mc-proj-tilt:hover::after { opacity: 1; }
+@media (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .mc-tilt, .mc-proj-tilt { transform: none !important; }
+}
 .mc-tile-card, .mc-window.mc-tile-card { border-radius: var(--pt-r-lg); }
 .mc-tile-body {
   display: flex; flex-direction: column; gap: 10px;
@@ -3953,6 +3985,35 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   padding: 3px 10px; background: var(--pt-surface-2);
 }
 .mc-core-model-vram { font-size: 9px; color: var(--pt-text-dim); letter-spacing: .04em; }
+
+/* 3D burn landscape (Costs tab). */
+.mc-burnvol-wrap { height: 300px; }
+.mc-burnvol { width: 100%; height: 100%; }
+
+/* Home 3D command core — orb beside the SYSTEM CORE gauges. */
+.mc-home-corewrap {
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  gap: 18px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.mc-home-coreorb-holder {
+  height: 150px;
+  border: 1px solid var(--pt-border-dim);
+  border-radius: var(--pt-r-lg);
+  background:
+    radial-gradient(circle at 50% 45%, rgba(var(--pt-neon-rgb),0.14), transparent 65%),
+    var(--pt-surface);
+  overflow: hidden;
+}
+.mc-coreorb { width: 100%; height: 100%; }
+.mc-home-corebody { min-width: 0; }
+.mc-home-corebody .mc-core { margin-bottom: 0; }
+@media (max-width: 640px) {
+  .mc-home-corewrap { grid-template-columns: 1fr; }
+  .mc-home-coreorb-holder { height: 120px; }
+}
 
 /* ══════════════════════════════════════════════════════════════════════
    HOME v2 — 4K-fidelity command center (additions)
