@@ -212,16 +212,28 @@ export function SubAgentPanel() {
         <ListView nodes={snap.tree} onSelect={setSelectedId} />
       ) : (
         <>
-          {/* WebGL 3D stage + non-interactive legend strip */}
-          <div className="mc-hud3d-frame">
+          {/* WebGL 3D stage + non-interactive legend strip.
+              aria-hidden: the canvas is decorative and not keyboard-operable; the
+              roster is fully exposed to assistive tech via the sr-only synopsis
+              below and the LIST view (toggle button is labeled). */}
+          <div className="mc-hud3d-frame" aria-hidden="true">
             <HoloHud3D nodes={snap.tree} selectedId={selectedId} onSelect={setSelectedId} />
             <div className="mc-hud3d-overlay">
-              <div className="mc-hud3d-hudtag"><span className="mc-hud-brack">◤</span> SYNC ARRAY <span className="mc-hud-brack">◢</span></div>
+              <div className="mc-hud3d-hudtag"><span className="mc-hud-brack">◤</span> COMMAND MESH <span className="mc-hud-brack">◢</span></div>
               <div className="mc-hud3d-counters">
                 <span className="mc-hud-count is-working">{activeCount} ✦ WORK</span>
                 <span className="mc-hud-count is-errored">{erroredCount} ✕ ERR</span>
               </div>
             </div>
+          </div>
+
+          {/* screen-reader synopsis so the canvas isn't the only carrier of state */}
+          <div className="sr-only" role="status">
+            {snap.tree.length} agents. {activeCount} working, {erroredCount} errored,{' '}
+            {snap.tree.filter(n => n.state === 'idle').length} idle,{' '}
+            {snap.tree.filter(n => n.state === 'offline').length} offline.
+            {' '}{working?.name ? `${working.name} is working now.` : ''} The 3D map is visual
+            only — use the LIST view for full keyboard navigation of every agent.
           </div>
 
           {/* spotlight */}
@@ -238,8 +250,8 @@ export function SubAgentPanel() {
               </div>
             ) : (
               <div className="mc-hud-idle">
-                <span className="mc-hud-idle-line">NO AGENT WORKING — MESH STANDBY</span>
-                <span className="mc-hud-idle-sub">drag to orbit · pinch to zoom · tap an orb for details</span>
+                <span className="mc-hud-idle-line">CREW ON STANDBY — {snap.tree.filter(n => n.state !== 'offline').length} OF {snap.tree.length} AGENTS AWAKE</span>
+                <span className="mc-hud-idle-sub">the mesh stands watch · drag to orbit · pinch to zoom · tap a node for details</span>
               </div>
             )}
           </div>

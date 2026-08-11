@@ -12,7 +12,7 @@ import fs from 'node:fs/promises'
 import { getConfig } from '@/lib/config'
 import { taskScanRoots } from '@/lib/mission-data'
 import { resolveTaskFile, tickCheckbox } from '@/lib/task-write'
-import { getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv, checkRateLimit } from '@/lib/mission-api'
+import {getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv, checkRateLimit, assertSameOrigin } from '@/lib/mission-api'
 import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -27,6 +27,8 @@ function isAuthorized(req: NextRequest): boolean {
 }
 
 export async function POST(req: NextRequest) {
+  const _origin = assertSameOrigin(req)
+  if (!_origin.ok) return NextResponse.json(_origin.body, { status: _origin.status })
   const ip = getClientIpFromHeaders(req.headers)
   const limit = checkRateLimit(rateBucket, ip, Date.now(), 30, 60_000)
   if (!limit.allowed) {

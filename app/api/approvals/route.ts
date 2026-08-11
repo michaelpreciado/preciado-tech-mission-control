@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { assertSameOrigin } from '@/lib/mission-api'
 import { collectApprovals } from '@/lib/approvals-data'
 import { upsertLead } from '@/lib/pipeline-data'
 import { logger } from '@/lib/logger'
@@ -29,6 +30,8 @@ export async function GET(req: NextRequest) {
  * stay in sync, and the web-dev-pipeline skill reads one source of truth.
  */
 export async function POST(req: NextRequest) {
+  const _origin = assertSameOrigin(req)
+  if (!_origin.ok) return NextResponse.json(_origin.body, { status: _origin.status })
   if (!isAuthorized(req)) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }

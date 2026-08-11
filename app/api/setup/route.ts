@@ -13,7 +13,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { CONFIG_FILE, getConfig, isConfigured, resetConfigCache, type ConfigFile } from '@/lib/config'
-import { getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv, checkRateLimit } from '@/lib/mission-api'
+import {getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv, checkRateLimit, assertSameOrigin } from '@/lib/mission-api'
 import { isHexColor } from '@/lib/theme'
 import { logger } from '@/lib/logger'
 
@@ -109,6 +109,8 @@ function validate(body: unknown): { ok: true; patch: ConfigFile } | { ok: false;
 }
 
 export async function POST(req: NextRequest) {
+  const _origin = assertSameOrigin(req)
+  if (!_origin.ok) return NextResponse.json(_origin.body, { status: _origin.status })
   const ip = getClientIpFromHeaders(req.headers)
   const limit = checkRateLimit(rateBucket, ip, Date.now(), 10, 60_000)
   if (!limit.allowed) {

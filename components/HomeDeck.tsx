@@ -18,6 +18,7 @@ import type { MissionTask } from '@/lib/types'
 
 const CommandHeader = dynamic(() => import('./views/CommandHeader').then(m => m.CommandHeader), { ssr: false, loading: () => <SkeletonPanel label="loading header" /> })
 const ActionFeed = dynamic(() => import('./ActionFeed').then(m => m.ActionFeed), { ssr: false })
+const SystemCore = dynamic(() => import('./views/SystemCore').then(m => m.SystemCore), { ssr: false, loading: () => <SkeletonPanel label="loading system core" /> })
 const CalendarList = dynamic(() => import('./views/CalendarList').then(m => m.CalendarList), { ssr: false, loading: () => <SkeletonPanel label="loading schedule" /> })
 
 const PRIORITY_TONE: Record<MissionTask['priority'], string> = {
@@ -59,12 +60,16 @@ function StatusTiles() {
     const offline = crew.filter(c => c.status === 'offline' || c.status === 'sleeping')
     const tasks = data.tasks ?? []
     const open = data.counts?.openTasks ?? tasks.filter(t => t.status !== 'done').length
-    const cronFails = (data.cron ?? []).filter(c => c.lastRunStatus === 'error').length
+    // Only count FAILING ENABLED jobs. Disabled/dormant jobs aren't failures —
+    // they're parked, and shouldn't keep the hero red forever.
+    const cronFails = (data.cron ?? []).filter(c => c.enabled !== false && c.lastRunStatus === 'error').length
     const billing = data.costs?.billing?.[0]
     const costMonth = billing ? `$${(billing.planAmount + (billing.openRouterUsd ?? 0)).toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—'
     const ghStreak = data.github?.currentStreak ?? 0
     const kb = data.kanban
-    const running = kb?.runningTasks ?? working.length
+    // "WORKING NOW" = live crew agents, not the kanban open count (which can be
+    // 0 mid-flight). It answers "is anything happening right now".
+    const running = kb?.runningTasks ?? working
 
     // Live cost burn curve (last 30 logged days) — the money sparkline.
     const costSpark = (data.costs?.daily ?? [])
@@ -293,6 +298,9 @@ export function HomeDeck() {
       </div>
 
       {/* 3 · What is live */}
+      <SectionHead label="SYSTEM CORE · RIG" />
+      <SystemCore />
+
       <SectionHead label="SYSTEM PULSE" />
       <StatusTiles />
       <AgentPulse />

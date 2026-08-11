@@ -42,6 +42,8 @@ export type MissionProject = {
   source: string
   signal: string
   tasks: number
+  /** Open to-do tasks wired to this project (non-done kanban/task records). */
+  todo?: { id: string; title: string; ownerName: string; priority: MissionTask['priority']; status: string }[]
   updatedAt?: string
   github?: {
     repo: string
@@ -240,6 +242,7 @@ export type MissionData = {
   ideas: Idea[]
   missions: Mission[]
   kanban: KanbanActivity
+  telemetry: SystemTelemetry
   /** Honest provenance for panels whose backing data may be missing or stale. */
   sources: {
     calendar: { configured: boolean; ok: boolean; syncedAt: string | null; detail: string }
@@ -487,6 +490,17 @@ export type SystemHealthData = {
   generatedAt: string
   services: ServiceHealth[]
   problems: number
+}
+
+/* ── System CORE telemetry (real host stats) ──────────── */
+
+export type SystemTelemetry = {
+  generatedAt: string
+  cpu: { load1: number; load5: number; load15: number; cores: number } | null
+  memory: { totalKb: number; availableKb: number } | null
+  disk: { usedBytes: number; totalBytes: number } | null
+  gpus: { index: number; name: string; utilPct: number; memUsedMb: number; memTotalMb: number; tempC: number }[] | null
+  ollama: { name: string; sizeGb: number; vramGb: number }[] | null
 }
 
 /* ── ML Content Loop (ml-content skill) ─────────── */

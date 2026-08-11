@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { assertSameOrigin } from '@/lib/mission-api'
 import fs from 'node:fs/promises'
 import { collectPipeline, pipelineStore, upsertLead } from '@/lib/pipeline-data'
 import type { PipelineStage } from '@/lib/types'
@@ -31,6 +32,8 @@ export async function GET() {
  * as documented in web-dev-pipeline/README.md).
  */
 export async function POST(req: NextRequest) {
+  const _origin = assertSameOrigin(req)
+  if (!_origin.ok) return NextResponse.json(_origin.body, { status: _origin.status })
   if (!isAuthorized(req)) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
@@ -62,6 +65,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const _origin = assertSameOrigin(req)
+  if (!_origin.ok) return NextResponse.json(_origin.body, { status: _origin.status })
   if (!isAuthorized(req)) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }

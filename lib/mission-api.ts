@@ -159,3 +159,38 @@ export function checkRateLimit(
   record.count += 1
   return { allowed: true, retryAfter: 0 }
 }
+
+/* ── CSRF / same-origin guard ─────────────────────────────────
+   Browsers attach an Origin header to every cross-origin request
+   (and to same-origin POSTs), and an attacker page cannot forge that
+   header — the browser sets it. So a "foreign" Origin that does not
+   match this server's own Host is proof of a cross-site request and is
+   rejected. Requests with NO Origin header (curl, server-to-server,
+   Hermes agents, CLI) are allowed through — this is a browser-CSRF
+   boundary, not an auth gate; trusted-IP + INTERNAL_API_SECRET are the
+   real authorization. Call at the top of every mutating handler. */
+
+export function assertSameOrigin(
+  req: Pick<Request, 'headers'>,
+): { ok: boolean; status: number; body: Record<string, unknown> } {
+  const origin = req.headers.get('origin')
+  // Presence of a foreign origin is the signal. Missing Origin = non-browser → allow.
+  if (!origin) return { ok: true, status: 200, body: {} }
+  const host = req.headers.get('host') ?? req.headers.get('x-forwarded-host')
+  if (!host) return { ok: true, status: 200, body: {} }
+
+  let originHost: string
+  try {
+    originHost = new URL(origin).host
+  } catch {
+    return { ok: false, status: 403, body: { error: 'Malformed Origin header.' } }
+  }
+  // 'null' Origin is sent for sandboxed/opaque origins → treat as foreign.
+  if (originHost === 'null' || originHost === '') {
+    return { ok: false, status: 403, body: { error: 'Cross-origin request rejected.' } }
+  }
+  const hostHost = host.includes('://') ? new URL(host).host : host
+  if (originHost === hostHost) return { ok: true, status: 200, body: {} }
+
+  return { ok: false, status: 403, body: { error: 'Cross-origin request rejected.' } }
+}

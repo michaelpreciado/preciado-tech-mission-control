@@ -1342,6 +1342,27 @@ body {
   font-size: 11px; color: var(--pt-text-dim);
   line-height: 1.6;
 }
+/* Parked/dormant cron jobs are collapsed — dimmed, non-alarming. */
+.mc-cal-card.mc-cal-parked {
+  border-style: dashed;
+  border-color: var(--pt-border-dim);
+  background: color-mix(in srgb, var(--pt-surface) 55%, transparent);
+  opacity: 0.85;
+}
+.mc-cal-card.mc-cal-parked .mc-cal-card-head {
+  cursor: pointer;
+  border-radius: var(--pt-r-sm);
+  transition: opacity .15s ease;
+}
+.mc-cal-card.mc-cal-parked .mc-cal-card-head:hover { opacity: 0.8; }
+.mc-cal-parked-row {
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px dashed var(--pt-border-dim);
+  display: flex; justify-content: space-between; gap: 12px;
+  font-size: 11px;
+}
+.mc-cal-parked-name { color: var(--pt-text-mute); }
+.mc-cal-parked-last { color: var(--pt-text-dim); font-size: 10px; letter-spacing: .04em; }
 .mc-cal-foot {
   margin-top: 10px;
   display: flex; gap: 14px;
@@ -3634,6 +3655,52 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   text-transform: uppercase;
 }
 
+/* ── Project to-do list (P2) — expandable task rows per project ──────── */
+.mc-proj-todo {
+  border-top: 1px dashed var(--pt-border-dim);
+  padding-top: 8px;
+}
+.mc-proj-todo-toggle {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  background: transparent; border: 0; cursor: pointer;
+  font: inherit; color: inherit; padding: 2px 0;
+}
+.mc-proj-todo-carets { color: var(--pt-neon); font-size: 10px; }
+.mc-proj-todo-label {
+  font-size: 9px; letter-spacing: 0.18em; font-weight: 700;
+  color: var(--pt-text-mute); text-transform: uppercase;
+}
+.mc-proj-todo-count {
+  margin-left: auto; font-size: 9px; letter-spacing: 0.1em;
+  color: var(--pt-text-dim); text-transform: uppercase;
+}
+.mc-proj-todo-count.hot { color: var(--pt-warn); text-shadow: var(--pt-glow-sm); }
+.mc-proj-todo-list {
+  list-style: none; margin: 8px 0 0; padding: 0;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.mc-proj-task {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; color: var(--pt-text); line-height: 1.4;
+}
+.mc-proj-task.is-done .mc-proj-task-title {
+  color: var(--pt-text-dim); text-decoration: line-through;
+}
+.mc-proj-task-box {
+  flex: 0 0 13px; height: 13px; border-radius: 3px;
+  border: 1px solid var(--pt-border-dim);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 9px; color: var(--pt-ok);
+}
+.mc-proj-task-title { flex: 1; min-width: 0; }
+.mc-proj-task-prio {
+  font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--pt-text-dim); padding: 1px 5px; border-radius: 999px;
+  border: 1px solid var(--pt-border-dim);
+}
+.mc-proj-task-prio.alert { color: var(--pt-danger,#ff5f57); border-color: rgba(255,95,87,0.35); }
+.mc-proj-task-prio.info { color: var(--pt-info,#00d4ff); border-color: rgba(0,212,255,0.35); }
+
 /* ── Shared empty state (the tc-empty family) ────────────────────────── */
 .mc-empty {
   display: flex; flex-direction: column; align-items: center;
@@ -3825,6 +3892,67 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   .mc-home-tiles { grid-template-columns: repeat(2, minmax(0,1fr)); }
   .mc-home-tile-value { font-size: 22px; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   SYSTEM CORE — real rig telemetry strip (P1)
+   ══════════════════════════════════════════════════════════════════════ */
+.mc-core {
+  margin-bottom: 16px;
+}
+.mc-core-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+.mc-core-gauge {
+  position: relative;
+  border: 1px solid var(--pt-border-dim);
+  border-radius: var(--pt-r-md);
+  padding: 12px 14px;
+  background:
+    radial-gradient(120% 120% at 0% 0%, rgba(var(--pt-neon-rgb),0.10), transparent 55%),
+    var(--pt-surface);
+  overflow: hidden;
+}
+.mc-core-gauge::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent 30%);
+  pointer-events: none;
+}
+.mc-core-label {
+  font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--pt-text-dim); font-weight: 600;
+}
+.mc-core-value {
+  margin-top: 6px;
+  font-size: 22px; font-weight: 700; color: var(--pt-text-high);
+  font-variant-numeric: tabular-nums; line-height: 1.1;
+  text-shadow: 0 0 18px rgba(var(--pt-neon-rgb),0.4);
+}
+.mc-core-sub { margin-top: 2px; font-size: 10px; color: var(--pt-text-mute); }
+.mc-core-track {
+  margin-top: 9px; height: 4px; border-radius: 999px;
+  background: rgba(var(--pt-neon-rgb),0.14); overflow: hidden;
+}
+.mc-core-fill {
+  height: 100%; border-radius: 999px;
+  transition: width .6s cubic-bezier(.22,1,.36,1);
+}
+.mc-core-models {
+  margin-top: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.mc-core-models-label {
+  font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--pt-text-dim); margin-right: 4px;
+}
+.mc-core-model-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--pt-text);
+  border: 1px solid var(--pt-border-dim); border-radius: 999px;
+  padding: 3px 10px; background: var(--pt-surface-2);
+}
+.mc-core-model-vram { font-size: 9px; color: var(--pt-text-dim); letter-spacing: .04em; }
 
 /* ══════════════════════════════════════════════════════════════════════
    HOME v2 — 4K-fidelity command center (additions)
@@ -4779,8 +4907,4 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   .mc-shell::before { animation: none; opacity: 0.5; }
   .mc-window, .mc-window:hover { transition: none; }
 }
-
-/* ───────────────────────────────────────────────────────────────
-   (single canonical DEPTH & HIERARCHY pass — see block above)
-   ─────────────────────────────────────────────────────────────── */
 

@@ -281,6 +281,73 @@ function MonthlyBurnHero({ costs }: { costs: CostDashboard }) {
   )
 }
 
+/* ── BURN-vs-COST header strip (P3) ─────────────────────
+   The one-glance answer to "what is this costing / saving me".
+   Real cost = Claude plan + OpenRouter billed for the current month.
+   Local savings = the local (Ollama) tokens this month × what they'd have
+   cost if sent to an API at a rough $2.50/M input-ish blended rate. The
+   blended rate is deliberately conservative and labeled — a framing aid,
+   not a bill. */
+function BurnVsCost({ costs }: { costs: CostDashboard }) {
+  const billing = costs.billing?.[0]
+  const subMonth = costs.subscription?.month
+  const isCurrent = billing && subMonth === billing.month
+  const realCost = billing ? (billing.planAmount + (billing.openRouterUsd ?? 0)) : null
+
+  const cu = costs.claudeUsage
+  const or = costs.openRouterLive
+
+  // Local tokens this month (from the daily series).
+  const providerOf = (model: string) => (costs.models ?? []).find(m => m.model === model)?.provider ?? 'unknown'
+  let localMonthTokens = 0
+  const dayCount = loggedDays(costs.daily)
+  for (const d of costs.daily ?? []) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d.date)) continue
+    for (const [model, v] of Object.entries(d.byModel ?? {})) {
+      if (providerOf(model) === 'ollama') {
+        localMonthTokens += typeof v === 'object' ? (v as { tokens?: number }).tokens ?? 0 : 0
+      }
+    }
+  }
+  const localSaved = localMonthTokens * 2.5 / 1_000_000 // $2.50 / M blended
+
+  const orTokens = or ? ` · OR ${money(or.usageMonthly)}` : ''
+  const planToken = cu?.totalTokens ? `${fmtTokens(cu.totalTokens)} claude` : ''
+
+  return (
+    <Window tag="◎" title="BURN vs COST · THIS MONTH" meta={`${billing?.plan.toUpperCase() ?? 'plan'}${orTokens}`}>
+      <div style={{ padding: '14px 16px 16px' }}>
+        <div style={{ display: 'flex', gap: 28, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <Stat
+            value={realCost != null ? money(realCost) : '—'}
+            label={`TOTAL REAL COST ${isCurrent ? '· THIS MONTH' : ''}`}
+            size="hero" glow color={STATUS.warn}
+          />
+          <Stat
+            value={localMonthTokens ? money(localSaved) : '—'}
+            label={`LOCAL AI SAVED · ${fmtTokens(localMonthTokens)} FREE TOKENS`}
+            size="lg" color={CATEGORICAL[2]}
+          />
+          <Stat
+            value={localMonthTokens ? `%${Math.round((localSaved / Math.max(1, (realCost ?? localSaved))) * 100)}` : '—'}
+            label="OF REAL COST OFFSET"
+            size="lg" color={CATEGORICAL[2]}
+          />
+        </div>
+        <ScopeNote>
+          {isCurrent
+            ? `REAL COST = CLAUDE ${billing.plan.toUpperCase()} PLAN ${money(billing.planAmount)} + OPENROUTER BILLED ${billing.openRouterUsd != null ? money(billing.openRouterUsd) : 'n/a'}.`
+            : 'NO CURRENT-MONTH BILLING RECORD (only historical plans).'}
+          {localMonthTokens > 0
+            ? ` LOCAL SAVINGS = ${fmtTokens(localMonthTokens)} local tokens × $2.50/M blended (conservative API-equivalent) — NEVER billed.`
+            : ' NO LOCAL TOKENS THIS MONTH IN LOGGED WINDOW.'}
+          {planToken ? ` ${planToken} covered by the fixed subscription (no per-token $).` : ''}
+        </ScopeNote>
+      </div>
+    </Window>
+  )
+}
+
 /* ── Monthly billing reconciliation: plan + real cost per month ── */
 function MonthlyBilling({ costs }: { costs: CostDashboard }) {
   const billing = costs.billing ?? []

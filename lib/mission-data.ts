@@ -17,6 +17,7 @@ import { collectMemory } from './collectors/memory'
 import { collectCrew } from './collectors/crew'
 import { collectCosts } from './collectors/costs'
 import { collectOperations } from './collectors/operations'
+import { collectTelemetry } from './collectors/telemetry'
 import { getCalendarEvents, type CalendarResult } from './collectors/calendar'
 import { integrations, collectIdeas, collectMissions, type IdeasResult, type MissionsResult } from './collectors/workspace'
 
@@ -40,8 +41,9 @@ export async function getMissionData(): Promise<MissionData> {
   const emptyIdeas: IdeasResult = { ideas: [], status: { path: rel(path.join(ROOTS.workspace, 'ideas.json')), exists: false } }
   const emptyMissions: MissionsResult = { missions: [], status: { path: null, updatedAt: null, stale: true } }
   const emptyKanban: KanbanActivity = { available: false, source: rel(ROOTS.kanbanDb), openTasks: 0, runningTasks: 0, lastEventAt: null, byAssignee: {} }
+  const emptyTelemetry: import('./types').SystemTelemetry = { generatedAt: '', cpu: null, memory: null, disk: null, gpus: null, ollama: null }
 
-  const [tasks, cron, memory, integrationStates, github, costs, operations, calendarResult, ideasResult, missionsResult, kanban] = await Promise.all([
+  const [tasks, cron, memory, integrationStates, github, costs, operations, calendarResult, ideasResult, missionsResult, kanban, telemetry] = await Promise.all([
     safeCollect('tasks', collectTasks, []),
     safeCollect('cron', collectCron, []),
     safeCollect('memory', collectMemory, []),
@@ -53,6 +55,7 @@ export async function getMissionData(): Promise<MissionData> {
     safeCollect('ideas', collectIdeas, emptyIdeas),
     safeCollect('missions', collectMissions, emptyMissions),
     safeCollect('kanban', collectKanbanActivity, emptyKanban),
+    safeCollect('telemetry', collectTelemetry, emptyTelemetry),
   ])
   const [projects, vaultFiles] = await Promise.all([collectProjects(tasks), walk(ROOTS.vault, { extensions: ['.md'], max: 1000, depth: 8 })])
   const warnings = integrationStates.filter(i => i.status === 'attention').map(i => `${i.name}: ${i.detail}`)
@@ -94,6 +97,7 @@ export async function getMissionData(): Promise<MissionData> {
     ideas: tagList(ideasResult.ideas),
     missions: tagList(missionsResult.missions),
     kanban,
+    telemetry,
     sources: {
       calendar: calendarResult.status,
       ideas: ideasResult.status,

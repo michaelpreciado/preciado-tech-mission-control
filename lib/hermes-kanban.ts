@@ -14,6 +14,7 @@ import { execFileSync } from 'node:child_process'
 import { DatabaseSync } from 'node:sqlite'
 import { getConfig } from './config'
 import { logger } from './logger'
+import { isRemoteCacheFresh } from './kanban-ttl'
 import type {
   HermesKanbanSnapshot,
   HermesTask,
@@ -158,7 +159,7 @@ function expandHome(p: string): string {
 function fetchRemote(remote: FridayKanbanRemote): DbRead {
   const now = Date.now()
   const hit = remoteCache.get(remote.name)
-  if (hit && now - hit.fetchedAt < (remote.cacheMs ?? 30000)) return hit.read
+  if (hit && isRemoteCacheFresh(hit.fetchedAt, now, remote.cacheMs)) return hit.read
 
   // Remote path keeps its literal '~' so the REMOTE shell expands it (scp
   // otherwise treats /home/mp/... as a literal remote path that doesn't exist).

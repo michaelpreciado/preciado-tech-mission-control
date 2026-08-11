@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { assertSameOrigin } from '@/lib/mission-api'
 import { recordHeartbeat, getHeartbeats } from '@/lib/heartbeats'
 
 const SECRET = process.env.INTERNAL_API_SECRET
@@ -15,6 +16,8 @@ function isAuthorized(req: NextRequest): boolean {
 }
 
 export async function POST(req: NextRequest) {
+  const _origin = assertSameOrigin(req)
+  if (!_origin.ok) return NextResponse.json(_origin.body, { status: _origin.status })
   if (!isAuthorized(req)) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }

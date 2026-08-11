@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getMessages } from '@/lib/conversations'
 import { continueConversation } from '@/lib/conversation-actions'
-import { checkRateLimit, getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv, isLoopbackIp } from '@/lib/mission-api'
+import {checkRateLimit, getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv, isLoopbackIp, assertSameOrigin } from '@/lib/mission-api'
 import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -43,6 +43,8 @@ export async function GET(_req: NextRequest, ctx: RouteCtx) {
 
 /** POST /api/conversations/[id] — continue an existing conversation. */
 export async function POST(req: NextRequest, ctx: RouteCtx) {
+  const _origin = assertSameOrigin(req)
+  if (!_origin.ok) return NextResponse.json(_origin.body, { status: _origin.status })
   const { id } = await ctx.params
   if (!rate(req)) return NextResponse.json({ error: 'rate limited' }, { status: 429 })
   if (!isAuthorized(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })

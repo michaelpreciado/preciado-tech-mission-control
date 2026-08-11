@@ -48,6 +48,11 @@ export function ActionFeed() {
     rows.push({ id: item.id, tone: 'urgent', glyph: '⏳', text: item.title, href: '/approvals' })
   }
   for (const svc of health?.services ?? []) {
+    // Store-freshness probes (pipeline store, cron jobs.json) are telemetry, not
+    // actions — a 16h-old store shouldn't read as "needs you". Only surface real
+    // service state (gateways, Ollama, event bus, kanban DB).
+    const TELEMETRY_ONLY = new Set(['pipeline-store', 'cron-jobs'])
+    if (TELEMETRY_ONLY.has(svc.id)) continue
     if (svc.status === 'down') rows.push({ id: `svc:${svc.id}`, tone: 'urgent', glyph: '✕', text: `${svc.name} — ${svc.detail}`, href: '/' })
     else if (svc.status === 'warn') rows.push({ id: `svc:${svc.id}`, tone: 'warn', glyph: '⚠', text: `${svc.name} — ${svc.detail}`, href: '/' })
   }

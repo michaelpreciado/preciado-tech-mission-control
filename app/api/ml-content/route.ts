@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { assertSameOrigin } from '@/lib/mission-api'
 import { readFileSync, readdirSync } from 'fs'
 import { join } from 'path'
 // Use relative path — @/ alias may not work in API routes
@@ -42,6 +43,8 @@ export async function GET(_request: NextRequest) {
   })
 }
 
-export async function POST(_request: NextRequest) {
+export async function POST(req: NextRequest) {
+  const _origin = assertSameOrigin(req)
+  if (!_origin.ok) return NextResponse.json(_origin.body, { status: _origin.status })
   return NextResponse.json({ message: 'Not implemented yet' }, { status: 501 })
 }

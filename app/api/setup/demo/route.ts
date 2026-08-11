@@ -8,7 +8,7 @@ import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import path from 'node:path'
 import { resetConfigCache } from '@/lib/config'
-import { getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv, checkRateLimit } from '@/lib/mission-api'
+import {getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv, checkRateLimit, assertSameOrigin } from '@/lib/mission-api'
 import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -24,6 +24,8 @@ function isAuthorized(req: NextRequest): boolean {
 }
 
 export async function POST(req: NextRequest) {
+  const _origin = assertSameOrigin(req)
+  if (!_origin.ok) return NextResponse.json(_origin.body, { status: _origin.status })
   const ip = getClientIpFromHeaders(req.headers)
   const limit = checkRateLimit(rateBucket, ip, Date.now(), 4, 60_000)
   if (!limit.allowed) {

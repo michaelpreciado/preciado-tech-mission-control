@@ -1,27 +1,26 @@
 'use client'
 
 /**
- * HoloHud3D — Apple-polished 3D dispatch-tree (WebGL via react-three-fiber).
+ * HoloHud3D — command-center 3D dispatch tree (WebGL via react-three-fiber).
  *
- * A production-grade, AAA-feel hierarchical tree: HERMES root on top, sub-agent
- * cards below, joined by smooth catmull-rom tree branches that pulse with an
- * energy flow while that agent is working. Each agent has a crisp SF-Symbol-style
- * SVG icon chip (DOM <Html> → retina-sharp on the Pixel Fold), rendered over a
- * soft glass rounded card with real contact shadows for floating depth.
+ * v2 (command hierarchy):
+ *   HERMES (root) → JARVIS (hub / operator) → agent clusters
+ *     OPS  · friday, edith          (the desktop + sentinel)
+ *     CREW · openclaw, echo, sage, forge  (shared capabilities)
  *
- * Apple-UX principles applied:
- *  - Restraint: soft pastel cards, subtle depth, no neon.
- *  - Clarity: crisp SVG icons + names always face the camera and stay readable.
- *  - Motion: gentle — a slow camera drift; the only "active" motion is the
- *    working agent's pulsing ring + animated branch flow. Idle stays calm.
- *  - Refinement: rounded geometry, smooth S-curve connectors, soft shadows.
+ * Why v2: the v1 tree rendered an EMPTY stage the moment no agent was
+ * working (MESH STANDBY). That hid the crew right when it went quiet —
+ * which is most of the day. v2 keeps the whole roster ALWAYS visible and
+ * informative:
+ *  - idle/waiting agents stay bright and legible (name + role + host), not
+ *    faded to invisibility.
+ *  - offline is dimmed/desaturated but still present (asleep ≠ missing).
+ *  - errored stays the loudest thing (red ring + hard flash).
+ *  - working pulls full color + animated energy flow + breathing scale.
  *
- * State encoding (brief-preserving):
- *  - working  → accent ring pulse + animated branch flow (energy traveling down)
- *  - waiting  → steady, calm
- *  - errored  → red ring + red chip
- *  - offline  → grey, faded (asleep ≠ error)
- *  - stale    → desaturated
+ * Apple-UX applied: restrained pastel cards, no neon, crisp SVG icons that
+ * always face the camera, and calm motion — the only "active" animation is a
+ * genuinely working agent (pulsing ring + traveling branch energy).
  * Touch: drag to orbit, pinch to zoom (drei OrbitControls).
  *
  * WebGL is client-only; loaded ssr:false from the Team page.
@@ -35,38 +34,45 @@ import { HEARTBEAT_STALE_MS } from '@/lib/telemetry'
 
 /* ── Layout constants (world units) ───────────────────────────────────── */
 
-const ROOT_POS: [number, number, number] = [0, 2.9, 0]
-const AGENT_Y = 0.55
-const MID_Y = 1.75
-const CARD_W = 1.45
-const CARD_H = 0.62
+const ROOT_POS: [number, number, number] = [0, 3.0, 0]
+const HUB_POS: [number, number, number] = [0, 1.9, 0]
+const AGENT_Y = 0.45
+const CARD_W = 1.7
+const CARD_H = 0.66
 const CARD_D = 0.05
-const ROOT_W = 1.9
-const ROOT_H = 0.74
+const ROOT_W = 2.0
+const ROOT_H = 0.78
+
+/** Command-cluster layout: which cluster each agent belongs to + x offset. */
+type Cluster = 'OPS' | 'CREW'
+const CLUSTER_OFFSET: Record<Cluster, number> = { OPS: -2.9, CREW: 2.9 }
+const AGENT_CLUSTER: Record<string, { cluster: Cluster; slot: number }> = {
+  friday:  { cluster: 'OPS', slot: 0 },
+  edith:   { cluster: 'OPS', slot: 1 },
+  openclaw:{ cluster: 'CREW', slot: 0 },
+  echo:    { cluster: 'CREW', slot: 1 },
+  sage:    { cluster: 'CREW', slot: 2 },
+  forge:   { cluster: 'CREW', slot: 3 },
+}
+const CLUSTER_SPACING = 1.95
+
+function agentPos(id: string): [number, number, number] {
+  const def = AGENT_CLUSTER[id]
+  if (!def) return [0, AGENT_Y, 0]
+  const baseX = CLUSTER_OFFSET[def.cluster]
+  const x = baseX + (def.slot - 0.5) * CLUSTER_SPACING
+  return [x, AGENT_Y, 0]
+}
+
+function clusterCenter(cluster: Cluster): [number, number, number] {
+  return [CLUSTER_OFFSET[cluster], 0.0, 0]
+}
 
 function isStaleNode(n: AgentNode): boolean {
   if (n.state === 'offline' || n.state === 'working') return false
   if (n.lastSeenAt === null) return false
   const ts = n.lastSeenAt > 1e12 ? n.lastSeenAt : n.lastSeenAt * 1000
   return Date.now() - ts > HEARTBEAT_STALE_MS
-}
-
-/** Mix a hex color toward white by `f` (0..1) → soft pastel card fill. */
-function lighten(hex: string, f: number): string {
-  const n = parseInt(hex.replace('#', ''), 16)
-  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255
-  const mix = (c: number) => Math.round(c + (255 - c) * f)
-  return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`
-}
-
-/** Agent i horizontal position (evenly spaced, deterministic). */
-function agentX(i: number, total: number): number {
-  return (i - (total - 1) / 2) * 2.85
-}
-
-/** Depth is intentionally flat — a clean, legible org row (Apple clarity). */
-function agentZ(i: number): number {
-  return 0
 }
 
 /* ── SF-Symbol-style icons (inline SVG, crisp at any DPI) ─────────────── */
@@ -80,7 +86,7 @@ const ICONS: Record<string, (p: IconProps) => React.ReactNode> = {
   edith:    ({ color }) => <><path d="M12 4C7 4 3.5 8 2.5 12 3.5 16 7 20 12 20s8.5-4 9.5-8C20.5 8 17 4 12 4z" stroke={color} strokeWidth="2" fill="none" strokeLinejoin="round" /><circle cx="12" cy="12" r="3.2" stroke={color} strokeWidth="2" fill="none" /></>,
   openclaw: ({ color }) => <><circle cx="12" cy="12" r="3" stroke={color} strokeWidth="2" fill="none" /><path d="M12 5V3M12 21v-2M5 12H3M21 12h-2M7.05 7.05L5.6 5.6M18.4 18.4l-1.45-1.45M16.95 7.05l1.45-1.45M5.6 18.4l1.45-1.45" stroke={color} strokeWidth="2" strokeLinecap="round" /></>,
   echo:     ({ color }) => <><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4" stroke={color} strokeWidth="2.2" strokeLinecap="round" fill="none" /></>,
-  sage:     ({ color }) => <><circle cx="10.5" cy="10.5" r="6.5" stroke={color} strokeWidth="2" fill="none" /><path d="M15.5 15.5L21 21" stroke={color} strokeWidth="2" strokeLinecap="round" /><circle cx="8" cy="8.2" r="1" fill={color} /><path d="M8 10v3M8 13c0 1.6-1 2.5-2.6 2.5" stroke={color} strokeWidth="1.6" strokeLinecap="round" fill="none" /></>,
+  sage:     ({ color }) => <><circle cx="10.5" cy="10.5" r="6.5" stroke={color} strokeWidth="2" fill="none" /><path d="M15.5 15.5L21 21" stroke={color} strokeWidth="2" strokeLinecap="round" /><circle cx="8" cy="8.2" r="1" fill={color} /></>,
   forge:    ({ color }) => <><path d="M4 20l4.5-4.5a3.2 3.2 0 0 1 4.5-4.5L20 4.5a2.5 2.5 0 0 1 3.5 3.5L17 14a3.2 3.2 0 0 1-4.5 4.5L8 23z" stroke={color} strokeWidth="2" fill="none" strokeLinejoin="round" /></>,
 }
 
@@ -96,7 +102,6 @@ function AgentIcon({ id, color, size = 18 }: { id: string; color: string; size?:
 /* ── Tree branch (smooth animated connector) ──────────────────────────── */
 
 function Branch({ from, to, accent, active }: { from: [number, number, number]; to: [number, number, number]; accent: string; active: boolean }) {
-  // catmull-rom through an elbow → smooth S-curve
   const points = useMemo(() => {
     const mid = (from[1] + to[1]) / 2
     return [
@@ -115,9 +120,8 @@ function Branch({ from, to, accent, active }: { from: [number, number, number]; 
   useFrame((state) => {
     if (!base.current) return
     const mat = base.current.material as THREE.MeshStandardMaterial
-    if (!active) { mat.opacity = 0.55; return }
+    if (!active) { mat.opacity = 0.45; return }
     const t = state.clock.elapsedTime
-    // traveling energy pulse
     mat.emissiveIntensity = 0.6 + (Math.sin(t * 5) * 0.5 + 0.5) * 1.1
     mat.opacity = 0.95
   })
@@ -125,11 +129,11 @@ function Branch({ from, to, accent, active }: { from: [number, number, number]; 
   return (
     <mesh ref={base} geometry={geo}>
       <meshStandardMaterial
-        color={active ? accent : '#c6cfdc'}
+        color={active ? accent : '#aab4c4'}
         emissive={active ? accent : '#000000'}
         emissiveIntensity={0}
         transparent
-        opacity={0.72}
+        opacity={0.6}
         roughness={0.5}
         metalness={0.1}
       />
@@ -160,42 +164,44 @@ function Card({
   const ring = useRef<THREE.Mesh>(null)
   const stale = isStaleNode(node)
 
-  const fill = isRoot ? 'rgba(236,246,230,0.96)' : 'rgba(250,251,255,0.94)'
   const accent = isRoot ? '#4caf50' : node.accent
   const ringColor = node.state === 'errored' ? '#ff5f57' : node.state === 'offline' ? '#9aa3b2' : accent
 
-  const dimmed = stale ? 0.4 : 1
-  const greyed = node.state === 'offline' ? 0.55 : 1
+  // v2: idle agents stay BRIGHT and present. Only offline/stale dim — but
+  // never to invisibility, so the roster always reads as a full crew.
+  const dimmed = stale ? 0.55 : 1
+  const greyed = node.state === 'offline' ? 0.72 : 1
+  const cardOpacity = Math.min(dimmed, greyed) * 0.96
 
   useFrame((state) => {
     if (!group.current) return
-    // gentle breathing scale only while working
     if (node.state === 'working') {
       const t = state.clock.elapsedTime
-      const s = 1 + Math.sin(t * 4) * 0.025
+      const s = 1 + Math.sin(t * 4) * 0.03
       group.current.scale.setScalar(s)
     } else {
       group.current.scale.setScalar(1)
     }
-    // pulsing selection/working ring
     if (ring.current) {
       const mat = ring.current.material as THREE.MeshBasicMaterial
       if (node.state === 'working') {
         mat.opacity = 0.5 + Math.sin(state.clock.elapsedTime * 5) * 0.3
       } else if (selected) {
         mat.opacity = 0.7
+      } else if (node.state === 'errored') {
+        mat.opacity = 0.45 + Math.sin(state.clock.elapsedTime * 8) * 0.3
       } else {
-        mat.opacity = 0.15
+        mat.opacity = 0.14
       }
     }
   })
 
   return (
     <group>
-      {/* branch from root to this card (only for non-root agents) */}
-      {!isRoot && (
+      {/* branch from HUB to this card — unless it IS the hub */}
+      {!isRoot && node.id !== 'jarvis' && (
         <Branch
-          from={[0, ROOT_POS[1] - ROOT_H / 2 - 0.04, 0]}
+          from={[HUB_POS[0], HUB_POS[1] - ROOT_H / 2 - 0.04, 0]}
           to={[pos[0], pos[1] + h / 2 + 0.04, pos[2]]}
           accent={node.accent}
           active={node.state === 'working'}
@@ -207,23 +213,21 @@ function Card({
         {/* soft colored accent ring (state) */}
         <mesh ref={ring} position={[0, 0, -0.02]}>
           <planeGeometry args={[w + 0.16, h + 0.16]} />
-          <meshBasicMaterial color={ringColor} transparent opacity={0.15} />
+          <meshBasicMaterial color={ringColor} transparent opacity={0.14} />
         </mesh>
-        {/* white glass card */}
         <RoundedBox args={[w, h, CARD_D]} radius={0.14} smoothness={8}>
           <meshStandardMaterial
             color="#ffffff"
             transparent
-            opacity={Math.min(dimmed, greyed) * 0.96}
+            opacity={cardOpacity}
             roughness={0.35}
             metalness={0}
           />
         </RoundedBox>
       </group>
 
-      {/* Apple-style label chip (screen-space → always crisp + never overlaps;
-          on a phone the LIST view / pinch covers the compact case) */}
-      <Html position={[pos[0], pos[1] + h / 2 + 0.3, pos[2]]} center zIndexRange={[10, 0]}>
+      {/* label chip — always crisp, screen-space, carries role + host */}
+      <Html position={[pos[0], pos[1] + h / 2 + 0.34, pos[2]]} center zIndexRange={[10, 0]}>
         <div
           className={`mc-card-chip state-${node.state}${isRoot ? ' is-root' : ''}${selected ? ' is-selected' : ''}`}
           onClick={onClick}
@@ -233,10 +237,40 @@ function Card({
           <span className="mc-chip-icon" style={{ background: `${accent}22` }}>
             <AgentIcon id={node.id} color={accent} size={18} />
           </span>
-          <span className="mc-chip-name">{node.name}</span>
+          <span className="mc-chip-txt">
+            <span className="mc-chip-name">{node.name}</span>
+            <span className="mc-chip-sub">{node.host ?? '—'}</span>
+          </span>
           <span className="mc-chip-dot" style={{ background: node.state === 'errored' ? '#ff5f57' : node.state === 'offline' ? '#8a93a3' : accent }} />
         </div>
       </Html>
+    </group>
+  )
+}
+
+/* ── Cluster label (OPS / CREW) ───────────────────────────────────────── */
+
+function ClusterTag({ label, pos }: { label: string; pos: [number, number, number] }) {
+  return (
+    <Html position={pos} center zIndexRange={[5, 0]}>
+      <div className="mc-cluster-tag">{label}</div>
+    </Html>
+  )
+}
+
+/* ── Hub (Jarvis) card ────────────────────────────────────────────────── */
+
+function HubCard({ node, selected, onClick }: { node: AgentNode; selected: boolean; onClick: () => void }) {
+  return (
+    <group>
+      {/* HERMES → JARVIS */}
+      <Branch
+        from={[ROOT_POS[0], ROOT_POS[1] - ROOT_H / 2 - 0.04, 0]}
+        to={[HUB_POS[0], HUB_POS[1] + ROOT_H / 2 + 0.04, 0]}
+        accent={node.accent}
+        active={node.state === 'working'}
+      />
+      <Card node={node} pos={HUB_POS} w={ROOT_W} h={ROOT_H} selected={selected} isRoot={false} onClick={onClick} />
     </group>
   )
 }
@@ -245,12 +279,15 @@ function Card({
 
 function Scene({ nodes, selectedId, onSelect }: { nodes: AgentNode[]; selectedId: string | null; onSelect: (id: string) => void }) {
   const hermes = useMemo(() => nodes.find(n => n.id === 'hermes'), [nodes])
-  const agents = useMemo(() => nodes.filter(n => n.id !== 'hermes'), [nodes])
+  const jarvis = useMemo(() => nodes.find(n => n.id === 'jarvis') ?? nodes.find(n => n.id !== 'hermes'), [nodes])
+  const hubId = jarvis?.id
+  const agents = useMemo(() => nodes.filter(n => n.id !== 'hermes' && n.id !== hubId), [nodes, hubId])
+  const hasOps = useMemo(() => agents.some(n => AGENT_CLUSTER[n.id]?.cluster === 'OPS'), [agents])
+  const hasCrew = useMemo(() => agents.some(n => AGENT_CLUSTER[n.id]?.cluster === 'CREW'), [agents])
 
   return (
     <>
-      {/* soft, even lighting — Apple-clean, no hotspots */}
-      <ambientLight intensity={1.15} />
+      <ambientLight intensity={1.2} />
       <directionalLight position={[3, 8, 6]} intensity={1.1} />
       <directionalLight position={[-4, 5, -4]} intensity={0.35} color="#eef2ff" />
 
@@ -259,23 +296,31 @@ function Scene({ nodes, selectedId, onSelect }: { nodes: AgentNode[]; selectedId
         <Card node={hermes} pos={[...ROOT_POS]} w={ROOT_W} h={ROOT_H} selected={selectedId === hermes.id} isRoot onClick={() => onSelect(hermes.id)} />
       )}
 
+      {/* JARVIS hub */}
+      {jarvis && (
+        <HubCard node={jarvis} selected={selectedId === jarvis.id} onClick={() => onSelect(jarvis.id)} />
+      )}
+
+      {/* cluster separators */}
+      {hasOps && <ClusterTag label="OPS" pos={[CLUSTER_OFFSET.OPS, 1.15, 0]} />}
+      {hasCrew && <ClusterTag label="CREW" pos={[CLUSTER_OFFSET.CREW, 1.15, 0]} />}
+
       {/* agents */}
-      {agents.map((n, i) => {
-        const pos: [number, number, number] = [agentX(i, agents.length), AGENT_Y, agentZ(i)]
+      {agents.map((n) => {
+        const pos = agentPos(n.id)
         return (
           <Card key={n.id} node={n} pos={pos} w={CARD_W} h={CARD_H} selected={selectedId === n.id} isRoot={false} onClick={() => onSelect(n.id)} />
         )
       })}
 
-      {/* soft grounded shadow for floating-depth */}
-      <ContactShadows position={[0, -0.85, 0]} opacity={0.45} scale={22} blur={2.8} far={4} resolution={256} color="#000000" />
+      <ContactShadows position={[0, -0.85, 0]} opacity={0.45} scale={26} blur={2.8} far={4} resolution={256} color="#000000" />
 
       <OrbitControls
-        target={[0, 1.7, 0]}
+        target={[0, 1.4, 0]}
         enablePan={false}
         enableZoom
-        minDistance={4}
-        maxDistance={13}
+        minDistance={5}
+        maxDistance={14}
         autoRotate
         autoRotateSpeed={0.12}
         enableDamping
@@ -301,7 +346,7 @@ export default function HoloHud3D({
       <Canvas
         dpr={[1, 2]}
         gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
-        camera={{ position: [0.2, 4.4, 9.2], fov: 38 }}
+        camera={{ position: [0.2, 4.6, 10.5], fov: 38 }}
         style={{ width: '100%', height: '100%', touchAction: 'none', background: 'transparent' }}
       >
         <Scene nodes={nodes} selectedId={selectedId} onSelect={onSelect} />

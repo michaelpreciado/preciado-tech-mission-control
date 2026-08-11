@@ -16,7 +16,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { getConfig } from '@/lib/config'
-import { getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv, checkRateLimit } from '@/lib/mission-api'
+import {getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv, checkRateLimit, assertSameOrigin } from '@/lib/mission-api'
 import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -59,6 +59,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const _origin = assertSameOrigin(req)
+  if (!_origin.ok) return NextResponse.json(_origin.body, { status: _origin.status })
   const ip = getClientIpFromHeaders(req.headers)
   const limit = checkRateLimit(rateBucket, ip, Date.now(), 20, 60_000)
   if (!limit.allowed) {

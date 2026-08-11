@@ -20,6 +20,10 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizeCss: true,
+    // Keep client side-effect-free; three/drei/fiber ship many named exports and
+    // @react-three/drei especially pulls subpath modules — optimize so only what
+    // /team actually imports survives into the bundle (three stays /team-only).
+    optimizePackageImports: ['three', '@react-three/fiber', '@react-three/drei'],
   },
   headers: async () => [
     {
