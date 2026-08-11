@@ -69,9 +69,10 @@ export function CommandHeader() {
   // glance at the colour is enough — you only read the numbers if one is lit.
   const attention = allTasks.filter(t => t.status === 'attention').length
   const active = allTasks.filter(t => t.status === 'active').length
-  // enabledCronJobs was always 0 here and read as "nothing scheduled"; what
-  // actually matters is how many jobs errored on their last run.
-  const cronFailing = cron.filter(c => c.lastRunStatus === 'error').length
+  // Only FAILING ENABLED jobs are real failures — disabled/dormant jobs just
+  // sit parked and shouldn't keep the header red (matches the Home tile + sidebar).
+  const cronLive = cron.filter(c => c.enabled !== false).length
+  const cronFailing = cron.filter(c => c.enabled !== false && c.lastRunStatus === 'error').length
   const servicesUp = health ? health.services.filter(s => s.status === 'up').length : 0
   const servicesTotal = health?.services.length ?? 0
 
@@ -79,7 +80,7 @@ export function CommandHeader() {
     { key: 'needs_you', label: 'Needs you', value: approvals ?? 0, glyph: '◆', alert: (approvals ?? 0) > 0 },
     { key: 'attention', label: 'Attention', value: attention, glyph: '⚠', alert: attention > 0 },
     { key: 'active', label: 'Active', value: active, glyph: '▶', alert: false },
-    { key: 'cron_fail', label: 'Cron fail', value: `${cronFailing}/${cron.length}`, glyph: '○', alert: cronFailing > 0 },
+    { key: 'cron_fail', label: 'Cron fail', value: cronLive ? `${cronFailing}/${cronLive}` : '—', glyph: '○', alert: cronFailing > 0 },
     { key: 'sys', label: 'Sys', value: servicesTotal ? `${servicesUp}/${servicesTotal}` : '—', glyph: '■', alert: Boolean(health && health.problems > 0) },
   ] : []
 

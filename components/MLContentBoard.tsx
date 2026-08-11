@@ -18,11 +18,18 @@ type WeekCardProps = {
   onClick: () => void
 }
 
+/** Avoid "Week 27: Week 27: …" when the source title already starts with the week prefix. */
+function titleLabel(idea: MLContentIdea): string {
+  const prefix = `week ${idea.week}:`
+  const t = idea.title.trim()
+  return t.toLowerCase().startsWith(prefix) ? t : `Week ${idea.week}: ${t}`
+}
+
 function WeekCard({ idea, onClick }: WeekCardProps) {
   return (
     <button type="button" className="mc-pipe-card" data-stage={idea.stage} onClick={onClick}>
       <div className="mc-pipe-card-head">
-        <span className="mc-pipe-name">Week {idea.week}: {idea.title}</span>
+        <span className="mc-pipe-name">{titleLabel(idea)}</span>
       </div>
       <div className="mc-pipe-meta">
         <span>{idea.project}</span>
@@ -105,7 +112,7 @@ export function MLContentBoard() {
         <div className="mc-modal-overlay" onClick={() => setSelectedIdea(null)}>
           <div className="mc-modal" onClick={e => e.stopPropagation()}>
             <button className="mc-modal-close" onClick={() => setSelectedIdea(null)}>✕</button>
-            <h3>Week {selectedIdea.week}: {selectedIdea.title}</h3>
+            <h3>{titleLabel(selectedIdea)}</h3>
             <p><strong>Project:</strong> {selectedIdea.project}</p>
             <p><strong>Video:</strong> {selectedIdea.video}</p>
             {selectedIdea.x_thread && (

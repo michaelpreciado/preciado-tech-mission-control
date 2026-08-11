@@ -335,7 +335,7 @@ function BurnVsCost({ costs }: { costs: CostDashboard }) {
         </div>
         <ScopeNote>
           {isCurrent
-            ? `REAL COST = CLAUDE ${billing.plan.toUpperCase()} PLAN ${money(billing.planAmount)} + OPENROUTER BILLED ${billing.openRouterUsd != null ? money(billing.openRouterUsd) : 'n/a'}.`
+            ? `REAL COST = ${billing.plan.toUpperCase()} PLAN ${money(billing.planAmount)} + OPENROUTER BILLED ${billing.openRouterUsd != null ? money(billing.openRouterUsd) : 'n/a'}.`
             : 'NO CURRENT-MONTH BILLING RECORD (only historical plans).'}
           {localMonthTokens > 0
             ? ` LOCAL SAVINGS = ${fmtTokens(localMonthTokens)} local tokens × $2.50/M blended (conservative API-equivalent) — NEVER billed.`

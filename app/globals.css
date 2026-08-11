@@ -4946,4 +4946,75 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   .mc-core-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   BRING IT ALIVE — a restrained motion layer (added on the visual QA pass).
+   Subtle, on-theme (scanline/glow), and fully prefers-reduced-motion safe.
+   Everything is a transform/opacity so it stays compositor-friendly on the
+   high-refresh MacBook + OLED Fold. ══════════════════════════════════════ */
+
+/* Live LEDs breathe gently — alive, not flashing. */
+.mc-led {
+  animation: mc-led-breathe 3.2s ease-in-out infinite;
+}
+.mc-led.green { animation-delay: .2s; }
+
+/* Status-tile gauge bars shimmer a soft energy sheen while idle. */
+.mc-core-fill {
+  animation: mc-gauge-sheen 5s ease-in-out infinite;
+}
+
+/* SYSTEM CORE gauges do a gentle hover lift + edge glow. */
+.mc-core-gauge {
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.mc-core-gauge:hover {
+  transform: translateY(-2px);
+  border-color: rgba(var(--pt-neon-rgb),0.5);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35), 0 0 18px rgba(var(--pt-neon-rgb),0.12);
+}
+
+/* NEEDS-YOU rows get a soft sheen sweep so the eye knows it's the live strip. */
+.mc-feed {
+  position: relative;
+  overflow: hidden;
+}
+.mc-feed::after {
+  content: '';
+  position: absolute; top: 0; bottom: 0; left: -60%;
+  width: 40%;
+  background: linear-gradient(100deg, transparent, rgba(var(--pt-neon-rgb),0.08), transparent);
+  animation: mc-feed-sweep 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Nav item active rail glows/pulses — a signal of where you are. */
+.mc-nav-item.is-active .mc-nav-rail {
+  animation: mc-rail-pulse 3s ease-in-out infinite;
+}
+
+@keyframes mc-led-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .55; }
+}
+@keyframes mc-gauge-sheen {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.25); }
+}
+@keyframes mc-feed-sweep {
+  0% { left: -60%; }
+  60%, 100% { left: 160%; }
+}
+@keyframes mc-rail-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mc-led, .mc-core-fill, .mc-feed::after, .mc-nav-item.is-active .mc-nav-rail {
+    animation: none !important;
+  }
+  .mc-core-gauge:hover { transform: none; }
+}
+
+
 
