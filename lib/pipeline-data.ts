@@ -161,10 +161,10 @@ export type UpsertLeadResult =
   | { ok: false; error: string; status: number }
 
 /**
- * Single write path for the pipeline store — used by /api/pipeline and
- * /api/approvals so dashboard buttons and the skill/Telegram bridge stay in
- * sync. Merges `fields` (object values shallow-merge), records stage history,
- * and appends the canonical pipeline_update event.
+ * Single write path for the pipeline store — used by /api/pipeline so the
+ * skill/Telegram bridge and any dashboard writers stay in sync. Merges
+ * `fields` (object values shallow-merge), records stage history, and appends
+ * the canonical pipeline_update event.
  */
 export async function upsertLead(input: UpsertLeadInput): Promise<UpsertLeadResult> {
   const { leadId, stage } = input

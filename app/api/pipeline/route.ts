@@ -24,8 +24,8 @@ export async function GET() {
 
 /**
  * Upsert a lead / record a stage transition. Producers: the web-dev-pipeline
- * skill, Hermes, the Telegram approval bridge, and the dashboard approvals
- * inbox (via lib/pipeline-data upsertLead — single write path).
+ * skill, Hermes, and the Telegram approval bridge (via lib/pipeline-data
+ * upsertLead — single write path).
  *
  * Body: { lead_id, business_name?, stage?, fields?: {...}, detail? }
  * `fields` is merged into the stored lead record verbatim (snake_case keys

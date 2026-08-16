@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
 import { useLiveData } from './LiveDataProvider'
-import type { SystemHealthData } from '@/lib/types'
+import type { HermesTask, SystemHealthData } from '@/lib/types'
 
 const POLL_MS = 15_000
 
@@ -17,18 +17,22 @@ type FeedRow = {
 
 /**
  * Needs-my-action strip — the first thing on the Deck (and on mobile, the
- * first thing on screen): down services, agents/tasks in trouble, data
- * warnings. Everything taps through to its tab.
+ * first thing on screen): down services, agents/tasks in trouble (both the
+ * markdown-sourced attention tasks and live Hermes kanban.db blocked/failing
+ * tasks), data warnings. Everything taps through to its tab.
  */
 export function ActionFeed() {
   const { data } = useLiveData()
   const [health, setHealth] = useState<SystemHealthData | null>(null)
+  const [blockedTasks, setBlockedTasks] = useState<HermesTask[]>([])
 
   const refresh = useCallback(async () => {
-    const [h] = await Promise.allSettled([
+    const [h, b] = await Promise.allSettled([
       fetch('/api/system', { cache: 'no-store' }).then(r => r.ok ? r.json() : null),
+      fetch('/api/blocked-tasks', { cache: 'no-store' }).then(r => r.ok ? r.json() : null),
     ])
     if (h.status === 'fulfilled' && h.value) setHealth(h.value)
+    if (b.status === 'fulfilled' && b.value?.tasks) setBlockedTasks(b.value.tasks)
   }, [])
 
   useEffect(() => {
@@ -61,6 +65,9 @@ export function ActionFeed() {
   for (const [i, warning] of (data?.warnings ?? []).entries()) {
     rows.push({ id: `warn:${i}`, tone: 'note', glyph: '◇', text: warning, href: '/' })
   }
+  for (const task of blockedTasks.slice(0, 3)) {
+    rows.push({ id: `hermes:${task.id}`, tone: 'warn', glyph: '⚠', text: `Hermes task ${task.status} — ${task.title}`, href: '/tasks' })
+  }
 
   const shown = rows.slice(0, 8)
   const extra = rows.length - shown.length
@@ -85,7 +92,7 @@ export function ActionFeed() {
             </Link>
           ))}
           {extra > 0 && (
-            <div className="mc-feed-row note">
+            <div className="mc-feed-row note is-static">
               <span className="mc-feed-glyph">＋</span>
               <span className="mc-feed-text">{extra} more…</span>
             </div>
