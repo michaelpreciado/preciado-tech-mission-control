@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLiveData } from '../LiveDataProvider'
 import { useBrand } from '../Shell'
+import { Button } from '../ui'
 import type { SystemHealthData } from '@/lib/types'
 
 /* ── Cockpit (stat header) ────────────────────────────── */
@@ -101,12 +102,15 @@ export function CommandHeader() {
             <span className={`mc-led ${liveState === 'live' ? 'green' : liveState === 'stale' ? 'amber' : ''}`} />
             {liveState === 'live' ? 'LIVE' : liveState === 'stale' ? 'STALE' : 'OFFLINE'}
           </div>
-          <button
-            className={`mc-refresh-btn ${spinning ? 'spin' : ''}`}
+          <Button
+            variant="ghost"
+            loading={spinning}
+            aria-label="Refresh"
+            title="Refresh"
             onClick={() => { setSpinning(true); refresh(); setTimeout(() => setSpinning(false), 800) }}
           >
-            ↻
-          </button>
+            {spinning ? null : '↻'}
+          </Button>
         </div>
         {data?.warnings?.length ? (
           <div className="mc-cockpit-warn">⚠ {data.warnings[0]}</div>

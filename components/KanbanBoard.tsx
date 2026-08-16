@@ -7,7 +7,7 @@ import type {
   HermesTaskDetail,
   KanbanSourceStatus,
 } from '@/lib/types'
-import { SkeletonPanel, fmtDate } from './ui'
+import { Button, SkeletonPanel, fmtDate } from './ui'
 
 const POLL_MS = 15_000
 
@@ -134,16 +134,18 @@ function DetailDrawer({ id, onClose, onChanged }: { id: string; onClose: () => v
               <div className="lbl">ACTIONS</div>
               <div className="mc-kb-actions">
                 {(detail.status === 'blocked' || detail.status === 'failed') && (
-                  <button className="mc-kb-action" disabled={!!busy} onClick={() => void act('unblock', { reason: 'unblocked from Mission Control' })}
+                  <Button variant="confirm" loading={busy === 'unblock'} disabled={!!busy}
+                    onClick={() => void act('unblock', { reason: 'unblocked from Mission Control' })}
                     aria-label={`Unblock ${detail.title}`}>
                     {busy === 'unblock' ? 'unblocking…' : '⊘ unblock'}
-                  </button>
+                  </Button>
                 )}
                 {detail.status !== 'done' && detail.status !== 'archived' && (
-                  <button className="mc-kb-action is-primary" disabled={!!busy} onClick={() => void act('complete', { result: 'completed from Mission Control' })}
+                  <Button variant="primary" loading={busy === 'complete'} disabled={!!busy}
+                    onClick={() => void act('complete', { result: 'completed from Mission Control' })}
                     aria-label={`Mark ${detail.title} complete`}>
                     {busy === 'complete' ? 'completing…' : '✓ complete'}
-                  </button>
+                  </Button>
                 )}
               </div>
               {actErr && <div className="mc-kb-acterr" role="alert">⚠ {actErr}</div>}
@@ -161,10 +163,11 @@ function DetailDrawer({ id, onClose, onChanged }: { id: string; onClose: () => v
                   rows={2}
                   maxLength={4000}
                 />
-                <button className="mc-kb-action is-primary" disabled={!!busy || !msg.trim()} onClick={() => void act('comment', { body: msg })}
+                <Button variant="primary" loading={busy === 'comment'} disabled={!!busy || !msg.trim()}
+                  onClick={() => void act('comment', { body: msg })}
                   aria-label={`Post comment on ${detail.title}`}>
                   {busy === 'comment' ? 'posting…' : 'send ▸'}
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -357,9 +360,9 @@ export function KanbanBoard() {
         </div>
 
         <div className="mc-kb-toolbar">
-          <button className="mc-kb-action is-primary" onClick={() => setShowCreate(v => !v)}>
+          <Button variant="primary" active={showCreate} onClick={() => setShowCreate(v => !v)}>
             {showCreate ? '✕ close' : '+ new task'}
-          </button>
+          </Button>
         </div>
 
         {showCreate && (
@@ -401,10 +404,10 @@ export function KanbanBoard() {
                   <option key={s.origin} value={s.origin}>{s.origin}</option>
                 ))}
               </select>
-              <button className="mc-kb-action is-primary" disabled={createBusy || !createForm.title.trim()} onClick={() => void submitCreate()}
+              <Button variant="primary" loading={createBusy} disabled={createBusy || !createForm.title.trim()} onClick={() => void submitCreate()}
                 aria-label="Create task">
                 {createBusy ? 'creating…' : 'create ▸'}
-              </button>
+              </Button>
             </div>
             {createErr && <div className="mc-kb-acterr" role="alert">⚠ {createErr}</div>}
           </div>

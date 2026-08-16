@@ -293,7 +293,7 @@ html[data-theme="friday"] .mc-cost-bar > span {
 html[data-theme="friday"] .mc-cost-bar > span::after { background: var(--pt-neon-bright); box-shadow: 0 0 8px var(--pt-neon-bright); }
 
 /* Buttons + pills + tags */
-html[data-theme="friday"] .mc-refresh-btn,
+html[data-theme="friday"] .mc-btn,
 html[data-theme="friday"] .mc-live-badge,
 html[data-theme="friday"] .mc-pill,
 html[data-theme="friday"] .mc-task-tag,
@@ -306,7 +306,7 @@ html[data-theme="friday"] .mc-agent-card-status {
   background: rgba(var(--pt-neon-rgb),0.08);
   font-weight: 700;
 }
-html[data-theme="friday"] .mc-refresh-btn:hover { background: var(--pt-neon); color: #08010c; text-shadow: none; }
+html[data-theme="friday"] .mc-btn:hover { background: var(--pt-neon); color: #08010c; text-shadow: none; }
 html[data-theme="friday"] .mc-task-tag.alert { color: var(--pt-warn-ink); border-color: rgba(254,188,46,0.6); background: rgba(254,188,46,0.08); text-shadow: 0 0 4px rgba(254,188,46,0.5); }
 html[data-theme="friday"] .mc-task-tag.done  { color: var(--pt-ok-ink); border-color: rgba(40,200,64,0.5); background: rgba(40,200,64,0.08); text-shadow: 0 0 4px rgba(40,200,64,0.4); }
 html[data-theme="friday"] .mc-task-tag.error { color: var(--pt-error-ink); border-color: rgba(255,95,87,0.6); background: rgba(255,95,87,0.08); text-shadow: 0 0 4px rgba(255,95,87,0.5); }
@@ -934,22 +934,61 @@ body {
   border-color: rgba(255,95,87,0.4);
   opacity: 0.7;
 }
-.mc-refresh-btn {
-  padding: 3px 10px;
+/* ── Button primitive (.mc-btn) ──────────────────────────
+   The one shared clickable-control look, rendered by <Button> in
+   components/ui.tsx. Formalizes the glow-on-hover / translateY-on-press /
+   spinner-on-loading language that .mc-refresh-btn and .mc-empty-btn each
+   proved out independently — everything below is that language, once.
+   Motion reads from the MOTION tokens (lib/tokens.ts, emitted as the
+   --pt-dur-… / --pt-ease-… custom properties) instead of new hardcoded
+   durations/easings. */
+.mc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 14px;
   border: 1px solid var(--pt-border);
-  border-radius: var(--pt-r-pill);
+  border-radius: var(--pt-r-sm);
   background: transparent;
   color: var(--pt-text);
   font-family: var(--pt-font-mono);
   font-size: 10px;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
+  text-decoration: none;
   cursor: pointer;
-  transition: all var(--pt-dur-fast) var(--pt-ease);
+  transition:
+    transform var(--pt-dur-micro) var(--pt-ease-exit),
+    box-shadow var(--pt-dur-std) var(--pt-ease-enter),
+    border-color var(--pt-dur-std) var(--pt-ease-enter),
+    background var(--pt-dur-std) var(--pt-ease-enter),
+    color var(--pt-dur-std) var(--pt-ease-enter);
 }
-.mc-refresh-btn:hover { color: var(--pt-neon-bright); border-color: var(--pt-border-strong); box-shadow: var(--pt-glow-sm); }
-.mc-refresh-btn:active { transform: translateY(1px); }
-.mc-refresh-btn.spin svg { animation: spin 0.8s linear; }
+.mc-btn:hover { color: var(--pt-neon-bright); border-color: var(--pt-border-strong); box-shadow: var(--pt-glow-sm); }
+.mc-btn:active { transform: translateY(1px); }
+.mc-btn:disabled,
+.mc-btn[aria-disabled="true"] { opacity: 0.45; cursor: default; pointer-events: none; }
+
+/* Primary — the one obvious next step (save, complete, send, create). */
+.mc-btn-primary { background: var(--pt-neon); color: #08010c; border-color: var(--pt-neon); text-shadow: none; }
+.mc-btn-primary:hover { background: var(--pt-neon-bright); border-color: var(--pt-neon-bright); box-shadow: var(--pt-glow-sm); }
+
+/* Ghost — default. Secondary actions, refresh, toggles. */
+.mc-btn-ghost.is-on { color: var(--pt-neon-bright); border-color: var(--pt-neon); box-shadow: var(--pt-glow-sm); }
+
+/* Confirm — an affirming inline action that isn't the page's primary CTA
+   (e.g. unblock). Green, same intensity language as GLOW.sm. */
+.mc-btn-confirm { color: #28c840; border-color: rgba(40,200,64,0.6); }
+.mc-btn-confirm:hover { color: #28c840; border-color: rgba(40,200,64,0.8); box-shadow: 0 0 6px rgba(40,200,64,0.45); }
+
+/* Danger — destructive/irreversible. Red is always semantic, never decorative. */
+.mc-btn-danger { color: #ff8a83; border-color: rgba(255,95,87,0.6); }
+.mc-btn-danger:hover { color: #ff8a83; border-color: rgba(255,95,87,0.8); box-shadow: 0 0 6px rgba(255,95,87,0.45); }
+
+/* Loading — inline spinner, carried forward from .mc-refresh-btn.spin svg. */
+.mc-btn-spinner { display: inline-flex; line-height: 1; }
+.mc-btn.is-loading .mc-btn-spinner { animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── LEDs ─────────────────────────────────────────────── */
@@ -1851,7 +1890,7 @@ h1 {
 /* ── Touch Target Minimum 44px (scoped to actual interactive controls) ── */
 .mc-nav-item,
 .mc-tab,
-.mc-refresh-btn,
+.mc-btn,
 .mc-radio,
 button,
 [role="button"] {
@@ -1872,7 +1911,7 @@ a.mc-cell {
 /* Ensure interactive elements have proper touch feedback */
 .mc-nav-item:active,
 .mc-tab:active,
-.mc-refresh-btn:active,
+.mc-btn:active,
 .mc-radio:active {
   transform: scale(0.97);
   opacity: 0.85;
@@ -1915,7 +1954,7 @@ a.mc-cell {
     background: rgba(var(--pt-neon-rgb),0.08);
     transform: scale(0.99);
   }
-  .mc-refresh-btn:hover {
+  .mc-btn-ghost:hover {
     color: var(--pt-text);
     border-color: var(--pt-border);
     box-shadow: none;
@@ -2314,16 +2353,8 @@ html[data-theme="friday"] .mc-pipe-name { color: var(--pt-neon-bright); text-sha
 .mc-empty.is-error .mc-empty-title { color: #ffb0b0; }
 .mc-empty-desc { margin: 0; max-width: 420px; font-size: 11px; line-height: 1.65; color: var(--pt-text-dim); }
 .mc-empty-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 10px; }
-.mc-empty-btn {
-  padding: 5px 12px; border: 1px solid var(--pt-border); border-radius: var(--pt-r-sm);
-  background: transparent; color: var(--pt-text);
-  font-family: var(--pt-font-mono); font-size: 10px; letter-spacing: 0.16em;
-  text-transform: uppercase; cursor: pointer; text-decoration: none; display: inline-flex;
-  transition: all var(--pt-dur-fast) var(--pt-ease);
-}
-.mc-empty-btn:hover { color: var(--pt-neon-bright); border-color: var(--pt-border-strong); box-shadow: var(--pt-glow-sm); }
-.mc-empty-btn.is-primary { background: var(--pt-neon); color: #08010c; border-color: var(--pt-neon); text-shadow: none; }
-.mc-empty-btn.is-primary:hover { background: var(--pt-neon-bright); box-shadow: var(--pt-glow-sm); }
+/* Action buttons render via <Button> — see the "Button primitive (.mc-btn)"
+   section above (near .mc-led). */
 
 /* ── Needs-you action feed ────────────────────────────── */
 .mc-feed {
@@ -2608,17 +2639,7 @@ html[data-theme="friday"] .mc-pipe-name { color: var(--pt-neon-bright); text-sha
 }
 .mc-kb-card-meta .mc-kb-origin { margin-left: 0; }
 .mc-kb-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-.mc-kb-action {
-  background: rgba(0,0,0,0.35);
-  border: 1px solid var(--pt-border-dim);
-  color: var(--pt-text-dim);
-  padding: 6px 10px;
-  font: inherit; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
-  cursor: pointer;
-}
-.mc-kb-action:hover:not(:disabled) { color: var(--pt-text); border-color: var(--pt-border); }
-.mc-kb-action.is-primary { color: var(--pt-neon-bright); border-color: var(--pt-border); text-shadow: var(--pt-glow-sm); }
-.mc-kb-action:disabled { opacity: 0.45; cursor: default; }
+/* Action buttons render via <Button> (.mc-btn family). */
 .mc-kb-compose { display: flex; flex-direction: column; gap: 8px; }
 .mc-kb-compose textarea {
   background: rgba(0,0,0,0.35); border: 1px solid var(--pt-border-dim);
@@ -2875,15 +2896,7 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
 .mc-sub-stream.state-stale { color: var(--pt-warn-ink); animation: sub-blink 1s steps(2) infinite; }
 .mc-sub-stream.state-offline { color: var(--pt-text-dim); }
 .mc-sub-bar-meta { display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--pt-text-dim); letter-spacing: 0.08em; }
-.mc-sub-btn {
-  min-height: 44px; padding: 6px 14px;
-  font-family: var(--pt-font-mono); font-size: 10px; letter-spacing: 0.16em;
-  color: var(--pt-text); background: transparent;
-  border: 1px solid var(--pt-border); border-radius: var(--pt-r-sm);
-  cursor: pointer;
-}
-.mc-sub-btn:hover { color: var(--pt-neon-bright); border-color: var(--pt-border-strong); box-shadow: var(--pt-glow-sm); }
-.mc-sub-btn.is-on { color: var(--pt-neon-bright); border-color: var(--pt-neon); box-shadow: var(--pt-glow-sm); }
+/* LIST/HOLO toggle + detail-close render via <Button> (.mc-btn family). */
 .mc-sub-banner {
   padding: 8px 12px; font-size: 11px; letter-spacing: 0.1em; color: var(--pt-warn-ink);
   border: 1px solid rgba(254,188,46,0.4); border-radius: var(--pt-r-sm);
@@ -3006,7 +3019,7 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
 .mc-sub-detail-state.state-waiting { color: var(--pt-warn-ink); border-color: rgba(254,188,46,0.5); }
 .mc-sub-detail-state.state-errored { color: var(--pt-error-ink); border-color: rgba(255,95,87,0.6); }
 .mc-sub-detail-state.state-offline { color: var(--pt-text-dim); }
-.mc-sub-detail-head .mc-sub-btn { margin-left: auto; }
+.mc-sub-detail-close { margin-left: auto; }
 .mc-sub-detail-body { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; }
 .mc-sub-detail-row { display: flex; gap: 10px; font-size: 11px; line-height: 1.5; }
 .mc-sub-detail-row .lbl {
@@ -3467,11 +3480,12 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
 }
 
 /* ── Buttons: unified focus + press feedback ─────────────────────────── */
-.mc-refresh-btn, .mc-sub-btn, .mc-win-float-btn, .mc-tab, [role="button"].mc-task {
+/* .mc-btn declares its own transition/:active (MOTION-token driven) —
+   see the Button primitive section near .mc-led. */
+.mc-win-float-btn, .mc-tab, [role="button"].mc-task {
   transition: transform 120ms var(--pt-ease), box-shadow 200ms var(--pt-ease), border-color 200ms var(--pt-ease), background 200ms var(--pt-ease);
 }
 :where(button, [role="button"], a):active { transform: translateY(0); }
-:where(.mc-sub-btn, .mc-refresh-btn):active { transform: translateY(1px); }
 
 /* ── Keyboard focus — always visible, Apple-crisp ────────────────────── */
 :where(button, [role="button"], a, [tabindex]):focus-visible {
@@ -4759,27 +4773,32 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   color: var(--pt-text-dim);
 }
 
-/* ── visible ⌘K trigger in the sidebar ── */
+/* ── visible ⌘K trigger in the sidebar ──
+   Renders through <Button variant="ghost" className="mc-cmdp-trigger">, so
+   this layer only overrides what makes it a sidebar row instead of a
+   mono/uppercase pill: full-width layout, sentence-case label, and its own
+   glass hover (kept distinct from the generic .mc-btn hover, including
+   under the always-on friday theme, since a nav-adjacent row reads better
+   translucent than as a solid filled pill). */
 .mc-cmdp-trigger {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   width: 100%;
+  justify-content: flex-start;
   margin: 6px 0 10px;
   padding: 7px 10px;
   background: var(--pt-surface);
-  border: 1px solid var(--pt-border-dim);
-  border-radius: var(--pt-r-md);
+  border-color: var(--pt-border-dim);
   color: var(--pt-text-dim);
-  font: inherit;
   font-size: 11px;
-  cursor: pointer;
-  transition: border-color var(--pt-dur-fast) var(--pt-ease), color var(--pt-dur-fast) var(--pt-ease), background var(--pt-dur-fast) var(--pt-ease);
+  letter-spacing: normal;
+  text-transform: none;
 }
-.mc-cmdp-trigger:hover {
+.mc-cmdp-trigger:hover,
+html[data-theme="friday"] .mc-cmdp-trigger:hover {
   border-color: var(--pt-border-strong);
   color: var(--pt-text-high);
   background: rgba(var(--pt-neon-rgb),0.08);
+  text-shadow: none;
+  box-shadow: none;
 }
 .mc-cmdp-trigger-ic { color: var(--pt-neon-bright); display: inline-flex; }
 .mc-cmdp-trigger-kbd {

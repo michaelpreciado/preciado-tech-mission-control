@@ -8,6 +8,90 @@ export function fmtDate(value?: string) {
   return new Date(value).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 }
 
+/* ── Button ────────────────────────────────────────────────
+   The one shared clickable-control primitive (`.mc-btn` family in
+   globals.css). Every button/link-styled-as-button in the app should render
+   through this instead of hand-rolling a class list on a raw <button>/<a>.
+
+   Variants (visual intent, not semantics elsewhere):
+     ghost   — default. Transparent, border + text, glows on hover. Most
+               controls (refresh, toggles, secondary actions).
+     primary — filled accent. The one obvious next step (save, complete,
+               send, create).
+     danger  — destructive/irreversible action. Red border + text.
+     confirm — an affirming action that isn't the primary CTA (e.g.
+               unblock/approve inline in a list of actions).
+
+   States: hover/active are handled by CSS; `loading` shows an inline
+   spinner and implies disabled/aria-busy; `active` is a toggled/pressed
+   visual state (e.g. a mode switch that is currently "on"), not the CSS
+   `:active` pseudo-class.
+
+   Renders a <button> by default, or an <a> when `href` is passed — same
+   classes, same motion, so a link styled as a button is never a special
+   case. */
+export type ButtonVariant = 'primary' | 'ghost' | 'danger' | 'confirm'
+
+type ButtonOwnProps = {
+  variant?: ButtonVariant
+  /** Toggled/pressed visual state — distinct from the CSS :active (press) state. */
+  active?: boolean
+  /** Shows an inline spinner; also disables the control while true. */
+  loading?: boolean
+  /** Render as an <a> instead of a <button>. */
+  href?: string
+  className?: string
+  children?: React.ReactNode
+}
+
+export type ButtonProps = ButtonOwnProps &
+  Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, keyof ButtonOwnProps>
+
+export const Button = React.forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
+  function Button({ variant = 'ghost', active = false, loading = false, href, className = '', children, disabled, type = 'button', ...rest }, ref) {
+    const cls = [
+      'mc-btn',
+      `mc-btn-${variant}`,
+      active ? 'is-on' : '',
+      loading ? 'is-loading' : '',
+      className,
+    ].filter(Boolean).join(' ')
+
+    const spinner = loading ? <span className="mc-btn-spinner" aria-hidden="true">↻</span> : null
+
+    if (href) {
+      // Anchor rendering shares onClick/etc with the button props type — cast
+      // is safe because <a> accepts the same event-handler shapes we pass through.
+      const anchorRest = rest as unknown as React.AnchorHTMLAttributes<HTMLAnchorElement>
+      return (
+        <a
+          ref={ref as React.Ref<HTMLAnchorElement>}
+          href={href}
+          className={cls}
+          aria-disabled={disabled || loading || undefined}
+          {...anchorRest}
+        >
+          {spinner}{children}
+        </a>
+      )
+    }
+
+    return (
+      <button
+        ref={ref as React.Ref<HTMLButtonElement>}
+        type={type}
+        className={cls}
+        disabled={disabled || loading}
+        aria-busy={loading || undefined}
+        aria-pressed={active || undefined}
+        {...rest}
+      >
+        {spinner}{children}
+      </button>
+    )
+  },
+)
+
 export function SectionHead({ label, pre, post }: { label: string; pre?: React.ReactNode; post?: React.ReactNode }) {
   return (
     <div className="mc-ascii-head">

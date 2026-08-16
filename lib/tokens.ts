@@ -232,6 +232,16 @@ export function buildTokenCss(): string {
   --pt-ease: cubic-bezier(0.2,0.7,0.2,1);
   --pt-dur-fast: ${MOTION.durMicro};
   --pt-dur-med: ${MOTION.durStd};
+  /* Full MOTION token set (lib/tokens.ts) — durations named after their role
+     plus the enter/exit easing curves. Phase 2 (.mc-btn) is the first
+     consumer; new interactive/motion CSS should read from these, not repeat
+     magic numbers. */
+  --pt-dur-micro: ${MOTION.durMicro};
+  --pt-dur-std: ${MOTION.durStd};
+  --pt-dur-complex: ${MOTION.durComplex};
+  --pt-dur-ambient: ${MOTION.durAmbient};
+  --pt-ease-enter: ${MOTION.easeEnter};
+  --pt-ease-exit: ${MOTION.easeExit};
 
   --pt-scanline:
     repeating-linear-gradient(to bottom,

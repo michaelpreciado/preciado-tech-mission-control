@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { LiveDataProvider, useLiveData } from './LiveDataProvider'
 import { CommandPalette } from './CommandPalette'
+import { Button } from './ui'
 import { Icon, type IconName } from './icons'
 
 /** Ambient WebGL backdrop — client-only (canvas can't render on the server). */
@@ -64,8 +65,8 @@ function Sidebar() {
           </div>
         </div>
       </div>
-      <button
-        type="button"
+      <Button
+        variant="ghost"
         className="mc-cmdp-trigger"
         aria-label="Open command palette (Ctrl+K)"
         title="Jump anywhere — Ctrl/⌘+K  or  /"
@@ -74,7 +75,7 @@ function Sidebar() {
         <span className="mc-cmdp-trigger-ic"><Icon name="chat" size={13} /></span>
         <span>Jump to…</span>
         <kbd className="mc-cmdp-trigger-kbd">⌘K</kbd>
-      </button>
+      </Button>
       <div className="mc-status-pill" style={{ display: 'none' }}>
         <span className={`mc-led ${isLive ? 'green' : ''}`} />
         <span>MISSION CTRL {isLive ? 'ONLINE' : 'OFFLINE'}</span>

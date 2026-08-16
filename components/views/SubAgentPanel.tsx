@@ -23,6 +23,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { RelativeTime } from '../RelativeTime'
+import { Button } from '../ui'
 import { MESH_ROSTER, useSubAgentTelemetry } from '@/lib/telemetry'
 import type { AgentNode, AgentState } from '@/lib/telemetry-types'
 
@@ -86,7 +87,7 @@ function DetailSheet({ node, onClose }: { node: AgentNode; onClose: () => void }
       <div className="mc-sub-detail-head">
         <span className="mc-sub-detail-name" style={{ color: node.accent }}>{node.name}</span>
         <span className={`mc-sub-detail-state state-${node.state}`}>{STATE_META[node.state].label}</span>
-        <button type="button" className="mc-sub-btn" onClick={onClose} aria-label="Close detail">✕</button>
+        <Button variant="ghost" className="mc-sub-detail-close" onClick={onClose} aria-label="Close detail">✕</Button>
       </div>
       <div className="mc-sub-detail-body">
         <div className="mc-sub-detail-row"><span className="lbl">role</span><span>{node.role}</span></div>
@@ -193,14 +194,14 @@ export function SubAgentPanel() {
         </div>
         <div className="mc-sub-bar-meta">
           <span>{activeCount} working · {erroredCount} errored</span>
-          <button
-            type="button"
-            className={`mc-sub-btn${listMode ? ' is-on' : ''}`}
+          <Button
+            variant="ghost"
+            active={listMode}
             onClick={() => setListMode(v => !v)}
             aria-label="Toggle list view"
           >
             {listMode ? 'HOLO' : 'LIST'}
-          </button>
+          </Button>
         </div>
       </div>
 

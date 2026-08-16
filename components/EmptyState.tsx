@@ -12,6 +12,7 @@
  * so it can be dropped into any tab without pulling in per-tab CSS.
  */
 import type { ReactNode } from 'react'
+import { Button } from './ui'
 
 export type EmptyStateAction = {
   label: string
@@ -48,14 +49,11 @@ export function EmptyState({
       {desc && <p className="mc-empty-desc">{desc}</p>}
       {actions.length > 0 && (
         <div className="mc-empty-actions">
-          {actions.map((a, i) => {
-            const cls = `mc-empty-btn${a.primary ? ' is-primary' : ''}`
-            return a.href ? (
-              <a key={i} className={cls} href={a.href} onClick={a.onClick}>{a.label}</a>
-            ) : (
-              <button key={i} type="button" className={cls} onClick={a.onClick}>{a.label}</button>
-            )
-          })}
+          {actions.map((a, i) => (
+            <Button key={i} variant={a.primary ? 'primary' : 'ghost'} href={a.href} onClick={a.onClick}>
+              {a.label}
+            </Button>
+          ))}
         </div>
       )}
     </div>

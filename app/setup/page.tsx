@@ -6,7 +6,7 @@
  * Bring-your-own keys: nothing here ever leaves this machine.
  */
 import { useEffect, useState } from 'react'
-import { SectionHead } from '@/components/ui'
+import { Button, SectionHead } from '@/components/ui'
 import { ACCENT_PRESETS, DEFAULT_ACCENT } from '@/lib/theme'
 
 type SetupConfig = {
@@ -161,9 +161,9 @@ export default function SetupPage() {
           <code> data/config.json</code> — gitignored, never synced, never sent anywhere.
           Blank fields simply disable their panel; the dashboard degrades gracefully.</p>
           <div className="mc-setup-actions">
-            <button className="mc-refresh-btn" onClick={seedDemo} disabled={busy}>
+            <Button variant="ghost" onClick={seedDemo} disabled={busy}>
               ▶ LOAD DEMO DATA
-            </button>
+            </Button>
             <span className="mc-setup-hint">New here? Seed a realistic demo dataset first, explore, then point the paths at your own agents.</span>
           </div>
         </div>
@@ -254,9 +254,9 @@ export default function SetupPage() {
             ))}
 
             <div className="mc-setup-actions sticky">
-              <button className="mc-refresh-btn primary" onClick={save} disabled={busy}>
+              <Button variant="primary" loading={busy} onClick={save}>
                 {busy ? 'WORKING…' : '💾 SAVE CONFIG'}
-              </button>
+              </Button>
               <span className="mc-setup-hint">saves to data/config.json · data panels update immediately</span>
             </div>
           </>

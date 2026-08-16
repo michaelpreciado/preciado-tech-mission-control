@@ -8,7 +8,7 @@
  * No data-dependent components — this is a pure static specimen wall, so it
  * renders identically for every visitor.
  */
-import { SectionHead } from '@/components/ui'
+import { Button, SectionHead } from '@/components/ui'
 import {
   designTokens, SEMANTIC, CATEGORICAL, FONT, TYPE_SCALE, SPACING,
   RADIUS, GLOW, MOTION, DENSITY, ACCENT_DEFAULT,
@@ -69,6 +69,34 @@ function StatusSpecimens() {
           </div>
         </VariantCard>
       ))}
+    </div>
+  )
+}
+
+/* .mc-btn family — the one shared clickable-control primitive (components/
+   ui.tsx → <Button>). First real consumer of the MOTION tokens above: hover/
+   press read --pt-dur-micro/--pt-dur-std + --pt-ease-enter/--pt-ease-exit,
+   not new magic numbers. */
+function ButtonSpecimens() {
+  const variants = ['primary', 'ghost', 'danger', 'confirm'] as const
+  return (
+    <div className="sg-grid sg-grid--4">
+      {variants.map(v => (
+        <VariantCard key={v} title={`button · ${v}`}>
+          <div className="sg-stack">
+            <Button variant={v}>default</Button>
+            <Button variant={v} active>active (toggled on)</Button>
+            <Button variant={v} loading>loading</Button>
+            <Button variant={v} disabled>disabled</Button>
+          </div>
+        </VariantCard>
+      ))}
+      <VariantCard title="button · href (renders <a>)">
+        <div className="sg-stack">
+          <Button variant="ghost" href="#sg-components">ghost link</Button>
+          <Button variant="primary" href="#sg-components">primary link</Button>
+        </div>
+      </VariantCard>
     </div>
   )
 }
@@ -188,7 +216,7 @@ export default function StyleGuide() {
         <div className="sg-rows">
           {Object.entries(MOTION).map(([k, v]) => <TokenRow key={k} k={`motion.${k}`} v={v} />)}
         </div>
-        <p className="sg-desc">Consumed by Phase 2 (Motion Tokens). Never linear except continuous loops. Animate transform & opacity only.</p>
+        <p className="sg-desc">Consumed by the .mc-btn family below (durMicro/durStd + easeEnter/easeExit) — see COMPONENT VARIANTS. Never linear except continuous loops. Animate transform &amp; opacity only.</p>
       </Section>
 
       <Section id="sg-density" label="DENSITY · COMPACT + EXPANDED">
@@ -196,6 +224,7 @@ export default function StyleGuide() {
       </Section>
 
       <Section id="sg-components" label="COMPONENT VARIANTS">
+        <ButtonSpecimens />
         <StatusSpecimens />
       </Section>
     </div>

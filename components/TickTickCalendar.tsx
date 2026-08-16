@@ -9,7 +9,7 @@
  * edge. The grid keeps the box-drawing look while letting titles wrap.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { SkeletonPanel } from './ui'
+import { Button, SkeletonPanel } from './ui'
 import { EmptyState } from './EmptyState'
 import type { TickTickTask, TickTickWeekData } from '@/lib/types'
 
@@ -112,7 +112,7 @@ export function TickTickCalendar() {
       <div className="mc-connect-card">
         <div className="mc-connect-title">◇ CONNECT TICKTICK</div>
         <p>Add your TickTick Open API bearer token in Setup to show this week&apos;s tasks here.</p>
-        <a href="/setup" className="mc-refresh-btn">🛠 OPEN SETUP</a>
+        <Button variant="ghost" href="/setup">🛠 OPEN SETUP</Button>
       </div>
     )
   }

@@ -2,6 +2,7 @@
 
 /* Cross-domain view primitives. Kept dependency-free on purpose: every page
    pulls this, so anything heavy belongs in the domain file that needs it. */
+import { Button } from '../ui'
 
 export function StatusDot({ status }: { status?: string }) {
   const cls = status === 'active' ? 'green' : status === 'attention' ? 'amber' : ''
@@ -24,7 +25,7 @@ export function ConnectCard({ name, hint }: { name: string; hint: string }) {
     <div className="mc-connect-card">
       <div className="mc-connect-title">◇ CONNECT {name.toUpperCase()}</div>
       <p>{hint}</p>
-      <a href="/setup" className="mc-refresh-btn">🛠 OPEN SETUP</a>
+      <Button variant="ghost" href="/setup">🛠 OPEN SETUP</Button>
     </div>
   )
 }
