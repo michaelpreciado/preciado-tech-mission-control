@@ -1,17 +1,6 @@
-'use client'
+import { redirect } from 'next/navigation'
 
-import dynamic from 'next/dynamic'
-import { SectionHead } from '@/components/ui'
-
-const CommandHeader = dynamic(() => import('@/components/views/CommandHeader').then(m => m.CommandHeader), { ssr: false })
-const MLContentBoard = dynamic(() => import('@/components/MLContentBoard').then(m => m.MLContentBoard), { ssr: false })
-
+/** ML Content was renamed to Content Creation — redirect so old links/bookmarks don't 404. */
 export default function MLContentPage() {
-  return (
-    <>
-      <CommandHeader />
-      <SectionHead label="ML CONTENT / SCRIPT → FILM → EDIT → POST" />
-      <MLContentBoard />
-    </>
-  )
+  redirect('/content-creation')
 }

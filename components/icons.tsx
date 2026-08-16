@@ -24,7 +24,8 @@ export type IconName =
   | 'costs'     // bar chart
   | 'projects'  // folder
   | 'pipeline'  // globe / web
-  | 'ml'        // cpu / bot
+  | 'ml'        // cpu / bot — kept for CommandPalette's stale /ml-content entry (Task 7 updates it)
+  | 'content'   // lightbulb / idea spark
   | 'memory'    // archive brain
   | 'team'      // users
   | 'setup'     // sliders
@@ -104,6 +105,12 @@ const P: Record<IconName, React.ReactNode> = {
       <rect x="6" y="6" width="12" height="12" rx="2" />
       <rect x="9.5" y="9.5" width="5" height="5" rx="1" />
       <path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3" />
+    </>
+  ),
+  content: (
+    <>
+      <path d="M9 18h6M10 21h4" />
+      <path d="M12 3a6 6 0 0 0-3.5 10.9c.5.4.8 1 .8 1.6v.5h5.4v-.5c0-.6.3-1.2.8-1.6A6 6 0 0 0 12 3z" />
     </>
   ),
   memory: (

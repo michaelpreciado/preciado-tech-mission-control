@@ -2114,9 +2114,9 @@ a:focus-visible,
 /* ── Web Dev Pipeline Kanban ──────────────────────────── */
 .mc-pipeline {
   display: grid;
-  /* Track count follows the actual number of columns rendered. Hardcoding
-     repeat(6, …) gave MLContentBoard — which has 4 stages — two phantom
-     columns of empty scrollable space, with snap points landing on nothing. */
+  /* Track count follows the actual number of columns rendered — hardcoding
+     repeat(N, …) leaves phantom empty scrollable columns whose snap points
+     land on nothing when a board has fewer stages than the fixed track count. */
   grid-auto-flow: column;
   grid-auto-columns: minmax(218px, 1fr);
   gap: 12px;
@@ -2287,6 +2287,17 @@ a:focus-visible,
 .mc-pipe-log-row .stage { color: var(--pt-text); letter-spacing: 0.12em; text-transform: uppercase; font-size: 9px; }
 .mc-pipe-log-row .act { color: #febc2e; font-size: 9px; letter-spacing: 0.1em; }
 .mc-pipe-log-row .det { color: var(--pt-text-dim); font-size: 9px; }
+
+/* ── Content Creation idea grid ───────────────────────── */
+.mc-content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+.mc-content-card-foot {
+  margin-top: auto;
+  padding-top: 6px;
+}
 
 @media (max-width: 1400px) {
   .mc-pipeline { grid-auto-columns: minmax(208px, 240px); }
@@ -2542,7 +2553,7 @@ html[data-theme="friday"] .mc-pipe-name { color: var(--pt-neon-bright); text-sha
 .mc-drawer-meta { display: flex; gap: 12px; flex-wrap: wrap; font-size: 9px; color: var(--pt-text-dim); letter-spacing: 0.08em; margin-bottom: 12px; align-items: center; }
 .mc-drawer-section { margin-top: 16px; }
 .mc-drawer-section .lbl { font-size: 9px; letter-spacing: 0.22em; color: var(--pt-text-dim); margin-bottom: 8px; }
-/* ── Centered detail modal (ML content idea details) ────── */
+/* ── Centered detail modal (shared preview dialog, ui.tsx) ────── */
 .mc-modal-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.65);
@@ -2584,13 +2595,6 @@ html[data-theme="friday"] .mc-pipe-name { color: var(--pt-neon-bright); text-sha
   cursor: pointer;
 }
 .mc-modal-close:hover { color: var(--pt-text); border-color: var(--pt-border); }
-.mc-modal-tweet {
-  margin-top: 8px;
-  padding: 8px 10px;
-  border: 1px dashed var(--pt-border-dim);
-  color: var(--pt-text-dim);
-  font-size: 10px;
-}
 
 .mc-hk-run, .mc-hk-comment, .mc-hk-event {
   font-size: 10px;

@@ -478,15 +478,11 @@ export type SystemTelemetry = {
   ollama: { name: string; sizeGb: number; vramGb: number }[] | null
 }
 
-/* ── ML Content Loop (ml-content skill) ─────────── */
-
-export type MLContentStage =
-  | 'script_film'
-  | 'edit_optimize'
-  | 'post_promote'
-  | 'done'
+/* ── Content Creation idea hub (ml-content skill) ─────────── */
 
 export type MLContentIdea = {
+  /** Deterministic id derived from week+title via deriveMLContentIdeaId — stable across GET requests reading the same static JSON files. */
+  id: string
   week: number
   title: string
   project: string
@@ -495,13 +491,26 @@ export type MLContentIdea = {
   shot_list: string[]
   score: number
   source_tweet?: string
-  stage: MLContentStage
   updated_at?: string
+  /** Merged in from the dispatch sidecar file (data/ml-content-dispatched.json) — not present in the raw week-N.json source. */
+  dispatched?: boolean
+  dispatchedAt?: string
 }
 
 export type MLContentData = {
   generated_at: string
   ideas: MLContentIdea[]
+}
+
+/** Deterministic, non-random id for dispatch-tracking — must be stable across
+ *  repeated GETs of the same static week-N.json idea. */
+export function deriveMLContentIdeaId(idea: { week: number; title: string }): string {
+  const slug = idea.title
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+  return `${idea.week}-${slug || 'untitled'}`
 }
 
 /* ── TickTick weekly calendar ─────────────────────────── */

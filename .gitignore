@@ -35,6 +35,8 @@ backend/venv/
 data/agents.json
 # OpenRouter per-month history store (forward snapshots)
 data/or-monthly.json
+# Content Creation dispatch-tracking sidecar (which ideas were sent to Hermes)
+data/ml-content-dispatched.json
 
 # Local-only config written by /setup — holds personal paths & keys. NEVER commit.
 data/config.json

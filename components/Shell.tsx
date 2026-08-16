@@ -39,7 +39,7 @@ const NAV: { section: string; items: { id: string; label: string; icon: IconName
   { section: 'Operations', items: [
     { id: '/projects', label: 'Projects', icon: 'projects' },
     { id: '/pipeline', label: 'Web Dev Pipeline', icon: 'pipeline' },
-    { id: '/ml-content', label: 'ML Content', icon: 'ml' },
+    { id: '/content-creation', label: 'Content Creation', icon: 'content' },
   ]},
   { section: 'System', items: [
     { id: '/memory', label: 'Memory', icon: 'memory' },
