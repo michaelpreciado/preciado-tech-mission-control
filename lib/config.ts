@@ -70,6 +70,24 @@ export interface FridayServices {
 export interface FridayAppearance {
   /** Accent hex color (#rrggbb) driving the whole neon token set. */
   accentColor: string
+  /**
+   * Explicit in-app motion override, distinct from the OS-level
+   * `prefers-reduced-motion` media query (which the 3D/ambient components
+   * still honor independently). 'full' = no override, defer to OS/battery
+   * heuristics. 'reduced' and 'off' both force every gated component to its
+   * static-frame codepath — there's no partial-motion mode to distinguish
+   * them today, so they're kept as separate menu choices for forward
+   * compatibility but currently behave identically.
+   */
+  motion: 'full' | 'reduced' | 'off'
+  /** Card padding/gap density, wired to lib/tokens.ts DENSITY tokens. */
+  density: 'compact' | 'expanded'
+  /** Sidebar/mobile-nav tab ids hidden from navigation ('/' and '/setup' can never be hidden). */
+  hiddenTabs: string[]
+  /** Explicit nav tab order (ids); tabs not listed keep their default relative order, appended at the end. */
+  tabOrder: string[]
+  /** Per-tab on/off switches for the heavier 3D/ambient elements (lower-power machines). */
+  elements3d: { homeGlobe: boolean; memoryGraph: boolean; teamGraph: boolean }
 }
 
 export interface FridayChatRemote {
@@ -160,7 +178,7 @@ export type ConfigFile = Partial<
     services: Partial<FridayServices>
     keys: Partial<FridayKeys>
     billing: Partial<FridayBilling>
-    appearance: Partial<FridayAppearance>
+    appearance: Partial<Omit<FridayAppearance, 'elements3d'> & { elements3d: Partial<FridayAppearance['elements3d']> }>
     chat: Partial<FridayChat>
     kanbanRemotes: FridayKanbanRemote[]
   }
@@ -242,6 +260,15 @@ function buildConfig(): FridayConfig {
     },
     appearance: {
       accentColor: str(env.NEXT_PUBLIC_ACCENT_COLOR, str(file.appearance?.accentColor, '#ff10f0')),
+      motion: file.appearance?.motion === 'reduced' || file.appearance?.motion === 'off' ? file.appearance.motion : 'full',
+      density: file.appearance?.density === 'expanded' ? 'expanded' : 'compact',
+      hiddenTabs: Array.isArray(file.appearance?.hiddenTabs) ? file.appearance!.hiddenTabs!.filter((t): t is string => typeof t === 'string') : [],
+      tabOrder: Array.isArray(file.appearance?.tabOrder) ? file.appearance!.tabOrder!.filter((t): t is string => typeof t === 'string') : [],
+      elements3d: {
+        homeGlobe: file.appearance?.elements3d?.homeGlobe !== false,
+        memoryGraph: file.appearance?.elements3d?.memoryGraph !== false,
+        teamGraph: file.appearance?.elements3d?.teamGraph !== false,
+      },
     },
     chat: {
       command: str(env.FRIDAY_CHAT_COMMAND, str(file.chat?.command, 'hermes')),

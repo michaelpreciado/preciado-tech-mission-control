@@ -8,6 +8,11 @@
 import { useEffect, useState } from 'react'
 import { Button, SectionHead } from '@/components/ui'
 import { ACCENT_PRESETS, DEFAULT_ACCENT } from '@/lib/theme'
+import { NAV_TABS, PINNED_TAB_IDS } from '@/lib/nav-tabs'
+
+type MotionSetting = 'full' | 'reduced' | 'off'
+type Density = 'compact' | 'expanded'
+type Elements3d = { homeGlobe: boolean; memoryGraph: boolean; teamGraph: boolean }
 
 type SetupConfig = {
   appName: string
@@ -16,8 +21,34 @@ type SetupConfig = {
   github: { username: string; projectRepo: string }
   paths: Record<string, string>
   services: Record<string, string>
-  appearance: { accentColor: string }
+  appearance: {
+    accentColor: string
+    motion: MotionSetting
+    density: Density
+    hiddenTabs: string[]
+    tabOrder: string[]
+    elements3d: Elements3d
+  }
   keysSet: { openrouterApiKey: boolean; ticktickToken: boolean }
+}
+
+/** All known tab ids in their default relative order — the baseline that
+ * hiddenTabs/tabOrder are patches on top of. */
+const ALL_TAB_IDS = NAV_TABS.map(t => t.id)
+
+/** The tab order a saved `tabOrder` patch resolves to: listed ids first (in
+ * their saved order), everything else appended in its original default
+ * position. Mirrors components/Shell.tsx's applyUiToNav sort exactly, just
+ * flattened across sections so the reorder buttons can operate on one list. */
+function effectiveTabOrder(tabOrder: string[]): string[] {
+  return [...ALL_TAB_IDS].sort((a, b) => {
+    const ia = tabOrder.indexOf(a)
+    const ib = tabOrder.indexOf(b)
+    if (ia === -1 && ib === -1) return 0
+    if (ia === -1) return 1
+    if (ib === -1) return -1
+    return ia - ib
+  })
 }
 
 type Field = { section: 'github' | 'paths' | 'services'; key: string; label: string; hint?: string }
@@ -97,6 +128,40 @@ export default function SetupPage() {
       const branch = prev[section as 'github' | 'paths' | 'services' | 'appearance'] as Record<string, string>
       return { ...prev, [section]: { ...branch, [key]: value } }
     })
+  }
+
+  // appearance now carries non-string fields (enums/arrays/nested booleans),
+  // so it gets its own typed setter instead of overloading set()'s string-only cast.
+  const setAppearance = <K extends keyof SetupConfig['appearance']>(key: K, value: SetupConfig['appearance'][K]) => {
+    setCfg(prev => prev ? { ...prev, appearance: { ...prev.appearance, [key]: value } } : prev)
+  }
+
+  const toggleHiddenTab = (id: string) => {
+    if (PINNED_TAB_IDS.has(id) || !cfg) return
+    const hidden = cfg.appearance.hiddenTabs.includes(id)
+      ? cfg.appearance.hiddenTabs.filter(t => t !== id)
+      : [...cfg.appearance.hiddenTabs, id]
+    setAppearance('hiddenTabs', hidden)
+  }
+
+  const moveTab = (id: string, dir: -1 | 1) => {
+    if (!cfg) return
+    const order = effectiveTabOrder(cfg.appearance.tabOrder)
+    const section = NAV_TABS.find(t => t.id === id)?.section
+    const sectionIds = order.filter(x => NAV_TABS.find(t => t.id === x)?.section === section)
+    const idx = sectionIds.indexOf(id)
+    const otherId = sectionIds[idx + dir]
+    if (!otherId) return // already at that edge of its section
+    const next = [...order]
+    const posA = next.indexOf(id)
+    const posB = next.indexOf(otherId)
+    ;[next[posA], next[posB]] = [next[posB], next[posA]]
+    setAppearance('tabOrder', next)
+  }
+
+  const toggleElement3d = (key: keyof Elements3d) => {
+    if (!cfg) return
+    setAppearance('elements3d', { ...cfg.appearance.elements3d, [key]: !cfg.appearance.elements3d[key] })
   }
 
   async function save() {
@@ -208,6 +273,91 @@ export default function SetupPage() {
                   />
                 </div>
                 <em>recolors the entire neon token system · restart the server to apply everywhere</em>
+              </div>
+            </div>
+
+            <div className="mc-setup-group">
+              <div className="mc-setup-group-head">UI CUSTOMIZATION <span>motion, density, nav, 3D elements · restart the server to apply everywhere (like accent color)</span></div>
+
+              <div className="mc-setup-field">
+                <span>Motion</span>
+                <div className="mc-setup-swatches">
+                  {(['full', 'reduced', 'off'] as const).map(m => (
+                    <Button key={m} variant="ghost" active={cfg.appearance.motion === m} onClick={() => setAppearance('motion', m)}>
+                      {m.toUpperCase()}
+                    </Button>
+                  ))}
+                </div>
+                <em>full = defer to OS reduced-motion/battery only · reduced &amp; off both freeze every ambient/3D element to a static frame</em>
+              </div>
+
+              <div className="mc-setup-field">
+                <span>Card density</span>
+                <div className="mc-setup-swatches">
+                  {(['compact', 'expanded'] as const).map(d => (
+                    <Button key={d} variant="ghost" active={cfg.appearance.density === d} onClick={() => setAppearance('density', d)}>
+                      {d.toUpperCase()}
+                    </Button>
+                  ))}
+                </div>
+                <em>card padding/gap across the dashboard</em>
+              </div>
+
+              <div className="mc-setup-field">
+                <span>3D / ambient elements</span>
+                <div className="mc-setup-swatches">
+                  <Button variant="ghost" active={cfg.appearance.elements3d.homeGlobe} onClick={() => toggleElement3d('homeGlobe')}>
+                    HOME GLOBE · {cfg.appearance.elements3d.homeGlobe ? 'ON' : 'OFF'}
+                  </Button>
+                  <Button variant="ghost" active={cfg.appearance.elements3d.memoryGraph} onClick={() => toggleElement3d('memoryGraph')}>
+                    MEMORY GRAPH · {cfg.appearance.elements3d.memoryGraph ? 'ON' : 'OFF'}
+                  </Button>
+                  <Button variant="ghost" active={cfg.appearance.elements3d.teamGraph} onClick={() => toggleElement3d('teamGraph')}>
+                    TEAM GRAPH · {cfg.appearance.elements3d.teamGraph ? 'ON' : 'OFF'}
+                  </Button>
+                </div>
+                <em>turn off the heavier WebGL/graph views on lower-power machines · each falls back to its existing list view</em>
+              </div>
+
+              <div className="mc-setup-field mc-setup-tabs">
+                <span>Sidebar / mobile-nav tabs</span>
+                <div className="mc-setup-tablist">
+                  {Object.entries(
+                    effectiveTabOrder(cfg.appearance.tabOrder).reduce<Record<string, typeof NAV_TABS>>((acc, id) => {
+                      const t = NAV_TABS.find(x => x.id === id)
+                      if (!t) return acc
+                      ;(acc[t.section] ??= []).push(t)
+                      return acc
+                    }, {}),
+                  ).map(([section, tabs]) => (
+                    <div key={section} className="mc-setup-tabsection">
+                      <div className="mc-setup-tabsection-head">{section}</div>
+                      {tabs.map((t, i) => {
+                        const hidden = cfg.appearance.hiddenTabs.includes(t.id)
+                        return (
+                          <div key={t.id} className="mc-setup-tabrow">
+                            <span className="mc-setup-tabrow-label">
+                              {t.label}{t.pinned && <em> · pinned</em>}
+                            </span>
+                            <div className="mc-setup-tabrow-actions">
+                              <Button variant="ghost" disabled={i === 0} onClick={() => moveTab(t.id, -1)} aria-label={`Move ${t.label} up`}>↑</Button>
+                              <Button variant="ghost" disabled={i === tabs.length - 1} onClick={() => moveTab(t.id, 1)} aria-label={`Move ${t.label} down`}>↓</Button>
+                              <Button
+                                variant="ghost"
+                                active={!hidden}
+                                disabled={t.pinned}
+                                onClick={() => toggleHiddenTab(t.id)}
+                              >
+                                {hidden ? 'HIDDEN' : 'VISIBLE'}
+                              </Button>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ))}
+                </div>
+                <em>hide tabs you don&apos;t use, reorder within a section · Home and Setup can&apos;t be hidden</em>
               </div>
             </div>
 

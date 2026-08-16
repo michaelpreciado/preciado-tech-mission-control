@@ -63,7 +63,58 @@ const NESTED: Record<string, readonly string[]> = {
   ],
   services: ['eventbusUrl', 'openclawGatewayUrl', 'ollamaUrl', 'llmsterUrl'],
   keys: ['openrouterApiKey', 'ticktickToken'],
-  appearance: ['accentColor'],
+}
+
+const TAB_ID_RE = /^\/[a-z0-9-]*$/
+const MOTION_VALUES = new Set(['full', 'reduced', 'off'])
+const DENSITY_VALUES = new Set(['compact', 'expanded'])
+const ELEMENTS_3D_KEYS = ['homeGlobe', 'memoryGraph', 'teamGraph'] as const
+
+/** Validate the `appearance` patch — mixed types (string/enum/array/nested
+ * booleans), so it gets its own path instead of the generic string-only
+ * NESTED loop below. */
+function validateAppearance(input: unknown): { ok: true; patch: Record<string, unknown> } | { ok: false; error: string } {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return { ok: false, error: 'appearance must be an object' }
+  const a = input as Record<string, unknown>
+  const out: Record<string, unknown> = {}
+
+  if (a.accentColor !== undefined) {
+    const cleaned = cleanString(a.accentColor, 'appearance.accentColor')
+    if (typeof cleaned !== 'string') return { ok: false, error: cleaned.error }
+    if (cleaned !== '' && !isHexColor(cleaned)) return { ok: false, error: 'appearance.accentColor must be a #rrggbb hex color' }
+    out.accentColor = cleaned
+  }
+  if (a.motion !== undefined) {
+    if (typeof a.motion !== 'string' || !MOTION_VALUES.has(a.motion)) return { ok: false, error: 'appearance.motion must be full|reduced|off' }
+    out.motion = a.motion
+  }
+  if (a.density !== undefined) {
+    if (typeof a.density !== 'string' || !DENSITY_VALUES.has(a.density)) return { ok: false, error: 'appearance.density must be compact|expanded' }
+    out.density = a.density
+  }
+  if (a.hiddenTabs !== undefined) {
+    if (!Array.isArray(a.hiddenTabs) || a.hiddenTabs.length > 40 || !a.hiddenTabs.every(t => typeof t === 'string' && TAB_ID_RE.test(t)))
+      return { ok: false, error: 'appearance.hiddenTabs must be an array of tab ids' }
+    out.hiddenTabs = a.hiddenTabs.filter(t => t !== '/' && t !== '/setup')
+  }
+  if (a.tabOrder !== undefined) {
+    if (!Array.isArray(a.tabOrder) || a.tabOrder.length > 40 || !a.tabOrder.every(t => typeof t === 'string' && TAB_ID_RE.test(t)))
+      return { ok: false, error: 'appearance.tabOrder must be an array of tab ids' }
+    out.tabOrder = a.tabOrder
+  }
+  if (a.elements3d !== undefined) {
+    const e = a.elements3d
+    if (!e || typeof e !== 'object' || Array.isArray(e)) return { ok: false, error: 'appearance.elements3d must be an object' }
+    const eo: Record<string, boolean> = {}
+    for (const k of ELEMENTS_3D_KEYS) {
+      const v = (e as Record<string, unknown>)[k]
+      if (v === undefined) continue
+      if (typeof v !== 'boolean') return { ok: false, error: `appearance.elements3d.${k} must be boolean` }
+      eo[k] = v
+    }
+    out.elements3d = eo
+  }
+  return { ok: true, patch: out }
 }
 
 function cleanString(v: unknown, field: string): string | { error: string } {
@@ -105,6 +156,12 @@ function validate(body: unknown): { ok: true; patch: ConfigFile } | { ok: false;
     if (Object.keys(out).length) patch[section] = out
   }
 
+  if (input.appearance !== undefined) {
+    const result = validateAppearance(input.appearance)
+    if (!result.ok) return result
+    if (Object.keys(result.patch).length) patch.appearance = result.patch
+  }
+
   return { ok: true, patch: patch as ConfigFile }
 }
 
@@ -140,6 +197,19 @@ export async function POST(req: NextRequest) {
       const prev = existing[section]
       const next = (result.patch as Record<string, unknown>)[section]
       if (prev && typeof prev === 'object' && next) merged[section] = { ...prev, ...next }
+    }
+    // appearance needs its own merge: it has mixed types and one nested
+    // object (elements3d) that itself deserves a shallow merge, not a clobber.
+    const prevAppearance = existing.appearance
+    const nextAppearance = (result.patch as Record<string, unknown>).appearance
+    if (prevAppearance && typeof prevAppearance === 'object' && nextAppearance && typeof nextAppearance === 'object') {
+      const mergedAppearance: Record<string, unknown> = { ...(prevAppearance as object), ...(nextAppearance as object) }
+      const prevElements3d = (prevAppearance as Record<string, unknown>).elements3d
+      const nextElements3d = (nextAppearance as Record<string, unknown>).elements3d
+      if (prevElements3d && typeof prevElements3d === 'object' && nextElements3d && typeof nextElements3d === 'object') {
+        mergedAppearance.elements3d = { ...(prevElements3d as object), ...(nextElements3d as object) }
+      }
+      merged.appearance = mergedAppearance
     }
     await fs.mkdir(path.dirname(CONFIG_FILE), { recursive: true })
     await fs.writeFile(CONFIG_FILE, JSON.stringify(merged, null, 2) + '\n', { mode: 0o600 })

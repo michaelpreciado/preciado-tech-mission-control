@@ -20,19 +20,13 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
+import { useUiSettings } from './ui-settings'
+import { wantsStaticMotion } from '@/lib/motion-pref'
 
 const COUNT = 380
 const SPREAD = 26 // world units cube
 const LINK_DIST = 3.2
 const NEON = new THREE.Color('#1e90ff')
-
-/** True when we should freeze the loop (battery / motion preference). */
-function wantsStatic(): boolean {
-  if (typeof window === 'undefined') return true
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return true
-  if (window.matchMedia('(pointer: coarse)').matches) return true
-  return false
-}
 
 /* ── The mesh: points + nearest-neighbour links ───────────────────────── */
 
@@ -132,13 +126,14 @@ function Field() {
 }
 
 export default function AmbientNeuralField() {
+  const { motion } = useUiSettings()
   return (
     <div className="mc-ambient3d" aria-hidden="true">
       <Canvas
         dpr={[1, 1.5]}
         gl={{ antialias: true, alpha: true, powerPreference: 'low-power' }}
         camera={{ position: [0, -0.5, 16], fov: 50 }}
-        frameloop={wantsStatic() ? 'demand' : 'always'}
+        frameloop={wantsStaticMotion(motion) ? 'demand' : 'always'}
         style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
       >
         <Field />

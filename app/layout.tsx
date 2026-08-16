@@ -56,10 +56,13 @@ export const viewport: Viewport = {
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  // Custom accent (from /setup) recolors the whole token system at runtime.
-  const accentCss = buildAccentCss(getConfig().appearance.accentColor)
+  // Read fresh per-request (not the module-level `config` above, which is
+  // only resolved once at process start) so /setup saves apply on next
+  // load without a server restart — same pattern buildAccentCss already uses.
+  const appearance = getConfig().appearance
+  const accentCss = buildAccentCss(appearance.accentColor)
   return (
-    <html lang="en" data-theme="friday">
+    <html lang="en" data-theme="friday" data-density={appearance.density}>
       <head>
         <link rel="manifest" href="/manifest.json" />
         {/* Base design tokens first, then the runtime accent override LAST so it wins. */}
@@ -67,7 +70,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         {accentCss && <style id="friday-accent">{accentCss}</style>}
       </head>
       <body className={`${mono.variable} ${inter.variable}`}>
-        <Shell appName={config.appName} appTagline={config.appTagline}>{children}</Shell>
+        <Shell
+          appName={config.appName}
+          appTagline={config.appTagline}
+          ui={{ motion: appearance.motion, density: appearance.density, hiddenTabs: appearance.hiddenTabs, tabOrder: appearance.tabOrder, elements3d: appearance.elements3d }}
+        >{children}</Shell>
         <Script src="/rain.js" strategy="lazyOnload" />
       </body>
     </html>

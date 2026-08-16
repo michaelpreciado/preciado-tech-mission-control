@@ -30,6 +30,8 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { Points, PointMaterial } from '@react-three/drei'
 import * as THREE from 'three'
 import { useLiveData } from '../LiveDataProvider'
+import { useUiSettings } from '../ui-settings'
+import { wantsStaticMotion } from '@/lib/motion-pref'
 
 const AGENTS = ['friday', 'echo', 'sage', 'forge', 'ticker', 'scout', 'crypto']
 
@@ -37,13 +39,6 @@ const POINT_COUNT = 900
 const SPHERE_SCALE = 1.05
 const ACCENT_COLOR = new THREE.Color('#1e90ff')
 const LATENT_COLOR = new THREE.Color('#12283a')
-
-function wantsStatic(): boolean {
-  if (typeof window === 'undefined') return true
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return true
-  if (window.matchMedia('(pointer: coarse)').matches) return true
-  return false
-}
 
 function clamp01(n: number): number {
   return Math.min(1, Math.max(0, n))
@@ -202,13 +197,14 @@ function Scene() {
 }
 
 export default function CoreOrb3D() {
+  const { motion } = useUiSettings()
   return (
     <div className="mc-coreorb" aria-hidden="true">
       <Canvas
         dpr={[1, 1.5]}
         gl={{ antialias: true, alpha: true, powerPreference: 'low-power' }}
         camera={{ position: [0, 0, 3.4], fov: 45 }}
-        frameloop={wantsStatic() ? 'demand' : 'always'}
+        frameloop={wantsStaticMotion(motion) ? 'demand' : 'always'}
         style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
       >
         <Scene />

@@ -24,6 +24,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { RelativeTime } from '../RelativeTime'
 import { Button } from '../ui'
+import { useUiSettings } from '../ui-settings'
 import { MESH_ROSTER, useSubAgentTelemetry } from '@/lib/telemetry'
 import type { AgentNode, AgentState } from '@/lib/telemetry-types'
 
@@ -174,8 +175,13 @@ const STREAM_META: Record<string, { label: string; cls: string }> = {
 
 export function SubAgentPanel() {
   const snap = useSubAgentTelemetry()
+  const { elements3d } = useUiSettings()
+  const holoEnabled = elements3d.teamGraph
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [listMode, setListMode] = useState(false)
+  // Off (Setup → UI CUSTOMIZATION): always show the existing ListView
+  // fallback and skip mounting the WebGL canvas entirely.
+  const effectiveListMode = !holoEnabled || listMode
   const stream = STREAM_META[snap.stream] ?? STREAM_META.connecting
   const selected = snap.tree.find(n => n.id === selectedId) ?? null
 
@@ -194,14 +200,18 @@ export function SubAgentPanel() {
         </div>
         <div className="mc-sub-bar-meta">
           <span>{activeCount} working · {erroredCount} errored</span>
-          <Button
-            variant="ghost"
-            active={listMode}
-            onClick={() => setListMode(v => !v)}
-            aria-label="Toggle list view"
-          >
-            {listMode ? 'HOLO' : 'LIST'}
-          </Button>
+          {holoEnabled ? (
+            <Button
+              variant="ghost"
+              active={listMode}
+              onClick={() => setListMode(v => !v)}
+              aria-label="Toggle list view"
+            >
+              {listMode ? 'HOLO' : 'LIST'}
+            </Button>
+          ) : (
+            <span className="mc-3d-off" title="Enable in Setup → UI CUSTOMIZATION">LIST · HOLO DISABLED</span>
+          )}
         </div>
       </div>
 
@@ -209,7 +219,7 @@ export function SubAgentPanel() {
         <div className="mc-sub-banner">stream dropped — showing last known state, marked stale</div>
       ) : null}
 
-      {listMode ? (
+      {effectiveListMode ? (
         <ListView nodes={snap.tree} onSelect={setSelectedId} />
       ) : (
         <>

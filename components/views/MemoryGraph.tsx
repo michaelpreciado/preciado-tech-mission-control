@@ -5,6 +5,7 @@ import { forceSimulation, forceManyBody, forceLink, forceCenter, forceCollide, f
 import type { SimulationNodeDatum } from 'd3-force'
 import { Window, SkeletonPanel, EmptyTerminal, Clamp, Button, fmtDate } from '../ui'
 import { MemoryStream } from './MemoryStream'
+import { useUiSettings } from '../ui-settings'
 import { CATEGORICAL } from '@/lib/chart-colors'
 import type { MemoryGraph as MemoryGraphData, MemoryGraphNode } from '@/lib/types'
 
@@ -51,10 +52,16 @@ function layout(nodes: MemoryGraphNode[], edges: { source: string; target: strin
 }
 
 export function MemoryGraphView() {
+  const { elements3d } = useUiSettings()
+  const graphEnabled = elements3d.memoryGraph
   const [data, setData] = useState<MemoryGraphData | null>(null)
   const [loadError, setLoadError] = useState(false)
   const [showAll, setShowAll] = useState(false)
   const [listView, setListView] = useState(false)
+  // Off (Setup → UI CUSTOMIZATION): always show the flat list — MemoryStream
+  // already exists as this view's list fallback, so disabling the graph just
+  // means never running the (relatively costly) d3-force layout below.
+  const effectiveListView = !graphEnabled || listView
   const [search, setSearch] = useState('')
   const [activeTags, setActiveTags] = useState<string[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -83,7 +90,10 @@ export function MemoryGraphView() {
     return showAll ? data.nodes : data.nodes.filter(n => n.kind === 'tag' || !n.isolated)
   }, [data, showAll])
 
-  const { nodes: positioned, links } = useMemo(() => layout(baseNodes, data?.edges ?? []), [baseNodes, data])
+  const { nodes: positioned, links } = useMemo(
+    () => (graphEnabled ? layout(baseNodes, data?.edges ?? []) : { nodes: [] as ReturnType<typeof layout>['nodes'], links: [] as ReturnType<typeof layout>['links'] }),
+    [baseNodes, data, graphEnabled],
+  )
 
   const tagChips = useMemo(() => {
     const counts = new Map<string, number>()
@@ -137,9 +147,13 @@ export function MemoryGraphView() {
           <Button variant="ghost" active={showAll} onClick={() => setShowAll(v => !v)}>
             {showAll ? `SHOWING ALL ${data.totalNotes}` : `SHOW ALL ${data.totalNotes} NOTES`}
           </Button>
-          <Button variant="ghost" active={listView} onClick={() => setListView(v => !v)}>
-            {listView ? 'GRAPH VIEW' : 'LIST VIEW'}
-          </Button>
+          {graphEnabled ? (
+            <Button variant="ghost" active={listView} onClick={() => setListView(v => !v)}>
+              {listView ? 'GRAPH VIEW' : 'LIST VIEW'}
+            </Button>
+          ) : (
+            <span className="mc-3d-off" title="Enable in Setup → UI CUSTOMIZATION">LIST VIEW · GRAPH DISABLED</span>
+          )}
         </div>
       </div>
 
@@ -162,7 +176,7 @@ export function MemoryGraphView() {
         </div>
       )}
 
-      {listView ? (
+      {effectiveListView ? (
         <MemoryStream />
       ) : (
         <div className="mc-mem-body">

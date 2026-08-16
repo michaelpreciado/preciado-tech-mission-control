@@ -11,6 +11,7 @@
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { useLiveData } from './LiveDataProvider'
+import { useUiSettings } from './ui-settings'
 import { SectionHead, SkeletonPanel, fmtDate } from './ui'
 import { Sparkline } from './Sparkline'
 import dynamic from 'next/dynamic'
@@ -286,6 +287,7 @@ function TaskCol({ headLabel, headGlyph, alert, items }: {
 
 export function HomeDeck() {
   const { data, isLive } = useLiveData()
+  const { elements3d } = useUiSettings()
   return (
     <>
       <CommandHeader />
@@ -301,7 +303,9 @@ export function HomeDeck() {
       {/* 3 · What is live */}
       <div className="mc-home-corewrap">
         <div className="mc-home-coreorb-holder">
-          <CoreOrb3D />
+          {/* Off (Setup → UI CUSTOMIZATION): pure ambient decoration, so the
+              holder's own gradient/border frame stands alone — no data is lost. */}
+          {elements3d.homeGlobe && <CoreOrb3D />}
         </div>
         <div className="mc-home-corebody">
           <SectionHead label="SYSTEM CORE · RIG" />

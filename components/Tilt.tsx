@@ -13,22 +13,20 @@
  * Usage: <Tilt><Card/></Tilt>
  */
 import { useCallback, useRef, type ReactNode } from 'react'
+import { useUiSettings } from './ui-settings'
+import { wantsStaticMotion } from '@/lib/motion-pref'
 
 const MAX = 7 // degrees
-
-function reducedMotion(): boolean {
-  return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-}
-function coarse(): boolean {
-  return typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
-}
 
 export function Tilt({ children, className = '', max = MAX }: { children: ReactNode; className?: string; max?: number }) {
   const ref = useRef<HTMLDivElement>(null)
   const frame = useRef<number | null>(null)
+  const { motion } = useUiSettings()
 
   const onMove = useCallback((e: React.MouseEvent) => {
-    if (reducedMotion() || coarse()) return
+    // wantsStaticMotion already covers coarse pointers alongside prefers-reduced-motion
+    // and the explicit Setup → UI CUSTOMIZATION override.
+    if (wantsStaticMotion(motion)) return
     const el = ref.current
     if (!el) return
     const r = el.getBoundingClientRect()

@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, useRef } from 'react'
+import { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import dynamic from 'next/dynamic'
@@ -8,6 +8,8 @@ import { LiveDataProvider, useLiveData } from './LiveDataProvider'
 import { CommandPalette } from './CommandPalette'
 import { Button } from './ui'
 import { Icon, type IconName } from './icons'
+import { UiSettingsContext, DEFAULT_UI_SETTINGS, useUiSettings, type UiSettings } from './ui-settings'
+import { NAV, PINNED_TAB_IDS } from '@/lib/nav-tabs'
 
 /** Ambient WebGL backdrop — client-only (canvas can't render on the server). */
 const AmbientNeuralField = dynamic(() => import('./AmbientNeuralField').then(m => m.default), {
@@ -25,33 +27,45 @@ export function useBrand() {
   return useContext(BrandContext)
 }
 
-const NAV: { section: string; items: { id: string; label: string; icon: IconName }[] }[] = [
-  { section: 'Overview', items: [
-    { id: '/', label: 'Home', icon: 'deck' },
-    { id: '/kanban', label: 'Kanban', icon: 'kanban' },
-    { id: '/calendar', label: 'Calendar', icon: 'calendar' },
-  ]},
-  { section: 'Intelligence', items: [
-    { id: '/chat', label: 'Chat', icon: 'chat' },
-    { id: '/github', label: 'GitHub', icon: 'github' },
-    { id: '/costs', label: 'Costs', icon: 'costs' },
-  ]},
-  { section: 'Operations', items: [
-    { id: '/projects', label: 'Projects', icon: 'projects' },
-    { id: '/pipeline', label: 'Web Dev Pipeline', icon: 'pipeline' },
-    { id: '/content-creation', label: 'Content Creation', icon: 'content' },
-  ]},
-  { section: 'System', items: [
-    { id: '/memory', label: 'Memory', icon: 'memory' },
-    { id: '/team', label: 'Team', icon: 'team' },
-    { id: '/setup', label: 'Setup', icon: 'setup' },
-  ]},
-]
+// UiSettings context/hook now live in ./ui-settings (see import above) so
+// components Shell dynamically imports (e.g. AmbientNeuralField) can read
+// them without a circular import back into this file. NAV/PINNED_TAB_IDS
+// live in lib/nav-tabs.ts so the Setup page can read tab ids/labels without
+// pulling in this whole 'use client' shell chunk.
+export { useUiSettings, type UiSettings }
+
+/** Apply hiddenTabs + tabOrder to the static NAV shape: hide non-pinned tabs
+ * the user turned off, and reorder items WITHIN each section (Array.sort is
+ * stable, so ids missing from tabOrder keep their default relative order). */
+function applyUiToNav(ui: UiSettings) {
+  return NAV
+    .map(sec => ({
+      section: sec.section,
+      items: sec.items
+        .filter(it => PINNED_TAB_IDS.has(it.id) || !ui.hiddenTabs.includes(it.id))
+        .slice()
+        .sort((a, b) => {
+          const ia = ui.tabOrder.indexOf(a.id)
+          const ib = ui.tabOrder.indexOf(b.id)
+          if (ia === -1 && ib === -1) return 0
+          if (ia === -1) return 1
+          if (ib === -1) return -1
+          return ia - ib
+        }),
+    }))
+    .filter(sec => sec.items.length > 0)
+}
+
+function useVisibleNav() {
+  const ui = useUiSettings()
+  return useMemo(() => applyUiToNav(ui), [ui])
+}
 
 function Sidebar() {
   const pathname = usePathname()
   const { data, isLive } = useLiveData()
   const { appName } = useBrand()
+  const nav = useVisibleNav()
 
   const isActive = (href: string) => href === '/' ? pathname === '/' : pathname.startsWith(href)
 
@@ -80,7 +94,7 @@ function Sidebar() {
         <span className={`mc-led ${isLive ? 'green' : ''}`} />
         <span>MISSION CTRL {isLive ? 'ONLINE' : 'OFFLINE'}</span>
       </div>
-      {NAV.map((sec) => (
+      {nav.map((sec) => (
         <div key={sec.section} className="mc-side-section">
           <div className="mc-side-label">&gt; {sec.section}</div>
           {sec.items.map((it, idx) => (
@@ -92,7 +106,7 @@ function Sidebar() {
               style={{ '--i': idx } as React.CSSProperties}
             >
               <span className="mc-nav-rail" />
-              <span className="mc-nav-ic"><Icon name={it.icon} size={16} /></span>
+              <span className="mc-nav-ic"><Icon name={it.icon as IconName} size={16} /></span>
               <span className="mc-nav-label">{it.label}</span>
               <span className="mc-nav-scan" />
             </Link>
@@ -122,6 +136,7 @@ const PRIMARY_IDS = new Set(PRIMARY.map(p => p.id))
 
 function MoreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const pathname = usePathname()
+  const nav = useVisibleNav()
   const isActive = (href: string) => href === '/' ? pathname === '/' : pathname.startsWith(href)
   useEffect(() => {
     if (!open) return
@@ -136,7 +151,7 @@ function MoreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
       <div className="mc-more-sheet" onClick={e => e.stopPropagation()}>
         <div className="mc-more-handle" />
         <div className="mc-more-title">&gt; MORE</div>
-        {NAV.map(sec => {
+        {nav.map(sec => {
           const items = sec.items.filter(it => !PRIMARY_IDS.has(it.id))
           if (!items.length) return null
           return (
@@ -145,7 +160,7 @@ function MoreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
               <div className="mc-more-grid">
                 {items.map(it => (
                   <Link key={it.id} href={it.id} className={`mc-more-cell ${isActive(it.id) ? 'is-active' : ''}`} onClick={onClose}>
-                    <span className="mc-more-ic"><Icon name={it.icon} size={18} /></span>
+                    <span className="mc-more-ic"><Icon name={it.icon as IconName} size={18} /></span>
                     <span className="mc-more-lbl">{it.label}</span>
                   </Link>
                 ))}
@@ -160,11 +175,18 @@ function MoreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
 
 function MobileNav() {
   const pathname = usePathname()
+  const ui = useUiSettings()
   const [moreOpen, setMoreOpen] = useState(false)
   const navInnerRef = useRef<HTMLDivElement>(null)
   const [pill, setPill] = useState<{ left: number; width: number } | null>(null)
 
   const isActive = (href: string) => href === '/' ? pathname === '/' : pathname.startsWith(href)
+  // Bottom-bar slots respect hiddenTabs too — a hidden tab shouldn't get a
+  // reserved thumb-reach slot just because it's one of the 3 primaries.
+  const visiblePrimary = useMemo(
+    () => PRIMARY.filter(p => PINNED_TAB_IDS.has(p.id) || !ui.hiddenTabs.includes(p.id)),
+    [ui.hiddenTabs],
+  )
   // The More tab lights up whenever the current route lives behind the sheet.
   const inMore = NAV.some(sec => sec.items.some(it => !PRIMARY_IDS.has(it.id) && isActive(it.id)))
 
@@ -189,7 +211,7 @@ function MobileNav() {
         <div className="mc-mobile-nav-inner" ref={navInnerRef}>
           {/* Sliding active-tab pill — glides to the active item on nav change */}
           {pill && <span className="mc-mobile-pill" style={{ left: pill.left, width: pill.width }} aria-hidden="true" />}
-          {PRIMARY.map(item => {
+          {visiblePrimary.map(item => {
             const active = isActive(item.id)
             return (
               <Link key={item.id} href={item.id} aria-current={active ? 'page' : undefined}
@@ -215,8 +237,9 @@ function MobileNav() {
   )
 }
 
-export function Shell({ appName, appTagline, children }: { appName: string; appTagline: string; children: React.ReactNode }) {
+export function Shell({ appName, appTagline, ui, children }: { appName: string; appTagline: string; ui?: UiSettings; children: React.ReactNode }) {
   return (
+    <UiSettingsContext.Provider value={ui ?? DEFAULT_UI_SETTINGS}>
     <BrandContext.Provider value={{ appName, appTagline }}>
     <LiveDataProvider>
       <CommandPalette />
@@ -238,5 +261,6 @@ export function Shell({ appName, appTagline, children }: { appName: string; appT
       <MobileNav />
     </LiveDataProvider>
     </BrandContext.Provider>
+    </UiSettingsContext.Provider>
   )
 }

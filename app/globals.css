@@ -910,6 +910,24 @@ body {
   .mc-setup-actions.sticky { bottom: 12px; }
 }
 
+/* Setup → UI CUSTOMIZATION tab visibility/reorder list. */
+.mc-setup-tablist { display: flex; flex-direction: column; gap: 10px; }
+.mc-setup-tabsection { border: 1px solid var(--pt-border-dim); border-radius: var(--pt-r-sm); overflow: hidden; }
+.mc-setup-tabsection-head {
+  font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--pt-text-mute); padding: 6px 10px; background: rgba(0,0,0,0.3);
+}
+.mc-setup-tabrow {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 7px 10px; border-top: 1px solid var(--pt-border-dim);
+}
+.mc-setup-tabrow-label {
+  font-family: var(--pt-font-mono); font-size: 12px; color: var(--pt-text-high);
+}
+.mc-setup-tabrow-label em { font-style: normal; color: var(--pt-text-mute); font-size: 10px; }
+.mc-setup-tabrow-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.mc-setup-tabrow-actions .mc-btn { min-width: 34px; padding-left: 8px; padding-right: 8px; }
+
 /* ── Hero brand title (configurable app name) ─────────── */
 .mc-hero-brand {
   margin: 0;
@@ -3623,6 +3641,21 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   .mc-main > * { animation: none !important; }
 }
 
+/* ── Density (Setup → UI CUSTOMIZATION) — lib/tokens.ts DENSITY values.
+   `html[data-density]` is stamped server-side in app/layout.tsx; compact is
+   the default (close to this file's pre-existing tile padding), expanded
+   loosens padding/gap for lower-density, easier-to-scan cards. ─────────── */
+:root {
+  --mc-density-py: 16px;
+  --mc-density-px: 18px;
+  --mc-density-gap: 6px;
+}
+html[data-density="expanded"] {
+  --mc-density-py: 24px;
+  --mc-density-px: 28px;
+  --mc-density-gap: 12px;
+}
+
 /* ══════════════════════════════════════════════════════════════════════
    TILE GRID / TILE CARD — shared project-idea-mission-integration surface
    Introduced by the view-polish pass. One consistent card family.
@@ -3654,8 +3687,8 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
 }
 .mc-tile-card, .mc-window.mc-tile-card { border-radius: var(--pt-r-lg); }
 .mc-tile-body {
-  display: flex; flex-direction: column; gap: 10px;
-  padding: 14px 16px;
+  display: flex; flex-direction: column; gap: var(--mc-density-gap);
+  padding: var(--mc-density-py) var(--mc-density-px);
 }
 .mc-tile-head {
   display: flex; align-items: center; gap: 8px;
@@ -5101,7 +5134,14 @@ html[data-theme="friday"] .mc-cmdp-trigger:hover {
   padding: 12px 14px 0;
 }
 .mc-mem-search { flex: 1 1 220px; min-width: 160px; max-width: 340px; }
-.mc-mem-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.mc-mem-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+/* Small "this 3D element is disabled" pill — used wherever a Setup →
+   UI CUSTOMIZATION off-switch replaces a HOLO/GRAPH view toggle button. */
+.mc-3d-off {
+  font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--pt-text-mute); border: 1px dashed var(--pt-border-dim);
+  border-radius: var(--pt-r-sm); padding: 5px 10px;
+}
 
 .mc-mem-tags {
   display: flex; flex-wrap: wrap; gap: 6px;

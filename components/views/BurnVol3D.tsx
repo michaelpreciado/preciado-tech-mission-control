@@ -19,6 +19,8 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls, ContactShadows } from '@react-three/drei'
 import * as THREE from 'three'
 import { useLiveData } from '../LiveDataProvider'
+import { useUiSettings } from '../ui-settings'
+import { wantsStaticMotion, type MotionSetting } from '@/lib/motion-pref'
 import type { CostDashboard } from '@/lib/types'
 
 const DAYS = 14
@@ -29,13 +31,6 @@ const SEG = [
 ]
 const COL_W = 0.42
 const GAP = 0.3
-
-function wantsStatic(): boolean {
-  if (typeof window === 'undefined') return true
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return true
-  if (window.matchMedia('(pointer: coarse)').matches) return true
-  return false
-}
 
 /** Flatten the latest N daily buckets into API/Claude/Local token stacks. */
 function useBurnSeries(costs: CostDashboard): { date: string; stacks: number[] }[] {
@@ -72,13 +67,14 @@ function fmtT(n: number): string {
   return String(n)
 }
 
-function Columns({ series }: { series: { date: string; stacks: number[] }[] }) {
+function Columns({ series, motion }: { series: { date: string; stacks: number[] }[]; motion: MotionSetting }) {
   const group = useRef<THREE.Group>(null)
   const max = useMemo(() => Math.max(...series.flatMap(s => s.stacks), 1), [series])
 
-  // Slow auto-orbit (frozen by reduced-motion / coarse pointers via wantsStatic).
+  // Slow auto-orbit (frozen by reduced-motion / coarse pointers / the explicit
+  // Setup → UI CUSTOMIZATION motion override via wantsStaticMotion).
   useFrame(() => {
-    if (group.current && !wantsStatic()) group.current.rotation.y += 0.0007
+    if (group.current && !wantsStaticMotion(motion)) group.current.rotation.y += 0.0007
   })
 
   return (
@@ -117,6 +113,7 @@ function Columns({ series }: { series: { date: string; stacks: number[] }[] }) {
 
 export default function BurnVol3D({ costs }: { costs: CostDashboard }) {
   const series = useBurnSeries(costs)
+  const { motion } = useUiSettings()
   if (!series.length) return null
 
   return (
@@ -130,13 +127,13 @@ export default function BurnVol3D({ costs }: { costs: CostDashboard }) {
         <ambientLight intensity={0.7} />
         <directionalLight position={[5, 8, 4]} intensity={1.1} />
         <pointLight position={[-4, 3, -3]} intensity={0.4} color="#1e90ff" />
-        <Columns series={series} />
+        <Columns series={series} motion={motion} />
         <ContactShadows position={[0, 0, 0]} opacity={0.4} scale={14} blur={2.5} far={3} resolution={256} color="#000000" />
         <OrbitControls
           enablePan={false}
           minDistance={4}
           maxDistance={14}
-          autoRotate={!wantsStatic()}
+          autoRotate={!wantsStaticMotion(motion)}
           autoRotateSpeed={0.7}
           enableDamping
           dampingFactor={0.12}
