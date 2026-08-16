@@ -29,7 +29,8 @@ import { useMemo, useRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { RoundedBox, Line, Html, OrbitControls, ContactShadows } from '@react-three/drei'
 import * as THREE from 'three'
-import type { AgentNode } from '@/lib/telemetry-types'
+import type { Line2 } from 'three-stdlib'
+import type { AgentNode, TelemetryTask } from '@/lib/telemetry-types'
 import { HEARTBEAT_STALE_MS } from '@/lib/telemetry'
 
 /* ── Layout constants (world units) ───────────────────────────────────── */
@@ -141,6 +142,63 @@ function Branch({ from, to, accent, active }: { from: [number, number, number]; 
   )
 }
 
+/* ── Task leaf (agent's currentTask — a graph leaf hanging off its owner) ─
+ * Deliberately lighter-weight than Branch: a thin drei <Line> instead of a
+ * TubeGeometry mesh (leaves are numerous-ish and low-priority next to the
+ * org-tree's main branches), and a small octahedron instead of the agents'
+ * RoundedBox card — shape + dimmer glow make "this is a task, not an agent"
+ * readable at a glance without just shrinking the same visual language.
+ * Unmounts entirely (not just fades) whenever the owning node has no
+ * currentTask — callers gate this behind `node.currentTask &&`.
+ */
+
+function TaskLink({ from, to, accent, active }: { from: [number, number, number]; to: [number, number, number]; accent: string; active: boolean }) {
+  const points = useMemo(
+    () => [new THREE.Vector3(...from), new THREE.Vector3(...to)],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [from[0], from[1], from[2], to[0], to[1], to[2]],
+  )
+  const ref = useRef<Line2>(null)
+  useFrame((state) => {
+    const mat = ref.current?.material as THREE.LineBasicMaterial | undefined
+    if (!mat) return
+    mat.opacity = active ? 0.3 + (Math.sin(state.clock.elapsedTime * 5) * 0.5 + 0.5) * 0.35 : 0.22
+  })
+  return <Line ref={ref} points={points} color={accent} transparent opacity={0.22} lineWidth={1} />
+}
+
+function TaskLeaf({ task, pos, accent, active }: { task: TelemetryTask; pos: [number, number, number]; accent: string; active: boolean }) {
+  const mesh = useRef<THREE.Mesh>(null)
+  useFrame((state) => {
+    if (!mesh.current) return
+    mesh.current.rotation.y = state.clock.elapsedTime * 0.6
+    mesh.current.rotation.x = state.clock.elapsedTime * 0.35
+    mesh.current.scale.setScalar(active ? 1 + Math.sin(state.clock.elapsedTime * 5) * 0.1 : 1)
+  })
+  return (
+    <group position={pos}>
+      <mesh ref={mesh}>
+        <octahedronGeometry args={[0.085, 0]} />
+        <meshStandardMaterial
+          color={accent}
+          transparent
+          opacity={active ? 0.8 : 0.42}
+          emissive={accent}
+          emissiveIntensity={active ? 0.85 : 0.18}
+          roughness={0.45}
+          metalness={0.15}
+        />
+      </mesh>
+      <Html position={[0, -0.19, 0]} center zIndexRange={[8, 0]}>
+        <div className={`mc-task-chip${active ? ' is-active' : ''}`} title={task.title ?? task.id}>
+          <span className="mc-task-dot" style={{ background: accent }} />
+          <span className="mc-task-txt">{task.title || task.id}</span>
+        </div>
+      </Html>
+    </group>
+  )
+}
+
 /* ── Card node ────────────────────────────────────────────────────────── */
 
 function Card({
@@ -225,6 +283,25 @@ function Card({
           />
         </RoundedBox>
       </group>
+
+      {/* task leaf — the agent's currentTask, hanging off the card below-front.
+          Fully unmounted (not faded) the instant the agent has no currentTask. */}
+      {node.currentTask && (
+        <>
+          <TaskLink
+            from={[pos[0], pos[1] - h / 2 - 0.03, pos[2]]}
+            to={[pos[0], pos[1] - h / 2 - 0.36, pos[2] + 0.48]}
+            accent={accent}
+            active={node.state === 'working'}
+          />
+          <TaskLeaf
+            task={node.currentTask}
+            pos={[pos[0], pos[1] - h / 2 - 0.36, pos[2] + 0.48]}
+            accent={accent}
+            active={node.state === 'working'}
+          />
+        </>
+      )}
 
       {/* label chip — always crisp, screen-space, carries role + host */}
       <Html position={[pos[0], pos[1] + h / 2 + 0.34, pos[2]]} center zIndexRange={[10, 0]}>
