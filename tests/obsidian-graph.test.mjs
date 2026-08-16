@@ -27,6 +27,16 @@ test('parseFrontmatterTags lowercases and trims quoted entries', () => {
   assert.deepEqual(parseFrontmatterTags(text), ['edith', 'memory', 'policy'])
 })
 
+test('parseFrontmatterTags dedupes repeated tags within one note', () => {
+  const text = `---\ntags: [a, a, b, A]\n---\nbody\n`
+  assert.deepEqual(parseFrontmatterTags(text), ['a', 'b'])
+})
+
+test('parseFrontmatterTags dedupes repeated tags in a dash-list', () => {
+  const text = `---\ntags:\n  - edith\n  - memory\n  - Edith\n---\nbody\n`
+  assert.deepEqual(parseFrontmatterTags(text), ['edith', 'memory'])
+})
+
 test('parseFrontmatterTags returns [] when there is no tags key', () => {
   const text = `---\ntype: journal\ncreated: 2026-01-01\n---\nbody\n`
   assert.deepEqual(parseFrontmatterTags(text), [])
@@ -138,6 +148,55 @@ test('resolveLinkTarget returns null for a dangling link', () => {
   assert.equal(resolveLinkTarget('Nonexistent Note', '300 Action Logs/2026-01-01', index), null)
 })
 
+test('resolveLinkTarget falls back to a case-insensitive full-path match when the exact case is stale', () => {
+  // e.g. the note "Preferences.md" was written when a link pointed at "preferences" — a
+  // rename/re-case after the link was written should not silently go dangling.
+  const notes = [
+    note('100 Memory System/Preferences.md', '# Preferences'),
+    note('100 Memory System/Identity.md', '[[100 memory system/preferences]]'),
+  ]
+  const index = buildNoteIndex(notes)
+  assert.equal(
+    resolveLinkTarget('100 memory system/preferences', '100 Memory System/Identity', index),
+    '100 Memory System/Preferences',
+  )
+})
+
+test('resolveLinkTarget falls back to a case-insensitive relative-path match', () => {
+  const notes = [
+    note('0200 Projects/Project Index.md', '# Project Index'),
+    note('Friday/500 Friday Hub/Active Projects Hub.md', '[[../../0200 projects/project index]]'),
+  ]
+  const index = buildNoteIndex(notes)
+  assert.equal(
+    resolveLinkTarget('../../0200 projects/project index', 'Friday/500 Friday Hub/Active Projects Hub', index),
+    '0200 Projects/Project Index',
+  )
+})
+
+test('resolveLinkTarget prefers an exact-case match over a case-insensitive one when both exist', () => {
+  const notes = [
+    note('README.md', '# README (shouty)'),
+    note('readme.md', '# readme (quiet)'),
+    note('Index.md', '[[README]]'),
+  ]
+  const index = buildNoteIndex(notes)
+  assert.equal(resolveLinkTarget('README', 'Index', index), 'README')
+})
+
+test('resolveLinkTarget treats an ambiguous case-insensitive full-path fold as unresolved, not a silent guess', () => {
+  const notes = [
+    note('Notes/Overview.md', '# Overview A'),
+    note('Notes/overview.md', '# Overview B'),
+    note('Index.md', '[[Notes/OVERVIEW]]'),
+  ]
+  const index = buildNoteIndex(notes)
+  // Two notes fold to the same lowercase id and neither is an exact match —
+  // must not guess one; the basename tier is equally ambiguous (same two
+  // candidates), so this stays a dangling link rather than a wrong edge.
+  assert.equal(resolveLinkTarget('Notes/OVERVIEW', 'Index', index), null)
+})
+
 /* ── graph assembly ───────────────────────────────────────── */
 
 test('buildGraph creates note nodes, link edges, and tag hub nodes', () => {
@@ -183,4 +242,16 @@ test('buildGraph ignores self-links and dedupes edges from links present in both
   const graph = buildGraph(notes)
   const linkEdges = graph.edges.filter(e => e.kind === 'link')
   assert.equal(linkEdges.length, 1)
+})
+
+test('buildGraph does not inflate a tag noteCount from duplicate tags within one note', () => {
+  const notes = [
+    note('a.md', `---\ntags: [edith, edith, EDITH]\n---\n# A`),
+    note('b.md', `---\ntags: [edith]\n---\n# B`),
+  ]
+  const graph = buildGraph(notes)
+  const tagNode = graph.nodes.find(n => n.id === 'tag:edith')
+  assert.equal(tagNode.noteCount, 2) // 2 notes carry it, not 4 tag mentions
+  const tagEdges = graph.edges.filter(e => e.kind === 'tag')
+  assert.equal(tagEdges.length, 2)
 })

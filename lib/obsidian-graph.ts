@@ -56,6 +56,10 @@ function cleanTag(raw: string): string {
   return raw.trim().replace(/^['"]|['"]$/g, '').replace(/^#/, '').trim().toLowerCase()
 }
 
+function dedupe(items: string[]): string[] {
+  return [...new Set(items)]
+}
+
 /**
  * Parses a YAML frontmatter `tags:` field. Handles the two forms seen in
  * the vault: an inline array (`tags: [a, b, c]`) and a dash-list
@@ -71,7 +75,7 @@ export function parseFrontmatterTags(text: string): string[] {
       const line = lines[i]
       const inline = line.match(/^tags:\s*\[(.*)\]\s*$/)
       if (inline) {
-        return inline[1].split(',').map(cleanTag).filter(Boolean)
+        return dedupe(inline[1].split(',').map(cleanTag).filter(Boolean))
       }
       if (/^tags:\s*$/.test(line)) {
         const out: string[] = []
@@ -81,7 +85,7 @@ export function parseFrontmatterTags(text: string): string[] {
           const t = cleanTag(item[1])
           if (t) out.push(t)
         }
-        return out
+        return dedupe(out)
       }
       const scalar = line.match(/^tags:\s*(.+)$/)
       if (scalar) {
@@ -174,20 +178,46 @@ export function parseNote(relPath: string, text: string, updatedAt?: string): Pa
 
 export type NoteIndex = {
   byId: Map<string, ParsedNote>
+  /** Case-insensitive fallback for byId: lowercased id -> the id(s) sharing that fold. */
+  byIdLower: Map<string, string[]>
   byBasename: Map<string, string[]>
 }
 
 export function buildNoteIndex(notes: ParsedNote[]): NoteIndex {
   const byId = new Map<string, ParsedNote>()
+  const byIdLower = new Map<string, string[]>()
   const byBasename = new Map<string, string[]>()
   for (const n of notes) {
     byId.set(n.id, n)
+    const lower = n.id.toLowerCase()
+    const lowerArr = byIdLower.get(lower) ?? []
+    lowerArr.push(n.id)
+    byIdLower.set(lower, lowerArr)
     const base = path.posix.basename(n.id).toLowerCase()
     const arr = byBasename.get(base) ?? []
     arr.push(n.id)
     byBasename.set(base, arr)
   }
-  return { byId, byBasename }
+  return { byId, byIdLower, byBasename }
+}
+
+/**
+ * Looks up a candidate vault-relative id, exact case first, falling back to
+ * a case-insensitive match if unique. Obsidian link targets are normally
+ * written with the exact case of the note they point at, but a note that
+ * got renamed/re-cased after the link was written should still resolve
+ * rather than silently going dangling — that's a real, if rare, failure
+ * mode in a 600+ note vault that's been reorganized over time. Exact case
+ * is tried first so two notes differing only by case (e.g. "README" vs
+ * "readme") still resolve unambiguously when the link matches one exactly;
+ * only an ambiguous case-insensitive fold (two+ ids) is treated as
+ * unresolved, same policy as the basename fallback tier.
+ */
+function lookupId(candidate: string, index: NoteIndex): string | null {
+  if (index.byId.has(candidate)) return candidate
+  const lowerMatches = index.byIdLower.get(candidate.toLowerCase())
+  if (lowerMatches && lowerMatches.length === 1) return lowerMatches[0]
+  return null
 }
 
 /**
@@ -196,10 +226,11 @@ export function buildNoteIndex(notes: ParsedNote[]): NoteIndex {
  * (`100 Memory System/Durable Memory`), a path relative to the linking
  * note (`../../0200 Projects/Project Index`), or a bare filename that
  * relies on Obsidian's "shortest path" resolution (`Identity`). Tries, in
- * order: exact vault-relative id, path relative to the source note's
- * folder, then a unique basename match anywhere in the vault. Returns
- * null (dangling link, left out of the graph) if none match or a
- * basename match is ambiguous.
+ * order: exact-then-case-insensitive vault-relative id (see `lookupId`),
+ * exact-then-case-insensitive path relative to the source note's folder,
+ * then a unique basename match anywhere in the vault. Returns null
+ * (dangling link, left out of the graph) if none match or a match is
+ * ambiguous.
  */
 export function resolveLinkTarget(rawTarget: string, sourceId: string, index: NoteIndex): string | null {
   const target = rawTarget.trim()
@@ -214,11 +245,13 @@ export function resolveLinkTarget(rawTarget: string, sourceId: string, index: No
   }
 
   const direct = normalize(bare)
-  if (index.byId.has(direct)) return direct
+  const directHit = lookupId(direct, index)
+  if (directHit) return directHit
 
   const sourceDir = path.posix.dirname(sourceId)
   const joined = normalize(path.posix.normalize(path.posix.join(sourceDir === '.' ? '' : sourceDir, bare)))
-  if (index.byId.has(joined)) return joined
+  const joinedHit = lookupId(joined, index)
+  if (joinedHit) return joinedHit
 
   const base = path.posix.basename(bare).toLowerCase()
   const candidates = index.byBasename.get(base)
