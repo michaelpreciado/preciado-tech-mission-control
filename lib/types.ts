@@ -78,6 +78,39 @@ export type MemoryEntry = {
   agent_id?: AgentId
 }
 
+/**
+ * Obsidian vault node graph (Memory tab). A node is either a real note
+ * (`kind: 'note'`) or a synthetic tag hub (`kind: 'tag'`, `id: "tag:<name>"`)
+ * that fans out to every note carrying that tag — see
+ * lib/obsidian-graph.ts for the parsing/graph-building rules.
+ */
+export type MemoryGraphNode = {
+  id: string
+  title: string
+  folder: string
+  tags: string[]
+  kind: 'note' | 'tag'
+  excerpt?: string
+  updatedAt?: string
+  /** True when the note has neither an outgoing/incoming link nor a tag. */
+  isolated: boolean
+  /** Tag nodes only: how many notes carry this tag. */
+  noteCount?: number
+}
+
+export type MemoryGraphEdge = {
+  source: string
+  target: string
+  kind: 'link' | 'tag'
+}
+
+export type MemoryGraph = {
+  nodes: MemoryGraphNode[]
+  edges: MemoryGraphEdge[]
+  totalNotes: number
+  connectedNotes: number
+}
+
 export type GitHubRepoSignal = {
   name: string
   url: string
