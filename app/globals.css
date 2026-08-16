@@ -307,6 +307,57 @@ html[data-theme="friday"] .mc-agent-card-status {
   font-weight: 700;
 }
 html[data-theme="friday"] .mc-btn:hover { background: var(--pt-neon); color: #08010c; text-shadow: none; }
+/* The generic .mc-btn override above (same specificity, 0,2,1 / hover 0,3,1)
+   otherwise flattens every variant to the plain neon-bright-on-transparent
+   look — at rest AND on hover, since it matches on the shared .mc-btn class
+   alone. Semantic variants (primary/confirm/danger) and the ghost toggle-on
+   state need their own color language to survive friday, which is always
+   active (app/layout.tsx hardcodes data-theme="friday" — this is not an
+   optional secondary theme). Each rule below is placed after its generic
+   counterpart at matching specificity so the cascade tie-break favors it. */
+html[data-theme="friday"] .mc-btn-primary {
+  color: #08010c;
+  background: var(--pt-neon);
+  border-color: var(--pt-neon);
+  text-shadow: none;
+}
+html[data-theme="friday"] .mc-btn-primary:hover {
+  color: #08010c;
+  background: var(--pt-neon-bright);
+  border-color: var(--pt-neon-bright);
+}
+html[data-theme="friday"] .mc-btn-confirm {
+  color: #28c840;
+  background: rgba(40,200,64,0.08);
+  border-color: rgba(40,200,64,0.6);
+  text-shadow: none;
+}
+html[data-theme="friday"] .mc-btn-confirm:hover {
+  color: #28c840;
+  background: rgba(40,200,64,0.14);
+  border-color: rgba(40,200,64,0.8);
+  box-shadow: 0 0 6px rgba(40,200,64,0.45);
+}
+html[data-theme="friday"] .mc-btn-danger {
+  color: #ff8a83;
+  background: rgba(255,95,87,0.08);
+  border-color: rgba(255,95,87,0.6);
+  text-shadow: none;
+}
+html[data-theme="friday"] .mc-btn-danger:hover {
+  color: #ff8a83;
+  background: rgba(255,95,87,0.12);
+  border-color: rgba(255,95,87,0.8);
+  box-shadow: 0 0 6px rgba(255,95,87,0.45);
+}
+/* Toggle-on border for ghost (e.g. the sub-agent LIST/HOLO toggle) — without
+   this, the generic rule's border-color: var(--pt-border) always wins over
+   .mc-btn-ghost.is-on's border-color at (0,2,0), even though it never
+   reached .mc-sub-btn before this class consolidation. */
+html[data-theme="friday"] .mc-btn-ghost.is-on {
+  border-color: var(--pt-neon);
+  box-shadow: var(--pt-glow-sm);
+}
 html[data-theme="friday"] .mc-task-tag.alert { color: var(--pt-warn-ink); border-color: rgba(254,188,46,0.6); background: rgba(254,188,46,0.08); text-shadow: 0 0 4px rgba(254,188,46,0.5); }
 html[data-theme="friday"] .mc-task-tag.done  { color: var(--pt-ok-ink); border-color: rgba(40,200,64,0.5); background: rgba(40,200,64,0.08); text-shadow: 0 0 4px rgba(40,200,64,0.4); }
 html[data-theme="friday"] .mc-task-tag.error { color: var(--pt-error-ink); border-color: rgba(255,95,87,0.6); background: rgba(255,95,87,0.08); text-shadow: 0 0 4px rgba(255,95,87,0.5); }

@@ -360,7 +360,7 @@ export function KanbanBoard() {
         </div>
 
         <div className="mc-kb-toolbar">
-          <Button variant="primary" active={showCreate} onClick={() => setShowCreate(v => !v)}>
+          <Button variant="ghost" active={showCreate} onClick={() => setShowCreate(v => !v)}>
             {showCreate ? '✕ close' : '+ new task'}
           </Button>
         </div>

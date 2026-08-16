@@ -48,7 +48,7 @@ export type ButtonProps = ButtonOwnProps &
   Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, keyof ButtonOwnProps>
 
 export const Button = React.forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
-  function Button({ variant = 'ghost', active = false, loading = false, href, className = '', children, disabled, type = 'button', ...rest }, ref) {
+  function Button({ variant = 'ghost', active, loading = false, href, className = '', children, disabled, type = 'button', ...rest }, ref) {
     const cls = [
       'mc-btn',
       `mc-btn-${variant}`,
@@ -83,7 +83,7 @@ export const Button = React.forwardRef<HTMLButtonElement | HTMLAnchorElement, Bu
         className={cls}
         disabled={disabled || loading}
         aria-busy={loading || undefined}
-        aria-pressed={active || undefined}
+        aria-pressed={active}
         {...rest}
       >
         {spinner}{children}
