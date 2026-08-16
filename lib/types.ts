@@ -451,31 +451,6 @@ export type KanbanMultiSnapshot = HermesKanbanSnapshot & {
   sources: KanbanSourceStatus[]
 }
 
-/* ── Approvals inbox ───────────────────────────────────── */
-
-export type ApprovalKind = 'pipeline_approval' | 'email_signoff' | 'task_attention' | 'exec_allowlist'
-
-export type ApprovalItem = {
-  id: string
-  kind: ApprovalKind
-  title: string
-  summary?: string
-  requestedAt?: string
-  source: string
-  href?: string
-  leadId?: string
-  /** True when the dashboard can decide it (APPROVE/REJECT buttons). */
-  actionable: boolean
-  payload?: Record<string, unknown>
-}
-
-export type ApprovalsData = {
-  generatedAt: string
-  pending: ApprovalItem[]
-  info: ApprovalItem[]
-  counts: { pending: number; info: number }
-}
-
 /* ── System health ─────────────────────────────────────── */
 
 export type ServiceHealth = {

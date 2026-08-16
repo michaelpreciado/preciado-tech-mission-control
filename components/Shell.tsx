@@ -24,33 +24,10 @@ export function useBrand() {
   return useContext(BrandContext)
 }
 
-/** Pending-approvals count for nav badges (sidebar + mobile tab bar). */
-function usePendingApprovals(): number {
-  const [count, setCount] = useState(0)
-  useEffect(() => {
-    let alive = true
-    const poll = async () => {
-      try {
-        const res = await fetch('/api/approvals?count=1', { cache: 'no-store' })
-        if (!res.ok) return
-        const json = await res.json()
-        if (alive && typeof json.pending === 'number') setCount(json.pending)
-      } catch { /* offline — keep last count */ }
-    }
-    void poll()
-    const timer = window.setInterval(() => {
-      if (document.visibilityState === 'visible') void poll()
-    }, 30_000)
-    return () => { alive = false; clearInterval(timer) }
-  }, [])
-  return count
-}
-
 const NAV: { section: string; items: { id: string; label: string; icon: IconName }[] }[] = [
   { section: 'Overview', items: [
     { id: '/', label: 'Home', icon: 'deck' },
     { id: '/kanban', label: 'Kanban', icon: 'kanban' },
-    { id: '/approvals', label: 'Approvals', icon: 'approvals' },
     { id: '/calendar', label: 'Calendar', icon: 'calendar' },
   ]},
   { section: 'Intelligence', items: [
@@ -73,7 +50,6 @@ const NAV: { section: string; items: { id: string; label: string; icon: IconName
 function Sidebar() {
   const pathname = usePathname()
   const { data, isLive } = useLiveData()
-  const pending = usePendingApprovals()
   const { appName } = useBrand()
 
   const isActive = (href: string) => href === '/' ? pathname === '/' : pathname.startsWith(href)
@@ -111,16 +87,12 @@ function Sidebar() {
               key={it.id}
               href={it.id}
               aria-current={isActive(it.id) ? 'page' : undefined}
-              aria-label={it.id === '/approvals' && pending > 0 ? `${it.label}, ${pending} pending` : undefined}
               className={`mc-nav-item ${isActive(it.id) ? 'is-active' : ''}`}
               style={{ '--i': idx } as React.CSSProperties}
             >
               <span className="mc-nav-rail" />
               <span className="mc-nav-ic"><Icon name={it.icon} size={16} /></span>
               <span className="mc-nav-label">{it.label}</span>
-              {it.id === '/approvals' && pending > 0 && (
-                <span className="mc-nav-badge">{pending}</span>
-              )}
               <span className="mc-nav-scan" />
             </Link>
           ))}
@@ -142,7 +114,6 @@ function Sidebar() {
 const PRIMARY: { id: string; label: string; icon: IconName }[] = [
   { id: '/', label: 'Home', icon: 'deck' },
   { id: '/kanban', label: 'Kanban', icon: 'kanban' },
-  { id: '/approvals', label: 'Approvals', icon: 'approvals' },
   { id: '/chat', label: 'Chat', icon: 'chat' },
 ]
 
@@ -188,7 +159,6 @@ function MoreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
 
 function MobileNav() {
   const pathname = usePathname()
-  const pending = usePendingApprovals()
   const [moreOpen, setMoreOpen] = useState(false)
   const navInnerRef = useRef<HTMLDivElement>(null)
   const [pill, setPill] = useState<{ left: number; width: number } | null>(null)
@@ -222,13 +192,9 @@ function MobileNav() {
             const active = isActive(item.id)
             return (
               <Link key={item.id} href={item.id} aria-current={active ? 'page' : undefined}
-                aria-label={item.id === '/approvals' && pending > 0 ? `${item.label}, ${pending} pending` : undefined}
                 className={`mc-mobile-item ${active ? 'is-active' : ''}`}>
                 <span className="mc-mobile-glyph">
                   <Icon name={item.icon} size={20} />
-                  {item.id === '/approvals' && pending > 0 && (
-                    <span className="mc-mobile-badge">{pending > 9 ? '9+' : pending}</span>
-                  )}
                 </span>
                 <span className="mc-mobile-label">{item.label}</span>
               </Link>

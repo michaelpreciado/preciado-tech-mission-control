@@ -40,18 +40,6 @@
   ],
   "shortcuts": [
     {
-      "name": "Approvals",
-      "short_name": "Approvals",
-      "description": "Everything waiting on your decision",
-      "url": "/approvals",
-      "icons": [
-        {
-          "src": "/icon-192.png",
-          "sizes": "192x192"
-        }
-      ]
-    },
-    {
       "name": "Web Dev Pipeline",
       "short_name": "Pipeline",
       "description": "Lead-to-launch kanban",

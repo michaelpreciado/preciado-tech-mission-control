@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
 import { useLiveData } from './LiveDataProvider'
-import type { ApprovalsData, SystemHealthData } from '@/lib/types'
+import type { SystemHealthData } from '@/lib/types'
 
 const POLL_MS = 15_000
 
@@ -17,20 +17,17 @@ type FeedRow = {
 
 /**
  * Needs-my-action strip — the first thing on the Deck (and on mobile, the
- * first thing on screen): pending approvals, down services, agents/tasks in
- * trouble, data warnings. Everything taps through to its tab.
+ * first thing on screen): down services, agents/tasks in trouble, data
+ * warnings. Everything taps through to its tab.
  */
 export function ActionFeed() {
   const { data } = useLiveData()
-  const [approvals, setApprovals] = useState<ApprovalsData | null>(null)
   const [health, setHealth] = useState<SystemHealthData | null>(null)
 
   const refresh = useCallback(async () => {
-    const [a, h] = await Promise.allSettled([
-      fetch('/api/approvals', { cache: 'no-store' }).then(r => r.ok ? r.json() : null),
+    const [h] = await Promise.allSettled([
       fetch('/api/system', { cache: 'no-store' }).then(r => r.ok ? r.json() : null),
     ])
-    if (a.status === 'fulfilled' && a.value) setApprovals(a.value)
     if (h.status === 'fulfilled' && h.value) setHealth(h.value)
   }, [])
 
@@ -44,9 +41,6 @@ export function ActionFeed() {
 
   const rows: FeedRow[] = []
 
-  for (const item of approvals?.pending ?? []) {
-    rows.push({ id: item.id, tone: 'urgent', glyph: '⏳', text: item.title, href: '/approvals' })
-  }
   for (const svc of health?.services ?? []) {
     // Store-freshness probes (pipeline store, cron jobs.json) are telemetry, not
     // actions — a 16h-old store shouldn't read as "needs you". Only surface real
@@ -67,22 +61,18 @@ export function ActionFeed() {
   for (const [i, warning] of (data?.warnings ?? []).entries()) {
     rows.push({ id: `warn:${i}`, tone: 'note', glyph: '◇', text: warning, href: '/' })
   }
-  for (const item of (approvals?.info ?? []).filter(it => it.kind === 'task_attention').slice(0, 3)) {
-    rows.push({ id: item.id, tone: 'warn', glyph: '⚠', text: item.title, href: item.href ?? '/tasks' })
-  }
 
   const shown = rows.slice(0, 8)
   const extra = rows.length - shown.length
-  const pendingCount = approvals?.counts.pending ?? 0
+  const urgentCount = rows.filter(r => r.tone === 'urgent').length
 
   return (
-    <div className={`mc-feed ${pendingCount ? 'has-urgent' : ''}`}>
+    <div className={`mc-feed ${urgentCount ? 'has-urgent' : ''}`}>
       <div className="mc-feed-head">
         <span className="mc-feed-title">▸ NEEDS YOU</span>
-        <span className={`mc-feed-count ${pendingCount ? 'hot' : ''}`}>
-          {pendingCount ? `${pendingCount} AWAITING DECISION` : 'ALL CLEAR'}
+        <span className={`mc-feed-count ${urgentCount ? 'hot' : ''}`}>
+          {urgentCount ? `${urgentCount} URGENT` : 'ALL CLEAR'}
         </span>
-        <Link href="/approvals" className="mc-feed-open">approvals ↗</Link>
       </div>
       {shown.length > 0 && (
         <div className="mc-feed-body" role="status" aria-live="polite">
@@ -95,10 +85,10 @@ export function ActionFeed() {
             </Link>
           ))}
           {extra > 0 && (
-            <Link href="/approvals" className="mc-feed-row note">
+            <div className="mc-feed-row note">
               <span className="mc-feed-glyph">＋</span>
               <span className="mc-feed-text">{extra} more…</span>
-            </Link>
+            </div>
           )}
         </div>
       )}

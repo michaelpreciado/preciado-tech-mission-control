@@ -1502,14 +1502,6 @@ h1 {
     padding: 0; margin: -1px; overflow: hidden;
     clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
   }
-  /* The approvals count must survive the rail — it is the one thing on this
-     nav you need to see at a glance. margin-left:auto is meaningless on a
-     centred rail, so pin it to the glyph's corner instead. */
-  /* Only position is set here: the base .mc-nav-badge rule is later in this
-     file, so at equal specificity it wins any size/margin declarations made
-     from inside this block. Its own margin-left:auto is inert once the badge
-     is absolutely positioned. */
-  .mc-nav-badge { position: absolute; top: 2px; right: 2px; }
   .mc-nav-item.is-active::after { display: none; }
   :root { --mc-gutter: 18px; }
   .mc-main { padding-top: 16px; }
@@ -2291,7 +2283,7 @@ html[data-theme="friday"] .mc-pipe-draft { border-radius: 0; }
 html[data-theme="friday"] .mc-pipe-name { color: var(--pt-neon-bright); text-shadow: var(--pt-glow-text); }
 
 /* ── Contextual empty state (SYS-08) ─────────────────────
-   Shared guidance card used across Calendar / Chat / Approvals / Kanban.
+   Shared guidance card used across Calendar / Chat / Kanban.
    Replaces tall voids with a compact card: why it's empty, a next action,
    and a subtle dot pattern instead of a blank rectangle. */
 .mc-empty {
@@ -2333,57 +2325,6 @@ html[data-theme="friday"] .mc-pipe-name { color: var(--pt-neon-bright); text-sha
 .mc-empty-btn.is-primary { background: var(--pt-neon); color: #08010c; border-color: var(--pt-neon); text-shadow: none; }
 .mc-empty-btn.is-primary:hover { background: var(--pt-neon-bright); box-shadow: var(--pt-glow-sm); }
 
-/* ── Approvals inbox ──────────────────────────────────── */
-.mc-appr-col { display: flex; flex-direction: column; }
-.mc-appr-body { display: flex; flex-direction: column; gap: 10px; padding: 12px; }
-.mc-appr-card {
-  border: 1px solid var(--pt-border-dim);
-  border-radius: var(--pt-r-md);
-  background: rgba(10,2,12,0.7);
-  padding: 12px 14px;
-  display: flex; flex-direction: column; gap: 6px;
-}
-.mc-appr-card:not(.info) { border-color: rgba(254,188,46,0.45); }
-.mc-appr-card.info { opacity: 0.92; }
-.mc-appr-head { display: flex; align-items: baseline; gap: 8px; }
-.mc-appr-glyph { color: #febc2e; }
-.mc-appr-card.info .mc-appr-glyph { color: var(--pt-text-dim); }
-.mc-appr-title {
-  font-size: 12px; font-weight: 700;
-  color: var(--pt-neon-bright);
-  text-shadow: var(--pt-glow-sm);
-}
-.mc-appr-when { margin-left: auto; font-size: 8px; color: var(--pt-text-mute); letter-spacing: 0.14em; text-transform: uppercase; white-space: nowrap; }
-.mc-appr-summary { font-size: 10px; color: var(--pt-text); line-height: 1.5; }
-.mc-appr-foot { display: flex; align-items: center; gap: 10px; margin-top: 4px; flex-wrap: wrap; }
-.mc-appr-src { font-size: 8px; color: var(--pt-text-mute); letter-spacing: 0.12em; }
-.mc-appr-actions { margin-left: auto; display: flex; gap: 8px; }
-.mc-appr-btn {
-  font: 700 10px var(--pt-font-mono);
-  letter-spacing: 0.14em;
-  padding: 7px 14px;
-  min-height: 32px;
-  border-radius: var(--pt-r-sm);
-  background: transparent;
-  cursor: pointer;
-  transition: background 0.15s ease, box-shadow 0.15s ease;
-}
-.mc-appr-btn.approve { border: 1px solid rgba(40,200,64,0.6); color: #28c840; }
-.mc-appr-btn.approve:hover, .mc-appr-btn.approve.confirm { background: rgba(40,200,64,0.14); box-shadow: 0 0 10px rgba(40,200,64,0.35); }
-.mc-appr-btn.reject { border: 1px solid rgba(255,95,87,0.6); color: #ff8a83; }
-.mc-appr-btn.reject:hover, .mc-appr-btn.reject.confirm { background: rgba(255,95,87,0.12); box-shadow: 0 0 10px rgba(255,95,87,0.3); }
-.mc-appr-btn:disabled { opacity: 0.4; cursor: wait; }
-.mc-appr-btn.confirm { animation: pipe-pulse 0.9s ease-in-out infinite; }
-.mc-appr-flash {
-  font-size: 11px; letter-spacing: 0.14em;
-  color: #28c840; text-shadow: 0 0 8px rgba(40,200,64,0.5);
-  border: 1px solid rgba(40,200,64,0.4);
-  background: rgba(40,200,64,0.07);
-  border-radius: var(--pt-r-sm);
-  padding: 8px 12px;
-  margin-bottom: 12px;
-}
-
 /* ── Needs-you action feed ────────────────────────────── */
 .mc-feed {
   border: 1px solid var(--pt-border-dim);
@@ -2399,10 +2340,8 @@ html[data-theme="friday"] .mc-pipe-name { color: var(--pt-neon-bright); text-sha
   border-bottom: 1px solid var(--pt-border-dim);
 }
 .mc-feed-title { font-size: 10px; letter-spacing: 0.22em; color: var(--pt-neon-bright); text-shadow: var(--pt-glow-sm); }
-.mc-feed-count { font-size: 9px; letter-spacing: 0.18em; color: var(--pt-text-dim); }
+.mc-feed-count { margin-left: auto; font-size: 9px; letter-spacing: 0.18em; color: var(--pt-text-dim); }
 .mc-feed-count.hot { color: #febc2e; text-shadow: 0 0 8px rgba(254,188,46,0.5); animation: pipe-pulse 1.6s ease-in-out infinite; }
-.mc-feed-open { margin-left: auto; font-size: 9px; letter-spacing: 0.14em; color: var(--pt-neon); text-decoration: none; }
-.mc-feed-open:hover { text-decoration: underline; }
 .mc-feed-body { display: flex; flex-direction: column; }
 .mc-feed-row {
   display: flex; align-items: center; gap: 10px;
@@ -2423,30 +2362,7 @@ html[data-theme="friday"] .mc-pipe-name { color: var(--pt-neon-bright); text-sha
 .mc-feed-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mc-feed-arrow { margin-left: auto; color: var(--pt-text-mute); }
 
-/* ── Nav badges ───────────────────────────────────────── */
-.mc-nav-badge {
-  margin-left: auto;
-  font-size: 9px; font-weight: 700;
-  min-width: 18px; height: 18px;
-  display: inline-flex; align-items: center; justify-content: center;
-  padding: 0 5px;
-  border-radius: 9px;
-  color: #08010c;
-  background: #febc2e;
-  box-shadow: 0 0 8px rgba(254,188,46,0.6);
-}
 .mc-mobile-glyph { position: relative; }
-.mc-mobile-badge {
-  position: absolute; top: -6px; right: -12px;
-  font-size: 8px; font-weight: 700;
-  min-width: 15px; height: 15px;
-  display: inline-flex; align-items: center; justify-content: center;
-  padding: 0 4px;
-  border-radius: 8px;
-  color: #08010c;
-  background: #febc2e;
-  box-shadow: 0 0 6px rgba(254,188,46,0.7);
-}
 
 /* ── System health ────────────────────────────────────── */
 .mc-health { margin-bottom: 16px; }
@@ -2717,7 +2633,6 @@ html[data-theme="friday"] .mc-pipe-name { color: var(--pt-neon-bright); text-sha
   /* Inline links that act as navigation, plus the week stepper, are all well
      under the 44px minimum on a phone. Pad the hit area rather than the text
      so the visual density is unchanged. */
-  .mc-feed-open,
   .mc-pipe-link,
   .mc-pipe-preview {
     display: inline-flex; align-items: center;
@@ -2728,17 +2643,11 @@ html[data-theme="friday"] .mc-pipe-name { color: var(--pt-neon-bright); text-sha
     min-width: 44px;
     padding: 0 12px;
   }
-  .mc-appr-actions { width: 100%; }
-  .mc-appr-btn { flex: 1; min-height: 44px; }
 }
 
-html[data-theme="friday"] .mc-appr-card,
-html[data-theme="friday"] .mc-appr-btn,
 html[data-theme="friday"] .mc-feed,
 html[data-theme="friday"] .mc-hk-status,
-html[data-theme="friday"] .mc-drawer-close,
-html[data-theme="friday"] .mc-nav-badge,
-html[data-theme="friday"] .mc-mobile-badge { border-radius: 0; }
+html[data-theme="friday"] .mc-drawer-close { border-radius: 0; }
 
 /* ── GitHub at-a-glance ───────────────────────────────── */
 .mc-gh-live {

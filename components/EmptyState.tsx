@@ -4,7 +4,7 @@
  * Shared contextual empty state.
  *
  * Replaces the old "tall empty rectangle + thin `— empty —` line" pattern across
- * Calendar, Chat, Approvals, and Kanban with a compact guidance card: it explains
+ * Calendar, Chat, and Kanban with a compact guidance card: it explains
  * WHY the view is empty, offers a clear next action where one exists, and fills
  * the space with a subtle dot pattern instead of a void.
  *

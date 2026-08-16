@@ -15,20 +15,15 @@ export function CommandHeader() {
   const { data, isLive, refresh, lastUpdated } = useLiveData()
   const { appName } = useBrand()
   const [spinning, setSpinning] = useState(false)
-  const [approvals, setApprovals] = useState<number | null>(null)
   const [health, setHealth] = useState<SystemHealthData | null>(null)
   const cockpitRef = useRef<HTMLDivElement>(null)
 
-  // Approvals + service health aren't part of the mission-control poll, so the
-  // header pulls them itself. Failures leave the chip at its last known value
-  // rather than flashing a scary zero.
+  // Service health isn't part of the mission-control poll, so the header pulls
+  // it itself. Failures leave the chip at its last known value rather than
+  // flashing a scary zero.
   useEffect(() => {
     let alive = true
     const load = () => {
-      fetch('/api/approvals?count=1', { cache: 'no-store' })
-        .then(r => r.json())
-        .then(j => { if (alive && typeof j.pending === 'number') setApprovals(j.pending) })
-        .catch(() => {})
       fetch('/api/system', { cache: 'no-store' })
         .then(r => r.json())
         .then((j: SystemHealthData) => { if (alive && Array.isArray(j.services)) setHealth(j) })
@@ -77,7 +72,6 @@ export function CommandHeader() {
   const servicesTotal = health?.services.length ?? 0
 
   const stats = data ? [
-    { key: 'needs_you', label: 'Needs you', value: approvals ?? 0, glyph: '◆', alert: (approvals ?? 0) > 0 },
     { key: 'attention', label: 'Attention', value: attention, glyph: '⚠', alert: attention > 0 },
     { key: 'active', label: 'Active', value: active, glyph: '▶', alert: false },
     { key: 'cron_fail', label: 'Cron fail', value: cronLive ? `${cronFailing}/${cronLive}` : '—', glyph: '○', alert: cronFailing > 0 },
