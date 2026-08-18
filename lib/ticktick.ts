@@ -41,6 +41,7 @@ export async function fetchTickTickWeek(): Promise<TickTickWeekData> {
 
   try {
     const projects = await ttFetch<RawProject[]>('/project', token)
+    const failures: string[] = []
     const perProject = await Promise.all(
       projects.map(async p => {
         try {
@@ -60,12 +61,20 @@ export async function fetchTickTickWeek(): Promise<TickTickWeekData> {
               }
             })
             .filter((t): t is TickTickTask => t !== null)
-        } catch {
-          return [] // one bad project shouldn't sink the whole week
+        } catch (err) {
+          // One bad project shouldn't sink the whole week, but silently
+          // swallowing it made a stuck-401 project indistinguishable from a
+          // genuinely empty calendar — surface it instead.
+          failures.push(`${p.name ?? p.id}: ${(err as Error).message}`)
+          return []
         }
       }),
     )
-    return { configured: true, tasks: perProject.flat() }
+    return {
+      configured: true,
+      tasks: perProject.flat(),
+      ...(failures.length > 0 && { error: `Failed to load ${failures.length} of ${projects.length} project(s) — ${failures.join('; ')}` }),
+    }
   } catch (err) {
     return { configured: true, tasks: [], error: (err as Error).message }
   }
