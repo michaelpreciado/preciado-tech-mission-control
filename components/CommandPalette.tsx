@@ -23,14 +23,13 @@ type Item = { id: string; label: string; sub?: string; href: string; icon: IconN
 const ROUTES: Item[] = [
   { id: '/', label: 'Home', sub: 'command center', href: '/', icon: 'deck', group: 'Routes' },
   { id: '/kanban', label: 'Kanban', sub: 'task board', href: '/kanban', icon: 'kanban', group: 'Routes' },
-  { id: '/approvals', label: 'Approvals', sub: 'needs your call', href: '/approvals', icon: 'approvals', group: 'Routes' },
   { id: '/calendar', label: 'Calendar', sub: 'scheduler / today', href: '/calendar', icon: 'calendar', group: 'Routes' },
   { id: '/chat', label: 'Chat', sub: 'conversation console', href: '/chat', icon: 'chat', group: 'Routes' },
   { id: '/github', label: 'GitHub', sub: 'repos & activity', href: '/github', icon: 'github', group: 'Routes' },
   { id: '/costs', label: 'Costs', sub: 'billing & burn', href: '/costs', icon: 'costs', group: 'Routes' },
   { id: '/projects', label: 'Projects', sub: 'workspace', href: '/projects', icon: 'projects', group: 'Routes' },
   { id: '/pipeline', label: 'Web Dev Pipeline', sub: 'client delivery', href: '/pipeline', icon: 'pipeline', group: 'Routes' },
-  { id: '/ml-content', label: 'ML Content', sub: 'content engine', href: '/ml-content', icon: 'ml', group: 'Routes' },
+  { id: '/content-creation', label: 'Content Creation', sub: 'content engine', href: '/content-creation', icon: 'content', group: 'Routes' },
   { id: '/memory', label: 'Memory', sub: 'vault & notes', href: '/memory', icon: 'memory', group: 'Routes' },
   { id: '/team', label: 'Team', sub: 'agent command mesh', href: '/team', icon: 'team', group: 'Routes' },
   { id: '/setup', label: 'Setup', sub: 'configuration', href: '/setup', icon: 'setup', group: 'Routes' },
@@ -88,16 +87,15 @@ export function CommandPalette() {
     }
   }, [toggle, open])
 
-  // Escape to close
+  // Escape to close. Reset cursor on open — deliberately no autofocus here:
+  // focusing the input immediately pops the on-screen keyboard on touch
+  // devices, covering the list before the user can tap or arrow through it.
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
     window.addEventListener('keydown', onKey)
-    // focus the input on open (after render)
-    const raf = requestAnimationFrame(() => inputRef.current?.focus())
-    // reset cursor when results change
     setCursor(0)
-    return () => { window.removeEventListener('keydown', onKey); cancelAnimationFrame(raf) }
+    return () => window.removeEventListener('keydown', onKey)
   }, [open])
 
   // Lock body scroll while open
@@ -139,11 +137,36 @@ export function CommandPalette() {
     if (pathname !== it.href) router.push(it.href)
   }, [router, pathname])
 
-  const onInputKey = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowDown') { e.preventDefault(); setCursor(c => Math.min(c + 1, items.length - 1)) }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); setCursor(c => Math.max(c - 1, 0)) }
-    else if (e.key === 'Enter') { e.preventDefault(); const it = items[cursor]; if (it) go(it) }
-  }
+  // Arrow-key / Enter navigation lives on a window-level listener (not the
+  // input's onKeyDown) so it keeps working whether or not the input has
+  // focus — the palette opens with focus intentionally left on nothing,
+  // so touch users can arrow/tap through the list without the on-screen
+  // keyboard covering it. The first printable keystroke focuses the input
+  // so desktop keyboard users can still just start typing.
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault(); setCursor(c => Math.min(c + 1, items.length - 1))
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault(); setCursor(c => Math.max(c - 1, 0))
+      } else if (e.key === 'Enter') {
+        e.preventDefault(); const it = items[cursor]; if (it) go(it)
+      } else if (
+        document.activeElement !== inputRef.current &&
+        e.key.length === 1 && !e.metaKey && !e.ctrlKey && !e.altKey
+      ) {
+        // first printable keystroke while the input isn't focused: focus it
+        // and forward the character (browser default text-insertion only
+        // applies to whatever element already had focus at keydown time).
+        e.preventDefault()
+        inputRef.current?.focus()
+        setQuery(q => q + e.key)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, items, cursor, go])
 
   // keep the active row in view
   useEffect(() => {
@@ -158,14 +181,13 @@ export function CommandPalette() {
     <div className="cmdp-layer" role="dialog" aria-modal="true" aria-label="Command palette">
       <div className="cmdp-backdrop" onClick={() => setOpen(false)} />
       <div className="cmdp" onClick={e => e.stopPropagation()}>
-        <div className="cmdp-inputrow">
+        <div className="cmdp-inputrow" onClick={() => inputRef.current?.focus()}>
           <span className="cmdp-prompt">&gt;_</span>
           <input
             ref={inputRef}
             className="cmdp-input"
             value={query}
             onChange={e => { setQuery(e.target.value); setCursor(0) }}
-            onKeyDown={onInputKey}
             placeholder="Jump to a page, agent, task…  (try  g forge  or  > costs)"
             aria-label="Command palette search"
             autoComplete="off"

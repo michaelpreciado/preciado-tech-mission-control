@@ -189,7 +189,12 @@ function TaskLeaf({ task, pos, accent, active }: { task: TelemetryTask; pos: [nu
           metalness={0.15}
         />
       </mesh>
-      <Html position={[0, -0.19, 0]} center zIndexRange={[8, 0]}>
+      {/* Non-interactive label (no onClick, unlike the agent card chip) —
+          pointerEvents: 'none' so it never steals the drag-orbit / pinch-zoom
+          gesture from OrbitControls when a touch starts on top of a task
+          leaf. Html's own `pointerEvents` prop only takes effect in
+          `transform` mode, so it has to go through `style` here. */}
+      <Html position={[0, -0.19, 0]} center zIndexRange={[8, 0]} style={{ pointerEvents: 'none' }}>
         <div className={`mc-task-chip${active ? ' is-active' : ''}`} title={task.title ?? task.id}>
           <span className="mc-task-dot" style={{ background: accent }} />
           <span className="mc-task-txt">{task.title || task.id}</span>

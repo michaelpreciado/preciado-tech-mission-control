@@ -205,6 +205,20 @@ export function MemoryGraphView() {
                   const isTag = n.kind === 'tag'
                   const r = isTag ? 5 + Math.min(9, (n.noteCount ?? 1) / 3) : 5
                   const fill = isTag ? 'var(--pt-neon)' : folderColor(n.folder)
+                  // The visible dot (r=5..14 viewBox units) is far too small to
+                  // tap once the 900-wide viewBox is scaled down at fold-cover
+                  // width (~386px CSS, but the actual .mc-mem-svg-wrap render
+                  // width after Window/gutter/panel padding measures ~282px,
+                  // ~0.31x scale) — an r=5 note node renders at ~3px on
+                  // screen. An invisible, larger hit-area circle (still
+                  // bounded relative to the collide-force spacing so dense
+                  // clusters don't fully swallow their neighbors) expands the
+                  // tappable zone to ~13px on screen without changing the
+                  // visual design. A true 44px target isn't reachable in this
+                  // viewBox without either shrinking the world to match the
+                  // viewport (which would break desktop density) or adding
+                  // pinch-zoom — out of scope for this pass.
+                  const hitR = r + 16
                   return (
                     <g
                       key={n.id}
@@ -217,6 +231,7 @@ export function MemoryGraphView() {
                       aria-label={n.title}
                       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedId(cur => cur === n.id ? null : n.id) } }}
                     >
+                      <circle r={hitR} fill="transparent" style={{ pointerEvents: 'all' }} className="mc-mem-node-hit" />
                       {isTag ? (
                         <rect x={-r} y={-r} width={r * 2} height={r * 2} transform="rotate(45)" fill={fill} className="mc-mem-node-shape" />
                       ) : (

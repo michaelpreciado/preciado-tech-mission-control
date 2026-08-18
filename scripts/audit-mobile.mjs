@@ -26,10 +26,10 @@ const VIEWPORTS = ARGW
     ]
 
 const TABS = [
-  ['deck', '/'], ['approvals', '/approvals'], ['kanban', '/kanban'],
+  ['deck', '/'], ['kanban', '/kanban'],
   ['calendar', '/calendar'], ['chat', '/chat'], ['github', '/github'],
   ['costs', '/costs'], ['projects', '/projects'], ['pipeline', '/pipeline'],
-  ['ml-content', '/ml-content'], ['memory', '/memory'], ['team', '/team'],
+  ['content-creation', '/content-creation'], ['memory', '/memory'], ['team', '/team'],
   ['setup', '/setup'],
 ]
 
