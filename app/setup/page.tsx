@@ -272,12 +272,12 @@ export default function SetupPage() {
                     onChange={e => set('appearance', 'accentColor', e.target.value)}
                   />
                 </div>
-                <em>recolors the entire neon token system · restart the server to apply everywhere</em>
+                <em>recolors the entire neon token system · applies on next page load, no restart needed</em>
               </div>
             </div>
 
             <div className="mc-setup-group">
-              <div className="mc-setup-group-head">UI CUSTOMIZATION <span>motion, density, nav, 3D elements · restart the server to apply everywhere (like accent color)</span></div>
+              <div className="mc-setup-group-head">UI CUSTOMIZATION <span>motion, density, nav, 3D elements · applies on next page load, no restart needed (like accent color)</span></div>
 
               <div className="mc-setup-field">
                 <span>Motion</span>

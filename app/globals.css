@@ -2023,7 +2023,12 @@ a.mc-cell {
     background: rgba(var(--pt-neon-rgb),0.08);
     transform: scale(0.99);
   }
-  .mc-btn-ghost:hover {
+  /* Compound .mc-btn.mc-btn-ghost (both classes are always present together —
+     see components/ui.tsx Button) puts this at (0,4,1), strictly higher than
+     the (0,3,1) html[data-theme="friday"] .mc-btn:hover rule it must beat —
+     not just a same-specificity source-order tie, which is fragile to future
+     edits reordering the file. */
+  html[data-theme="friday"] .mc-btn.mc-btn-ghost:hover {
     color: var(--pt-text);
     border-color: var(--pt-border);
     box-shadow: none;

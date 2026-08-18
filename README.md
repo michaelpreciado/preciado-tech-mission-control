@@ -15,7 +15,7 @@ Your agents already write their state to disk — task queues, session logs, cro
 The dashboard is built on a simple operating pattern we call **Flight Director**: agents do the flying, you make the calls.
 
 1. **Own your agents.** They run on your hardware, under your command — not on someone else's platform.
-2. **Review all work.** Outbound work passes a **Go/No-Go gate** — the approvals inbox is the heart of the dashboard, not an afterthought.
+2. **Review all work.** The dashboard is read-mostly by design — a handful of explicit, same-origin actions (dispatch a task, tick a checkbox) are the only way it writes back into agent-land.
 3. **Keep your keys local.** Bring-your-own keys, stored in a gitignored file in this folder. Never synced, never logged, never returned by an API.
 
 ## What it is — and isn't
@@ -24,7 +24,7 @@ The dashboard is built on a simple operating pattern we call **Flight Director**
 |---|---|
 | A **dashboard/control-plane** for agents you already run | An agent framework or orchestrator (that's the [roadmap](#roadmap)) |
 | **Local-first** — reads files and localhost services | A SaaS, or anything that phones home |
-| **Read-mostly** — the one write path is your approval decisions | A tool that acts on your behalf without a gate |
+| **Read-mostly** — writes are a handful of explicit, same-origin actions you trigger | A tool that acts on your behalf without a gate |
 | Configurable via a **/setup page** in the browser | A YAML wrestling match |
 
 ## Get started
@@ -33,22 +33,21 @@ The dashboard is built on a simple operating pattern we call **Flight Director**
 |---|---|---|
 | 1. Clone | `git clone https://github.com/michaelpreciado/preciado-tech-mission-control.git && cd preciado-tech-mission-control` | 30s |
 | 2. Launch with demo data | `./start.sh --demo` | ~2 min |
-| 3. Explore | Browser opens a fully populated deck — approvals, pipeline, costs, tasks | 2 min |
+| 3. Explore | Browser opens a fully populated deck — kanban, pipeline, costs, team | 2 min |
 | 4. Make it yours | Open **/setup**, point the paths at your own agents' files, add keys | ~5 min |
 
 Requires **Node.js ≥ 22**. The demo seed (`npm run seed-demo`) fills the board with realistic fake data — an empty dashboard is hard to appreciate. When you're ready, `/setup` writes `data/config.json` (gitignored) and the collectors pick it up live, no restart.
 
 <p align="center">
   <img src="docs/screenshots/deck-mobile.png" width="24%" alt="Deck on mobile" />
-  <img src="docs/screenshots/approvals-mobile.png" width="24%" alt="Approvals go/no-go gate on mobile" />
+  <img src="docs/screenshots/tasks.png" width="24%" alt="Kanban board on mobile" />
   <img src="docs/screenshots/pipeline.png" width="50%" alt="Web-dev pipeline kanban" />
 </p>
 
 ## What's on the deck
 
 - **Deck** — live stats, a "NEEDS YOU" strip of everything awaiting a decision, scheduler, system health
-- **Approvals** — the Go/No-Go inbox: pipeline gates, email sign-offs, blocked tasks, one-tap approve/reject
-- **Tasks** — a read-only window into your agents' kanban DB (SQLite), with live SSE updates
+- **Kanban** — a window into your agents' kanban DB (SQLite), with live SSE updates
 - **Calendar** — every scheduled job with next/last run, plus optional Google Calendar events
 - **Chat** — talk to your agents through your local gateway
 - **GitHub** — contributions heatmap, repo grid, and recent events via your own `gh` CLI
@@ -78,7 +77,7 @@ Requires **Node.js ≥ 22**. The demo seed (`npm run seed-demo`) fills the board
       cron jobs.json      notes vault     localhost services (SSE bus, Ollama, …)
 ```
 
-Your agents **write**; Mission Control **renders**. Every collector degrades gracefully — a missing file or dead service means an empty panel, never a crash. The single write path back into agent-land is the approvals gate.
+Your agents **write**; Mission Control **renders**. Every collector degrades gracefully — a missing file or dead service means an empty panel, never a crash. The dashboard's own writes back into agent-land are limited to a handful of explicit, same-origin actions (dispatch a task, tick a checkbox) — never an unattended agent-facing write path.
 
 ## Configuration
 

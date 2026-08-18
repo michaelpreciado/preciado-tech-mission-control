@@ -1,11 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { assertSameOrigin } from '@/lib/mission-api'
+import { assertSameOrigin, getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv } from '@/lib/mission-api'
 import { readFileSync, readdirSync, mkdirSync, writeFileSync } from 'fs'
 import { join, dirname } from 'path'
 // Use relative path — @/ alias may not work in API routes
 import { deriveMLContentIdeaId, type MLContentIdea } from '../../../lib/types'
 import { getConfig } from '../../../lib/config'
 import { logger } from '../../../lib/logger'
+
+/** Same trusted-client gate as every other write route: bearer INTERNAL_API_SECRET if set, else loopback / FRIDAY_TRUSTED_IPS CIDR. */
+function isAuthorized(req: NextRequest): boolean {
+  const secret = process.env.INTERNAL_API_SECRET
+  if (secret) return req.headers.get('authorization') === `Bearer ${secret}`
+  const ip = getClientIpFromHeaders(req.headers)
+  return isTrustedIp(ip === 'unknown' ? '127.0.0.1' : ip, trustedRangesFromEnv())
+}
+
+/** Ids of ideas currently present in the week-N.json files — used to reject dispatch
+ * requests for ids that don't correspond to a real idea (caps the sidecar's key space). */
+function readValidIdeaIds(): Set<string> {
+  const IDEAS_DIR = getConfig().paths.mlContentIdeasDir
+  const ids = new Set<string>()
+  let files: string[] = []
+  try {
+    files = readdirSync(IDEAS_DIR).filter(f => f.startsWith('week-') && f.endsWith('.json'))
+  } catch {
+    return ids
+  }
+  for (const file of files) {
+    try {
+      const data = JSON.parse(readFileSync(join(IDEAS_DIR, file), 'utf-8'))
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- idea files have loose shape
+      data.ideas?.forEach((idea: any) => ids.add(deriveMLContentIdeaId(idea)))
+    } catch {
+      // skip unreadable file — same tolerance as GET
+    }
+  }
+  return ids
+}
 
 // Local-only, gitignored sidecar recording which ideas have already been
 // dispatched to Hermes — same pattern as data/config.json (lib/config.ts).
@@ -69,6 +100,7 @@ export async function GET(_request: NextRequest) {
 export async function POST(req: NextRequest) {
   const _origin = assertSameOrigin(req)
   if (!_origin.ok) return NextResponse.json(_origin.body, { status: _origin.status })
+  if (!isAuthorized(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
   let body: unknown
   try {
@@ -79,6 +111,9 @@ export async function POST(req: NextRequest) {
   const id = (body as { id?: unknown } | null)?.id
   if (typeof id !== 'string' || !id.trim()) {
     return NextResponse.json({ error: 'id (string) is required' }, { status: 400 })
+  }
+  if (!readValidIdeaIds().has(id)) {
+    return NextResponse.json({ error: 'id does not match a known idea' }, { status: 404 })
   }
 
   try {

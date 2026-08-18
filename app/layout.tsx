@@ -9,6 +9,11 @@ import { buildTokenCss, buildFridayThemeCss, buildDensityCss } from '@/lib/token
 
 const config = getConfig()
 
+// Force dynamic rendering so /setup changes (motion/density/tab-visibility/
+// 3D toggles) apply on the next page load without a full rebuild — most of
+// this app's data is fetched client-side regardless of route classification.
+export const dynamic = 'force-dynamic'
+
 const mono = JetBrains_Mono({
   variable: '--pt-font-mono',
   subsets: ['latin'],
@@ -66,7 +71,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <head>
         <link rel="manifest" href="/manifest.json" />
         {/* Base design tokens first, then the runtime accent override LAST so it wins. */}
-        <style id="design-tokens">{buildTokenCss()}{buildFridayThemeCss()}{buildDensityCss()}</style>
+        <style id="design-tokens">{buildTokenCss() + buildFridayThemeCss() + buildDensityCss()}</style>
         {accentCss && <style id="friday-accent">{accentCss}</style>}
       </head>
       <body className={`${mono.variable} ${inter.variable}`}>

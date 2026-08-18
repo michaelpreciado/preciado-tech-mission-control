@@ -83,6 +83,7 @@ export function ContentCreationBoard() {
   const [ideas, setIdeas] = useState<MLContentIdea[]>([])
   const [error, setError] = useState<string | null>(null)
   const [dispatchingId, setDispatchingId] = useState<string | null>(null)
+  const [loaded, setLoaded] = useState(false)
   const ideasRef = useRef<MLContentIdea[]>([])
   ideasRef.current = ideas
 
@@ -95,6 +96,8 @@ export function ContentCreationBoard() {
       setError(null)
     } catch (err) {
       setError((err as Error).message)
+    } finally {
+      setLoaded(true)
     }
   }, [])
 
@@ -140,7 +143,7 @@ export function ContentCreationBoard() {
     }
   }, [refresh])
 
-  if (!ideas.length && !error) return <SkeletonPanel label="loading content ideas" />
+  if (!loaded && !ideas.length && !error) return <SkeletonPanel label="loading content ideas" />
 
   return (
     <>

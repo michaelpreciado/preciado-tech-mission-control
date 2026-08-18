@@ -60,13 +60,13 @@ export function ActionFeed() {
     }
   }
   for (const task of (data?.tasks ?? []).filter(t => t.status === 'attention').slice(0, 3)) {
-    rows.push({ id: `task:${task.id}`, tone: 'warn', glyph: '≡', text: `${task.title} (${task.ownerName})`, href: '/tasks' })
+    rows.push({ id: `task:${task.id}`, tone: 'warn', glyph: '≡', text: `${task.title} (${task.ownerName})`, href: '/kanban' })
   }
   for (const [i, warning] of (data?.warnings ?? []).entries()) {
     rows.push({ id: `warn:${i}`, tone: 'note', glyph: '◇', text: warning, href: '/' })
   }
   for (const task of blockedTasks.slice(0, 3)) {
-    rows.push({ id: `hermes:${task.id}`, tone: 'warn', glyph: '⚠', text: `Hermes task ${task.status} — ${task.title}`, href: '/tasks' })
+    rows.push({ id: `hermes:${task.id}`, tone: 'warn', glyph: '⚠', text: `Hermes task ${task.status} — ${task.title}`, href: '/kanban' })
   }
 
   const shown = rows.slice(0, 8)
