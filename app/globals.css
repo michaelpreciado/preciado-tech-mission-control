@@ -1900,44 +1900,6 @@ h1 {
   }
 }
 
-/* ── AMOLED-optimized panel surfaces (mobile) ─────────────
-   Pixel/Fold-class phones use AMOLED: a pixel at true #000000
-   draws ~zero power and gives the highest contrast against the
-   neon accents, but any purple/white color tint lights up
-   subpixels for no visual gain. `--pt-bg`/`SURFACE.bg` are
-   already pure black at the page level (lib/tokens.ts), but the
-   large panel fills stacked on top of it — window bodies, the
-   sticky header, the mobile dock, the "More" sheet, and the
-   modal/drawer overlays — are purple- or white-tinted glass, and
-   on a phone those panels ARE most of the visible screen. This
-   block (same ≤820px breakpoint that switches on the mobile nav,
-   above) collapses those fills toward near-black. It touches
-   panel-background color ONLY — borders, glow, box-shadow and the
-   accent-tinted window-head strip are untouched, and desktop
-   (>820px) keeps the current richer glass look unchanged. */
-@media (max-width: 820px) {
-  .mc-window,
-  html[data-theme="friday"] .mc-window {
-    background: rgba(0,0,0,0.94);
-  }
-  .mc-cockpit {
-    background: rgba(0,0,0,0.96);
-  }
-  html[data-theme="friday"] .mc-cockpit {
-    background: rgba(0,0,0,0.92);
-  }
-  .mc-mobile-nav-inner {
-    background: rgba(0,0,0,0.94);
-  }
-  .mc-more-sheet {
-    background: rgba(0,0,0,0.96);
-  }
-  .mc-modal,
-  .mc-drawer {
-    background: linear-gradient(180deg, rgba(0,0,0,0.97), rgba(0,0,0,0.99));
-  }
-}
-
 /* ── Small phone: ≤520px ── */
 @media (max-width: 520px) {
   :root { --mc-gutter: 10px; }
@@ -5230,4 +5192,58 @@ html[data-theme="friday"] .mc-cmdp-trigger:hover {
 @media (max-width: 820px) {
   .mc-mem-body { grid-template-columns: 1fr; }
   .mc-mem-detail { min-height: 120px; }
+}
+
+/* ── AMOLED-optimized panel surfaces (mobile) ─────────────
+   Pixel/Fold-class phones use AMOLED: a pixel at true #000000
+   draws ~zero power and gives the highest contrast against the
+   neon accents, but any purple/white color tint lights up
+   subpixels for no visual gain. `--pt-bg`/`SURFACE.bg` are
+   already pure black at the page level (lib/tokens.ts), but the
+   large panel fills stacked on top of it — window bodies, the
+   sticky header, the mobile dock, the "More" sheet, and the
+   modal/drawer overlays — are purple- or white-tinted glass, and
+   on a phone those panels ARE most of the visible screen. This
+   block reuses the same ≤820px breakpoint that switches on the
+   mobile nav (`.mc-mobile-nav { display: block }`, above) and
+   collapses those fills toward near-black. It touches
+   panel-background color ONLY — borders, glow, box-shadow and the
+   accent-tinted window-head strip are untouched, and desktop
+   (>820px) keeps the current richer glass look unchanged.
+
+   Deliberately placed at the END of the file: `.mc-modal`,
+   `.mc-drawer` and `.mc-more-sheet` each have an unconditional
+   (non-media-query) base rule elsewhere in this file at the SAME
+   specificity (one class), and per the cascade the later rule in
+   source order wins a specificity tie — media-query wrapping does
+   not add specificity. Putting this block first (right after the
+   mobile-nav-activation block, where it originally lived) let
+   those three base rules — which appear further down the file —
+   win at every width, silently no-op'ing 3 of the 6 targeted
+   selectors. Being last in the file guarantees this block wins
+   the tie for all six, including `html[data-theme="friday"]
+   .mc-window`/`.mc-cockpit`, which need matching-specificity
+   qualified selectors (not just extra specificity) to be reliably
+   beaten regardless of future edits elsewhere in the file. */
+@media (max-width: 820px) {
+  .mc-window,
+  html[data-theme="friday"] .mc-window {
+    background: rgba(0,0,0,0.94);
+  }
+  .mc-cockpit {
+    background: rgba(0,0,0,0.96);
+  }
+  html[data-theme="friday"] .mc-cockpit {
+    background: rgba(0,0,0,0.92);
+  }
+  .mc-mobile-nav-inner {
+    background: rgba(0,0,0,0.94);
+  }
+  .mc-more-sheet {
+    background: rgba(0,0,0,0.96);
+  }
+  .mc-modal,
+  .mc-drawer {
+    background: linear-gradient(180deg, rgba(0,0,0,0.97), rgba(0,0,0,0.99));
+  }
 }
