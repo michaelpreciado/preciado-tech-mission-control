@@ -1900,6 +1900,44 @@ h1 {
   }
 }
 
+/* ── AMOLED-optimized panel surfaces (mobile) ─────────────
+   Pixel/Fold-class phones use AMOLED: a pixel at true #000000
+   draws ~zero power and gives the highest contrast against the
+   neon accents, but any purple/white color tint lights up
+   subpixels for no visual gain. `--pt-bg`/`SURFACE.bg` are
+   already pure black at the page level (lib/tokens.ts), but the
+   large panel fills stacked on top of it — window bodies, the
+   sticky header, the mobile dock, the "More" sheet, and the
+   modal/drawer overlays — are purple- or white-tinted glass, and
+   on a phone those panels ARE most of the visible screen. This
+   block (same ≤820px breakpoint that switches on the mobile nav,
+   above) collapses those fills toward near-black. It touches
+   panel-background color ONLY — borders, glow, box-shadow and the
+   accent-tinted window-head strip are untouched, and desktop
+   (>820px) keeps the current richer glass look unchanged. */
+@media (max-width: 820px) {
+  .mc-window,
+  html[data-theme="friday"] .mc-window {
+    background: rgba(0,0,0,0.94);
+  }
+  .mc-cockpit {
+    background: rgba(0,0,0,0.96);
+  }
+  html[data-theme="friday"] .mc-cockpit {
+    background: rgba(0,0,0,0.92);
+  }
+  .mc-mobile-nav-inner {
+    background: rgba(0,0,0,0.94);
+  }
+  .mc-more-sheet {
+    background: rgba(0,0,0,0.96);
+  }
+  .mc-modal,
+  .mc-drawer {
+    background: linear-gradient(180deg, rgba(0,0,0,0.97), rgba(0,0,0,0.99));
+  }
+}
+
 /* ── Small phone: ≤520px ── */
 @media (max-width: 520px) {
   :root { --mc-gutter: 10px; }
