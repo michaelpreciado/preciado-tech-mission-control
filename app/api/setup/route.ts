@@ -148,9 +148,6 @@ function validate(body: unknown): { ok: true; patch: ConfigFile } | { ok: false;
       if (!fields.includes(k)) continue // unknown keys ignored
       const cleaned = cleanString(v, `${section}.${k}`)
       if (typeof cleaned !== 'string') return { ok: false, error: cleaned.error }
-      if (k === 'accentColor' && cleaned !== '' && !isHexColor(cleaned)) {
-        return { ok: false, error: 'appearance.accentColor must be a #rrggbb hex color' }
-      }
       out[k] = cleaned
     }
     if (Object.keys(out).length) patch[section] = out

@@ -5,11 +5,13 @@
  * 'use client' module pulling in LiveDataProvider/CommandPalette/AmbientNeuralField)
  * so the Setup page doesn't drag that whole chunk in just to list tab ids/labels.
  *
- * `icon` is a plain string here (not the IconName union from components/icons)
- * to avoid Setup needing that import too; Shell.tsx casts it back to IconName
- * where it actually renders <Icon>.
+ * `icon` is typed as the real IconName union — `import type` is erased
+ * entirely at compile time, so this doesn't pull components/icons's runtime
+ * code (or anything else) into the Setup page's bundle.
  */
-export type NavItem = { id: string; label: string; icon: string }
+import type { IconName } from '@/components/icons'
+
+export type NavItem = { id: string; label: string; icon: IconName }
 export type NavSection = { section: string; items: NavItem[] }
 
 export const NAV: NavSection[] = [

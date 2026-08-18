@@ -106,7 +106,7 @@ function Sidebar() {
               style={{ '--i': idx } as React.CSSProperties}
             >
               <span className="mc-nav-rail" />
-              <span className="mc-nav-ic"><Icon name={it.icon as IconName} size={16} /></span>
+              <span className="mc-nav-ic"><Icon name={it.icon} size={16} /></span>
               <span className="mc-nav-label">{it.label}</span>
               <span className="mc-nav-scan" />
             </Link>
@@ -160,7 +160,7 @@ function MoreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
               <div className="mc-more-grid">
                 {items.map(it => (
                   <Link key={it.id} href={it.id} className={`mc-more-cell ${isActive(it.id) ? 'is-active' : ''}`} onClick={onClose}>
-                    <span className="mc-more-ic"><Icon name={it.icon as IconName} size={18} /></span>
+                    <span className="mc-more-ic"><Icon name={it.icon} size={18} /></span>
                     <span className="mc-more-lbl">{it.label}</span>
                   </Link>
                 ))}

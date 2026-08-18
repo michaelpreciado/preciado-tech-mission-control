@@ -243,10 +243,29 @@ export function buildTokenCss(): string {
   --pt-ease-enter: ${MOTION.easeEnter};
   --pt-ease-exit: ${MOTION.easeExit};
 
+  /* density — compact/expanded card padding+gap (Setup → UI CUSTOMIZATION).
+     Compact is the default here; buildDensityCss() below overrides these to
+     DENSITY.expanded under html[data-density="expanded"]. */
+  --mc-density-py: ${DENSITY.compact.py};
+  --mc-density-px: ${DENSITY.compact.px};
+  --mc-density-gap: ${DENSITY.compact.gap};
+
   --pt-scanline:
     repeating-linear-gradient(to bottom,
       rgba(var(--pt-neon-rgb),0.04) 0px, rgba(var(--pt-neon-rgb),0.04) 1px,
       transparent 1px, transparent 3px);
+}
+`
+}
+
+/** Emit the `html[data-density="expanded"]` override — the only other place
+ * DENSITY values may legally appear in CSS. `html[data-density]` itself is
+ * stamped server-side in app/layout.tsx from Setup → UI CUSTOMIZATION. */
+export function buildDensityCss(): string {
+  return `html[data-density="expanded"] {
+  --mc-density-py: ${DENSITY.expanded.py};
+  --mc-density-px: ${DENSITY.expanded.px};
+  --mc-density-gap: ${DENSITY.expanded.gap};
 }
 `
 }

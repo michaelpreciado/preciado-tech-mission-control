@@ -3641,20 +3641,13 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   .mc-main > * { animation: none !important; }
 }
 
-/* ── Density (Setup → UI CUSTOMIZATION) — lib/tokens.ts DENSITY values.
-   `html[data-density]` is stamped server-side in app/layout.tsx; compact is
-   the default (close to this file's pre-existing tile padding), expanded
-   loosens padding/gap for lower-density, easier-to-scan cards. ─────────── */
-:root {
-  --mc-density-py: 16px;
-  --mc-density-px: 18px;
-  --mc-density-gap: 6px;
-}
-html[data-density="expanded"] {
-  --mc-density-py: 24px;
-  --mc-density-px: 28px;
-  --mc-density-gap: 12px;
-}
+/* ── Density (Setup → UI CUSTOMIZATION) ────────────────────────────────
+   --mc-density-py/px/gap are emitted from lib/tokens.ts DENSITY by
+   buildTokenCss()/buildDensityCss() (injected in app/layout.tsx's
+   #design-tokens <style> block) — this file only ever CONSUMES them via
+   var(), never redeclares the numbers, so DENSITY stays the single source
+   of truth. `html[data-density]` itself is stamped server-side in
+   app/layout.tsx. ──────────────────────────────────────────────────── */
 
 /* ══════════════════════════════════════════════════════════════════════
    TILE GRID / TILE CARD — shared project-idea-mission-integration surface

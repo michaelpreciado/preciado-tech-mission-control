@@ -316,7 +316,7 @@ export default function SetupPage() {
                     TEAM GRAPH · {cfg.appearance.elements3d.teamGraph ? 'ON' : 'OFF'}
                   </Button>
                 </div>
-                <em>turn off the heavier WebGL/graph views on lower-power machines · each falls back to its existing list view</em>
+                <em>turn off the heavier WebGL/graph views on lower-power machines · Memory/Team graph fall back to their existing list views · Home globe is pure decoration, so off just leaves its frame empty</em>
               </div>
 
               <div className="mc-setup-field mc-setup-tabs">

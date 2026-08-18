@@ -5,7 +5,7 @@ import './globals.css'
 import { Shell } from '@/components/Shell'
 import { getConfig } from '@/lib/config'
 import { buildAccentCss } from '@/lib/theme'
-import { buildTokenCss, buildFridayThemeCss } from '@/lib/tokens'
+import { buildTokenCss, buildFridayThemeCss, buildDensityCss } from '@/lib/tokens'
 
 const config = getConfig()
 
@@ -66,7 +66,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <head>
         <link rel="manifest" href="/manifest.json" />
         {/* Base design tokens first, then the runtime accent override LAST so it wins. */}
-        <style id="design-tokens">{buildTokenCss()}{buildFridayThemeCss()}</style>
+        <style id="design-tokens">{buildTokenCss()}{buildFridayThemeCss()}{buildDensityCss()}</style>
         {accentCss && <style id="friday-accent">{accentCss}</style>}
       </head>
       <body className={`${mono.variable} ${inter.variable}`}>
