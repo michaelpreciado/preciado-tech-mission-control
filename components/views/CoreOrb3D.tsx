@@ -15,7 +15,7 @@
  * beacon swells + brightens in real time. The whole sphere breathes
  * (opacity pulse) faster when any agent is working, same as the old orb.
  *
- * Perf/motion guards (same contract as AmbientNeuralField / BurnVol3D):
+ * Perf/motion guards (same contract as AmbientNeuralField / HoloHud3D):
  *  - `prefers-reduced-motion` → static frame, no loop.
  *  - coarse pointer → static frame (saves phone battery).
  *  - dpr capped, additive blends, zero real lights.
