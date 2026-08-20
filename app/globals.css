@@ -4847,6 +4847,16 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   .cc-listpane, .cc-threadpane { grid-row: 1 / -1; grid-column: 1 / -1; }
   /* Thread replaces the list on mobile when open; back button appears. */
   .cc-listpane.is-hidden-mobile { display: none; }
+  /* Both panes share one grid cell here, so the empty thread pane sat DIRECTLY
+     ON TOP of the list — later in DOM order, therefore above it — and
+     swallowed every tap. The list rendered fine underneath and looked
+     perfectly normal, which is why this survived a mobile pass: a synthetic
+     .click() on a row bypasses hit-testing and "worked", while a real finger
+     hit .cc-threadpane and did nothing.
+     Hiding only its children (as the two rules below still do, for the
+     >900px case where the panes sit side by side) left the box itself
+     hit-testable. When there is nothing to show, the pane must not exist. */
+  .cc-threadpane.is-empty { display: none; }
   .cc-threadpane.is-empty .cc-thread { display: none; }
   .cc-threadpane.is-empty .cc-composer { display: none; }
   .cc-back { display: inline-flex; align-items: center; gap: 2px;
