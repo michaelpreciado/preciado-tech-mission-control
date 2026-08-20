@@ -20,7 +20,7 @@ import type { MissionTask } from '@/lib/types'
 const CommandHeader = dynamic(() => import('./views/CommandHeader').then(m => m.CommandHeader), { ssr: false, loading: () => <SkeletonPanel label="loading header" /> })
 const ActionFeed = dynamic(() => import('./ActionFeed').then(m => m.ActionFeed), { ssr: false })
 const CoreOrb3D = dynamic(() => import('./views/CoreOrb3D').then(m => m.default), { ssr: false, loading: () => null })
-const SystemCore = dynamic(() => import('./views/SystemCore').then(m => m.SystemCore), { ssr: false, loading: () => <SkeletonPanel label="loading system core" /> })
+const RigHud = dynamic(() => import('./views/RigHud').then(m => m.RigHud), { ssr: false, loading: () => <SkeletonPanel label="loading rig telemetry" /> })
 const CalendarList = dynamic(() => import('./views/CalendarList').then(m => m.CalendarList), { ssr: false, loading: () => <SkeletonPanel label="loading schedule" /> })
 
 const PRIORITY_TONE: Record<MissionTask['priority'], string> = {
@@ -30,16 +30,21 @@ const PRIORITY_TONE: Record<MissionTask['priority'], string> = {
 /* ── Live clock + data-freshness readout (presence) ──────────────────── */
 
 function PresenceClock({ generatedAt, isLive }: { generatedAt?: string; isLive: boolean }) {
-  const [now, setNow] = useState(() => new Date())
+  // Starts null on purpose. Seeding this with `new Date()` renders the SERVER's
+  // wall clock into the SSR payload; if the second ticks before hydration the
+  // text mismatches, React throws #418 and discards the whole server tree to
+  // re-render on the client. Time-dependent text must only appear post-mount.
+  const [now, setNow] = useState<Date | null>(null)
   useEffect(() => {
+    setNow(new Date())
     const t = setInterval(() => setNow(new Date()), 1000)
     return () => clearInterval(t)
   }, [])
-  const ageMin = generatedAt ? Math.max(0, Math.round((Date.now() - Date.parse(generatedAt)) / 60000)) : null
+  const ageMin = now && generatedAt ? Math.max(0, Math.round((now.getTime() - Date.parse(generatedAt)) / 60000)) : null
   return (
     <div className="mc-home-presence">
-      <span className="mc-home-clock">{now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
-      <span className="mc-home-date">{now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+      <span className="mc-home-clock">{now ? now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '--:--:--'}</span>
+      <span className="mc-home-date">{now ? now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }) : '—'}</span>
       <span className="mc-home-live">
         <span className={`mc-led ${isLive ? 'green' : ''}`} />
         {isLive ? 'LIVE' : 'OFFLINE'}
@@ -309,7 +314,7 @@ export function HomeDeck() {
         </div>
         <div className="mc-home-corebody">
           <SectionHead label="SYSTEM CORE · RIG" />
-          <SystemCore />
+          <RigHud />
         </div>
       </div>
 
