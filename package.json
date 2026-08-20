@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 4175",
     "typecheck": "tsc --noEmit",
-    "test": "node --test tests/*.test.mjs",
+    "test": "node --test --import ./tests/helpers/ts-resolve.mjs tests/*.test.mjs",
     "seed-demo": "node scripts/seed-demo.mjs"
   },
   "dependencies": {
