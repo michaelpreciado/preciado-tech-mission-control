@@ -52,3 +52,102 @@ export function usageFromObject(obj: Record<string, any>) {
     failed,
   }
 }
+
+/* ── Local vs cloud-routed classification ──────────────────────────────
+ * Ollama can execute a model on THIS machine or route it to Ollama's hosted
+ * service. Hosted models carry a `:cloud` suffix, run on someone else's GPU,
+ * and are not free — so counting them as "local compute" both inflates local
+ * token volume and overstates the cost the rig avoided. They also log a $0
+ * cost, which makes them invisible on the paid side too, so they have to be
+ * called out explicitly rather than silently dropped.
+ * ─────────────────────────────────────────────────────────────────────── */
+
+/** True for an Ollama model executed on Ollama's hosted hardware, not the rig. */
+export function isCloudRoutedModel(model: string): boolean {
+  return /[:-]cloud$/i.test(String(model ?? '').trim())
+}
+
+/** True only for inference that actually ran on this machine. */
+export function isLocalModel(provider: string, model: string): boolean {
+  return String(provider ?? '').toLowerCase() === 'ollama' && !isCloudRoutedModel(model)
+}
+
+/* ── Duplicate-record identity ─────────────────────────────────────────
+ * OpenClaw persists a session as a `.trajectory.jsonl` PLUS one
+ * `.checkpoint.<id>.jsonl` per fork/resume, and every checkpoint replays the
+ * whole conversation up to that point. A session that was resumed twice
+ * therefore writes the same assistant turn — same tokens, same billed cost —
+ * into three files. Summing the tree naively counted each API call up to 6
+ * times: measured against this machine's logs, that overstated requests by
+ * 62%, tokens by 36% and logged spend by 63%.
+ *
+ * `message.responseId` is the provider's own id for the completion and is the
+ * true identity of an API call. Across 6,664 distinct responseIds in the local
+ * tree, 4,115 appeared more than once and NOT ONE of the repeats carried
+ * different usage — every duplicate is a byte-identical replay, so collapsing
+ * on this key is lossless rather than lossy.
+ *
+ * Records with no responseId (~19% — mostly Ollama and trace events) fall back
+ * to a content key. Timestamp is deliberately part of that key: two genuine
+ * calls with identical token counts are common, two at the same millisecond
+ * are not.
+ * ─────────────────────────────────────────────────────────────────────── */
+export function usageIdentity(obj: Record<string, any>, u: { model: string; input: number; output: number; cacheRead: number; cacheWrite: number; timestamp: string }): string {
+  const message = obj?.message || obj?.response || obj
+  const responseId = message?.responseId ?? obj?.responseId ?? obj?.data?.responseId
+  if (responseId) return `r:${responseId}`
+  return `k:${u.model}|${u.timestamp}|${u.input}|${u.output}|${u.cacheRead}|${u.cacheWrite}`
+}
+
+/**
+ * Identity of one throughput sample. `model.completed` events embed the entire
+ * `messagesSnapshot`, so every event re-emits a sample for every earlier turn
+ * in the session — without this, turn 1 of a 40-turn session is counted 40
+ * times and drags the average toward whatever that one turn happened to do.
+ * A turn is uniquely identified by its own timestamp.
+ */
+export function throughputIdentity(s: { model: string; timestamp: string; outputTokens: number }): string {
+  return `${s.model}|${s.timestamp}|${s.outputTokens}`
+}
+
+/* ── Billing mode ───────────────────────────────────────────────────────
+ * The single most misleading thing a cost dashboard can do is add up dollars
+ * and tokens that were paid for in different ways. Four modes exist here and
+ * they must never be summed or ranked against one another:
+ *
+ *   metered       pay per token, a real invoice line       (OpenRouter)
+ *   subscription  a flat monthly plan already paid for     (Claude Code, Codex)
+ *   local         ran on this machine's GPU, costs nothing (Ollama)
+ *   cloud-routed  Ollama's HOSTED hardware — not this rig, not free, and it
+ *                 logs no price, so it is neither of the two above
+ *
+ * Subscription providers log a per-token `cost` anyway: the client prices the
+ * request at list rate even though the plan already covered it. Counting that
+ * as spend put $57.99 of ChatGPT-plan usage into a "logged spend" total and
+ * dragged the blended rate — used to value local inference — up by 85%.
+ * ─────────────────────────────────────────────────────────────────────── */
+
+export type BillingMode = 'metered' | 'subscription' | 'local' | 'cloud-routed'
+
+/**
+ * Providers whose per-token cost is already covered by a flat plan. Matched on
+ * the provider label, so an Anthropic or OpenAI model reached THROUGH a metered
+ * gateway (`openrouter/anthropic/claude-sonnet-4-5`) is correctly still
+ * metered — its provider is `openrouter`.
+ */
+export const DEFAULT_SUBSCRIPTION_PROVIDERS = ['openai', 'openai-codex', 'anthropic', 'claude', 'claude-code']
+
+export function billingMode(provider: string, model: string, subscriptionProviders: readonly string[] = DEFAULT_SUBSCRIPTION_PROVIDERS): BillingMode {
+  const p = String(provider ?? '').trim().toLowerCase()
+  if (p === 'ollama') return isCloudRoutedModel(model) ? 'cloud-routed' : 'local'
+  if (subscriptionProviders.some(s => s.toLowerCase() === p)) return 'subscription'
+  return 'metered'
+}
+
+/** Tokens that a metered provider actually charges for. Cache READS are excluded
+ *  deliberately — they are billed at a fraction of input rate and dwarf every
+ *  other figure (96% of some models' totals), so ranking on them compares a
+ *  heavily-cached agent loop against a cold local model and calls it more work. */
+export function billableOf(u: { input: number; output: number; cacheWrite: number }): number {
+  return (u.input || 0) + (u.output || 0) + (u.cacheWrite || 0)
+}

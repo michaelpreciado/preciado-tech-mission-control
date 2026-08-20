@@ -143,9 +143,14 @@ export type GitHubActivity = {
   agent_id?: AgentId
 }
 
+/** How a model's usage was paid for. Figures from different modes are never
+ *  summed. See billingMode() in lib/collectors/costs-usage.ts. */
+export type BillingMode = 'metered' | 'subscription' | 'local' | 'cloud-routed'
+
 export type ModelUsage = {
   model: string
   provider: string
+  mode: BillingMode
   requests: number
   inputTokens: number
   outputTokens: number
@@ -176,7 +181,33 @@ export type CostDashboard = {
   totalCacheWriteTokens: number
   estimatedCostUsd: number
   models: ModelUsage[]
-  openRouterModels: ModelUsage[]
+  /** Calendar days covered by `daily` / `claudeUsage.daily` — the real window
+   *  behind every "last N days" label on the costs view. */
+  dailyWindowDays: number
+  /** Per-billing-mode rollup. The dashboard's spine: each mode is reported on
+   *  its own terms and the modes are never added together. */
+  modes: {
+    mode: BillingMode
+    models: number
+    requests: number
+    billableTokens: number
+    cacheReadTokens: number
+    totalTokens: number
+    /** Split of the billable side. `outputTokens` is the closest thing to
+     *  "work produced" that is comparable across all four modes — unlike totals,
+     *  nothing inflates it and Ollama reports it the same way OpenRouter does. */
+    inputTokens: number
+    outputTokens: number
+    /** Real per-token spend. Meaningful ONLY for `metered`; zero elsewhere. */
+    costUsd: number
+    /** List-rate cost the client computed for usage a flat plan already paid
+     *  for. Reported so the tokens aren't invisible, never added to spend. */
+    notionalCostUsd: number
+  }[]
+  /** Per-token spend from METERED usage only — the only log-derived figure that
+   *  corresponds to an invoice. `estimatedCostUsd` is the legacy all-provider
+   *  sum and is retained only for the all-time burn chart. */
+  meteredCostUsd: number
   openRouterLive?: {
     usageUsd: number
     /** Lifetime spend for the key — never mixed into monthly/total figures. */
@@ -194,9 +225,48 @@ export type CostDashboard = {
     totalOutputTokens: number
     totalCacheTokens: number
     totalTokens: number
+    /** Trailing `dailyWindowDays` calendar days. `models`/`totalTokens` above
+     *  are all-time and are NOT limited to this window. */
     daily: { date: string; tokens: number; byModel: Record<string, number> }[]
+    /** `YYYY-MM` → tokens, over ALL history. Monthly billing reconciles against
+     *  this rather than `daily`, which only reaches back one window. */
+    monthlyTokens: Record<string, number>
   }
-  daily: { date: string; requests: number; tokens: number; billableTokens: number; cost: number; byModel: Record<string, { tokens: number; cost: number }>; agent_id?: AgentId }[]
+  daily: { date: string; requests: number; tokens: number; billableTokens: number; cost: number; byModel: Record<string, { tokens: number; billable: number; cost: number; requests: number }>; agent_id?: AgentId }[]
+  /** Local (Ollama) inference analytics — token volume, tok/s throughput, and
+   * cost avoided vs. the blended rate this month's real paid usage implies.
+   * Absent (not just empty) when no local inference has been logged. */
+  localCompute?: {
+    totalTokens: number
+    totalRequests: number
+    daily: { date: string; tokens: number; requests: number }[]
+    models: { model: string; tokens: number; requests: number; avgTokensPerSec: number | null }[]
+    avgTokensPerSec: number | null
+    /** Median and 95th-percentile tok/s. The mean is dragged around by a
+     *  handful of near-zero turns (a 35B model on CPU logs 0.2 tok/s), so the
+     *  median is the honest "what it usually does" number. */
+    medianTokensPerSec: number | null
+    p95TokensPerSec: number | null
+    /** Wall-clock seconds the rig actually spent generating, summed over every
+     *  sampled turn — the closest thing to "GPU time bought for free". */
+    generationSeconds: number
+    inputTokens: number
+    outputTokens: number
+    /** Highest-volume single day on record. */
+    busiestDay: { date: string; tokens: number } | null
+    sampleCount: number
+    dailyThroughput: { date: string; avgTokensPerSec: number; samples: number }[]
+    /** $/million tokens implied by real logged paid (non-local) usage; null if none is logged. */
+    blendedApiRatePerMTokens: number | null
+    /** The raw $ and token totals the blended rate was computed from, for an honest scope note. */
+    blendedRateBasis: { costUsd: number; billableTokens: number } | null
+    costAvoidedMonthUsd: number
+    costAvoidedAllTimeUsd: number
+    /** Ollama models routed to Ollama's HOSTED hardware (`:cloud`). Excluded
+     * from every local figure above — they aren't this rig's compute and
+     * aren't free — but surfaced so the tokens aren't silently unaccounted. */
+    cloudRouted: { tokens: number; requests: number; models: string[] }
+  }
   /** Per-month billing reconciliation: Claude subscription plan + flat cost for
    * that month, real OpenRouter billed $ (current month only — the key API only
    * exposes the current month + lifetime), and token/buildings per source. */

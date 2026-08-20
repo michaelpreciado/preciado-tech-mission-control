@@ -4,7 +4,7 @@
  * than blanking the whole board.
  */
 import path from 'node:path'
-import type { CostDashboard, GitHubActivity, KanbanActivity, MissionData, OperationsDashboard } from './types'
+import type { CostDashboard, GitHubActivity, KanbanActivity, MissionData, MissionProject, OperationsDashboard } from './types'
 import { logger } from './logger'
 import { getConfig } from './config'
 import { ROOTS, rel, walk } from './collectors/shared'
@@ -23,19 +23,41 @@ import { integrations, collectIdeas, collectMissions, type IdeasResult, type Mis
 
 export { taskScanRoots }
 
-/** Wrap a collector so one failure doesn't take down the whole dashboard. */
+/**
+ * Wrap a collector so one failure doesn't take down the whole dashboard, and
+ * record how long it took. This aggregate is the critical path for every page,
+ * so a collector that quietly degrades from 200ms to 8s is worth a log line
+ * rather than a mystery.
+ */
+const SLOW_COLLECTOR_MS = 750
+let lastTimings: Record<string, number> = {}
+
 async function safeCollect<T>(name: string, fn: () => Promise<T>, fallback: T): Promise<T> {
+  const started = Date.now()
   try {
     return await fn()
   } catch (err) {
     logger.error('collector', err, { collector: name })
     return fallback
+  } finally {
+    const ms = Date.now() - started
+    lastTimings[name] = ms
+    if (ms >= SLOW_COLLECTOR_MS) logger.warn('collector', `${name} took ${ms}ms`, { collector: name, ms })
   }
 }
 
+/** Per-collector durations from the most recent collection, slowest first. */
+export function collectorTimings(): { name: string; ms: number }[] {
+  return Object.entries(lastTimings)
+    .map(([name, ms]) => ({ name, ms }))
+    .sort((a, b) => b.ms - a.ms)
+}
+
 export async function getMissionData(): Promise<MissionData> {
+  lastTimings = {}
+  const collectStarted = Date.now()
   const emptyGithub: GitHubActivity = { username: getConfig().github.username, weeks: [], repos: [], recentEvents: [], source: 'unavailable' }
-  const emptyCosts: CostDashboard = { source: 'unavailable', totalRequests: 0, totalTokens: 0, totalBillableTokens: 0, totalInputTokens: 0, totalOutputTokens: 0, totalCacheReadTokens: 0, totalCacheWriteTokens: 0, estimatedCostUsd: 0, models: [], openRouterModels: [], daily: [], warnings: ['Cost collection failed'] }
+  const emptyCosts: CostDashboard = { source: 'unavailable', totalRequests: 0, totalTokens: 0, totalBillableTokens: 0, totalInputTokens: 0, totalOutputTokens: 0, totalCacheReadTokens: 0, totalCacheWriteTokens: 0, estimatedCostUsd: 0, meteredCostUsd: 0, models: [], modes: [], dailyWindowDays: 30, daily: [], warnings: ['Cost collection failed'] }
   const emptyOps: OperationsDashboard = { source: 'unavailable', recentFiles: [], inbox: [], hotspots: [] }
   const emptyCalendar: CalendarResult = { events: [], status: { configured: false, ok: false, syncedAt: null, detail: 'Calendar collection failed' } }
   const emptyIdeas: IdeasResult = { ideas: [], status: { path: rel(path.join(ROOTS.workspace, 'ideas.json')), exists: false } }
@@ -57,7 +79,17 @@ export async function getMissionData(): Promise<MissionData> {
     safeCollect('kanban', collectKanbanActivity, emptyKanban),
     safeCollect('telemetry', collectTelemetry, emptyTelemetry),
   ])
-  const [projects, vaultFiles] = await Promise.all([collectProjects(tasks), walk(ROOTS.vault, { extensions: ['.md'], max: 1000, depth: 8 })])
+  const [projects, vaultFiles] = await Promise.all([
+    safeCollect('projects', () => collectProjects(tasks), [] as MissionProject[]),
+    safeCollect('vaultWalk', () => walk(ROOTS.vault, { extensions: ['.md'], max: 1000, depth: 8 }), [] as string[]),
+  ])
+  {
+    // One line per collection: this aggregate is the critical path for every
+    // page, so a regression should be visible in the log, not just felt.
+    const totalMs = Date.now() - collectStarted
+    const slowest = collectorTimings()[0]
+    logger.info('mission-data', `collected in ${totalMs}ms`, { ms: totalMs, slowest: slowest?.name, slowestMs: slowest?.ms })
+  }
   const warnings = integrationStates.filter(i => i.status === 'attention').map(i => `${i.name}: ${i.detail}`)
   // Tag every record with the producing agent so the frontend can attribute data.
   // OpenClaw is the default filesystem-based producer; Hermes records (cron,
