@@ -37,10 +37,24 @@ function streakFromCalendar(weeks: GitHubActivity['weeks']): number {
   return streak
 }
 
+/**
+ * Contribution graphs and repo lists change a few times an hour at most, but
+ * this collector spawns `gh api graphql` — a subprocess plus a network
+ * round-trip, ~2s — and the dashboard aggregate refreshes every 15 seconds.
+ * Cache it on its own clock, and serve the last good result if GitHub or the
+ * CLI is briefly unavailable rather than blanking the panel.
+ */
+const GITHUB_TTL_MS = Number(process.env.MC_GITHUB_TTL_MS ?? 10 * 60_000)
+let githubCache: { data: GitHubActivity; at: number } | null = null
+
 export async function collectGithub(): Promise<GitHubActivity> {
   const username = getConfig().github.username
   const empty: GitHubActivity = { username, weeks: [], repos: [], recentEvents: [], source: 'gh cli + GitHub API' }
   if (!username) return { ...empty, source: 'not configured — set github.username in data/config.json' }
+
+  if (githubCache && Date.now() - githubCache.at < GITHUB_TTL_MS && githubCache.data.username === username) {
+    return githubCache.data
+  }
   try {
     // No from/to → GitHub returns its natural rolling-year calendar (the exact
     // 52/53-week window the profile page shows). contributionLevel is GitHub's
@@ -82,7 +96,7 @@ export async function collectGithub(): Promise<GitHubActivity> {
     // The contribution calendar counts automated pushes too (e.g. sync bots
     // committing daily), so the streak is labeled rather than presented as personal.
     const hasAutomation = repos.some(r => /claude-sync|auto-?commit|sync-?bot/i.test(r.name))
-    return {
+    const data: GitHubActivity = {
       ...empty,
       totalContributions: calendar?.totalContributions,
       weeks,
@@ -92,7 +106,12 @@ export async function collectGithub(): Promise<GitHubActivity> {
       streakNote: hasAutomation ? 'includes automated claude-sync commits' : undefined,
       syncedAt: new Date().toISOString(),
     }
+    githubCache = { data, at: Date.now() }
+    return data
   } catch {
+    // A transient gh/network failure shouldn't blank a panel that was fine a
+    // minute ago — serve the last good snapshot and mark it stale.
+    if (githubCache) return { ...githubCache.data, source: `${githubCache.data.source} · cached (refresh failed)` }
     return empty
   }
 }
