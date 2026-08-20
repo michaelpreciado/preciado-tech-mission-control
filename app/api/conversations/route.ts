@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { listConversations, listDevices, localProfiles } from '@/lib/conversations'
+import { listConversations, listDevices, localProfiles, conversationStats } from '@/lib/conversations'
 import { checkRateLimit, getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv } from '@/lib/mission-api'
 
 export const dynamic = 'force-dynamic'
@@ -20,15 +20,20 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'rate limited' }, { status: 429, headers: { 'Retry-After': String(limit.retryAfter) } })
   }
   const sp = req.nextUrl.searchParams
+  const limitRaw = Number(sp.get('limit'))
   const conversations = listConversations({
     q: sp.get('q') ?? undefined,
     profile: sp.get('profile') ?? undefined,
     device: sp.get('device') ?? undefined,
+    limit: Number.isFinite(limitRaw) && limitRaw > 0 ? limitRaw : undefined,
   })
   return NextResponse.json({
     generatedAt: new Date().toISOString(),
     conversations,
     devices: listDevices(),
     profiles: localProfiles(),
+    // Deliberately unfiltered: the intel panel describes the whole archive, so
+    // it must not shrink while the user is typing in the search box.
+    stats: conversationStats(),
   }, { headers: { 'Cache-Control': 'no-store' } })
 }

@@ -248,8 +248,23 @@ function fetchRemote(remote: FridayChatRemote): Conversation[] {
 
 /* ── Public API ──────────────────────────────────────────── */
 
-/** All conversations across local profiles + configured remotes, newest first. */
-export function listConversations(opts?: { q?: string; profile?: string; device?: string; limit?: number }): Conversation[] {
+/**
+ * Every conversation from every local profile + configured remote, de-duped and
+ * newest first. NOT capped — callers that need a page slice it themselves, and
+ * aggregate callers need the true total (there are hundreds of sessions; a
+ * dashboard built on a capped list silently under-reports).
+ */
+let collectCache: { rows: Conversation[]; at: number } | null = null
+/** Long enough for one request's two callers to share, short enough to feel live. */
+const COLLECT_TTL_MS = 1_500
+
+function collectAll(): Conversation[] {
+  // listConversations() and conversationStats() both need the full set and are
+  // called together on every request. Without this they each re-read every
+  // profile's SQLite store — the same hundreds of sessions, twice per request.
+  const now = Date.now()
+  if (collectCache && now - collectCache.at < COLLECT_TTL_MS) return collectCache.rows
+
   const localDeviceName = localDevice()
   const all: Conversation[] = []
 
@@ -262,10 +277,104 @@ export function listConversations(opts?: { q?: string; profile?: string; device?
     all.push(...fetchRemote(remote))
   }
 
+  const seen = new Set<string>()
+  const rows = all
+    .filter(c => { const k = `${c.device}::${c.profile}::${c.id}`; if (seen.has(k)) return false; seen.add(k); return true })
+    .sort((a, b) => b.lastActiveAt - a.lastActiveAt)
+
+  collectCache = { rows, at: now }
+  return rows
+}
+
+/** Drop the collect cache so a just-sent message shows up immediately. */
+export function invalidateConversationCache(): void {
+  collectCache = null
+}
+
+/* ── Aggregate stats (the chat intel dashboard) ──────────── */
+
+export type ConversationStats = {
+  totalConversations: number
+  totalMessages: number
+  activeConversations: number
+  byAgent: { name: string; count: number; messages: number }[]
+  byDevice: { name: string; count: number; messages: number }[]
+  bySource: { name: string; count: number }[]
+  byModel: { name: string; count: number }[]
+  /** Oldest → newest daily message counts for the heatmap. */
+  heatmap: { date: string; count: number }[]
+  busiest: { id: string; title: string; profile: string; device: string; messageCount: number }[]
+  firstActiveAt: number | null
+  lastActiveAt: number | null
+}
+
+const HEATMAP_DAYS = 84 // 12 weeks
+
+function tally(rows: Conversation[], key: (c: Conversation) => string | null, withMessages: boolean) {
+  const map = new Map<string, { count: number; messages: number }>()
+  for (const c of rows) {
+    const k = key(c)
+    if (!k) continue
+    const cur = map.get(k) ?? { count: 0, messages: 0 }
+    cur.count++
+    cur.messages += c.messageCount
+    map.set(k, cur)
+  }
+  return [...map.entries()]
+    .map(([name, v]) => (withMessages ? { name, count: v.count, messages: v.messages } : { name, count: v.count }))
+    .sort((a, b) => b.count - a.count)
+}
+
+/** Aggregates over EVERY conversation — deliberately ignores search/filters. */
+export function conversationStats(): ConversationStats {
+  const all = collectAll()
+
+  // Heatmap buckets are keyed by LOCAL calendar day so the grid lines up with
+  // the day-grouped list; toISOString would bucket by UTC and drift.
+  const dayKey = (ts: number) => {
+    const d = new Date(ts)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  }
+  const counts = new Map<string, number>()
+  for (const c of all) counts.set(dayKey(c.lastActiveAt), (counts.get(dayKey(c.lastActiveAt)) ?? 0) + c.messageCount)
+
+  const heatmap: { date: string; count: number }[] = []
+  const cursor = new Date()
+  cursor.setHours(0, 0, 0, 0)
+  cursor.setDate(cursor.getDate() - (HEATMAP_DAYS - 1))
+  for (let i = 0; i < HEATMAP_DAYS; i++) {
+    const k = dayKey(cursor.getTime())
+    heatmap.push({ date: k, count: counts.get(k) ?? 0 })
+    cursor.setDate(cursor.getDate() + 1)
+  }
+
+  return {
+    totalConversations: all.length,
+    totalMessages: all.reduce((s, c) => s + c.messageCount, 0),
+    activeConversations: all.filter(c => c.active).length,
+    byAgent: tally(all, c => c.profile, true) as ConversationStats['byAgent'],
+    byDevice: tally(all, c => c.device, true) as ConversationStats['byDevice'],
+    bySource: tally(all, c => c.source || null, false) as ConversationStats['bySource'],
+    byModel: tally(all, c => (c.model ? c.model.split('/').pop()! : null), false).slice(0, 6) as ConversationStats['byModel'],
+    heatmap,
+    busiest: [...all].sort((a, b) => b.messageCount - a.messageCount).slice(0, 5)
+      .map(c => ({ id: c.id, title: c.title, profile: c.profile, device: c.device, messageCount: c.messageCount })),
+    firstActiveAt: all.length ? Math.min(...all.map(c => c.startedAt)) : null,
+    lastActiveAt: all.length ? Math.max(...all.map(c => c.lastActiveAt)) : null,
+  }
+}
+
+/** All conversations across local profiles + configured remotes, newest first. */
+export function listConversations(opts?: { q?: string; profile?: string; device?: string; limit?: number }): Conversation[] {
+  const all = collectAll()
+
   const q = opts?.q?.trim().toLowerCase()
   const prof = opts?.profile
   const dev = opts?.device
-  const limit = opts?.limit ?? 200
+  // Was 200 with no way for the route to override it, which silently hid
+  // every conversation past the newest 200. The list uses content-visibility,
+  // so the extra rows cost DOM but not paint.
+  const limit = Math.max(1, Math.min(opts?.limit ?? 1000, 5000))
 
   let results = all
   if (q) {
@@ -278,14 +387,8 @@ export function listConversations(opts?: { q?: string; profile?: string; device?
   if (prof) results = results.filter(c => c.profile === prof)
   if (dev) results = results.filter(c => c.device === dev)
 
-  // de-dup (id+profile+device), sort by last active desc
-  const seen = new Set<string>()
-  results = results
-    .filter(c => { const k = `${c.device}::${c.profile}::${c.id}`; if (seen.has(k)) return false; seen.add(k); return true })
-    .sort((a, b) => b.lastActiveAt - a.lastActiveAt)
-    .slice(0, limit)
-
-  return results
+  // collectAll() already de-duped and sorted; only the page slice is left.
+  return results.slice(0, limit)
 }
 
 /** Read the full message thread for one conversation. */
