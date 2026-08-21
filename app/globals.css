@@ -2518,7 +2518,7 @@ html[data-theme="friday"] .mc-pipe-name { color: var(--pt-neon-bright); text-sha
 .mc-hk-meta .bad { color: #ff8a83; }
 .mc-hk-meta .dim, .mc-hk-run .dim, .mc-hk-comment .dim, .mc-hk-event .dim { color: var(--pt-text-mute); }
 .mc-hk-status {
-  font-size: 8px; letter-spacing: 0.16em; text-transform: uppercase;
+  font-size: 8px; letter-spacing: 0.16em; text-transform: lowercase;
   padding: 2px 7px;
   border: 1px solid var(--pt-border-dim);
   border-radius: var(--pt-r-sm);
@@ -2633,33 +2633,50 @@ html[data-theme="friday"] .mc-pipe-name { color: var(--pt-neon-bright); text-sha
 
 /* ── Kanban board (multi-machine Heres mirror) ─────────────────── */
 .mc-kb { padding-bottom: 16px; }
-.mc-kb-sources {
-  display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 12px 0;
-  font-size: 9px; letter-spacing: 0.12em;
+
+/* Header is a single quiet meta line (the page SectionHead is the one title):
+   sources on the left, show-done + new-task toggles on the right. */
+.mc-kb-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 12px 0;
 }
-.mc-kb-src { display: inline-flex; gap: 6px; align-items: baseline; color: var(--pt-text-dim); }
+.mc-kb-sources {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  font-size: 9px; letter-spacing: 0.12em;
+  min-width: 0;
+}
+.mc-kb-src { display: inline-flex; gap: 6px; align-items: baseline; color: var(--pt-text-dim); white-space: nowrap; }
 .mc-kb-src.ok  { color: #28c840; }
 .mc-kb-src.down { color: #ff8a83; }
 .mc-kb-src .dim { color: var(--pt-text-mute); }
-.mc-kb-toolbar { padding: 8px 12px 0; display: flex; gap: 8px; }
+.mc-kb-toolbar { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
 .mc-kb-create {
-  margin: 10px 12px 0; padding: 12px;
+  margin: 4px 12px 0; padding: 12px;
   border: 1px dashed var(--pt-border-dim);
-  display: flex; flex-direction: column; gap: 10px;
+  display: flex; flex-direction: column; gap: 8px;
 }
-.mc-kb-create-row { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+.mc-kb-create-row { display: flex; gap: 8px; align-items: stretch; flex-wrap: wrap; }
 .mc-kb-create-row .mc-kb-input { flex: 1; min-width: 120px; }
 .mc-kb-input {
   background: rgba(0,0,0,0.35);
   border: 1px solid var(--pt-border-dim);
   color: var(--pt-text);
-  padding: 8px 10px;
+  padding: 8px 8px;
   font: inherit; font-size: 11px;
   width: 100%;
 }
 .mc-kb-input::placeholder { color: var(--pt-text-mute); }
 .mc-kb-input:focus { outline: none; border-color: var(--pt-border); }
+.mc-kb-input:focus-visible { outline: 2px solid var(--pt-neon-bright); outline-offset: 1px; }
 .mc-kb-acterr { color: #ff8a83; font-size: 10px; }
+.mc-kb-viewport {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding: 0;
+}
 .mc-kb-board {
   display: grid;
   grid-auto-flow: column;
@@ -2667,7 +2684,6 @@ html[data-theme="friday"] .mc-pipe-name { color: var(--pt-neon-bright); text-sha
   grid-auto-rows: auto;
   gap: 12px;
   padding: 12px;
-  overflow-x: auto;
   align-items: start;
 }
 .mc-kb-col {
@@ -2675,10 +2691,11 @@ html[data-theme="friday"] .mc-pipe-name { color: var(--pt-neon-bright); text-sha
   border: 1px solid var(--pt-border-dim);
   display: flex; flex-direction: column;
   min-height: 120px;
+  min-width: 0;
 }
 .mc-kb-col-head {
   display: flex; align-items: center; gap: 8px;
-  padding: 8px 10px;
+  padding: 8px 12px;
   font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
   color: var(--pt-text-dim);
   border-bottom: 1px solid var(--pt-border-dim);
@@ -2689,42 +2706,60 @@ html[data-theme="friday"] .mc-pipe-name { color: var(--pt-neon-bright); text-sha
 .mc-kb-col-head.done { color: #28c840; }
 .mc-kb-col-glyph { opacity: 0.8; }
 .mc-kb-col-count { margin-left: auto; font-size: 9px; color: var(--pt-text-mute); }
-.mc-kb-col-body { padding: 10px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.mc-kb-col-body { padding: 12px; display: flex; flex-direction: column; gap: 12px; flex: 1; min-width: 0; }
 .mc-kb-col-empty { font-size: 9px; letter-spacing: 0.18em; color: var(--pt-text-mute); }
 .mc-kb-card {
-  display: flex; flex-direction: column; gap: 6px; text-align: left;
+  display: flex; flex-direction: column; gap: 8px; text-align: left;
   background: rgba(0,0,0,0.35);
   border: 1px solid var(--pt-border-dim);
-  padding: 10px;
+  padding: 12px;
   color: var(--pt-text);
   cursor: pointer;
-  transition: border-color 0.12s var(--pt-ease, ease);
+  width: 100%;
+  min-width: 0;
+  transition: border-color 0.12s var(--pt-ease, ease), background 0.12s var(--pt-ease, ease);
 }
-.mc-kb-card:hover { border-color: var(--pt-border); }
-.mc-kb-card-top { display: flex; gap: 6px; align-items: center; }
-.mc-kb-card-title { font-size: 11px; line-height: 1.4; color: var(--pt-text-high); }
+.mc-kb-card:hover { border-color: var(--pt-border); background: rgba(var(--pt-neon-rgb),0.05); }
+.mc-kb-card:focus-visible {
+  outline: 2px solid var(--pt-neon-bright);
+  outline-offset: 1px;
+}
+.mc-kb-card-top { display: flex; gap: 8px; align-items: center; }
+.mc-kb-card-title { font-size: 11px; line-height: 1.4; color: var(--pt-text-high); overflow-wrap: break-word; }
 .mc-kb-card-meta {
-  display: flex; gap: 10px; flex-wrap: wrap; align-items: baseline;
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: baseline;
   font-size: 9px; color: var(--pt-text-dim);
+  min-width: 0;
 }
-.mc-kb-origin {
-  color: var(--pt-neon-bright);
-  font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase;
-  font-style: normal;
-  border: 1px solid var(--pt-border-dim);
-  padding: 1px 5px;
-  margin-left: 8px;
-}
-.mc-kb-card-meta .mc-kb-origin { margin-left: 0; }
+.mc-kb-card-meta .time { color: var(--pt-text-mute); }
 .mc-kb-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 /* Action buttons render via <Button> (.mc-btn family). */
 .mc-kb-compose { display: flex; flex-direction: column; gap: 8px; }
 .mc-kb-compose textarea {
   background: rgba(0,0,0,0.35); border: 1px solid var(--pt-border-dim);
-  color: var(--pt-text); font: inherit; font-size: 11px; padding: 8px 10px; resize: vertical;
+  color: var(--pt-text); font: inherit; font-size: 11px; padding: 8px 8px; resize: vertical;
 }
 .mc-kb-compose textarea:focus { outline: none; border-color: var(--pt-border); }
+.mc-kb-compose textarea:focus-visible { outline: 2px solid var(--pt-neon-bright); outline-offset: 1px; }
 .mc-drawer-title em.mc-kb-origin { margin-left: 8px; vertical-align: 1px; }
+
+/* Mobile: stack the board into full-width columns (no horizontal scroll).
+   Cards no longer clip at ~390px this way. */
+@media (max-width: 768px) {
+  .mc-kb-viewport { overflow-x: visible; }
+  .mc-kb-board {
+    display: flex;
+    flex-direction: column;
+  }
+  .mc-kb-col { flex: none; width: 100%; }
+  .mc-kb-meta { align-items: flex-start; flex-wrap: wrap; }
+}
+
+/* Reduced motion: keep the board calm when the user asks for it. */
+@media (prefers-reduced-motion: reduce) {
+  .mc-kb-card { transition: none; }
+  .mc-kb-viewport { scroll-behavior: auto; }
+}
 
 @media (max-width: 820px) {
   .mc-health-name { min-width: 0; }

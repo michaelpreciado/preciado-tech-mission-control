@@ -8,8 +8,10 @@ import type {
   KanbanSourceStatus,
 } from '@/lib/types'
 import { Button, SkeletonPanel, fmtDate } from './ui'
+import { RelativeTime } from './RelativeTime'
 
 const POLL_MS = 15_000
+const SHOW_DONE_LS_KEY = 'mc-kanban:showDone'
 
 /** Column definition: canonical Hermes lifecycle order + tone for badges. */
 const COLUMNS: { status: string; label: string; glyph: string; tone: string }[] = [
@@ -22,6 +24,9 @@ const COLUMNS: { status: string; label: string; glyph: string; tone: string }[] 
   { status: 'done', label: 'DONE', glyph: '✓', tone: 'done' },
   { status: 'archived', label: 'ARCHIVED', glyph: '🗄', tone: '' },
 ]
+
+/** Columns hidden behind the "show done" toggle by default (live work first). */
+const UI_HIDDEN_STATUSES = new Set(['done', 'archived'])
 
 /** Any status not explicitly defined falls into a catch-all column. */
 function columnFor(status: string) {
@@ -219,7 +224,7 @@ function DetailDrawer({ id, onClose, onChanged }: { id: string; onClose: () => v
 
 function KanbanCard({ task, onClick }: { task: HermesTask; onClick: () => void }) {
   return (
-    <button className="mc-kb-card" onClick={onClick}>
+    <button className="mc-kb-card" onClick={onClick} aria-label={`Open ${task.title}`}>
       <div className="mc-kb-card-top">
         <span className={`mc-hk-status ${STATUS_TONE[task.status] ?? ''}`}>{task.status}</span>
         {task.consecutiveFailures > 0 && <span className="mc-hk-status bad" title="consecutive failures">⚠ {task.consecutiveFailures}</span>}
@@ -227,8 +232,11 @@ function KanbanCard({ task, onClick }: { task: HermesTask; onClick: () => void }
       <div className="mc-kb-card-title">{task.title}</div>
       <div className="mc-kb-card-meta">
         {task.assignee && <span className="who">{task.assignee}</span>}
-        {task.origin && <span className="mc-kb-origin">{task.origin}</span>}
-        {task.createdAt && <span className="dim">{fmtDate(task.createdAt)}</span>}
+        {task.createdAt && (
+          <span className="time">
+            <RelativeTime ts={new Date(task.createdAt).getTime()} frame="ago" />
+          </span>
+        )}
       </div>
     </button>
   )
@@ -248,7 +256,7 @@ function Column({ def, tasks, onOpen }: {
       </div>
       <div className="mc-kb-col-body">
         {tasks.length === 0
-          ? <div className="mc-kb-col-empty">— empty —</div>
+          ? <div className="mc-kb-col-empty">— none —</div>
           : tasks.map(t => <KanbanCard key={t.id} task={t} onClick={() => onOpen(t.id)} />)}
       </div>
     </div>
@@ -264,7 +272,24 @@ export function KanbanBoard() {
   const [createForm, setCreateForm] = useState({ title: '', body: '', assignee: '', origin: '' })
   const [createBusy, setCreateBusy] = useState(false)
   const [createErr, setCreateErr] = useState<string | null>(null)
+  // Show (default off) or hide the done/archived columns. Hydrated from
+  // localStorage so "live work by default" survives reloads.
+  const [showDone, setShowDone] = useState(false)
   const lastEventRef = useRef(0)
+
+  useEffect(() => {
+    try {
+      setShowDone(window.localStorage.getItem(SHOW_DONE_LS_KEY) === '1')
+    } catch { /* private mode */ }
+  }, [])
+
+  const toggleShowDone = useCallback(() => {
+    setShowDone(prev => {
+      const next = !prev
+      try { window.localStorage.setItem(SHOW_DONE_LS_KEY, next ? '1' : '0') } catch { /* private mode */ }
+      return next
+    })
+  }, [])
 
   const refresh = useCallback(async () => {
     try {
@@ -336,33 +361,38 @@ export function KanbanBoard() {
   }
   // Determine which columns are non-empty so we don't render empty canonical columns that add no info.
   const presentStatuses = new Set(tasks.map(t => t.status))
-  const cols = COLUMNS.filter(c => presentStatuses.has(c.status))
-  const leftoverStatuses = [...presentStatuses].filter(s => !columnFor(s) && s !== 'archived')
+  const cols = COLUMNS
+    .filter(c => presentStatuses.has(c.status))
+    .filter(c => showDone || !UI_HIDDEN_STATUSES.has(c.status))
+  const leftoverStatuses = [...presentStatuses].filter(s => !columnFor(s) && !UI_HIDDEN_STATUSES.has(s))
+  const doneCount = byStatus.get('done')?.length ?? 0
+  const archivedCount = byStatus.get('archived')?.length ?? 0
+  const hasDoneWork = doneCount + archivedCount > 0
 
   return (
     <>
       <div className="mc-window mc-kb">
-        <div className="mc-tcol-head">
-          <span className="mc-tcol-glyph">⛁</span>
-          <span>HERMES KANBAN · ALL MACHINES</span>
-          <span className="mc-tcol-count">{tasks.length}</span>
-        </div>
-
-        {/* Source availability strip */}
-        <div className="mc-kb-sources">
-          {sources.length === 0 && <span className="dim">no sources</span>}
-          {sources.map(s => (
-            <span key={s.name} className={`mc-kb-src ${s.available ? 'ok' : 'down'}`}>
-              {s.available ? '●' : '○'} {s.name}
-              <span className="dim"> {Object.entries(s.counts).map(([k, v]) => `${v} ${k}`).join(' · ')}</span>
-            </span>
-          ))}
-        </div>
-
-        <div className="mc-kb-toolbar">
-          <Button variant="ghost" active={showCreate} onClick={() => setShowCreate(v => !v)}>
-            {showCreate ? '✕ close' : '+ new task'}
-          </Button>
+        {/* Single meta line: availability + toolbar (headers merged — one title only). */}
+        <div className="mc-kb-meta">
+          <div className="mc-kb-sources" aria-label="Board sources">
+            {sources.length === 0 && <span className="dim">no sources</span>}
+            {sources.map(s => (
+              <span key={s.name} className={`mc-kb-src ${s.available ? 'ok' : 'down'}`}>
+                {s.available ? '●' : '○'} {s.name}
+                <span className="dim"> {s.available ? Object.entries(s.counts).map(([k, v]) => `${v} ${k}`).join(' · ') : 'offline'}</span>
+              </span>
+            ))}
+          </div>
+          <div className="mc-kb-toolbar">
+            {hasDoneWork && (
+              <Button variant="ghost" active={showDone} onClick={toggleShowDone}>
+                {showDone ? 'hide done' : `show ${doneCount} done · ${archivedCount} archived`}
+              </Button>
+            )}
+            <Button variant="ghost" active={showCreate} onClick={() => setShowCreate(v => !v)}>
+              {showCreate ? '✕ close' : '+ new task'}
+            </Button>
+          </div>
         </div>
 
         {showCreate && (
@@ -413,16 +443,18 @@ export function KanbanBoard() {
           </div>
         )}
 
-        <div className="mc-kb-board">
-          {cols.length === 0 && leftoverStatuses.length === 0 && (
-            <div className="mc-pipe-empty">— no tasks on any board yet —</div>
-          )}
-          {cols.map(c => (
-            <Column key={c.status} def={c} tasks={byStatus.get(c.status) ?? []} onOpen={setOpenId} />
-          ))}
-          {leftoverStatuses.map(s => (
-            <Column key={s} def={{ status: s, label: s.toUpperCase(), glyph: '▪', tone: '' }} tasks={byStatus.get(s) ?? []} onOpen={setOpenId} />
-          ))}
+        <div className="mc-kb-viewport">
+          <div className="mc-kb-board">
+            {cols.length === 0 && leftoverStatuses.length === 0 && (
+              <div className="mc-pipe-empty">— no tasks on any board yet —</div>
+            )}
+            {cols.map(c => (
+              <Column key={c.status} def={c} tasks={byStatus.get(c.status) ?? []} onOpen={setOpenId} />
+            ))}
+            {leftoverStatuses.map(s => (
+              <Column key={s} def={{ status: s, label: s.toUpperCase(), glyph: '▪', tone: '' }} tasks={byStatus.get(s) ?? []} onOpen={setOpenId} />
+            ))}
+          </div>
         </div>
       </div>
       {openId && <DetailDrawer id={openId} onClose={() => setOpenId(null)} onChanged={refresh} />}
