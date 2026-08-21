@@ -498,6 +498,8 @@ export type HermesTask = {
   sessionId?: string
   /** Which board this task came from: the local hostname or a remote name (e.g. 'friday-macbook'). */
   origin?: string
+  /** Ids of parent tasks this task depends on (task_links where task is child). Additive. */
+  parentIds?: string[]
 }
 
 export type HermesTaskRun = {

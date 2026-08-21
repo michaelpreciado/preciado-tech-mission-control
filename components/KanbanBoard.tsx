@@ -12,6 +12,7 @@ import { RelativeTime } from './RelativeTime'
 
 const POLL_MS = 15_000
 const SHOW_DONE_LS_KEY = 'mc-kanban:showDone'
+const PIN_LS_KEY = 'mc-kanban:pins'
 
 /** Column definition: canonical Hermes lifecycle order + tone for badges. */
 const COLUMNS: { status: string; label: string; glyph: string; tone: string }[] = [
@@ -27,6 +28,24 @@ const COLUMNS: { status: string; label: string; glyph: string; tone: string }[] 
 
 /** Columns hidden behind the "show done" toggle by default (live work first). */
 const UI_HIDDEN_STATUSES = new Set(['done', 'archived'])
+
+/** Statuses that count as "active work" for the filter chip. */
+const ACTIVE_STATUSES = new Set(['todo', 'ready', 'running', 'in_progress'])
+
+/** Statuses that count as "needs attention" for the filter chip. */
+const ATTENTION_STATUSES = new Set(['blocked', 'failed'])
+
+/** "Mine" = tasks addressed to the local crew (no viewer concept yet). */
+const MINE_ASSIGNEES = new Set(['jarvis', 'friday'])
+
+type FilterId = 'all' | 'mine' | 'active' | 'attention'
+
+const FILTER_CHIPS: { id: FilterId; label: string }[] = [
+  { id: 'all', label: 'all' },
+  { id: 'mine', label: 'mine' },
+  { id: 'active', label: 'active' },
+  { id: 'attention', label: 'needs attention' },
+]
 
 /** Any status not explicitly defined falls into a catch-all column. */
 function columnFor(status: string) {
@@ -220,16 +239,267 @@ function DetailDrawer({ id, onClose, onChanged }: { id: string; onClose: () => v
   )
 }
 
-/* ── Card + Column ─────────────────────────────────────────────── */
+/* ── Filter bar ────────────────────────────────────────────────── */
 
-function KanbanCard({ task, onClick }: { task: HermesTask; onClick: () => void }) {
+function FilterBar({ filter, onFilter, query, onQuery, searchRef, onFocusSearch }: {
+  filter: FilterId
+  onFilter: (f: FilterId) => void
+  query: string
+  onQuery: (q: string) => void
+  searchRef: React.RefObject<HTMLInputElement | null>
+  onFocusSearch: () => void
+}) {
   return (
-    <button className="mc-kb-card" onClick={onClick} aria-label={`Open ${task.title}`}>
+    <div className="mc-kb-filter-bar" role="toolbar" aria-label="Filter kanban">
+      <div className="mc-kb-filter-chips">
+        {FILTER_CHIPS.map(chip => (
+          <button
+            key={chip.id}
+            type="button"
+            className={`mc-kb-filter-chip${filter === chip.id ? ' is-on' : ''}`}
+            aria-pressed={filter === chip.id}
+            onClick={() => onFilter(chip.id)}
+          >
+            {chip.label}
+          </button>
+        ))}
+      </div>
+      <div className="mc-kb-search">
+        <span className="mc-kb-search-glyph" aria-hidden="true">⌕</span>
+        <input
+          ref={searchRef}
+          className="mc-kb-input mc-kb-search-input"
+          type="search"
+          placeholder="search title…  ( / )"
+          aria-label="Search tasks by title"
+          value={query}
+          onChange={e => onQuery(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === 'Escape') {
+              onQuery('')
+              e.currentTarget.blur()
+            }
+          }}
+          onFocus={onFocusSearch}
+        />
+      </div>
+    </div>
+  )
+}
+
+/* ── Create modal (drawer-style dialog) ────────────────────────── */
+
+const ASSIGNEE_OPTIONS = ['jarvis', 'friday']
+const PRIORITY_OPTIONS = [
+  { value: '0', label: '0 · normal' },
+  { value: '10', label: '10 · high' },
+  { value: '20', label: '20 · urgent' },
+]
+
+function CreateModal({ sources, onClose, onCreated }: {
+  sources: KanSource[]
+  onClose: () => void
+  onCreated: (id?: string) => void | Promise<void>
+}) {
+  const [form, setForm] = useState({ title: '', body: '', assignee: '', assigneeOther: '', origin: '', priority: '0' })
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  const titleRef = useRef<HTMLInputElement | null>(null)
+
+  useEffect(() => {
+    // Minimal focus trap: focus the first field on open; Escape closes.
+    titleRef.current?.focus()
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  const submit = useCallback(async () => {
+    if (!form.title.trim()) return
+    setBusy(true)
+    setErr(null)
+    const assignee = form.assignee === 'other' ? form.assigneeOther.trim() : form.assignee
+    try {
+      const res = await fetch('/api/kanban', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: form.title.trim(),
+          body: form.body.trim() || undefined,
+          assignee: assignee || undefined,
+          origin: form.origin || undefined,
+          priority: form.priority !== '0' ? form.priority : undefined,
+        }),
+      })
+      const j = await res.json()
+      if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`)
+      await onCreated(j.id as string | undefined)
+      onClose()
+    } catch (cause) {
+      setErr((cause as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }, [form, onClose, onCreated])
+
+  return (
+    <div className="mc-kb-modal-overlay" onClick={onClose}>
+      <div
+        className="mc-drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Create kanban task"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="mc-drawer-head">
+          <span className="mc-drawer-title">NEW TASK</span>
+          <button className="mc-drawer-close" onClick={onClose} aria-label="Close">✕</button>
+        </div>
+        <div className="mc-drawer-body">
+          <div className="mc-kb-modal-form">
+            <label className="mc-kb-modal-field" htmlFor="kc-title">TITLE <em className="req">*</em></label>
+            <input
+              id="kc-title"
+              ref={titleRef}
+              className="mc-kb-input"
+              placeholder="Task title…"
+              value={form.title}
+              onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+              maxLength={200}
+            />
+
+            <label className="mc-kb-modal-field" htmlFor="kc-body">BRIEF</label>
+            <textarea
+              id="kc-body"
+              className="mc-kb-input"
+              placeholder="Brief (optional)…"
+              value={form.body}
+              onChange={e => setForm(f => ({ ...f, body: e.target.value }))}
+              rows={3}
+              maxLength={4000}
+            />
+
+            <label className="mc-kb-modal-field" htmlFor="kc-assignee">ASSIGNEE</label>
+            <select
+              id="kc-assignee"
+              className="mc-kb-input"
+              value={form.assignee}
+              onChange={e => setForm(f => ({ ...f, assignee: e.target.value }))}
+            >
+              <option value="">unassigned</option>
+              {ASSIGNEE_OPTIONS.map(a => <option key={a} value={a}>{a}</option>)}
+              <option value="other">other…</option>
+            </select>
+            {form.assignee === 'other' && (
+              <input
+                className="mc-kb-input"
+                placeholder="assignee (profile)…"
+                aria-label="Other assignee profile"
+                value={form.assigneeOther}
+                onChange={e => setForm(f => ({ ...f, assigneeOther: e.target.value }))}
+                maxLength={80}
+              />
+            )}
+
+            <label className="mc-kb-modal-field" htmlFor="kc-origin">ORIGIN</label>
+            <select
+              id="kc-origin"
+              className="mc-kb-input"
+              value={form.origin}
+              onChange={e => setForm(f => ({ ...f, origin: e.target.value }))}
+            >
+              <option value="">origin: (default)</option>
+              {sources.map(s => <option key={s.origin} value={s.origin}>{s.origin}</option>)}
+            </select>
+
+            <label className="mc-kb-modal-field" htmlFor="kc-priority">PRIORITY</label>
+            <select
+              id="kc-priority"
+              className="mc-kb-input"
+              value={form.priority}
+              onChange={e => setForm(f => ({ ...f, priority: e.target.value }))}
+            >
+              {PRIORITY_OPTIONS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+            </select>
+          </div>
+          {err && <div className="mc-kb-acterr" role="alert">⚠ {err}</div>}
+          <div className="mc-kb-actions">
+            <Button variant="ghost" onClick={onClose}>cancel</Button>
+            <Button variant="primary" loading={busy} disabled={busy || !form.title.trim()} onClick={() => void submit()}
+              aria-label="Create task">
+              {busy ? 'creating…' : 'create ▸'}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+type KanSource = KanbanSourceStatus
+
+/* ── Sorting────────────────────────────────────────────────────── */
+
+/**
+ * Card sort within a column: pinned first, then blocked/failed first,
+ * then consecutive failures desc, then oldest created first.
+ */
+function taskSort(a: HermesTask, b: HermesTask, pinned: Set<string>): number {
+  const aPin = pinned.has(a.id) ? 0 : 1
+  const bPin = pinned.has(b.id) ? 0 : 1
+  if (aPin !== bPin) return aPin - bPin
+  const aBad = a.status === 'blocked' || a.status === 'failed' ? 0 : 1
+  const bBad = b.status === 'blocked' || b.status === 'failed' ? 0 : 1
+  if (aBad !== bBad) return aBad - bBad
+  const af = a.consecutiveFailures ?? 0
+  const bf = b.consecutiveFailures ?? 0
+  if (af !== bf) return bf - af
+  const at = a.createdAt ? new Date(a.createdAt).getTime() : 0
+  const bt = b.createdAt ? new Date(b.createdAt).getTime() : 0
+  return at - bt
+}
+
+function KanbanCard({ task, pinned, pendingParents, onOpen, onTogglePin }: {
+  task: HermesTask
+  pinned: boolean
+  pendingParents: { id: string; title: string }[]
+  onOpen: () => void
+  onTogglePin: () => void
+}) {
+  return (
+    <div
+      className={`mc-kb-card${pinned ? ' is-pinned' : ''}`}
+      role="button"
+      tabIndex={0}
+      aria-label={`Open ${task.title}`}
+      onClick={onOpen}
+      onKeyDown={e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen() }
+      }}
+    >
       <div className="mc-kb-card-top">
         <span className={`mc-hk-status ${STATUS_TONE[task.status] ?? ''}`}>{task.status}</span>
         {task.consecutiveFailures > 0 && <span className="mc-hk-status bad" title="consecutive failures">⚠ {task.consecutiveFailures}</span>}
+        <button
+          type="button"
+          className={`mc-kb-pin${pinned ? ' is-on' : ''}`}
+          aria-pressed={pinned}
+          aria-label={pinned ? `Unpin ${task.title}` : `Pin ${task.title}`}
+          title={pinned ? 'unpin' : 'pin'}
+          onClick={e => { e.stopPropagation(); onTogglePin() }}
+        >
+          {pinned ? '📌' : '·'}
+        </button>
       </div>
       <div className="mc-kb-card-title">{task.title}</div>
+      {pendingParents.length > 0 && (
+        <span
+          className="mc-kb-dep"
+          title={`blocked by ${pendingParents.map(p => p.title).join(', ')}`}
+        >
+          ⊘ blocked by {pendingParents.length}
+        </span>
+      )}
       <div className="mc-kb-card-meta">
         {task.assignee && <span className="who">{task.assignee}</span>}
         {task.createdAt && (
@@ -238,15 +508,19 @@ function KanbanCard({ task, onClick }: { task: HermesTask; onClick: () => void }
           </span>
         )}
       </div>
-    </button>
+    </div>
   )
 }
 
-function Column({ def, tasks, onOpen }: {
+function Column({ def, tasks, pinned, byId, onOpen, onTogglePin }: {
   def: { status: string; label: string; glyph: string; tone: string }
   tasks: HermesTask[]
+  pinned: Set<string>
+  byId: Map<string, HermesTask>
   onOpen: (id: string) => void
+  onTogglePin: (id: string) => void
 }) {
+  const sorted = [...tasks].sort((a, b) => taskSort(a, b, pinned))
   return (
     <div className="mc-kb-col">
       <div className={`mc-kb-col-head ${def.tone}`}>
@@ -255,13 +529,21 @@ function Column({ def, tasks, onOpen }: {
         <span className="mc-kb-col-count">{tasks.length}</span>
       </div>
       <div className="mc-kb-col-body">
-        {tasks.length === 0
+        {sorted.length === 0
           ? <div className="mc-kb-col-empty">— none —</div>
-          : tasks.map(t => <KanbanCard key={t.id} task={t} onClick={() => onOpen(t.id)} />)}
+          : sorted.map(t => {
+              const pendingParents = (t.parentIds ?? [])
+                .map(id => byId.get(id))
+                .filter((p): p is HermesTask => !!p && p.status !== 'done' && p.status !== 'archived')
+                .map(p => ({ id: p.id, title: p.title }))
+              return <KanbanCard key={t.id} task={t} pinned={pinned.has(t.id)} pendingParents={pendingParents} onOpen={() => onOpen(t.id)} onTogglePin={() => onTogglePin(t.id)} />
+            })}
       </div>
     </div>
   )
 }
+
+type ColumnDef = { status: string; label: string; glyph: string; tone: string }
 
 /* ── Main board ────────────────────────────────────────────────── */
 
@@ -269,19 +551,35 @@ export function KanbanBoard() {
   const [snap, setSnap] = useState<HermesKanbanSnapshot | null>(null)
   const [openId, setOpenId] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
-  const [createForm, setCreateForm] = useState({ title: '', body: '', assignee: '', origin: '' })
-  const [createBusy, setCreateBusy] = useState(false)
-  const [createErr, setCreateErr] = useState<string | null>(null)
+  const [filter, setFilter] = useState<FilterId>('all')
+  const [query, setQuery] = useState('')
+  const searchRef = useRef<HTMLInputElement | null>(null)
   // Show (default off) or hide the done/archived columns. Hydrated from
   // localStorage so "live work by default" survives reloads.
   const [showDone, setShowDone] = useState(false)
+  const [pinned, setPinned] = useState<Set<string>>(() => new Set())
   const lastEventRef = useRef(0)
 
   useEffect(() => {
     try {
       setShowDone(window.localStorage.getItem(SHOW_DONE_LS_KEY) === '1')
     } catch { /* private mode */ }
+    try {
+      const raw = window.localStorage.getItem(PIN_LS_KEY)
+      if (raw) setPinned(new Set(JSON.parse(raw) as string[]))
+    } catch { /* private mode */ }
   }, [])
+
+  const persistPins = useCallback((next: Set<string>) => {
+    setPinned(next)
+    try { window.localStorage.setItem(PIN_LS_KEY, JSON.stringify([...next])) } catch { /* private mode */ }
+  }, [])
+
+  const togglePin = useCallback((id: string) => {
+    const next = new Set(pinned)
+    if (next.has(id)) next.delete(id); else next.add(id)
+    persistPins(next)
+  }, [pinned, persistPins])
 
   const toggleShowDone = useCallback(() => {
     setShowDone(prev => {
@@ -321,46 +619,61 @@ export function KanbanBoard() {
     return () => es.close()
   }, [refresh])
 
-  const submitCreate = useCallback(async () => {
-    if (!createForm.title.trim()) return
-    setCreateBusy(true)
-    setCreateErr(null)
-    try {
-      const res = await fetch('/api/kanban', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: createForm.title,
-          body: createForm.body || undefined,
-          assignee: createForm.assignee || undefined,
-          origin: createForm.origin || undefined,
-        }),
-      })
-      const j = await res.json()
-      if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`)
-      setCreateForm({ title: '', body: '', assignee: '', origin: '' })
-      setShowCreate(false)
-      await refresh()
-      if (j.id) setOpenId(j.id)
-    } catch (err) {
-      setCreateErr((err as Error).message)
-    } finally {
-      setCreateBusy(false)
+  // '/' focuses search; Escape clears search focus / closes modal.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === '/') {
+        const el = e.target as HTMLElement | null
+        const tag = el?.tagName ?? ''
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+        e.preventDefault()
+        searchRef.current?.focus()
+      } else if (e.key === 'Escape') {
+        if (showCreate) {
+          setShowCreate(false)
+          return
+        }
+        if (document.activeElement === searchRef.current) {
+          setQuery('')
+          searchRef.current?.blur()
+        }
+      }
     }
-  }, [createForm, refresh])
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [showCreate])
+
+  const onCreated = useCallback(async (_id?: string) => {
+    await refresh()
+  }, [refresh])
 
   if (!snap) return <SkeletonPanel label="reading kanban boards" />
 
   const tasks = snap.tasks
-  const sources = (snap as unknown as { sources?: KanbanSourceStatus[] }).sources ?? []
+  const sources = (snap as unknown as { sources?: KanSource[] }).sources ?? []
+  const byId = new Map<string, HermesTask>()
+  for (const t of tasks) byId.set(t.id, t)
+
+  // Apply filter + search across all task statuses before column grouping.
+  let visible = tasks
+  if (filter === 'mine') visible = visible.filter(t => t.assignee && MINE_ASSIGNEES.has(t.assignee))
+  else if (filter === 'active') visible = visible.filter(t => ACTIVE_STATUSES.has(t.status))
+  else if (filter === 'attention') visible = visible.filter(t => ATTENTION_STATUSES.has(t.status))
+  const q = query.trim().toLowerCase()
+  if (q) {
+    visible = visible.filter(t => {
+      const parents = (t.parentIds ?? []).map(id => byId.get(id)?.title ?? '').join(' ')
+      return `${t.title} ${t.assignee ?? ''} ${parents}`.toLowerCase().includes(q)
+    })
+  }
+
   const byStatus = new Map<string, HermesTask[]>()
-  for (const t of tasks) {
+  for (const t of visible) {
     const arr = byStatus.get(t.status) ?? []
     arr.push(t)
     byStatus.set(t.status, arr)
   }
-  // Determine which columns are non-empty so we don't render empty canonical columns that add no info.
-  const presentStatuses = new Set(tasks.map(t => t.status))
+  const presentStatuses = new Set(visible.map(t => t.status))
   const cols = COLUMNS
     .filter(c => presentStatuses.has(c.status))
     .filter(c => showDone || !UI_HIDDEN_STATUSES.has(c.status))
@@ -395,69 +708,31 @@ export function KanbanBoard() {
           </div>
         </div>
 
-        {showCreate && (
-          <div className="mc-kb-create">
-            <input
-              className="mc-kb-input"
-              placeholder="Task title…"
-              aria-label="Task title"
-              value={createForm.title}
-              onChange={e => setCreateForm(f => ({ ...f, title: e.target.value }))}
-              maxLength={200}
-            />
-            <textarea
-              className="mc-kb-input"
-              placeholder="Brief (optional)…"
-              aria-label="Task brief (optional)"
-              value={createForm.body}
-              onChange={e => setCreateForm(f => ({ ...f, body: e.target.value }))}
-              rows={2}
-              maxLength={4000}
-            />
-            <div className="mc-kb-create-row">
-              <input
-                className="mc-kb-input"
-                placeholder="assignee (profile)…"
-                aria-label="Assignee (profile)"
-                value={createForm.assignee}
-                onChange={e => setCreateForm(f => ({ ...f, assignee: e.target.value }))}
-                maxLength={80}
-              />
-              <select
-                className="mc-kb-input"
-                aria-label="Origin"
-                value={createForm.origin}
-                onChange={e => setCreateForm(f => ({ ...f, origin: e.target.value }))}
-              >
-                <option value="">origin: (default)</option>
-                {sources.filter(s => s.available).map(s => (
-                  <option key={s.origin} value={s.origin}>{s.origin}</option>
-                ))}
-              </select>
-              <Button variant="primary" loading={createBusy} disabled={createBusy || !createForm.title.trim()} onClick={() => void submitCreate()}
-                aria-label="Create task">
-                {createBusy ? 'creating…' : 'create ▸'}
-              </Button>
-            </div>
-            {createErr && <div className="mc-kb-acterr" role="alert">⚠ {createErr}</div>}
-          </div>
-        )}
+        <FilterBar
+          filter={filter}
+          onFilter={setFilter}
+          query={query}
+          onQuery={setQuery}
+          searchRef={searchRef}
+          onFocusSearch={() => setFilter('all')}
+        />
 
         <div className="mc-kb-viewport">
           <div className="mc-kb-board">
             {cols.length === 0 && leftoverStatuses.length === 0 && (
-              <div className="mc-pipe-empty">— no tasks on any board yet —</div>
+              <div className="mc-pipe-empty">— no tasks match —</div>
             )}
             {cols.map(c => (
-              <Column key={c.status} def={c} tasks={byStatus.get(c.status) ?? []} onOpen={setOpenId} />
+              <Column key={c.status} def={c} tasks={byStatus.get(c.status) ?? []} pinned={pinned} byId={byId} onOpen={setOpenId} onTogglePin={togglePin} />
             ))}
             {leftoverStatuses.map(s => (
-              <Column key={s} def={{ status: s, label: s.toUpperCase(), glyph: '▪', tone: '' }} tasks={byStatus.get(s) ?? []} onOpen={setOpenId} />
+              <Column key={s} def={{ status: s, label: s.toUpperCase(), glyph: '▪', tone: '' }} tasks={byStatus.get(s) ?? []} pinned={pinned} byId={byId} onOpen={setOpenId} onTogglePin={togglePin} />
             ))}
           </div>
         </div>
       </div>
       {openId && <DetailDrawer id={openId} onClose={() => setOpenId(null)} onChanged={refresh} />}
+      {showCreate && <CreateModal sources={sources} onClose={() => setShowCreate(false)} onCreated={onCreated} />}
     </>
   )
 }

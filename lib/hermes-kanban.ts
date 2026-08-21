@@ -38,7 +38,7 @@ function toIso(epoch: unknown): string | undefined {
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-function rowToTask(r: any, origin?: string): HermesTask {
+function rowToTask(r: any, origin?: string, parentIds?: string[]): HermesTask {
   return {
     id: String(r.id),
     title: r.title ?? '(untitled)',
@@ -55,6 +55,7 @@ function rowToTask(r: any, origin?: string): HermesTask {
     currentRunId: typeof r.current_run_id === 'number' ? r.current_run_id : undefined,
     sessionId: r.session_id ?? undefined,
     origin,
+    parentIds: parentIds && parentIds.length > 0 ? parentIds : undefined,
   }
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
@@ -130,8 +131,15 @@ function readBoard(file: string, origin?: string): DbRead {
     for (const row of db.prepare('SELECT status, COUNT(*) AS n FROM tasks GROUP BY status').all() as { status: string; n: number }[]) {
       counts[row.status] = row.n
     }
+    // Parent dependencies: task_links(parent_id, child_id) → map of child id → parent ids.
+    const parentMap = new Map<string, string[]>()
+    for (const link of db.prepare('SELECT parent_id, child_id FROM task_links').all() as { parent_id: string; child_id: string }[]) {
+      const arr = parentMap.get(link.child_id) ?? []
+      arr.push(link.parent_id)
+      parentMap.set(link.child_id, arr)
+    }
     const rows = db.prepare(`SELECT ${TASK_COLS} FROM tasks ORDER BY created_at DESC LIMIT 500`).all() as any[]
-    return { counts, tasks: rows.map(r => rowToTask(r, origin)), available: true }
+    return { counts, tasks: rows.map(r => rowToTask(r, origin, parentMap.get(String(r.id)))), available: true }
   })
   return result ?? { counts: {}, tasks: [], available: false }
 }
