@@ -5901,3 +5901,106 @@ html[data-theme="friday"] .mc-cmdp-trigger:hover {
     background: linear-gradient(180deg, rgba(0,0,0,0.97), rgba(0,0,0,0.99));
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TEAM · SHIFT ROSTER — single clean agent + task view
+   Namespaced mc-shift-*. Coordinator-style append: only these rules touch
+   team-page layout; nothing redefines existing mc-* classes.
+   ═════════════════════════════════════════════════════════════════════════ */
+
+/* Roadside "now" strip — the pulse of the team. */
+.mc-shift-now {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
+  padding: 8px 4px 12px;
+}
+.mc-shift-now-led {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--pt-ok-ink);
+  box-shadow: 0 0 8px var(--pt-ok-ink);
+  animation: mc-shift-blink 2s ease-in-out infinite;
+}
+@keyframes mc-shift-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.mc-shift-now-item {
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--pt-text-mute); font-family: var(--pt-font-mono);
+  padding: 3px 9px; border-radius: 99px; border: 1px solid var(--pt-border-dim);
+  white-space: nowrap;
+}
+.mc-shift-now-item.is-working { color: var(--pt-ok-ink);    border-color: color-mix(in srgb, var(--pt-ok-ink) 45%, transparent); }
+.mc-shift-now-item.is-errored { color: var(--pt-error-ink); border-color: color-mix(in srgb, var(--pt-error-ink) 60%, transparent); background: color-mix(in srgb, var(--pt-error-ink) 8%, transparent); }
+.mc-shift-now-item.is-waiting { color: var(--pt-warn-ink);  border-color: color-mix(in srgb, var(--pt-warn-ink) 45%, transparent); }
+.mc-shift-now-empty { font-size: 10px; letter-spacing: 0.14em; color: var(--pt-text-mute); text-transform: uppercase; }
+
+/* Slim "N working · N errored" count next to the HOLO toggle. */
+.mc-shift-counts {
+  font-size: 10px; letter-spacing: 0.08em; color: var(--pt-text-mute);
+  font-family: var(--pt-font-mono); white-space: nowrap;
+}
+
+/* Roster rows — one per agent. Reuses .mc-sub-row as the base; these rules
+   only ADD the role line, elapsed chip, and per-state dim/pop treatment. */
+.mc-sub-row.mc-shift-row { flex-wrap: nowrap; }
+.mc-sub-row.mc-shift-row .mc-sub-row-shape { transition: transform 0.12s ease; }
+.mc-sub-row.mc-shift-row:hover .mc-sub-row-shape { transform: scale(1.06); }
+.mc-sub-row.mc-shift-row .mc-sub-row-name { display: flex; align-items: baseline; flex-wrap: wrap; column-gap: 8px; }
+.mc-sub-row.mc-shift-row .mc-shift-role { font-style: normal; font-size: 9px; letter-spacing: 0.16em; color: var(--pt-text-mute); text-transform: uppercase; }
+.mc-sub-row.mc-shift-row .mc-sub-row-task { white-space: normal; overflow: visible; }
+
+.mc-shift-elapsed { color: var(--pt-text-mute); }
+.mc-shift-notask { color: var(--pt-text-mute); opacity: 0.7; font-style: italic; }
+
+/* Right-aligned status badge. */
+.mc-shift-side { display: flex; align-items: center; flex-shrink: 0; padding-left: 8px; }
+.mc-shift-badge {
+  min-width: 56px; text-align: center;
+  font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+  font-family: var(--pt-font-mono);
+  padding: 4px 8px; border-radius: 99px;
+  border: 1px solid var(--pt-border-dim);
+  color: var(--pt-text-mute);
+  background: rgba(0,0,0,0.3);
+}
+.mc-shift-badge.is-working {
+  color: var(--pt-ok-ink); border-color: color-mix(in srgb, var(--pt-ok-ink) 50%, transparent);
+  background: color-mix(in srgb, var(--pt-ok-ink) 8%, transparent);
+  animation: mc-shift-pulse-soft 1.6s ease-in-out infinite;
+}
+.mc-shift-badge.is-errored {
+  color: var(--pt-error-ink); border-color: var(--pt-error-ink);
+  background: color-mix(in srgb, var(--pt-error-ink) 14%, transparent);
+  animation: mc-shift-hardflash 1s steps(2, jump-none) infinite;
+}
+.mc-shift-badge.is-waiting { color: var(--pt-warn-ink); border-color: color-mix(in srgb, var(--pt-warn-ink) 45%, transparent); }
+@keyframes mc-shift-pulse-soft {
+  0%, 100% { box-shadow: 0 0 0 rgba(0,0,0,0); }
+  50% { box-shadow: 0 0 8px var(--pt-ok-ink); }
+}
+@keyframes mc-shift-hardflash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+/* Working rows pop (they carry the accent hue); idle/offline recede. */
+.mc-shift-row.state-working { box-shadow: inset 2px 0 0 color-mix(in srgb, var(--pt-ok-ink) 70%, transparent); }
+.mc-shift-row.state-waiting { box-shadow: inset 2px 0 0 color-mix(in srgb, var(--pt-warn-ink) 60%, transparent); }
+.mc-shift-row.state-offline,
+.mc-shift-row.state-idle { opacity: 0.6; }
+.mc-shift-row.state-offline .mc-sub-row-shape,
+.mc-shift-row.state-idle .mc-sub-row-shape { filter: saturate(0.4); }
+.mc-shift-row.state-errored { box-shadow: inset 3px 0 0 var(--pt-error-ink); }
+
+/* ── Fold / compact viewport (≤ 660px — Pixel Fold cover & smaller) ─────── */
+@media (max-width: 660px) {
+  .mc-shift-now { gap: 5px 8px; padding: 6px 2px 10px; }
+  .mc-shift-now-item { font-size: 9px; letter-spacing: 0.12em; padding: 4px 8px; }
+  .mc-sub-row.mc-shift-row { padding: 10px; gap: 10px; min-height: 68px; align-items: flex-start; }
+  .mc-sub-row.mc-shift-row .mc-sub-row-shape { width: 36px; height: 36px; font-size: 14px; flex-shrink: 0; }
+  .mc-sub-row.mc-shift-row .mc-sub-row-task { font-size: 11px; line-height: 1.4; white-space: normal; word-break: break-word; }
+  .mc-shift-side { padding-left: 0; align-self: flex-end; }
+  .mc-shift-badge { min-width: 48px; padding: 4px 6px; font-size: 8px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+  /* tap target floor: even though the whole row is tappable, guarantee height */
+  .mc-shift-row .mc-sub-row-main { min-height: 40px; }
+}

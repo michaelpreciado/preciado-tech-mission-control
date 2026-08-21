@@ -1,13 +1,17 @@
 'use client'
 
 /**
- * Sub-agent dispatch HUD — the Team tab visualization.
+ * Sub-agent dispatch — the Team tab.
  *
- * Primary view: a TRUE 3D orbital command-core (HoloHud3D, WebGL via
- * react-three-fiber). HERMES is a glowing wireframe core; the agent roster
- * orbits on a tilted ring in real 3D space; energy beams pulse to whoever is
- * genuinely working. The camera auto-drifts and accepts touch drag/pinch —
- * made for watching an active task from a phone (Pixel Fold).
+ * ONE primary view: a clean SHIFT ROSTER. Every crew member is a row showing
+ * name + role, a single status badge, the current task title + elapsed time,
+ * and host/model as secondary. A compact "now" strip up top is the pulse of
+ * the team at a glance. `working` rows pop (tinted accent + subtle glow),
+ * idle/offline recede, `errored` is the loudest state (red).
+ *
+ * The WebGL 3D orbital HUD (HoloHud3D) is OPT-IN: it only mounts when the
+ * user clicks the HOLO 3D toggle (and only if Setup → UI CUSTOMIZATION has
+ * `elements3d.teamGraph` enabled). Default view is the roster.
  *
  * Encoding rules (brief-preserving):
  *  - State is carried by color AND shape/motion, never color alone.
@@ -16,11 +20,8 @@
  *  - Stale agents render desaturated with a "last seen" marker in detail.
  *  - Errored agents are the loudest thing (red, hard flash).
  *  - Offline nodes (desktop asleep) are a normal state, distinct from errors.
- *
- * The mission spotlight, list view, and detail sheet stay as crisp HTML
- * overlays (readable text on mobile) layered over / beside the WebGL stage.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { RelativeTime } from '../RelativeTime'
 import { Button } from '../ui'
@@ -41,39 +42,114 @@ const STATE_META: Record<AgentState, { label: string; glyph: string }> = {
 /** Deterministic rank used for list sorting (active → waiting → errored → idle → offline). */
 const STATE_RANK: Record<AgentState, number> = { working: 0, waiting: 1, errored: 2, idle: 3, offline: 4 }
 
-// Client-only WebGL HUD (no SSR — Canvas can't render on the server).
+// Client-only WebGL HUD (no SSR — Canvas can't render on the server). Dynamic
+// import keeps it out of the bundle until the user opts into the holo view.
 const HoloHud3D = dynamic(() => import('./HoloHud3D'), { ssr: false, loading: () => <div className="mc-hud3d-loading">INITIALIZING HOLO ARRAY…</div> })
 
-function elapsedOnTask(n: AgentNode): number | null {
+function taskStartedMs(n: AgentNode): number | null {
   if (!n.currentTask?.startedAt) return null
   return n.currentTask.startedAt > 1e12 ? n.currentTask.startedAt : n.currentTask.startedAt * 1000
 }
 
-/* ── Compact list view (mobile toggle) ────────────────────────────────── */
+function fmtElapsed(startedMs: number, now: number): string {
+  const s = Math.max(0, Math.floor((now - startedMs) / 1000))
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  const sec = s % 60
+  const mm = String(m).padStart(2, '0')
+  const ss = String(sec).padStart(2, '0')
+  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`
+}
 
-function ListView({ nodes, onSelect }: { nodes: AgentNode[]; onSelect: (id: string) => void }) {
+/** Ticks once a second while `active` (e.g. any agent has a task running). */
+function useNowWhile(active: boolean, intervalMs = 1000): number {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    if (!active) return
+    const id = setInterval(() => setNow(Date.now()), intervalMs)
+    return () => clearInterval(id)
+  }, [active, intervalMs])
+  return now
+}
+
+/* ── Now strip — the pulse of the team ─────────────────────────────────── */
+
+function NowStrip({ nodes }: { nodes: AgentNode[] }) {
+  const segs: { key: string; label: string; cls: string }[] = []
+  const count = (s: AgentState) => nodes.filter(n => n.state === s).length
+  const working = count('working')
+  const errored = count('errored')
+  const waiting = count('waiting')
+  const idle = count('idle')
+  const offline = count('offline')
+  if (working) segs.push({ key: 'working', label: `${working} ${working === 1 ? 'agent' : 'agents'} working`, cls: 'is-working' })
+  if (errored) segs.push({ key: 'errored', label: `${errored} errored`, cls: 'is-errored' })
+  if (waiting) segs.push({ key: 'waiting', label: `${waiting} waiting`, cls: 'is-waiting' })
+  if (idle) segs.push({ key: 'idle', label: `${idle} idle`, cls: 'is-idle' })
+  if (offline) segs.push({ key: 'offline', label: `${offline} offline`, cls: 'is-offline' })
+
+  return (
+    <div className="mc-shift-now" role="status" aria-live="polite">
+      <span className="mc-shift-now-led" aria-hidden="true" />
+      {segs.length === 0 ? (
+        <span className="mc-shift-now-empty">no agents reported</span>
+      ) : (
+        segs.map(s => (
+          <span key={s.key} className={`mc-shift-now-item ${s.cls}`}>{s.label}</span>
+        ))
+      )}
+    </div>
+  )
+}
+
+/* ── Shift roster — the primary view ──────────────────────────────────── */
+
+function RosterRow({ node, now, onSelect }: { node: AgentNode; now: number; onSelect: (id: string) => void }) {
+  const task = node.currentTask
+  const started = taskStartedMs(node)
+  const meta = [node.host ? `@${node.host}` : null, node.model && node.model !== 'n/a (not published)' ? node.model : null]
+    .filter(Boolean)
+    .join(' · ')
+
+  return (
+    <button
+      type="button"
+      className={`mc-sub-row mc-shift-row state-${node.state}`}
+      onClick={() => onSelect(node.id)}
+      role="listitem"
+      style={{ '--shift-accent': node.accent } as React.CSSProperties}
+      aria-label={`${node.name}, ${STATE_META[node.state].label}${task ? `, ${task.title}` : ''}`}
+    >
+      <span className="mc-sub-row-shape" style={{ borderColor: node.accent, color: node.accent }}>{STATE_META[node.state].glyph}</span>
+      <span className="mc-sub-row-main">
+        <span className="mc-sub-row-name">
+          {node.name}
+          <em className="mc-shift-role">{node.role}</em>
+        </span>
+        <span className="mc-sub-row-task">
+          {task ? (
+            <>{task.title}{started != null && <span className="mc-shift-elapsed"> · {fmtElapsed(started, now)}</span>}</>
+          ) : (
+            <span className="mc-shift-notask">no active task</span>
+          )}
+        </span>
+        <span className="mc-sub-row-meta">{meta || '—'}</span>
+      </span>
+      <span className="mc-shift-side">
+        <span className={`mc-shift-badge is-${node.state}`}>{STATE_META[node.state].label}</span>
+      </span>
+    </button>
+  )
+}
+
+function ShiftRoster({ nodes, now, onSelect }: { nodes: AgentNode[]; now: number; onSelect: (id: string) => void }) {
   const sorted = useMemo(
     () => [...nodes].sort((a, b) => STATE_RANK[a.state] - STATE_RANK[b.state] || (b.lastSeenAt ?? 0) - (a.lastSeenAt ?? 0)),
     [nodes],
   )
   return (
-    <div className="mc-sub-list" role="list">
-      {sorted.map(n => (
-        <button
-          key={n.id}
-          type="button"
-          className={`mc-sub-row state-${n.state}`}
-          onClick={() => onSelect(n.id)}
-          role="listitem"
-        >
-          <span className={`mc-sub-row-shape state-${n.state}`} style={{ borderColor: n.accent, color: n.accent }}>{STATE_META[n.state].glyph}</span>
-          <span className="mc-sub-row-main">
-            <span className="mc-sub-row-name">{n.name} <em className="mc-sub-row-state">{STATE_META[n.state].label}</em></span>
-            <span className="mc-sub-row-task">{n.currentTask ? n.currentTask.title : 'no active task'}</span>
-            <span className="mc-sub-row-meta">{n.host ?? '—'} · last seen <RelativeTime ts={n.lastSeenAt} frame="ago" /></span>
-          </span>
-        </button>
-      ))}
+    <div className="mc-sub-list" role="list" aria-label="agent shift roster">
+      {sorted.map(n => <RosterRow key={n.id} node={n} now={now} onSelect={onSelect} />)}
     </div>
   )
 }
@@ -124,12 +200,12 @@ function DetailSheet({ node, onClose }: { node: AgentNode; onClose: () => void }
   )
 }
 
-/* ── Live mission spotlight (HTML overlay over/under the HUD) ─────────── */
+/* ── Live mission spotlight (holo overlay) ────────────────────────────── */
 
 function LiveMission({ node }: { node: AgentNode }) {
   const task = node.currentTask
   const [now, setNow] = useState(() => Date.now())
-  const started = useMemo(() => elapsedOnTask(node), [node])
+  const started = task?.startedAt ? (task.startedAt > 1e12 ? task.startedAt : task.startedAt * 1000) : null
 
   useEffect(() => {
     if (started == null) return
@@ -176,12 +252,12 @@ const STREAM_META: Record<string, { label: string; cls: string }> = {
 export function SubAgentPanel() {
   const snap = useSubAgentTelemetry()
   const { elements3d } = useUiSettings()
-  const holoEnabled = elements3d.teamGraph
+  const holoAllowed = elements3d.teamGraph
+  // Holo is OPT-IN: default off, mounted only when the user toggles it.
+  const [holoOn, setHoloOn] = useState(false)
+  const showHolo = holoAllowed && holoOn
+
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [listMode, setListMode] = useState(false)
-  // Off (Setup → UI CUSTOMIZATION): always show the existing ListView
-  // fallback and skip mounting the WebGL canvas entirely.
-  const effectiveListMode = !holoEnabled || listMode
   const stream = STREAM_META[snap.stream] ?? STREAM_META.connecting
   const selected = snap.tree.find(n => n.id === selectedId) ?? null
 
@@ -190,27 +266,32 @@ export function SubAgentPanel() {
   const working = snap.tree.find(n => n.state === 'working')
   const erroredNode = snap.tree.find(n => n.state === 'errored')
 
+  // One shared ticker for the roster's elapsed counters (only while someone
+  // actually has a running task — otherwise the list stays static).
+  const now = useNowWhile(snap.tree.some(n => n.currentTask))
+
   return (
     <div className="mc-sub-panel">
       <div className="mc-sub-bar">
         <div className="mc-sub-bar-title">
-          <span className="mc-sub-kicker">HOLO DISPATCH · 3D TREE</span>
+          <span className="mc-sub-kicker">{showHolo ? 'HOLO DISPATCH · 3D TREE' : 'TEAM · SHIFT ROSTER'}</span>
           <span className={`mc-led ${stream.cls}`} />
           <span className={`mc-sub-stream state-${snap.stream}`}>{stream.label}</span>
         </div>
         <div className="mc-sub-bar-meta">
-          <span>{activeCount} working · {erroredCount} errored</span>
-          {holoEnabled ? (
+          {!showHolo && (
+            <span className="mc-shift-counts" aria-hidden="true">{activeCount} working · {erroredCount} errored</span>
+          )}
+          {holoAllowed && (
             <Button
               variant="ghost"
-              active={listMode}
-              onClick={() => setListMode(v => !v)}
-              aria-label="Toggle list view"
+              active={holoOn}
+              onClick={() => setHoloOn(v => !v)}
+              aria-pressed={holoOn}
+              aria-label={holoOn ? 'Show shift roster' : 'Show 3D holo view'}
             >
-              {listMode ? 'HOLO' : 'LIST'}
+              {holoOn ? 'ROSTER' : 'HOLO 3D'}
             </Button>
-          ) : (
-            <span className="mc-3d-off" title="Enable in Setup → UI CUSTOMIZATION">LIST · HOLO DISABLED</span>
           )}
         </div>
       </div>
@@ -219,14 +300,8 @@ export function SubAgentPanel() {
         <div className="mc-sub-banner">stream dropped — showing last known state, marked stale</div>
       ) : null}
 
-      {effectiveListMode ? (
-        <ListView nodes={snap.tree} onSelect={setSelectedId} />
-      ) : (
+      {showHolo ? (
         <>
-          {/* WebGL 3D stage + non-interactive legend strip.
-              aria-hidden: the canvas is decorative and not keyboard-operable; the
-              roster is fully exposed to assistive tech via the sr-only synopsis
-              below and the LIST view (toggle button is labeled). */}
           <div className="mc-hud3d-frame" aria-hidden="true">
             <HoloHud3D nodes={snap.tree} selectedId={selectedId} onSelect={setSelectedId} />
             <div className="mc-hud3d-overlay">
@@ -238,16 +313,14 @@ export function SubAgentPanel() {
             </div>
           </div>
 
-          {/* screen-reader synopsis so the canvas isn't the only carrier of state */}
           <div className="sr-only" role="status">
             {snap.tree.length} agents. {activeCount} working, {erroredCount} errored,{' '}
             {snap.tree.filter(n => n.state === 'idle').length} idle,{' '}
             {snap.tree.filter(n => n.state === 'offline').length} offline.
             {' '}{working?.name ? `${working.name} is working now.` : ''} The 3D map is visual
-            only — use the LIST view for full keyboard navigation of every agent.
+            only — use the roster for full keyboard navigation of every agent.
           </div>
 
-          {/* spotlight */}
           <div className="mc-hud-spotlight">
             <div className="mc-hud-spot-kicker">
               {working ? '▸ LIVE MISSION' : erroredNode ? '⚠ TASK ERROR' : '◌ MESH STANDBY'}
@@ -262,10 +335,15 @@ export function SubAgentPanel() {
             ) : (
               <div className="mc-hud-idle">
                 <span className="mc-hud-idle-line">CREW ON STANDBY — {snap.tree.filter(n => n.state !== 'offline').length} OF {snap.tree.length} AGENTS AWAKE</span>
-                <span className="mc-hud-idle-sub">the mesh stands watch · drag to orbit · pinch to zoom · tap a node for details</span>
+                <span className="mc-hud-idle-sub">tap ROSTER to return · drag to orbit · scroll to zoom · click a node for details</span>
               </div>
             )}
           </div>
+        </>
+      ) : (
+        <>
+          <NowStrip nodes={snap.tree} />
+          <ShiftRoster nodes={snap.tree} now={now} onSelect={setSelectedId} />
         </>
       )}
 
