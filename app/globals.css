@@ -2796,6 +2796,39 @@ html[data-theme="friday"] .mc-pipe-name { color: var(--pt-neon-bright); text-sha
   .mc-kb-meta { align-items: flex-start; flex-wrap: wrap; }
 }
 
+/* Fold-width compact (520-660px, the user's fold portrait): dense ops-slip
+   cards, no real-horizontal-scroll risk, full-bleed create modal. This is
+   purely the compact layer — it must NOT touch the desktop grid. */
+@media (max-width: 660px) {
+  .mc-kb-viewport { overflow-x: visible; }
+  .mc-kb-board { padding: 8px; gap: 8px; }
+  .mc-kb-meta { gap: 4px; padding: 2px 8px 0; }
+  .mc-kb-filter-bar { gap: 6px; padding: 6px 8px 0; }
+  .mc-kb-filter-chips { gap: 4px; }
+  .mc-kb-filter-chip { padding: 3px 8px; }
+  .mc-kb-search { min-width: 120px; max-width: 100%; }
+  .mc-kb-col-head { letter-spacing: 0.12em; padding: 6px 8px; }
+  .mc-kb-col-body { padding: 8px; gap: 8px; }
+  .mc-kb-card { padding: 8px; gap: 6px; }
+  /* Force the meta row (assignee + relative time) to one quiet line:
+     nowrap + ellipsis so it clips instead of double-stacking or overflowing
+     the right edge at ~590px. */
+  .mc-kb-card-meta {
+    flex-wrap: nowrap; gap: 6px; font-size: 8.5px; min-width: 0;
+  }
+  .mc-kb-card-meta > * {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+  }
+  /* Create modal goes full-bleed on the fold (was capped at 520px). */
+  .mc-kb-modal-overlay { padding: 24px 8px; }
+  .mc-kb-modal-overlay .mc-drawer { width: 100%; max-width: 100%; max-height: none; }
+}
+
+/* Below 520 (very compact): hide the column glyph to free label width. */
+@media (max-width: 520px) {
+  .mc-kb-col-glyph { display: none; }
+}
+
 /* Reduced motion: keep the board calm when the user asks for it. */
 @media (prefers-reduced-motion: reduce) {
   .mc-kb-card { transition: none; }
