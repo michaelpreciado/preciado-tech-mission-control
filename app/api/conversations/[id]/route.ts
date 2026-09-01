@@ -41,7 +41,11 @@ export async function GET(_req: NextRequest, ctx: RouteCtx) {
   return NextResponse.json({ id, profile, device, messages }, { headers: { 'Cache-Control': 'no-store' } })
 }
 
-/** POST /api/conversations/[id] — continue an existing conversation. */
+function enc(event: string, data: unknown): Uint8Array {
+  return new TextEncoder().encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)
+}
+
+/** POST /api/conversations/[id] — continue an existing conversation (SSE stream). */
 export async function POST(req: NextRequest, ctx: RouteCtx) {
   const _origin = assertSameOrigin(req)
   if (!_origin.ok) return NextResponse.json(_origin.body, { status: _origin.status })
@@ -59,13 +63,44 @@ export async function POST(req: NextRequest, ctx: RouteCtx) {
   const device = typeof body.device === 'string' ? body.device : ''
   if (!SESSION_RE.test(id)) return NextResponse.json({ error: 'invalid conversation id' }, { status: 400 })
 
-  // device (non-empty, non-local) + profile must be a known remote — validated by call.
   logger.info('conversations/continue', `id=${id} profile=${profile} device=${device || '(local)'} len=${message.length}`)
-  const result = continueConversation(id, message, { profile, device })
-  if (!result.ok) {
-    return NextResponse.json({ error: result.error }, { status: 502 })
-  }
-  // Re-read the thread (now includes the new exchange).
-  const messages = getMessages({ profile, device, sessionId: id })
-  return NextResponse.json({ ok: true, reply: result.result, messages }, { headers: { 'Cache-Control': 'no-store' } })
+
+  const startMs = Date.now()
+  let closed = false
+
+  const stream = new ReadableStream({
+    async start(controller) {
+      controller.enqueue(enc('start', { profile, device }))
+
+      const hb = setInterval(() => {
+        if (closed) return
+        controller.enqueue(enc('heartbeat', { elapsedMs: Date.now() - startMs }))
+      }, 5000)
+
+      try {
+        const result = await continueConversation(id, message, { profile, device })
+        if (!result.ok) {
+          controller.enqueue(enc('done', { ok: false, error: result.error }))
+        } else {
+          const messages = getMessages({ profile, device, sessionId: id })
+          controller.enqueue(enc('done', { ok: true, reply: result.result, messages }))
+        }
+      } catch (err) {
+        controller.enqueue(enc('done', { ok: false, error: 'agent run failed' }))
+        logger.warn('conversations/continue', String(err))
+      } finally {
+        clearInterval(hb)
+        closed = true
+        controller.close()
+      }
+    },
+  })
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-store',
+      'X-Accel-Buffering': 'no',
+    },
+  })
 }

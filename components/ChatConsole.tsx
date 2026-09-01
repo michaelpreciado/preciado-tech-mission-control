@@ -59,6 +59,42 @@ const BUCKET_ORDER: DayBucket[] = ['TODAY', 'YESTERDAY', 'THIS WEEK', 'THIS MONT
  */
 const PAGE_SIZE = 60
 
+/* ── SSE reader ─────────────────────────────────────────── */
+
+type SseEvent = { event: string; data: unknown }
+
+async function* readSse(body: ReadableStream<Uint8Array>): AsyncGenerator<SseEvent> {
+  const reader = body.getReader()
+  const dec = new TextDecoder()
+  let buf = ''
+  let curEvent = 'message'
+  let curData = ''
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buf += dec.decode(value, { stream: true })
+      const lines = buf.split('\n')
+      buf = lines.pop() ?? ''
+      for (const line of lines) {
+        if (line.startsWith('event:')) {
+          curEvent = line.slice(6).trim()
+        } else if (line.startsWith('data:')) {
+          curData = line.slice(5).trim()
+        } else if (line === '') {
+          if (curData !== '') {
+            try { yield { event: curEvent, data: JSON.parse(curData) } } catch { /* skip bad frame */ }
+          }
+          curEvent = 'message'
+          curData = ''
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock()
+  }
+}
+
 /* ── Helpers ────────────────────────────────────────────── */
 
 function relTime(ts: number): string {
@@ -161,6 +197,8 @@ export default function ChatConsole() {
 
   const [composer, setComposer] = useState('')
   const [busy, setBusy] = useState(false)
+  const [elapsed, setElapsed] = useState(0)
+  const abortRef = useRef<AbortController | null>(null)
 
   const [showNew, setShowNew] = useState(false)
   const [newProfile, setNewProfile] = useState('jarvis')
@@ -176,6 +214,22 @@ export default function ChatConsole() {
   const threadRefEl = useRef<HTMLDivElement>(null)
   const threadBottomRef = useRef<HTMLDivElement>(null)
   const composerRef = useRef<HTMLTextAreaElement>(null)
+
+  /* Tick the elapsed display while busy. Server heartbeats anchor the truth;
+     the client interval keeps it smooth between them. */
+  const busyStartRef = useRef<number>(0)
+  useEffect(() => {
+    if (!busy) { setElapsed(0); return }
+    busyStartRef.current = Date.now()
+    setElapsed(0)
+    const t = setInterval(() => setElapsed(Math.floor((Date.now() - busyStartRef.current) / 1000)), 500)
+    return () => clearInterval(t)
+  }, [busy])
+
+  /* Abort any in-flight request on unmount. */
+  useEffect(() => {
+    return () => { abortRef.current?.abort() }
+  }, [])
 
   /* Load the conversation index. One debounced effect owns every fetch — an
      eager load plus a debounced load fired two requests per keystroke. */
@@ -248,21 +302,41 @@ export default function ChatConsole() {
     setComposer('')
     setBusy(true)
     setThread(t => [...t, { id: Date.now(), role: 'user', content: text, timestamp: Date.now() }])
+    const ctrl = new AbortController()
+    abortRef.current = ctrl
     try {
       const res = await fetch(`/api/conversations/${encodeURIComponent(threadRef.id)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text, profile: threadRef.profile, device: threadRef.device }),
+        signal: ctrl.signal,
       })
-      const j = await res.json()
-      if (!res.ok) {
+      if (!res.ok || !res.body) {
+        const j = await res.json().catch(() => ({ error: 'send failed' }))
         setThread(t => [...t, { id: Date.now() - 1, role: 'tool', content: `⚠ ${j.error || 'send failed'}`, timestamp: Date.now() }])
       } else {
-        setThread(j.messages ?? [])
+        for await (const ev of readSse(res.body)) {
+          if (ev.event === 'heartbeat') {
+            const d = ev.data as { elapsedMs?: number }
+            if (typeof d.elapsedMs === 'number') {
+              busyStartRef.current = Date.now() - d.elapsedMs
+            }
+          } else if (ev.event === 'done') {
+            const d = ev.data as { ok?: boolean; error?: string; reply?: string; messages?: ChatMessage[] }
+            if (!d.ok) {
+              setThread(t => [...t, { id: Date.now() - 1, role: 'tool', content: `⚠ ${d.error || 'send failed'}`, timestamp: Date.now() }])
+            } else {
+              setThread(d.messages ?? [])
+            }
+          }
+        }
       }
     } catch (err) {
-      setThread(t => [...t, { id: Date.now() - 1, role: 'tool', content: `⚠ ${(err as Error).message}`, timestamp: Date.now() }])
+      if ((err as Error).name !== 'AbortError') {
+        setThread(t => [...t, { id: Date.now() - 1, role: 'tool', content: `⚠ ${(err as Error).message}`, timestamp: Date.now() }])
+      }
     } finally {
+      abortRef.current = null
       setBusy(false)
       setReloadToken(t => t + 1)
     }
@@ -274,24 +348,44 @@ export default function ChatConsole() {
     if (!text || busy) return
     setComposer('')
     setBusy(true)
+    const ctrl = new AbortController()
+    abortRef.current = ctrl
     try {
       const res = await fetch('/api/conversations/new', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text, profile: newProfile, device: newDevice }),
+        signal: ctrl.signal,
       })
-      const j = await res.json()
-      if (!res.ok) {
+      if (!res.ok || !res.body) {
+        const j = await res.json().catch(() => ({ error: 'send failed' }))
         setThread(t => [...t, { id: Date.now() - 1, role: 'tool', content: `⚠ ${j.error || 'send failed'}`, timestamp: Date.now() }])
       } else {
-        setOpenId('__new__')
-        setThread([{ id: Date.now(), role: 'user', content: text, timestamp: Date.now() },
-          { id: Date.now() - 1, role: 'assistant', content: j.reply, timestamp: Date.now() }])
-        setThreadRef(null)
+        for await (const ev of readSse(res.body)) {
+          if (ev.event === 'heartbeat') {
+            const d = ev.data as { elapsedMs?: number }
+            if (typeof d.elapsedMs === 'number') {
+              busyStartRef.current = Date.now() - d.elapsedMs
+            }
+          } else if (ev.event === 'done') {
+            const d = ev.data as { ok?: boolean; error?: string; reply?: string }
+            if (!d.ok) {
+              setThread(t => [...t, { id: Date.now() - 1, role: 'tool', content: `⚠ ${d.error || 'send failed'}`, timestamp: Date.now() }])
+            } else {
+              setOpenId('__new__')
+              setThread([{ id: Date.now(), role: 'user', content: text, timestamp: Date.now() },
+                { id: Date.now() - 1, role: 'assistant', content: d.reply ?? '', timestamp: Date.now() }])
+              setThreadRef(null)
+            }
+          }
+        }
       }
     } catch (err) {
-      setThread(t => [...t, { id: Date.now() - 1, role: 'tool', content: `⚠ ${(err as Error).message}`, timestamp: Date.now() }])
+      if ((err as Error).name !== 'AbortError') {
+        setThread(t => [...t, { id: Date.now() - 1, role: 'tool', content: `⚠ ${(err as Error).message}`, timestamp: Date.now() }])
+      }
     } finally {
+      abortRef.current = null
       setBusy(false)
       setReloadToken(t => t + 1)
     }
@@ -520,7 +614,14 @@ export default function ChatConsole() {
             {busy && (
               <div className="cc-bubble is-assistant">
                 <div className="cc-bubble-head"><span>◂ AGENT</span><span>…</span></div>
-                <div className="cc-msg-body cc-thinking">thinking<span className="mc-boot-cursor" /></div>
+                <div className="cc-msg-body cc-thinking">
+                  thinking<span className="mc-boot-cursor" />
+                  {elapsed > 0 && (
+                    <span style={{ marginLeft: '0.5em', opacity: 0.6 }}>
+                      {String(Math.floor(elapsed / 60)).padStart(2, '0')}:{String(elapsed % 60).padStart(2, '0')}
+                    </span>
+                  )}
+                </div>
               </div>
             )}
             <div ref={threadBottomRef} />

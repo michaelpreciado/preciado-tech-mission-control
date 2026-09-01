@@ -6,15 +6,18 @@
  *    (local) or run the same over SSH on the remote host that owns the session.
  *  - Initiate a brand-new session: `hermes --profile <p> -z <msg> --cli`
  *
- * Every action shells out synchronously (bounded timeout) and returns a
+ * Every action shells out asynchronously (bounded timeout) and returns a
  * {ok, result|error, sessionId?} shape for the API route to turn into JSON.
  */
 import os from 'node:os'
 import path from 'node:path'
-import { execFileSync } from 'node:child_process'
+import { execFile, execFileSync } from 'node:child_process'
+import { promisify } from 'node:util'
 import { getConfig } from './config'
 import { logger } from './logger'
 import type { FridayChatRemote } from './config'
+
+const execFileAsync = promisify(execFile)
 
 export type ActionOutcome =
   | { ok: true; result: string; sessionId?: string }
@@ -60,16 +63,17 @@ function build(
   }
 }
 
-function run(
+async function run(
   args: string[],
   opts: { device?: string; profile?: string; timeoutMs?: number },
-): ActionOutcome {
+): Promise<ActionOutcome> {
   const { argv, opts: execOpts } = build(args, opts)
   try {
-    const out = execFileSync(argv[0], argv.slice(1), execOpts as object).toString().trim()
+    const { stdout } = await execFileAsync(argv[0], argv.slice(1), execOpts as Parameters<typeof execFileAsync>[2])
+    const out = (stdout as string).trim()
     return { ok: true, result: out || '(done)' }
   } catch (err) {
-    const e = err as { stderr?: Buffer; stdout?: Buffer; message: string; timedOut?: boolean; killed?: boolean }
+    const e = err as { stderr?: Buffer | string; stdout?: Buffer | string; message: string; timedOut?: boolean; killed?: boolean }
     // On timeout the agent may already have written the reply to stdout before
     // dying — surface that text over a generic error when present.
     const stdout = e.stdout ? e.stdout.toString().trim() : ''
@@ -85,19 +89,19 @@ function run(
 }
 
 /** Continue an existing conversation by its real Hermes session id. */
-export function continueConversation(
+export async function continueConversation(
   sessionId: string,
   message: string,
   opts: { profile?: string; device?: string },
-): ActionOutcome {
+): Promise<ActionOutcome> {
   return run(['--resume', sessionId, '-z', message, '--cli'], opts)
 }
 
 /** Initiate a brand-new conversation on a given profile/device. */
-export function initiateConversation(
+export async function initiateConversation(
   message: string,
   opts: { profile: string; device?: string },
-): ActionOutcome {
+): Promise<ActionOutcome> {
   return run(['-z', message, '--cli'], opts)
 }
 

@@ -22,7 +22,11 @@ function rate(req: NextRequest): boolean {
   return checkRateLimit(rateLimitMap, ip, Date.now(), 20, 60_000).allowed
 }
 
-/** POST /api/conversations/new — initiate a brand-new conversation. */
+function enc(event: string, data: unknown): Uint8Array {
+  return new TextEncoder().encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)
+}
+
+/** POST /api/conversations/new — initiate a brand-new conversation (SSE stream). */
 export async function POST(req: NextRequest) {
   const _origin = assertSameOrigin(req)
   if (!_origin.ok) return NextResponse.json(_origin.body, { status: _origin.status })
@@ -43,9 +47,42 @@ export async function POST(req: NextRequest) {
   }
 
   logger.info('conversations/new', `profile=${profile} device=${device || '(local)'}`)
-  const result = initiateConversation(message, { profile, device })
-  if (!result.ok) {
-    return NextResponse.json({ error: result.error }, { status: 502 })
-  }
-  return NextResponse.json({ ok: true, reply: result.result, profile, device }, { headers: { 'Cache-Control': 'no-store' } })
+
+  const startMs = Date.now()
+  let closed = false
+
+  const stream = new ReadableStream({
+    async start(controller) {
+      controller.enqueue(enc('start', { profile, device }))
+
+      const hb = setInterval(() => {
+        if (closed) return
+        controller.enqueue(enc('heartbeat', { elapsedMs: Date.now() - startMs }))
+      }, 5000)
+
+      try {
+        const result = await initiateConversation(message, { profile, device })
+        if (!result.ok) {
+          controller.enqueue(enc('done', { ok: false, error: result.error }))
+        } else {
+          controller.enqueue(enc('done', { ok: true, reply: result.result, profile, device }))
+        }
+      } catch (err) {
+        controller.enqueue(enc('done', { ok: false, error: 'agent run failed' }))
+        logger.warn('conversations/new', String(err))
+      } finally {
+        clearInterval(hb)
+        closed = true
+        controller.close()
+      }
+    },
+  })
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-store',
+      'X-Accel-Buffering': 'no',
+    },
+  })
 }
