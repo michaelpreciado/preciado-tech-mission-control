@@ -545,6 +545,62 @@ export default function ChatConsole() {
             </button>
           </div>
 
+          {/* Stage D: Pinned agent slots — always visible, outside filtered buckets */}
+          <div style={{
+            display: 'flex',
+            gap: '1px',
+            borderBottom: '1px solid color-mix(in srgb, currentColor 12%, transparent)',
+            background: 'color-mix(in srgb, currentColor 3%, transparent)',
+          }}>
+            {(['jarvis', 'friday'] as const).map(agent => {
+              const id = profiles.includes(agent) ? agent : agent
+              const live = conversations.some(c => c.profile === id && c.active)
+              return (
+                <button
+                  key={agent}
+                  onClick={() => {
+                    setNewProfile(id)
+                    setShowNew(true)
+                    setThread([])
+                    setThreadRef(null)
+                    setOpenId('__new__')
+                  }}
+                  disabled={busy}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5em',
+                    padding: '0 10px',
+                    minHeight: '44px',
+                    background: 'none',
+                    border: 'none',
+                    borderRight: agent === 'jarvis' ? '1px solid color-mix(in srgb, currentColor 12%, transparent)' : 'none',
+                    cursor: busy ? 'not-allowed' : 'pointer',
+                    fontFamily: 'monospace',
+                    fontSize: '10px',
+                    letterSpacing: '0.16em',
+                    textTransform: 'uppercase',
+                    color: 'inherit',
+                    opacity: busy ? 0.4 : 1,
+                  }}
+                  aria-label={`Start new conversation with ${agent}`}
+                >
+                  <span style={{
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    flexShrink: 0,
+                    background: live ? '#00e87a' : 'color-mix(in srgb, currentColor 30%, transparent)',
+                    boxShadow: live ? '0 0 5px #00e87a' : 'none',
+                  }} />
+                  <span style={{ flex: 1, textAlign: 'left' }}>{agent.toUpperCase()}</span>
+                  <span style={{ opacity: 0.45, fontSize: '9px', letterSpacing: '0.12em' }}>START</span>
+                </button>
+              )
+            })}
+          </div>
+
           {/* Filters are ALWAYS mounted. They used to be gated on a filter
               already being set, which made them unreachable: the only controls
               that could set one were inside the block that needed one. */}
