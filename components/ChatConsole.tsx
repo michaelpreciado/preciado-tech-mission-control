@@ -45,6 +45,7 @@ type ChatMessage = {
   toolName?: string
   toolCalls?: string
   timestamp: number
+  ms?: number
 }
 
 type Device = { name: string; isLocal: boolean }
@@ -138,6 +139,56 @@ function MessageBody({ m }: { m: ChatMessage }) {
   // Agent replies are markdown; users type plain text but markdown is harmless
   // there and keeps pasted snippets readable.
   return <div className="cc-msg-body"><Markdown text={m.content || ''} /></div>
+}
+
+/* ── Copy-to-clipboard button ───────────────────────────── */
+
+function fallbackCopy(text: string, onDone: () => void) {
+  const el = document.createElement('textarea')
+  el.value = text
+  el.style.cssText = 'position:fixed;opacity:0;top:0;left:0'
+  document.body.appendChild(el)
+  el.select()
+  try { document.execCommand('copy') } catch { /* best-effort */ }
+  document.body.removeChild(el)
+  onDone()
+}
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false)
+  const done = () => { setCopied(true); setTimeout(() => setCopied(false), 1500) }
+  const copy = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done))
+    } else {
+      fallbackCopy(text, done)
+    }
+  }
+  return (
+    <button
+      onClick={copy}
+      aria-label={copied ? 'Copied' : 'Copy message'}
+      style={{
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        padding: '12px',
+        minWidth: '44px',
+        minHeight: '44px',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '11px',
+        fontFamily: 'monospace',
+        letterSpacing: '0.08em',
+        opacity: copied ? 1 : 0.4,
+        color: copied ? 'var(--mc-accent, #1e90ff)' : 'inherit',
+        flexShrink: 0,
+      }}
+    >
+      {copied ? 'COPIED' : '⎘'}
+    </button>
+  )
 }
 
 /* ── Conversation list row ──────────────────────────────── */
@@ -602,15 +653,50 @@ export default function ChatConsole() {
 
             {threadLoading && <div className="cc-empty">loading thread…</div>}
 
-            {thread.map(m => (
-              <div key={m.id} className={`cc-bubble is-${m.role}`}>
-                <div className="cc-bubble-head">
-                  <span>{m.role === 'user' ? '▸ YOU' : m.role === 'assistant' ? '◂ AGENT' : m.role === 'tool' ? '⚙ TOOL' : '· NOTE'}</span>
-                  <span>{fmtStamp(m.timestamp)}</span>
-                </div>
-                <MessageBody m={m} />
-              </div>
-            ))}
+            {(() => {
+              let prevDay = ''
+              return thread.map(m => {
+                const day = new Date(m.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+                const showDiv = day !== prevDay
+                prevDay = day
+                const divLabel = dayBucket(m.timestamp)
+                const isUserOrAssistant = m.role === 'user' || m.role === 'assistant'
+                return (
+                  <div key={m.id}>
+                    {showDiv && (
+                      <div style={{
+                        fontFamily: 'monospace',
+                        fontSize: '9px',
+                        letterSpacing: '0.24em',
+                        textTransform: 'uppercase',
+                        opacity: 0.5,
+                        padding: '10px 12px 6px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.75em',
+                      }}>
+                        <span style={{ flex: 1, borderTop: '1px solid currentColor', opacity: 0.3 }} />
+                        <span>{divLabel}</span>
+                        <span style={{ flex: 1, borderTop: '1px solid currentColor', opacity: 0.3 }} />
+                      </div>
+                    )}
+                    <div className={`cc-bubble is-${m.role}`}>
+                      <div className="cc-bubble-head">
+                        <span>{m.role === 'user' ? '▸ YOU' : m.role === 'assistant' ? '◂ AGENT' : m.role === 'tool' ? '⚙ TOOL' : '· NOTE'}</span>
+                        {m.role === 'tool' && m.ms != null && (
+                          <span style={{ opacity: 0.45, fontSize: '0.78em', fontFamily: 'monospace', marginLeft: '0.4em' }}>
+                            {(m.ms / 1000).toFixed(1)}s
+                          </span>
+                        )}
+                        <span style={{ marginLeft: 'auto' }}>{fmtStamp(m.timestamp)}</span>
+                        {isUserOrAssistant && <CopyButton text={m.content ?? ''} />}
+                      </div>
+                      <MessageBody m={m} />
+                    </div>
+                  </div>
+                )
+              })
+            })()}
             {busy && (
               <div className="cc-bubble is-assistant">
                 <div className="cc-bubble-head"><span>◂ AGENT</span><span>…</span></div>
