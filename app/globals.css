@@ -4974,6 +4974,22 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   .cc-newbtn { width: 44px; justify-content: center; }
   .cc-newbtn span, .cc-newbtn svg { display: block; }
 }
+/* 601-700px: Pixel Fold inner display (and similar widths) — two-column RAIL
+   mode instead of the phone stacked/back-button swap (rule above ends at the
+   same 700px, this range is what a Fold actually renders). The list rail
+   stays visible beside the open thread: that IS the hub experience. */
+@media (min-width: 601px) and (max-width: 700px) {
+  .cc { grid-template-columns: minmax(300px, 340px) minmax(0, 1fr); }
+  .cc-listpane.is-hidden-mobile { display: flex; }
+  .cc-threadpane.is-empty { display: none; } /* no thread open: rail owns the row */
+  .cc-back { display: none; }
+  .cc-listpane, .cc-threadpane {
+    grid-row: auto; grid-column: auto;
+  }
+  .cc-composer-area { padding: 10px 14px 0; gap: 8px; }
+  .cc-composer-text { min-height: 44px; }
+  .cc-sendbtn { min-height: 44px; min-width: 60px; }
+}
 @media (max-width: 520px) {
   :root { --cc-pane-h: calc(100dvh - 122px); }
   .cc-row { padding: 9px 8px; }
