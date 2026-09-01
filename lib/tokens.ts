@@ -23,7 +23,7 @@
 
 /** ── Raw token values (the canonical numbers) ─────────────────────── */
 
-export const ACCENT_DEFAULT = '#ff10f0'
+export const ACCENT_DEFAULT = '#9db4ec'
 
 /* Semantic status palette — the four states, reserved meaning. never reused
    as a categorical slot, never decorative. */
@@ -45,8 +45,8 @@ export const CATEGORICAL = {
 } as const
 
 /* Accent RGB triplets (for rgba() use). Keep in sync with ACCENT_DEFAULT. */
-export const ACCENT_RGB = '255,16,240'
-export const ACCENT_BRIGHT_RGB = '255,125,248'
+export const ACCENT_RGB = '157,180,236'
+export const ACCENT_BRIGHT_RGB = '188,208,255'
 
 /* ── Type roles ───────────────────────────────────────────────────── */
 export const FONT = {
@@ -85,14 +85,14 @@ export const RADIUS = { sm: '4px', md: '8px', lg: '12px', pill: '999px' } as con
 /* ── Borders — one color family (accent-derived). */
 export const BORDER = { dim: 0.15, base: 0.35, strong: 0.65, rule: 0.22 } as const
 
-/* ── Surfaces — two elevations only. */
+/* ── Surfaces — PT cinematic near-black ramp. */
 export const SURFACE = {
-  bg:         '#000000',
-  bgSoft:     '#070109',
-  surface:    'rgba(16,6,20,0.6)',
-  surface2:   'rgba(24,10,30,0.72)',
-  terminal:   'rgba(10,2,12,0.78)',
-  glassProse: 'rgba(13,2,18,0.96)',
+  bg:         '#07080b',
+  bgSoft:     '#0b0d12',
+  surface:    'rgba(16,19,24,0.6)',
+  surface2:   'rgba(22,27,34,0.72)',
+  terminal:   'rgba(14,17,23,0.78)',
+  glassProse: 'rgba(14,17,23,0.96)',
 } as const
 
 /* ── Glow — two intensities max on any page (sm for interactive, md for hero). */
@@ -151,8 +151,8 @@ export function buildTokenCss(): string {
   --pt-info: ${SEMANTIC.info.hex}; --pt-info-ink: ${SEMANTIC.info.ink};
 
   --pt-neon-rgb: ${ACCENT_RGB}; --pt-neon-bright-rgb: ${ACCENT_BRIGHT_RGB};
-  --pt-text-rgb: 248,236,247;
-  --pt-bg-tint: #1f0526;
+  --pt-text-rgb: 244,247,251;
+  --pt-bg-tint: #0a0d16;
 
   /* core surfaces — two elevations */
   --pt-bg: ${SURFACE.bg};
@@ -160,21 +160,44 @@ export function buildTokenCss(): string {
   --pt-surface: ${SURFACE.surface};
   --pt-surface-2: ${SURFACE.surface2};
   --pt-bg-terminal: ${SURFACE.terminal};
-  --pt-bg-terminal-solid: #0b0110;
+  --pt-bg-terminal-solid: #0e1117;
 
   /* text */
-  --pt-text: #f8ecf7;
+  --pt-text: #f4f7fb;
   --pt-text-high: #ffffff;
   --pt-text-dim: rgba(var(--pt-text-rgb),0.55);
   --pt-text-mute: rgba(var(--pt-text-rgb),0.35);
 
   /* accent (overridden at runtime by buildAccentCss when custom) */
   --pt-neon: ${ACCENT_DEFAULT};
-  --pt-neon-bright: #ff7df8;
-  --pt-neon-deep: #c400ba;
+  --pt-neon-bright: #bcd0ff;
+  --pt-neon-deep: #4f6bb0;
   --pt-neon-glow: rgba(var(--pt-neon-rgb),0.55);
   --pt-neon-glow-soft: rgba(var(--pt-neon-rgb),0.18);
   --pt-neon-wash: rgba(var(--pt-neon-rgb),0.08);
+
+  /* ── mc-* aliases (DESIGN-SPEC §2) — stable names the tab lanes (V1/V2/V3)
+     read from their own per-lane stylesheets. Mapped onto the pt-* values
+     above so there is one source of truth. */
+  --mc-bg: ${SURFACE.bg};
+  --mc-bg-2: ${SURFACE.bgSoft};
+  --mc-surface: #101318;
+  --mc-panel: #0e1117;
+  --mc-surface-2: #161b22;
+  --mc-ink: var(--pt-text);
+  --mc-ink-dim: #c7ced8;
+  --mc-ink-mute: #99a3b2;
+  --mc-ink-faint: #6f7886;
+  --mc-line: rgba(255,255,255,0.08);
+  --mc-line-2: rgba(255,255,255,0.12);
+  --mc-neon: var(--pt-neon);
+  --mc-neon-bright: var(--pt-neon-bright);
+  --mc-neon-2: #6f8ede;
+  --mc-neon-deep: var(--pt-neon-deep);
+  --mc-neon-rgb: var(--pt-neon-rgb);
+  --mc-bg-tint: var(--pt-bg-tint);
+  --mc-glass: rgba(var(--pt-neon-rgb),0.06);
+  --mc-glass-line: rgba(var(--pt-neon-rgb),0.16);
 
   /* terminal traffic lights (legacy aliases) */
   --pt-tl-red: ${SEMANTIC.error.hex};
@@ -197,7 +220,7 @@ export function buildTokenCss(): string {
   /* bg gradient */
   --pt-bg-gradient:
     radial-gradient(ellipse at top, rgba(var(--pt-neon-rgb),0.1), transparent 55%),
-    linear-gradient(180deg, #000000 0%, #060009 100%);
+    linear-gradient(180deg, #07080b 0%, #0b0d12 100%);
 
   /* radii — one family */
   --pt-r-sm: ${RADIUS.sm}; --pt-r-md: ${RADIUS.md}; --pt-r-lg: ${RADIUS.lg}; --pt-r-pill: ${RADIUS.pill};
@@ -275,13 +298,13 @@ export function buildFridayThemeCss(): string {
   return `html[data-theme="friday"] {
   --pt-neon-rgb: ${ACCENT_RGB};
   --pt-neon-bright-rgb: ${ACCENT_BRIGHT_RGB};
-  --pt-text-rgb: 244,205,240;
-  --pt-bg-tint: #1f0526;
-  --pt-text: #f4cdf0;
-  --pt-text-high: #ffe9fc;
+  --pt-text-rgb: 244,247,251;
+  --pt-bg-tint: #0a0d16;
+  --pt-text: #f4f7fb;
+  --pt-text-high: #ffffff;
   --pt-neon: ${ACCENT_DEFAULT};
-  --pt-neon-bright: #ff7df8;
-  --pt-neon-deep: #c400ba;
+  --pt-neon-bright: #bcd0ff;
+  --pt-neon-deep: #4f6bb0;
   --pt-neon-glow: rgba(var(--pt-neon-rgb),0.6);
   --pt-neon-glow-soft: rgba(var(--pt-neon-rgb),0.2);
   --pt-neon-wash: rgba(var(--pt-neon-rgb),0.08);
@@ -289,9 +312,9 @@ export function buildFridayThemeCss(): string {
   --pt-border-strong: rgba(var(--pt-neon-rgb),0.85);
   --pt-border-dim: rgba(var(--pt-neon-rgb),0.28);
   --pt-rule: rgba(var(--pt-neon-rgb),0.35);
-  --pt-bg: #0d0212;
-  --pt-bg-soft: #150322;
-  --pt-bg-terminal: rgba(13,2,18,0.96);
+  --pt-bg: #07080b;
+  --pt-bg-soft: #0b0d12;
+  --pt-bg-terminal: rgba(14,17,23,0.96);
   --pt-glow-sm: 0 0 6px rgba(var(--pt-neon-rgb),0.65);
   --pt-glow-md: 0 0 14px rgba(var(--pt-neon-rgb),0.6), 0 0 2px rgba(var(--pt-neon-rgb),0.95);
   --pt-glow-text: 0 0 6px rgba(var(--pt-neon-bright-rgb),0.75), 0 0 14px rgba(var(--pt-neon-rgb),0.55);

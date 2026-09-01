@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, JetBrains_Mono } from 'next/font/google'
+import { Inter, JetBrains_Mono, Noto_Sans_JP } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
 import { Shell } from '@/components/Shell'
@@ -33,6 +33,17 @@ const inter = Inter({
   fallback: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
 })
 
+/* Japanese accent font (DESIGN-SPEC §4) — cyberpunk flavor only: brand
+   kicker, section eyebrows, hero accent lines. Never body prose. */
+const notoSansJp = Noto_Sans_JP({
+  variable: '--mc-font-jp',
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  display: 'swap',
+  preload: false,
+  fallback: ['sans-serif'],
+})
+
 export const metadata: Metadata = {
   title: `${config.appName} · Mission Control`,
   description: config.appTagline,
@@ -56,7 +67,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   viewportFit: 'cover',
-  themeColor: '#000000',
+  themeColor: '#07080b',
   colorScheme: 'dark',
 }
 
@@ -67,14 +78,14 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   const appearance = getConfig().appearance
   const accentCss = buildAccentCss(appearance.accentColor)
   return (
-    <html lang="en" data-theme="friday" data-density={appearance.density}>
+    <html lang="en" data-theme="friday" data-density={appearance.density} data-motion={appearance.motion}>
       <head>
         <link rel="manifest" href="/manifest.json" />
         {/* Base design tokens first, then the runtime accent override LAST so it wins. */}
         <style id="design-tokens">{buildTokenCss() + buildFridayThemeCss() + buildDensityCss()}</style>
         {accentCss && <style id="friday-accent">{accentCss}</style>}
       </head>
-      <body className={`${mono.variable} ${inter.variable}`}>
+      <body className={`${mono.variable} ${inter.variable} ${notoSansJp.variable}`}>
         <Shell
           appName={config.appName}
           appTagline={config.appTagline}

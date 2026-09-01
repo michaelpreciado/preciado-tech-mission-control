@@ -5,9 +5,10 @@
  * hex in /setup recolors the whole dashboard.
  */
 
-export const DEFAULT_ACCENT = '#ff10f0'
+export const DEFAULT_ACCENT = '#9db4ec'
 
 export const ACCENT_PRESETS = [
+  { name: 'Periwinkle (PT)', hex: '#9db4ec' },
   { name: 'Neon pink', hex: '#ff10f0' },
   { name: 'Dodger blue', hex: '#1e90ff' },
   { name: 'Matrix green', hex: '#39ff14' },

@@ -24,7 +24,7 @@
     var drops = new Array(Math.floor(canvas.width / fs)).fill(0);
 
     function frame() {
-      ctx.fillStyle = 'rgba(0,0,0,0.08)';
+      ctx.fillStyle = 'rgba(7,8,11,0.09)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.font = fs + "px 'JetBrains Mono', monospace";
       var cols = Math.floor(canvas.width / fs);
@@ -32,7 +32,10 @@
       for (var i = 0; i < drops.length; i++) {
         var ch = Math.random() < 0.5 ? '0' : '1';
         var y = drops[i] * fs;
-        ctx.fillStyle = 'rgba(255,16,240,' + (0.08 + Math.random() * 0.35) + ')';
+        var isHead = Math.random() < 0.12;
+        ctx.fillStyle = isHead
+          ? 'rgba(188,208,255,0.85)'
+          : 'rgba(127,160,255,' + (0.06 + Math.random() * 0.16) + ')';
         ctx.fillText(ch, i * fs, y);
         if (y > canvas.height && Math.random() > 0.975) drops[i] = 0;
         drops[i]++;

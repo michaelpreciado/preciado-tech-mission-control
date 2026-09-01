@@ -3,19 +3,12 @@
 import { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import dynamic from 'next/dynamic'
 import { LiveDataProvider, useLiveData } from './LiveDataProvider'
 import { CommandPalette } from './CommandPalette'
 import { Button } from './ui'
 import { Icon, type IconName } from './icons'
 import { UiSettingsContext, DEFAULT_UI_SETTINGS, useUiSettings, type UiSettings } from './ui-settings'
 import { NAV, PINNED_TAB_IDS } from '@/lib/nav-tabs'
-
-/** Ambient WebGL backdrop — client-only (canvas can't render on the server). */
-const AmbientNeuralField = dynamic(() => import('./AmbientNeuralField').then(m => m.default), {
-  ssr: false,
-  loading: () => null,
-})
 
 /** Brand identity resolved server-side in lib/config.ts, provided by <Shell>. */
 const BrandContext = createContext<{ appName: string; appTagline: string }>({
@@ -247,7 +240,6 @@ export function Shell({ appName, appTagline, ui, children }: { appName: string; 
         Skip to main content
       </a>
       <div className="mc-bg" />
-      <AmbientNeuralField />
       <canvas id="mc-rain-canvas" className="mc-rain" aria-hidden="true" />
       <div className="mc-scanlines" aria-hidden="true" />
       <div className="mc-vignette" aria-hidden="true" />
