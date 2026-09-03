@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react'
 import { Button, SectionHead } from '@/components/ui'
 import { ACCENT_PRESETS, DEFAULT_ACCENT } from '@/lib/theme'
 import { NAV_TABS, PINNED_TAB_IDS } from '@/lib/nav-tabs'
+import '../vf/v3-lane.css'
 
 type MotionSetting = 'full' | 'reduced' | 'off'
 type Density = 'compact' | 'expanded'
@@ -220,6 +221,7 @@ export default function SetupPage() {
   return (
     <>
       <SectionHead label="SETUP / CONFIGURE F.R.I.D.A.Y." />
+      <div className="v3-kicker"><span className="jp">設定</span> configure</div>
       <div className="mc-setup">
         <div className="mc-setup-intro">
           <p><strong>Local-first, bring-your-own-keys.</strong> Everything below is written to
