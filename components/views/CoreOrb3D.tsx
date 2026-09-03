@@ -32,12 +32,13 @@ import * as THREE from 'three'
 import { useLiveData } from '../LiveDataProvider'
 import { useUiSettings } from '../ui-settings'
 import { wantsStaticMotion } from '@/lib/motion-pref'
+import { ACCENT_DEFAULT } from '@/lib/tokens'
 
 const AGENTS = ['friday', 'echo', 'sage', 'forge', 'ticker', 'scout', 'crypto']
 
 const POINT_COUNT = 900
 const SPHERE_SCALE = 1.05
-const ACCENT_COLOR = new THREE.Color('#1e90ff')
+const ACCENT_COLOR = new THREE.Color(ACCENT_DEFAULT)
 const LATENT_COLOR = new THREE.Color('#12283a')
 
 function clamp01(n: number): number {
@@ -58,7 +59,7 @@ function useAgentAccents(): Record<string, { color: string; active: boolean }> {
     for (const id of AGENTS) {
       const member = crew.find(c => c.id === id)
       const active = !!member && (member.status === 'active' || member.status === 'on-demand')
-      out[id] = { color: member?.accent ?? '#1e90ff', active }
+      out[id] = { color: member?.accent ?? ACCENT_DEFAULT, active }
     }
     return out
   }, [data])
@@ -161,7 +162,7 @@ function CrewBeacons() {
     AGENTS.forEach((id, i) => {
       const b = beacons.current[i]
       if (!b) return
-      const info = accent[id] ?? { color: '#1e90ff', active: false }
+      const info = accent[id] ?? { color: ACCENT_DEFAULT, active: false }
       const speed = 0.45 + i * 0.08
       const angle = t * speed + i * 2.1
       const radius = SPHERE_SCALE * (1.18 + (i % 3) * 0.05)
@@ -179,7 +180,7 @@ function CrewBeacons() {
       {AGENTS.map((id, i) => (
         <mesh key={id} ref={(el) => { beacons.current[i] = el }}>
           <sphereGeometry args={[0.045, 12, 12]} />
-          <meshBasicMaterial color="#1e90ff" transparent opacity={0.7} blending={THREE.AdditiveBlending} depthWrite={false} />
+          <meshBasicMaterial color={ACCENT_DEFAULT} transparent opacity={0.7} blending={THREE.AdditiveBlending} depthWrite={false} />
         </mesh>
       ))}
     </group>

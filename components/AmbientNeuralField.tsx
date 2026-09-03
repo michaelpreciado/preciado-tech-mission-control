@@ -22,11 +22,12 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useUiSettings } from './ui-settings'
 import { wantsStaticMotion } from '@/lib/motion-pref'
+import { ACCENT_DEFAULT } from '@/lib/tokens'
 
 const COUNT = 380
 const SPREAD = 26 // world units cube
 const LINK_DIST = 3.2
-const NEON = new THREE.Color('#1e90ff')
+const NEON = new THREE.Color(ACCENT_DEFAULT)
 
 /* ── The mesh: points + nearest-neighbour links ───────────────────────── */
 
