@@ -52,6 +52,10 @@ function columnFor(status: string) {
   return COLUMNS.find(c => c.status === status)
 }
 
+/** Pending statuses that may be handed to a Claude Code worker (mirror of the
+ *  server-side DISPATCHABLE_STATUSES guard in lib/kanban-dispatch.ts). */
+const DISPATCH_STATUSES = new Set(['todo', 'ready', 'blocked', 'failed', 'review'])
+
 /* ── Detail drawer (reuse the proven Hermes task detail layout) ───── */
 const STATUS_TONE: Record<string, string> = {
   running: 'run', in_progress: 'run',
@@ -76,6 +80,7 @@ function DetailDrawer({ id, onClose, onChanged }: { id: string; onClose: () => v
   const [busy, setBusy] = useState<string | null>(null)
   const [msg, setMsg] = useState('')
   const [actErr, setActErr] = useState<string | null>(null)
+  const [dispatchInfo, setDispatchInfo] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -122,6 +127,30 @@ function DetailDrawer({ id, onClose, onChanged }: { id: string; onClose: () => v
       const j = await res.json()
       if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`)
       setMsg('')
+      await load()
+      onChanged()
+    } catch (err) {
+      setActErr((err as Error).message)
+    } finally {
+      setBusy(null)
+    }
+  }, [id, load, onChanged])
+
+  const dispatchClaude = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setBusy('dispatch')
+    setActErr(null)
+    try {
+      const res = await fetch(`/api/kanban/${encodeURIComponent(id)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'dispatch-claude' }),
+      })
+      const j = await res.json()
+      if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`)
+      // Show pid + log basename only — never the full absolute workspace path.
+      const logBase = typeof j.logPath === 'string' ? j.logPath.split('/').pop() : ''
+      setDispatchInfo(`Claude dispatched · PID ${j.pid}${logBase ? ` · log ${logBase}` : ''}`)
       await load()
       onChanged()
     } catch (err) {
@@ -182,7 +211,15 @@ function DetailDrawer({ id, onClose, onChanged }: { id: string; onClose: () => v
                     {busy === 'complete' ? 'completing…' : '✓ complete'}
                   </Button>
                 )}
+                {DISPATCH_STATUSES.has(detail.status) && (
+                  <Button variant="confirm" loading={busy === 'dispatch'} disabled={!!busy}
+                    onClick={e => void dispatchClaude(e)}
+                    aria-label={`Dispatch a Claude Code worker on ${detail.title}`}>
+                    {busy === 'dispatch' ? 'dispatching…' : '✦ dispatch Claude'}
+                  </Button>
+                )}
               </div>
+              {dispatchInfo && <div className="mc-hk-run-summary" role="status">✦ {dispatchInfo}</div>}
               {actErr && <div className="mc-kb-acterr" role="alert">⚠ {actErr}</div>}
             </div>
 
@@ -745,7 +782,7 @@ export function KanbanBoard() {
           </div>
         </div>
       </div>
-      {openId && <DetailDrawer id={openId} onClose={() => setOpenId(null)} onChanged={refresh} />}
+      {openId && <DetailDrawer key={openId} id={openId} onClose={() => setOpenId(null)} onChanged={refresh} />}
       {showCreate && <CreateModal sources={sources} onClose={() => setShowCreate(false)} onCreated={onCreated} />}
     </>
   )

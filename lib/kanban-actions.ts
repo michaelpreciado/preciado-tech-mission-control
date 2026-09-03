@@ -78,6 +78,24 @@ export function unblockTask(id: string, reason?: string, origin?: string): Actio
   return run(args, origin)
 }
 
+/** Send a task in `review` back to ready/todo so it can be claimed again. */
+export function reopenReviewTask(id: string, reason?: string, origin?: string): ActionOutcome {
+  const args = ['reopen-review', ...(reason ? ['--reason', reason] : []), id]
+  return run(args, origin)
+}
+
+/** Atomically claim a ready task with a TTL (seconds). Never touches SQLite directly. */
+export function claimTask(id: string, ttlSeconds = 1800, origin?: string): ActionOutcome {
+  const ttl = Number.isFinite(ttlSeconds) && ttlSeconds > 0 ? Math.floor(ttlSeconds) : 1800
+  return run(['claim', id, '--ttl', String(ttl)], origin)
+}
+
+/** Release an active worker claim (used to undo a claim when a dispatch fails to start). */
+export function reclaimTask(id: string, reason?: string, origin?: string): ActionOutcome {
+  const args = ['reclaim', ...(reason ? ['--reason', reason] : []), id]
+  return run(args, origin)
+}
+
 export function createTask(
   title: string,
   opts: { body?: string; assignee?: string; priority?: string; workspace?: string; origin?: string },

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { assertSameOrigin, getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv } from '@/lib/mission-api'
 import { getTaskDetail } from '@/lib/hermes-kanban'
 import { completeTask, commentTask, unblockTask } from '@/lib/kanban-actions'
+import { dispatchClaude } from '@/lib/kanban-dispatch'
 import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -23,7 +24,7 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
   return NextResponse.json(detail, { headers: { 'Cache-Control': 'no-store' } })
 }
 
-/** POST /api/kanban/[id] → actions. Body: { action: 'complete'|'comment'|'unblock', ... }. */
+/** POST /api/kanban/[id] → actions. Body: { action: 'complete'|'comment'|'unblock'|'dispatch-claude', ... }. */
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const _origin = assertSameOrigin(req)
   if (!_origin.ok) return NextResponse.json(_origin.body, { status: _origin.status })
@@ -38,6 +39,17 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
 
     const b = await req.json()
     const action = String(b?.action ?? '')
+
+    // Dispatch a headless Claude Code worker into the task's own workspace.
+    // Returns immediately with the worker pid + log path.
+    if (action === 'dispatch-claude') {
+      const res = await dispatchClaude(id, detail, origin)
+      if (!res.ok) return NextResponse.json({ error: res.error }, { status: 400 })
+      return NextResponse.json(
+        { ok: true, pid: res.pid, logPath: res.logPath },
+        { headers: { 'Cache-Control': 'no-store' } },
+      )
+    }
 
     let out: { ok: boolean; error?: string; result?: string }
     if (action === 'complete') {
