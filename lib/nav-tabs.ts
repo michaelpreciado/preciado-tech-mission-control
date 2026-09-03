@@ -29,6 +29,7 @@ export const NAV: NavSection[] = [
     { id: '/projects', label: 'Projects', icon: 'projects' },
     { id: '/pipeline', label: 'Web Dev Pipeline', icon: 'pipeline' },
     { id: '/content-creation', label: 'Content Creation', icon: 'content' },
+    { id: '/bots', label: 'Bots', icon: 'team' },
   ]},
   { section: 'System', items: [
     { id: '/memory', label: 'Memory', icon: 'memory' },

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { assertSameOrigin, getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv } from '@/lib/mission-api'
 import { getTaskDetail } from '@/lib/hermes-kanban'
-import { completeTask, commentTask, unblockTask } from '@/lib/kanban-actions'
+import { completeTask, commentTask, unblockTask, setStatusTask } from '@/lib/kanban-actions'
 import { dispatchClaude } from '@/lib/kanban-dispatch'
 import { logger } from '@/lib/logger'
 
@@ -24,7 +24,7 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
   return NextResponse.json(detail, { headers: { 'Cache-Control': 'no-store' } })
 }
 
-/** POST /api/kanban/[id] → actions. Body: { action: 'complete'|'comment'|'unblock'|'dispatch-claude', ... }. */
+/** POST /api/kanban/[id] → actions. Body: { action: 'complete'|'comment'|'unblock'|'set-status'|'dispatch-claude', ... }. */
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const _origin = assertSameOrigin(req)
   if (!_origin.ok) return NextResponse.json(_origin.body, { status: _origin.status })
@@ -60,6 +60,10 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
       out = commentTask(id, body, String(b.author ?? 'mission-control'), origin)
     } else if (action === 'unblock') {
       out = unblockTask(id, typeof b.reason === 'string' ? b.reason : undefined, origin)
+    } else if (action === 'set-status') {
+      const status = typeof b.status === 'string' ? b.status.trim() : ''
+      if (!status) return NextResponse.json({ error: 'status is required' }, { status: 400 })
+      out = setStatusTask(id, status, detail?.status, origin)
     } else {
       return NextResponse.json({ error: `unknown action '${action}'` }, { status: 400 })
     }

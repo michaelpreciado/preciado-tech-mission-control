@@ -8,12 +8,7 @@ import { CommandPalette } from './CommandPalette'
 import { Button } from './ui'
 import { Icon, type IconName } from './icons'
 import { UiSettingsContext, DEFAULT_UI_SETTINGS, useUiSettings, type UiSettings } from './ui-settings'
-import { NAV, PINNED_TAB_IDS, type NavItem } from '@/lib/nav-tabs'
-
-/** Bots (Hermes Bot Mode) tab. Lives in Shell rather than lib/nav-tabs.ts so the
- * roster ships without touching the shared nav source; fold it into NAV's
- * Operations section there once the surface stabilises. */
-const BOTS_TAB: NavItem = { id: '/bots', label: 'Bots', icon: 'team' }
+import { NAV, PINNED_TAB_IDS } from '@/lib/nav-tabs'
 
 /** Brand identity resolved server-side in lib/config.ts, provided by <Shell>. */
 const BrandContext = createContext<{ appName: string; appTagline: string }>({
@@ -37,7 +32,6 @@ export { useUiSettings, type UiSettings }
  * stable, so ids missing from tabOrder keep their default relative order). */
 function applyUiToNav(ui: UiSettings) {
   return NAV
-    .map(sec => (sec.section === 'Operations' ? { ...sec, items: [...sec.items, BOTS_TAB] } : sec))
     .map(sec => ({
       section: sec.section,
       items: sec.items

@@ -56,6 +56,35 @@ function columnFor(status: string) {
  *  server-side DISPATCHABLE_STATUSES guard in lib/kanban-dispatch.ts). */
 const DISPATCH_STATUSES = new Set(['todo', 'ready', 'blocked', 'failed', 'review'])
 
+/* ── Drag-and-drop (desktop only) ─────────────────────────────────
+ * Drop zones persist through POST /api/kanban/[id], mapping each legal
+ * column→column move to the action the hermes kanban CLI can actually express:
+ *   • any live card onto DONE                    → complete
+ *   • blocked / failed card onto TODO or READY   → unblock
+ *   • todo → ready                               → set-status (promote)
+ *   • todo | ready | running → blocked           → set-status (block)
+ *   • ready | running → review                   → set-status (request-review --force)
+ *   • review → ready | todo                      → set-status (reopen-review)
+ * Any other target is not a drop zone. */
+type DragInfo = { id: string; from: string }
+
+type DropAction = 'complete' | 'unblock' | 'set-status'
+
+function supportedTransition(from: string, to: string): DropAction | null {
+  if (!from || !to || from === to) return null
+  // Any live card onto DONE completes it (archived is terminal).
+  if (to === 'done') return from === 'archived' ? null : 'complete'
+  // blocked/failed → todo|ready: the dedicated unblock verb also covers `failed`,
+  // which set-status cannot express.
+  if ((from === 'blocked' || from === 'failed') && (to === 'todo' || to === 'ready')) return 'unblock'
+  // Column↔column moves the hermes kanban CLI expresses via set-status.
+  if (from === 'todo' && to === 'ready') return 'set-status' // promote
+  if ((from === 'todo' || from === 'ready' || from === 'running') && to === 'blocked') return 'set-status' // block
+  if ((from === 'running' || from === 'ready') && to === 'review') return 'set-status' // request-review --force
+  if (from === 'review' && (to === 'ready' || to === 'todo')) return 'set-status' // reopen-review
+  return null
+}
+
 /* ── Detail drawer (reuse the proven Hermes task detail layout) ───── */
 const STATUS_TONE: Record<string, string> = {
   running: 'run', in_progress: 'run',
@@ -507,19 +536,30 @@ function taskSort(a: HermesTask, b: HermesTask, pinned: Set<string>): number {
   return at - bt
 }
 
-function KanbanCard({ task, pinned, pendingParents, onOpen, onTogglePin }: {
+function KanbanCard({ task, pinned, pendingParents, onOpen, onTogglePin, draggable, dragging, onDragStart, onDragEnd }: {
   task: HermesTask
   pinned: boolean
   pendingParents: { id: string; title: string }[]
   onOpen: () => void
   onTogglePin: () => void
+  draggable?: boolean
+  dragging?: boolean
+  onDragStart?: () => void
+  onDragEnd?: () => void
 }) {
   return (
     <div
-      className={['mc-kb-card', pinned ? 'is-pinned' : '', cardTone(task.status)].filter(Boolean).join(' ')}
+      className={['mc-kb-card', pinned ? 'is-pinned' : '', cardTone(task.status), dragging ? 'kbn-dnd-dragging' : ''].filter(Boolean).join(' ')}
       role="button"
       tabIndex={0}
       aria-label={`Open ${task.title}`}
+      draggable={draggable}
+      onDragStart={e => {
+        e.dataTransfer.effectAllowed = 'move'
+        e.dataTransfer.setData('text/plain', task.id)
+        onDragStart?.()
+      }}
+      onDragEnd={() => onDragEnd?.()}
       onClick={onOpen}
       onKeyDown={e => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen() }
@@ -561,16 +601,23 @@ function KanbanCard({ task, pinned, pendingParents, onOpen, onTogglePin }: {
   )
 }
 
-function Column({ def, tasks, pinned, byId, onOpen, onTogglePin }: {
+function Column({ def, tasks, pinned, byId, onOpen, onTogglePin, dnd, drag, onCardDragStart, onCardDragEnd, onDropToStatus }: {
   def: { status: string; label: string; glyph: string; tone: string }
   tasks: HermesTask[]
   pinned: Set<string>
   byId: Map<string, HermesTask>
   onOpen: (id: string) => void
   onTogglePin: (id: string) => void
+  dnd: boolean
+  drag: DragInfo | null
+  onCardDragStart: (info: DragInfo) => void
+  onCardDragEnd: () => void
+  onDropToStatus: (to: string) => void
 }) {
   const sorted = [...tasks].sort((a, b) => taskSort(a, b, pinned))
   const active = def.tone === 'run'
+  const [over, setOver] = useState(false)
+  const dropOk = dnd && !!drag && supportedTransition(drag.from, def.status) !== null
   return (
     <div className={`mc-kb-col${active ? ' is-active' : ''}`}>
       <div className={`mc-kb-col-head ${def.tone}`} title={`${def.label} · ${tasks.length}`}>
@@ -579,15 +626,24 @@ function Column({ def, tasks, pinned, byId, onOpen, onTogglePin }: {
         {active && <span className="mc-kb-col-live" aria-hidden="true" />}
         <span className="mc-kb-col-count">{tasks.length}</span>
       </div>
-      <div className="mc-kb-col-body">
+      <div
+        className={`mc-kb-col-body${dropOk ? ' kbn-dnd-drop-ok' : ''}${dropOk && over ? ' kbn-dnd-over' : ''}`}
+        onDragOver={dropOk ? e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setOver(true) } : undefined}
+        onDragLeave={dropOk ? () => setOver(false) : undefined}
+        onDrop={dropOk ? e => { e.preventDefault(); setOver(false); onDropToStatus(def.status) } : undefined}
+      >
         {sorted.length === 0
-          ? <div className="mc-kb-col-empty">— none —</div>
+          ? <div className="mc-kb-col-empty">{dropOk && over ? '▸ drop here' : '— none —'}</div>
           : sorted.map(t => {
               const pendingParents = (t.parentIds ?? [])
                 .map(id => byId.get(id))
                 .filter((p): p is HermesTask => !!p && p.status !== 'done' && p.status !== 'archived')
                 .map(p => ({ id: p.id, title: p.title }))
-              return <KanbanCard key={t.id} task={t} pinned={pinned.has(t.id)} pendingParents={pendingParents} onOpen={() => onOpen(t.id)} onTogglePin={() => onTogglePin(t.id)} />
+              return <KanbanCard key={t.id} task={t} pinned={pinned.has(t.id)} pendingParents={pendingParents}
+                onOpen={() => onOpen(t.id)} onTogglePin={() => onTogglePin(t.id)}
+                draggable={dnd} dragging={drag?.id === t.id}
+                onDragStart={() => onCardDragStart({ id: t.id, from: t.status })}
+                onDragEnd={onCardDragEnd} />
             })}
       </div>
     </div>
@@ -610,6 +666,17 @@ export function KanbanBoard() {
   const [showDone, setShowDone] = useState(false)
   const [pinned, setPinned] = useState<Set<string>>(() => new Set())
   const lastEventRef = useRef(0)
+  // Drag-and-drop is desktop-only; ≤820px keeps the drawer buttons.
+  const [isDesktop, setIsDesktop] = useState(false)
+  const [drag, setDrag] = useState<DragInfo | null>(null)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 821px)')
+    const sync = () => setIsDesktop(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
 
   useEffect(() => {
     try {
@@ -698,6 +765,36 @@ export function KanbanBoard() {
     await refresh()
   }, [refresh])
 
+  // Optimistically move a card, persist via the supported action, and
+  // reconcile against server truth (revert on failure).
+  const moveTask = useCallback(async (to: string) => {
+    const info = drag
+    setDrag(null)
+    if (!info) return
+    const action = supportedTransition(info.from, to)
+    if (!action) return
+    setSnap(prev => prev
+      ? { ...prev, tasks: prev.tasks.map(t => (t.id === info.id ? { ...t, status: to } : t)) }
+      : prev)
+    try {
+      const body = action === 'complete'
+        ? { action: 'complete', result: 'moved to done from Mission Control' }
+        : action === 'unblock'
+          ? { action: 'unblock', reason: 'unblocked from Mission Control' }
+          : { action: 'set-status', status: to }
+      const res = await fetch(`/api/kanban/${encodeURIComponent(info.id)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    } catch {
+      /* fall through — refresh reconciles to server truth */
+    } finally {
+      await refresh()
+    }
+  }, [drag, refresh])
+
   if (!snap) return <SkeletonPanel label="reading kanban boards" />
 
   const tasks = snap.tasks
@@ -774,10 +871,12 @@ export function KanbanBoard() {
               <div className="mc-pipe-empty">— no tasks match —</div>
             )}
             {cols.map(c => (
-              <Column key={c.status} def={c} tasks={byStatus.get(c.status) ?? []} pinned={pinned} byId={byId} onOpen={setOpenId} onTogglePin={togglePin} />
+              <Column key={c.status} def={c} tasks={byStatus.get(c.status) ?? []} pinned={pinned} byId={byId} onOpen={setOpenId} onTogglePin={togglePin}
+                dnd={isDesktop} drag={drag} onCardDragStart={setDrag} onCardDragEnd={() => setDrag(null)} onDropToStatus={moveTask} />
             ))}
             {leftoverStatuses.map(s => (
-              <Column key={s} def={{ status: s, label: s.toUpperCase(), glyph: '▪', tone: '' }} tasks={byStatus.get(s) ?? []} pinned={pinned} byId={byId} onOpen={setOpenId} onTogglePin={togglePin} />
+              <Column key={s} def={{ status: s, label: s.toUpperCase(), glyph: '▪', tone: '' }} tasks={byStatus.get(s) ?? []} pinned={pinned} byId={byId} onOpen={setOpenId} onTogglePin={togglePin}
+                dnd={isDesktop} drag={drag} onCardDragStart={setDrag} onCardDragEnd={() => setDrag(null)} onDropToStatus={moveTask} />
             ))}
           </div>
         </div>

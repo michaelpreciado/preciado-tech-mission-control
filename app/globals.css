@@ -6487,3 +6487,38 @@ body {
 }
 .mcl-row:hover .mcl-row-full { opacity: 0.9; }
 .mcl-thread { border-top: 1px solid var(--pt-border-dim); padding: 8px 4px; display: flex; flex-direction: column; gap: 6px; width: 100%; }
+
+/* ── UI/UX BATCH 4 (Claude) ──────────────────────────────────────────
+ * Kanban drag-and-drop (kbn-dnd-*), Setup tab-list drag reorder
+ * (setup-tabrow-*), and a standalone-cockpit spacer (cockpit-*).
+ * Minimal additions only — no existing rules touched. */
+
+/* Cockpit mounted with no SectionHead beneath it (e.g. /chat) */
+.cockpit-standalone { margin-bottom: 14px; }
+
+/* Kanban DnD (desktop only) */
+.mc-kb-card.kbn-dnd-dragging { opacity: 0.4; }
+.mc-kb-card[draggable="true"] { cursor: grab; }
+.mc-kb-col-body.kbn-dnd-drop-ok {
+  outline: 1px dashed rgba(var(--pt-neon-rgb), 0.4);
+  outline-offset: -4px;
+  border-radius: 8px;
+}
+.mc-kb-col-body.kbn-dnd-over {
+  outline-style: solid;
+  outline-color: var(--pt-neon);
+  background: rgba(var(--pt-neon-rgb), 0.06);
+}
+
+/* Setup tab-list native drag reorder (↑/↓ buttons kept as fallback) */
+.setup-tabrow-grip {
+  cursor: grab;
+  color: var(--pt-text-mute);
+  font-size: 12px;
+  line-height: 1;
+  padding-right: 4px;
+  user-select: none;
+}
+.mc-setup-tabrow[draggable="true"] { cursor: grab; }
+.mc-setup-tabrow.setup-tabrow--dragging { opacity: 0.45; }
+.mc-setup-tabrow.setup-tabrow--over { box-shadow: inset 0 2px 0 0 var(--pt-neon); }

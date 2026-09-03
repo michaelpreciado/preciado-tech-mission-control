@@ -84,6 +84,55 @@ export function reopenReviewTask(id: string, reason?: string, origin?: string): 
   return run(args, origin)
 }
 
+/**
+ * Move a task to a target board status by composing the LEGAL `hermes kanban`
+ * verbs. Only the column pairs the CLI can actually express are supported; any
+ * other pair returns { ok:false } with a clear reason rather than inventing a
+ * verb. `from` is the task's current status (the API route passes the value it
+ * already looked up); it decides which verb applies.
+ *
+ *   todo    → ready       : promote        (recovery path for todo/blocked → ready)
+ *   blocked → ready        : unblock
+ *   blocked → todo         : unblock        (CLI parks it in todo while parents are open)
+ *   ready   → blocked      : block
+ *   running → review       : request-review --force  (clears the live worker claim)
+ *   review  → ready | todo : reopen-review
+ *   *       → done          : complete
+ */
+export function setStatusTask(id: string, to: string, from?: string, origin?: string): ActionOutcome {
+  const dst = String(to ?? '').trim()
+  const src = String(from ?? '').trim()
+  if (!dst) return { ok: false, error: 'target status is required' }
+  if (src && src === dst) return { ok: false, error: `task is already '${dst}'` }
+
+  if (dst === 'done') return run(['complete', id], origin)
+
+  if (dst === 'ready') {
+    if (src === 'todo') return run(['promote', id], origin)
+    if (src === 'blocked') return run(['unblock', id], origin)
+    if (src === 'review') return run(['reopen-review', id], origin)
+    return { ok: false, error: `no hermes kanban verb expresses '${src || 'unknown'}' → ready` }
+  }
+
+  if (dst === 'todo') {
+    if (src === 'blocked') return run(['unblock', id], origin)
+    if (src === 'review') return run(['reopen-review', id], origin)
+    return { ok: false, error: `no hermes kanban verb expresses '${src || 'unknown'}' → todo` }
+  }
+
+  if (dst === 'blocked') {
+    if (src === 'todo' || src === 'ready' || src === 'running') return run(['block', id], origin)
+    return { ok: false, error: `no hermes kanban verb expresses '${src || 'unknown'}' → blocked` }
+  }
+
+  if (dst === 'review') {
+    if (src === 'running' || src === 'ready') return run(['request-review', '--force', id], origin)
+    return { ok: false, error: `no hermes kanban verb expresses '${src || 'unknown'}' → review` }
+  }
+
+  return { ok: false, error: `unsupported target status '${dst}'` }
+}
+
 /** Atomically claim a ready task with a TTL (seconds). Never touches SQLite directly. */
 export function claimTask(id: string, ttlSeconds = 1800, origin?: string): ActionOutcome {
   const ttl = Number.isFinite(ttlSeconds) && ttlSeconds > 0 ? Math.floor(ttlSeconds) : 1800

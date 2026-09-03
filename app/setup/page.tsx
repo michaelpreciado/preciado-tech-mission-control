@@ -114,6 +114,8 @@ export default function SetupPage() {
   const [ticktickKey, setTicktickKey] = useState('')
   const [busy, setBusy] = useState(false)
   const [flash, setFlash] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null)
+  const [dragTabId, setDragTabId] = useState<string | null>(null)
+  const [overTabId, setOverTabId] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/setup', { cache: 'no-store' })
@@ -143,6 +145,21 @@ export default function SetupPage() {
       ? cfg.appearance.hiddenTabs.filter(t => t !== id)
       : [...cfg.appearance.hiddenTabs, id]
     setAppearance('hiddenTabs', hidden)
+  }
+
+  // Native drag reorder — drop `draggedId` onto `targetId`'s slot within the
+  // same section. Writes a fully-flattened order so effectiveTabOrder resolves
+  // it verbatim. The ↑/↓ buttons stay as a touch/keyboard fallback.
+  const reorderTab = (draggedId: string, targetId: string) => {
+    if (!cfg || draggedId === targetId) return
+    const dSection = NAV_TABS.find(t => t.id === draggedId)?.section
+    const tSection = NAV_TABS.find(t => t.id === targetId)?.section
+    if (!dSection || dSection !== tSection) return
+    const order = effectiveTabOrder(cfg.appearance.tabOrder).filter(id => id !== draggedId)
+    const at = order.indexOf(targetId)
+    if (at === -1) return
+    order.splice(at, 0, draggedId)
+    setAppearance('tabOrder', order)
   }
 
   const moveTab = (id: string, dir: -1 | 1) => {
@@ -337,7 +354,17 @@ export default function SetupPage() {
                       {tabs.map((t, i) => {
                         const hidden = cfg.appearance.hiddenTabs.includes(t.id)
                         return (
-                          <div key={t.id} className="mc-setup-tabrow">
+                          <div
+                            key={t.id}
+                            className={`mc-setup-tabrow${dragTabId === t.id ? ' setup-tabrow--dragging' : ''}${overTabId === t.id && dragTabId && dragTabId !== t.id ? ' setup-tabrow--over' : ''}`}
+                            draggable
+                            onDragStart={e => { setDragTabId(t.id); e.dataTransfer.effectAllowed = 'move' }}
+                            onDragEnd={() => { setDragTabId(null); setOverTabId(null) }}
+                            onDragOver={e => { if (dragTabId && dragTabId !== t.id) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setOverTabId(t.id) } }}
+                            onDragLeave={() => setOverTabId(prev => (prev === t.id ? null : prev))}
+                            onDrop={e => { e.preventDefault(); if (dragTabId) reorderTab(dragTabId, t.id); setDragTabId(null); setOverTabId(null) }}
+                          >
+                            <span className="setup-tabrow-grip" aria-hidden="true" title="Drag to reorder">⠿</span>
                             <span className="mc-setup-tabrow-label">
                               {t.label}{t.pinned && <em> · pinned</em>}
                             </span>

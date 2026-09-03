@@ -12,6 +12,7 @@
  *   plain text        → fuzzy-match route labels + agent names + task titles
  *   "> <query>"       → force route search
  *   "g <name>"        → force agent search
+ *   "c <query>"       → search the conversation archive, jump into a thread
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
@@ -56,6 +57,7 @@ export function CommandPalette() {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [cursor, setCursor] = useState(0)
+  const [convItems, setConvItems] = useState<Item[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -106,7 +108,36 @@ export function CommandPalette() {
     return () => { document.body.style.overflow = prev }
   }, [open])
 
+  // "c <query>" → search the conversation archive. Reuses the existing
+  // /api/conversations list endpoint (q + limit); jumps into /chat pre-filtered
+  // to the owning agent. Debounced; aborts the in-flight request on each keystroke.
+  const convMatch = query.trim().match(/^c\s+(.*)$/i)
+  const convQuery = convMatch ? convMatch[1].trim() : null
+  useEffect(() => {
+    if (!open || convQuery === null) { setConvItems([]); return }
+    if (!convQuery) { setConvItems([]); return }
+    const ctrl = new AbortController()
+    const t = setTimeout(() => {
+      fetch(`/api/conversations?q=${encodeURIComponent(convQuery)}&limit=8`, { cache: 'no-store', signal: ctrl.signal })
+        .then(r => (r.ok ? r.json() : null))
+        .then((j: { conversations?: Array<{ id: string; title: string; profile: string; device: string; source?: string }> } | null) => {
+          if (!j) return
+          setConvItems((j.conversations ?? []).map(c => ({
+            id: `conv-${c.device}-${c.profile}-${c.id}`,
+            label: c.title || '(untitled)',
+            sub: `chat · ${c.profile}${c.device ? ` · ${c.device}` : ''}`,
+            href: `/chat?profile=${encodeURIComponent(c.profile)}&session=${encodeURIComponent(c.id)}`,
+            icon: 'chat' as IconName,
+            group: 'Conversations',
+          })))
+        })
+        .catch(() => { /* aborted / offline */ })
+    }, 200)
+    return () => { ctrl.abort(); clearTimeout(t) }
+  }, [open, convQuery])
+
   const items = useMemo<Item[]>(() => {
+    if (convQuery !== null) return convItems.slice(0, 16)
     const q = query.trim().startsWith('>') ? query.trim().slice(1).trim() : query.trim()
     const forceGroup = query.trim().startsWith('>') ? 'Routes' : query.trim().startsWith('g ') ? 'Agents' : null
 
@@ -128,7 +159,7 @@ export function CommandPalette() {
       const ga = groupOrder.indexOf(a.group); const gb = groupOrder.indexOf(b.group)
       return ga === gb ? a.label.localeCompare(b.label) : ga - gb
     }).slice(0, 24)
-  }, [query, data])
+  }, [query, data, convQuery, convItems])
 
   useEffect(() => { if (cursor >= items.length) setCursor(0) }, [items.length, cursor])
 
@@ -188,7 +219,7 @@ export function CommandPalette() {
             className="cmdp-input"
             value={query}
             onChange={e => { setQuery(e.target.value); setCursor(0) }}
-            placeholder="Jump to a page, agent, task…  (try  g forge  or  > costs)"
+            placeholder="Jump to a page, agent, task…  (try  g forge  ·  > costs  ·  c <chat>)"
             aria-label="Command palette search"
             autoComplete="off"
             spellCheck={false}

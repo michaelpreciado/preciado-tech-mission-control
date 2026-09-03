@@ -259,13 +259,20 @@ export default function ChatConsole() {
 
   /* Deep-link support: /chat?profile=<name> (from the Bots roster's ENGAGE
      action) pre-filters the list AND presets the NEW composer to that bot.
-     Read once on mount; afterwards the user's own filter choices win. */
+     /chat?session=<id>[&device=<name>] (from the command palette) additionally
+     opens that thread once the list resolves. Read once on mount; afterwards
+     the user's own filter choices win. */
+  const deepLinkRef = useRef<{ session: string; device: string } | null>(null)
+  const deepLinkDoneRef = useRef(false)
   useEffect(() => {
-    const preset = new URLSearchParams(window.location.search).get('profile')
+    const sp = new URLSearchParams(window.location.search)
+    const preset = sp.get('profile')
     if (preset) {
       setFilterProfile(preset)
       setNewProfile(preset)
     }
+    const session = sp.get('session')
+    if (session) deepLinkRef.current = { session, device: sp.get('device') ?? '' }
   }, [])
 
   const [cursor, setCursor] = useState(-1)
@@ -347,6 +354,28 @@ export default function ChatConsole() {
     setThread([])
     setShowNew(false)
   }, [])
+
+  /* Honour a /chat?session=<id> deep-link once the conversation index has
+     resolved: open the matching thread (device-scoped if ?device= was given,
+     else first id match). If the id isn't in the result set we give up quietly
+     and leave the ?profile= pre-filter in place — never crash, never blank. */
+  useEffect(() => {
+    if (deepLinkDoneRef.current || !loaded) return
+    const dl = deepLinkRef.current
+    if (!dl) { deepLinkDoneRef.current = true; return }
+    const match =
+      conversations.find(c => c.id === dl.session && (!dl.device || c.device === dl.device)) ??
+      conversations.find(c => c.id === dl.session)
+    if (match) {
+      deepLinkDoneRef.current = true
+      deepLinkRef.current = null
+      void openThread(match)
+    } else if (conversations.length > 0) {
+      // Index resolved without the target — stop retrying on later reloads.
+      deepLinkDoneRef.current = true
+      deepLinkRef.current = null
+    }
+  }, [loaded, conversations, openThread])
 
   useEffect(() => {
     threadBottomRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' })
