@@ -14,8 +14,10 @@ import { useLiveData } from './LiveDataProvider'
 import { useUiSettings } from './ui-settings'
 import { SectionHead, SkeletonPanel, fmtDate } from './ui'
 import { Sparkline } from './Sparkline'
+import { CoreHalo } from './views/CoreHalo'
 import dynamic from 'next/dynamic'
 import type { MissionTask } from '@/lib/types'
+import '../app/vf/v1-lane.css'
 
 const CommandHeader = dynamic(() => import('./views/CommandHeader').then(m => m.CommandHeader), { ssr: false, loading: () => <SkeletonPanel label="loading header" /> })
 const ActionFeed = dynamic(() => import('./ActionFeed').then(m => m.ActionFeed), { ssr: false })
@@ -297,6 +299,11 @@ export function HomeDeck() {
     <>
       <CommandHeader />
 
+      <div className="v1-kicker">
+        <span className="jp" lang="ja">司令部</span>
+        <span>Command deck</span>
+      </div>
+
       {/* 1 · What needs me */}
       <ActionFeed />
 
@@ -308,8 +315,11 @@ export function HomeDeck() {
       {/* 3 · What is live */}
       <div className="mc-home-corewrap">
         <div className="mc-home-coreorb-holder">
-          {/* Off (Setup → UI CUSTOMIZATION): pure ambient decoration, so the
-              holder's own gradient/border frame stands alone — no data is lost. */}
+          {/* CoreHalo is the always-on CSS command-core motif — it makes the
+              frame a real instrument. The 3D globe layers on top of it.
+              Off (Setup → UI CUSTOMIZATION): the holder still reads as a
+              live core, just without the point cloud — no data is lost. */}
+          <CoreHalo />
           {elements3d.homeGlobe && <CoreOrb3D />}
         </div>
         <div className="mc-home-corebody">

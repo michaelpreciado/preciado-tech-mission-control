@@ -21,6 +21,7 @@ import { Markdown } from '@/components/Markdown'
 import { cleanTitle, dayBucket, isJunk, sourceGlyph, type DayBucket } from '@/lib/conv-format'
 import { ChatIntel } from '@/components/views/ChatIntel'
 import type { ConversationStats } from '@/lib/conversations'
+import '../app/vf/v1-lane.css'
 
 /* ── Types (mirror the API) ─────────────────────────────── */
 
@@ -182,7 +183,7 @@ function CopyButton({ text }: { text: string }) {
         fontFamily: 'monospace',
         letterSpacing: '0.08em',
         opacity: copied ? 1 : 0.4,
-        color: copied ? 'var(--mc-accent, #1e90ff)' : 'inherit',
+        color: copied ? 'var(--mc-neon)' : 'inherit',
         flexShrink: 0,
       }}
     >
@@ -523,6 +524,10 @@ export default function ChatConsole() {
   return (
     <>
       <SectionHead label="CHAT / ALL CONVERSATIONS" />
+      <div className="v1-kicker">
+        <span className="jp" lang="ja">通信</span>
+        <span>Comms channel</span>
+      </div>
       <div className="cc">
         {/* ── LIST PANE ── */}
         <div className={`cc-listpane ${hasActiveThread ? 'is-hidden-mobile' : ''}`}>
