@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { collectMemoryGraph } from '@/lib/collectors/memory'
+import { checkRateLimit, getClientIpFromHeaders } from '@/lib/mission-api'
 import { logger } from '@/lib/logger'
 
 // Read-only, local vault scan — not part of the main /api/mission-control
@@ -9,7 +10,17 @@ import { logger } from '@/lib/logger'
 // and /api/hermes/tasks.
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+
+export async function GET(req: NextRequest) {
+  const ip = getClientIpFromHeaders(req.headers)
+  const limit = checkRateLimit(rateLimitMap, ip, Date.now(), 30, 60_000)
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: 'rate limited' },
+      { status: 429, headers: { 'Retry-After': String(limit.retryAfter) } },
+    )
+  }
   try {
     const data = await collectMemoryGraph()
     return NextResponse.json(data, { headers: { 'Cache-Control': 'no-store' } })
