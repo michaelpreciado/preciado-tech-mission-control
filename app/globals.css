@@ -6446,3 +6446,44 @@ body {
   color: var(--pt-muted, rgba(255, 255, 255, 0.55));
   font-size: 13px;
 }
+
+/* ── LIVE CHAT MIRROR (mcl-*) — streaming desktop chats in the Chat list pane ── */
+.mcl { border-bottom: 1px solid var(--pt-border-dim); }
+.mcl-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; font-family: var(--pt-font-ui, inherit);
+}
+.mcl-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+  background: #00e87a; box-shadow: 0 0 6px #00e87a;
+  animation: mcl-pulse 2.2s ease-in-out infinite;
+}
+@keyframes mcl-pulse { 0%,100% { opacity: 1 } 50% { opacity: 0.35 } }
+.mcl-title {
+  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--pt-text-high); font-weight: 600;
+}
+.mcl-meta { margin-left: auto; font-size: 9.5px; color: var(--pt-text-mute); font-variant-numeric: tabular-nums; }
+.mcl-err { color: #ff6b6b; font-size: 12px; }
+.mcl-list { max-height: 46vh; overflow-y: auto; padding: 2px 8px 10px; }
+.mcl-empty { padding: 10px 12px; font-size: 11px; color: var(--pt-text-dim); }
+.mcl-row { display: flex; align-items: stretch; border-radius: 8px; }
+.mcl-row + .mcl-row { border-top: 1px solid var(--pt-border-dim); }
+.mcl-row:hover { background: rgba(var(--pt-neon-rgb),0.05); }
+.mcl-row.is-open { background: rgba(var(--pt-neon-rgb),0.08); }
+.mcl-row-main {
+  flex: 1; min-width: 0; text-align: left; background: none; border: none;
+  font: inherit; color: inherit; cursor: pointer; padding: 8px 8px 8px 4px;
+}
+.mcl-row-top { display: flex; align-items: center; gap: 8px; }
+.mcl-row-name { flex: 1; font-size: 12px; font-weight: 600; color: var(--pt-text-high); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mcl-row-time { font-size: 10px; color: var(--pt-text-mute); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.mcl-row-preview { display: block; font-size: 11px; color: var(--pt-text-dim); line-height: 1.45; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-top: 2px; }
+.mcl-row-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding-top: 4px; }
+.mcl-row-full {
+  align-self: stretch; background: none; border: none; cursor: pointer;
+  color: var(--pt-text-dim); font-size: 13px; padding: 0 10px;
+  opacity: 0; transition: opacity 0.15s;
+}
+.mcl-row:hover .mcl-row-full { opacity: 0.9; }
+.mcl-thread { border-top: 1px solid var(--pt-border-dim); padding: 8px 4px; display: flex; flex-direction: column; gap: 6px; width: 100%; }
