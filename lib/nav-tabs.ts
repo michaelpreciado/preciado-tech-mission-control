@@ -33,7 +33,6 @@ export const NAV: NavSection[] = [
   ]},
   { section: 'System', items: [
     { id: '/memory', label: 'Memory', icon: 'memory' },
-    { id: '/team', label: 'Team', icon: 'team' },
     { id: '/setup', label: 'Setup', icon: 'setup' },
   ]},
 ]

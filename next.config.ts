@@ -21,10 +21,14 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizeCss: true,
     // Keep client side-effect-free; three/drei/fiber ship many named exports and
-    // @react-three/drei especially pulls subpath modules — optimize so only what
-    // /team actually imports survives into the bundle (three stays /team-only).
+    // @react-three/drei especially pulls subpath modules — optimize so only the
+    // named exports a route actually imports survive into the bundle.
     optimizePackageImports: ['three', '@react-three/fiber', '@react-three/drei'],
   },
+  redirects: async () => [
+    // /team was removed — the Bots page supersedes it. Land stale bookmarks somewhere real.
+    { source: '/team', destination: '/bots', permanent: true },
+  ],
   headers: async () => [
     {
       source: '/:path*',

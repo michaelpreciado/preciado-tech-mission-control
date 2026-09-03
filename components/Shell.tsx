@@ -123,6 +123,7 @@ const PRIMARY: { id: string; label: string; icon: IconName }[] = [
   { id: '/', label: 'Home', icon: 'deck' },
   { id: '/kanban', label: 'Kanban', icon: 'kanban' },
   { id: '/chat', label: 'Chat', icon: 'chat' },
+  { id: '/bots', label: 'Bots', icon: 'team' },
 ]
 
 const PRIMARY_IDS = new Set(PRIMARY.map(p => p.id))
@@ -194,7 +195,8 @@ function MobileNav() {
     [ui.hiddenTabs],
   )
   // The More tab lights up whenever the current route lives behind the sheet.
-  const inMore = isActive('/bots') || NAV.some(sec => sec.items.some(it => !PRIMARY_IDS.has(it.id) && isActive(it.id)))
+  // Bots is a PRIMARY tab now, so PRIMARY_IDS excludes it — no special case.
+  const inMore = NAV.some(sec => sec.items.some(it => !PRIMARY_IDS.has(it.id) && isActive(it.id)))
 
   // Slide the pill to whichever bottom tab is active (primary or the More toggle).
   useEffect(() => {

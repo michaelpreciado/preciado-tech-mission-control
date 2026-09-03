@@ -86,7 +86,7 @@ function StatusTiles() {
       .map(d => d.cost ?? 0)
 
     return [
-      { key: 'working', label: 'WORKING NOW', glyph: '▶', href: '/team', value: String(running), sub: 'agents working', tone: running ? 'ok' : 'info' },
+      { key: 'working', label: 'WORKING NOW', glyph: '▶', href: '/bots', value: String(running), sub: 'agents working', tone: running ? 'ok' : 'info' },
       { key: 'open', label: 'OPEN TASKS', glyph: '≡', href: '/kanban', value: String(open), sub: 'kanban board', tone: open ? 'warn' : 'ok' },
       { key: 'cron', label: 'CRON FAILS', glyph: '○', href: '/calendar', value: String(cronFails), sub: 'jobs failing', tone: cronFails ? 'err' : 'ok' },
       { key: 'cost', label: 'COST · THIS MO', glyph: '$', href: '/costs', value: costMonth, sub: 'this month', tone: 'info', spark: costSpark },
@@ -151,7 +151,7 @@ function AgentPulse() {
         const bad = a.status === 'attention'
         const down = a.status === 'offline'
         return (
-          <Link key={a.id} href="/team" className={`mc-home-agent${live ? ' is-live' : ''}${bad ? ' is-bad' : ''}`} title={`${a.name} · ${a.status}`} aria-label={`${a.name} — ${a.status}`}>
+          <Link key={a.id} href="/bots" className={`mc-home-agent${live ? ' is-live' : ''}${bad ? ' is-bad' : ''}`} title={`${a.name} · ${a.status}`} aria-label={`${a.name} — ${a.status}`}>
             <span className="mc-home-agent-dot" aria-hidden="true" style={{
               background: live ? a.accent : bad ? '#ff5f57' : down ? '#5b6474' : a.accent,
               boxShadow: live ? `0 0 10px ${a.accent}` : 'none',

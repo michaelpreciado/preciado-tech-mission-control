@@ -56,7 +56,7 @@ export function ActionFeed() {
   }
   for (const member of data?.crew ?? []) {
     if (member.status === 'attention') {
-      rows.push({ id: `crew:${member.id}`, tone: 'warn', glyph: '⌬', text: `${member.name} needs attention — ${member.signal}`, href: '/team' })
+      rows.push({ id: `crew:${member.id}`, tone: 'warn', glyph: '⌬', text: `${member.name} needs attention — ${member.signal}`, href: '/bots' })
     }
   }
   for (const task of (data?.tasks ?? []).filter(t => t.status === 'attention').slice(0, 3)) {

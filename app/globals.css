@@ -6344,6 +6344,46 @@ html[data-motion="off"] .mc-shift-badge.is-working::after {
   color: var(--pt-neon);
 }
 
+/* v3 — per-bot control room: routine toggle slot + the shared inline
+   confirm zone (lifecycle / model-edit / routine pause-resume). Mirrors the
+   REMOVE flow's type-to-confirm; additive, token-driven. */
+.mc-bots-routine-act {
+  flex-basis: 100%;
+  display: flex;
+  justify-content: flex-end;
+}
+.mc-bots-confirm {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+.mc-bots-confirm-title {
+  font-family: var(--pt-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pt-text-dim);
+}
+.mc-bots-confirm-input {
+  background: var(--pt-surface-2);
+  border: 1px solid var(--pt-border-dim);
+  border-radius: 6px;
+  color: var(--pt-text);
+  padding: 5px 8px;
+  font-family: var(--pt-font-mono);
+  font-size: 10px;
+  min-width: 120px;
+  max-width: 220px;
+}
+.mc-bots-confirm-err {
+  flex-basis: 100%;
+  font-size: 10px;
+  color: #ff8f8a;
+}
+
 /* Fold / compact (≤ 660px): tighten the roster cards to phone width. */
 @media (max-width: 660px) {
   .mc-bots-avatar { flex-basis: 28px; width: 28px; height: 28px; font-size: 12px; }

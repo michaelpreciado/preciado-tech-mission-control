@@ -19,8 +19,17 @@
  *    type-to-confirm in the UI, plus server-side safety gates: never
  *    `default`, never a profile whose gateway is live.
  * The read-only roster remains the fallback when the action API is down.
+ *
+ * v3 — control room:
+ *  - Per-bot gateway lifecycle: RESTART / STOP (when live) or START (when not),
+ *    each `hermes -p <name> gateway <op>` — per-profile, not "all bots".
+ *  - EDIT swaps the bot's default model (config.yaml) via a compact <select>
+ *    seeded from models already in use across the roster (+ a custom field).
+ *  - Routine rows get a PAUSE / RESUME toggle (`hermes cron pause|resume`).
+ *  - Every state-changing control is a type-to-confirm inline zone that mirrors
+ *    REMOVE; routine toggles use the same zone without the typed gate.
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { SectionHead, SkeletonPanel, EmptyTerminal, Window, Badge } from '../ui'
 import type { Bot, BotGatewayStatus, BotsSnapshot } from '@/lib/collectors/bots'
@@ -111,7 +120,155 @@ function CopyTokenButton({ token, label }: { token: string; label: string }) {
   )
 }
 
-function Routine({ r }: { r: Bot['routines'][number] }) {
+type ActionResult = { ok: boolean; error?: string }
+type PostAction = (body: Record<string, unknown>) => Promise<ActionResult>
+
+/**
+ * Inline confirm zone — the REMOVE flow generalised. Collapsed it's a single
+ * button; expanded it shows an optional type-to-confirm input, any extra
+ * controls (`children`), and Run / Cancel with busy + error states. When
+ * `confirmWord` is omitted the typed gate is skipped (used for routine
+ * toggles); `canRun` lets the caller add its own readiness check.
+ */
+function ConfirmZone({
+  label,
+  title,
+  actionLabel,
+  confirmWord,
+  variant = 'default',
+  disabled,
+  canRun = true,
+  children,
+  onRun,
+}: {
+  label: ReactNode
+  title: string
+  actionLabel: string
+  confirmWord?: string
+  variant?: 'default' | 'primary' | 'danger'
+  disabled?: boolean
+  canRun?: boolean
+  children?: (busy: boolean) => ReactNode
+  onRun: () => Promise<ActionResult>
+}) {
+  const [open, setOpen] = useState(false)
+  const [typed, setTyped] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const needType = Boolean(confirmWord)
+  const ready = canRun && (!needType || typed === confirmWord) && !busy
+
+  const reset = () => { setOpen(false); setTyped(''); setBusy(false); setError(null) }
+
+  const run = async () => {
+    if (!ready) return
+    setBusy(true)
+    setError(null)
+    const out = await onRun()
+    if (!out.ok) { setError(out.error ?? 'action failed'); setBusy(false); return }
+    reset()
+  }
+
+  if (!open) {
+    return (
+      <button
+        className={`mc-btn${variant === 'primary' ? ' mc-btn-primary' : ''}${variant === 'danger' ? ' mc-btn-danger' : ''}`}
+        onClick={() => setOpen(true)}
+        disabled={disabled}
+        title={title}
+      >
+        {label}
+      </button>
+    )
+  }
+
+  return (
+    <span className="mc-bots-confirm">
+      <span className="mc-bots-confirm-title">{title}</span>
+      {children?.(busy)}
+      {needType && (
+        <input
+          aria-label={`Type ${confirmWord} to confirm`}
+          placeholder={`type "${confirmWord}" to confirm`}
+          value={typed}
+          onChange={e => setTyped(e.target.value)}
+          disabled={busy}
+          className="mc-bots-confirm-input"
+        />
+      )}
+      <button
+        className={`mc-btn ${variant === 'danger' ? 'mc-btn-danger' : 'mc-btn-confirm'}`}
+        onClick={run}
+        disabled={!ready}
+        title={title}
+      >
+        {busy ? '…' : actionLabel}
+      </button>
+      <button className="mc-btn" onClick={reset} disabled={busy}>CANCEL</button>
+      {error && <span className="mc-bots-confirm-err">{error}</span>}
+    </span>
+  )
+}
+
+/** Compact per-bot model editor — a <select> of models already in use across
+ *  the roster, plus a "custom…" free-text escape hatch. Save is type-to-confirm
+ *  (via ConfirmZone). Only `model.default` is written; a cross-provider swap may
+ *  still need a manual `hermes config set model.provider`. */
+function EditModel({
+  bot,
+  options,
+  onAction,
+}: {
+  bot: Bot
+  options: string[]
+  onAction: PostAction
+}) {
+  const current = bot.model ?? ''
+  const [model, setModel] = useState(current)
+  const [custom, setCustom] = useState(false)
+  const opts = Array.from(new Set([current, ...options].filter(Boolean)))
+
+  return (
+    <ConfirmZone
+      label="✎ EDIT"
+      title={`Change ${bot.name}'s model`}
+      actionLabel="SAVE MODEL"
+      confirmWord={bot.name}
+      canRun={model.trim().length > 0 && model.trim() !== current}
+      onRun={() => onAction({ action: 'edit-model', name: bot.name, model: model.trim() })}
+    >
+      {busy => (
+        custom ? (
+          <input
+            aria-label={`Custom model id for ${bot.name}`}
+            placeholder="provider/model-id"
+            value={model}
+            onChange={e => setModel(e.target.value)}
+            disabled={busy}
+            className="mc-bots-confirm-input"
+          />
+        ) : (
+          <select
+            aria-label={`Model for ${bot.name}`}
+            value={opts.includes(model) ? model : ''}
+            onChange={e => {
+              if (e.target.value === '__custom__') { setCustom(true); setModel('') }
+              else setModel(e.target.value)
+            }}
+            disabled={busy}
+            className="mc-bots-confirm-input"
+          >
+            {opts.map(o => <option key={o} value={o}>{o}</option>)}
+            <option value="__custom__">custom…</option>
+          </select>
+        )
+      )}
+    </ConfirmZone>
+  )
+}
+
+function Routine({ r, onToggle }: { r: Bot['routines'][number]; onToggle: PostAction }) {
   const failed = r.lastRunStatus === 'error'
   return (
     <li className={`mc-bots-routine ${r.enabled ? '' : 'is-off'} ${failed ? 'is-failed' : ''}`}>
@@ -119,6 +276,15 @@ function Routine({ r }: { r: Bot['routines'][number] }) {
       <span className="mc-bots-routine-name">{r.routine}</span>
       <span className="mc-bots-routine-sched">{r.schedule}</span>
       <span className="mc-bots-routine-when">{failed ? 'last run failed' : `next ${r.nextRunAt ? new Date(r.nextRunAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}`}</span>
+      <span className="mc-bots-routine-act">
+        <ConfirmZone
+          label={r.enabled ? '⏸ PAUSE' : '▶ RESUME'}
+          title={`${r.enabled ? 'Pause' : 'Resume'} "${r.routine}"`}
+          actionLabel={r.enabled ? 'PAUSE' : 'RESUME'}
+          variant={r.enabled ? 'danger' : 'default'}
+          onRun={() => onToggle({ action: 'toggle-routine', id: r.id, enabled: !r.enabled })}
+        />
+      </span>
     </li>
   )
 }
@@ -131,10 +297,14 @@ type RemoveState =
 
 function BotCard({
   bot,
+  modelOptions,
   onRemove,
+  onAction,
 }: {
   bot: Bot
-  onRemove: (name: string) => Promise<{ ok: boolean; error?: string }>
+  modelOptions: string[]
+  onRemove: (name: string) => Promise<ActionResult>
+  onAction: PostAction
 }) {
   const router = useRouter()
   const gw = bot.gateway
@@ -239,7 +409,7 @@ function BotCard({
 
         {bot.routines.length > 0 ? (
           <ul className="mc-bots-routines">
-            {bot.routines.map(r => <Routine key={r.id} r={r} />)}
+            {bot.routines.map(r => <Routine key={r.id} r={r} onToggle={onAction} />)}
           </ul>
         ) : (
           <div className="mc-empty is-compact">
@@ -253,7 +423,7 @@ function BotCard({
           </div>
         )}
 
-        {/* v2 — engage + manage */}
+        {/* v2 — engage + manage · v3 — lifecycle + model edit */}
         <div
           className="mc-bots-actions"
           style={{
@@ -273,18 +443,50 @@ function BotCard({
           {bot.isDefault ? (
             <span
               style={{ fontSize: 10, color: 'var(--pt-text-mute)', fontFamily: 'var(--pt-font-mono)', letterSpacing: '0.08em' }}
-              title="the implicit default profile can't be deleted"
+              title="the implicit default profile can't be managed from here"
             >
               🔒 SYSTEM PROFILE
             </span>
-          ) : gwLive ? (
-            <span
-              style={{ fontSize: 10, color: 'var(--pt-warn)', fontFamily: 'var(--pt-font-mono)', letterSpacing: '0.08em' }}
-              title="stop the gateway before deleting this bot"
-            >
-              ⚠ LIVE — STOP GATEWAY FIRST
-            </span>
-          ) : remState.step === 'confirm' || remState.step === 'busy' || remState.step === 'error' ? (
+          ) : (
+            <>
+              {gwLive ? (
+                <>
+                  <ConfirmZone
+                    label="⟳ RESTART"
+                    title={`Restart ${bot.name}'s gateway`}
+                    actionLabel="RESTART"
+                    confirmWord={bot.name}
+                    onRun={() => onAction({ action: 'restart', name: bot.name })}
+                  />
+                  <ConfirmZone
+                    label="■ STOP"
+                    title={`Stop ${bot.name}'s gateway`}
+                    actionLabel="STOP"
+                    variant="danger"
+                    confirmWord={bot.name}
+                    onRun={() => onAction({ action: 'stop', name: bot.name })}
+                  />
+                </>
+              ) : (
+                <ConfirmZone
+                  label="▶ START"
+                  title={`Start ${bot.name}'s gateway`}
+                  actionLabel="START"
+                  confirmWord={bot.name}
+                  onRun={() => onAction({ action: 'start', name: bot.name })}
+                />
+              )}
+
+              <EditModel bot={bot} options={modelOptions} onAction={onAction} />
+
+              {gwLive ? (
+                <span
+                  style={{ fontSize: 10, color: 'var(--pt-warn)', fontFamily: 'var(--pt-font-mono)', letterSpacing: '0.08em' }}
+                  title="stop the gateway before deleting this bot"
+                >
+                  ⚠ LIVE — STOP TO REMOVE
+                </span>
+              ) : remState.step === 'confirm' || remState.step === 'busy' || remState.step === 'error' ? (
             <span
               style={{
                 display: 'flex',
@@ -341,9 +543,11 @@ function BotCard({
               onClick={() => setRemState({ step: 'confirm' })}
               style={{ marginLeft: 'auto', borderColor: 'var(--pt-border-dim)', color: 'var(--pt-text-dim)' }}
               title="delete this profile"
-            >
-              ✕ REMOVE
-            </button>
+                >
+                  ✕ REMOVE
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -483,6 +687,12 @@ export function BotsPanel() {
     return () => { alive = false; clearInterval(t) }
   }, [reloadToken])
 
+  /** Models already in use across the roster — the <select> seed for EDIT. */
+  const modelOptions = useMemo(
+    () => Array.from(new Set((data?.bots ?? []).map(b => b.model).filter((m): m is string => Boolean(m)))),
+    [data],
+  )
+
   if (!data) {
     return err
       ? <EmptyTerminal label="bots endpoint unreachable" />
@@ -491,12 +701,14 @@ export function BotsPanel() {
 
   const { totals } = data
 
-  const removeBot = async (name: string): Promise<{ ok: boolean; error?: string }> => {
+  /** Single POST path for every bot action — mirrors the create/remove flow,
+   *  bumps the reload token on success so the roster re-reads on-disk truth. */
+  const postAction: PostAction = async body => {
     try {
       const res = await fetch('/api/bots/actions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'delete', name }),
+        body: JSON.stringify(body),
       })
       const j = await res.json()
       if (!res.ok) return { ok: false, error: j?.error ?? `HTTP ${res.status}` }
@@ -506,6 +718,8 @@ export function BotsPanel() {
       return { ok: false, error: err instanceof Error ? err.message : String(err) }
     }
   }
+
+  const removeBot = (name: string): Promise<ActionResult> => postAction({ action: 'delete', name })
 
   return (
     <>
@@ -538,7 +752,15 @@ export function BotsPanel() {
         ? <EmptyTerminal label="no hermes profiles found" />
         : (
           <div className="mc-tile-grid mc-tile-grid--tri">
-            {data.bots.map(bot => <BotCard key={bot.name} bot={bot} onRemove={removeBot} />)}
+            {data.bots.map(bot => (
+              <BotCard
+                key={bot.name}
+                bot={bot}
+                modelOptions={modelOptions}
+                onRemove={removeBot}
+                onAction={postAction}
+              />
+            ))}
           </div>
         )}
     </>

@@ -32,7 +32,6 @@ const ROUTES: Item[] = [
   { id: '/pipeline', label: 'Web Dev Pipeline', sub: 'client delivery', href: '/pipeline', icon: 'pipeline', group: 'Routes' },
   { id: '/content-creation', label: 'Content Creation', sub: 'content engine', href: '/content-creation', icon: 'content', group: 'Routes' },
   { id: '/memory', label: 'Memory', sub: 'vault & notes', href: '/memory', icon: 'memory', group: 'Routes' },
-  { id: '/team', label: 'Team', sub: 'agent command mesh', href: '/team', icon: 'team', group: 'Routes' },
   { id: '/setup', label: 'Setup', sub: 'configuration', href: '/setup', icon: 'setup', group: 'Routes' },
 ]
 
@@ -156,7 +155,7 @@ export function CommandPalette() {
     const forceGroup = query.trim().startsWith('>') ? 'Routes' : query.trim().startsWith('g ') ? 'Agents' : null
 
     const agents: Item[] = (data?.crew ?? []).map(a => ({
-      id: `agent-${a.id}`, label: a.name, sub: `${a.status} · ${a.role ?? 'agent'}`, href: '/team', icon: 'team', group: 'Agents',
+      id: `agent-${a.id}`, label: a.name, sub: `${a.status} · ${a.role ?? 'agent'}`, href: '/bots', icon: 'team', group: 'Agents',
     }))
     const tasks: Item[] = (data?.tasks ?? []).slice(0, 40).map(t => ({
       id: `task-${t.id}`, label: t.title, sub: `task · ${t.ownerName ?? t.status ?? ''}`, href: '/kanban', icon: 'kanban', group: 'Tasks',
