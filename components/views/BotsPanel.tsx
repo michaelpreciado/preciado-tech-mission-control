@@ -9,7 +9,8 @@
  * `state.db` + `gateway_state.json` via /api/bots — nothing is simulated.
  *
  * Chat / continue and the HoloHUD enrichment are a later pass; this view is
- * read-only.
+ * read-only. The per-bot CONNECT row shows the profile's Telegram token
+ * (masked) with a copy button so Michael can wire a new bot from the roster.
  */
 import { useEffect, useState } from 'react'
 import { SectionHead, SkeletonPanel, EmptyTerminal, Window, Badge } from '../ui'
@@ -41,6 +42,64 @@ function shortModel(model: string | null): string {
   return model.includes('/') ? model.split('/').pop()! : model
 }
 
+/** Mask a Telegram bot token for display — keeps the numeric bot id prefix,
+ *  hides the secret: `123456789:Aa••••••Zz`. */
+function maskToken(token: string): string {
+  const sep = token.indexOf(':')
+  const head = sep > 0 ? token.slice(0, sep + 1) : ''
+  const secret = sep > 0 ? token.slice(sep + 1) : token
+  if (secret.length <= 8) return `${head}••••••`
+  return `${head}${secret.slice(0, 2)}••••••${secret.slice(-2)}`
+}
+
+/* Copy-to-clipboard — the same pattern ChatConsole uses. */
+
+function fallbackCopy(text: string, onDone: () => void) {
+  const el = document.createElement('textarea')
+  el.value = text
+  el.style.cssText = 'position:fixed;opacity:0;top:0;left:0'
+  document.body.appendChild(el)
+  el.select()
+  try { document.execCommand('copy') } catch { /* best-effort */ }
+  document.body.removeChild(el)
+  onDone()
+}
+
+function CopyTokenButton({ token, label }: { token: string; label: string }) {
+  const [copied, setCopied] = useState(false)
+  const done = () => { setCopied(true); setTimeout(() => setCopied(false), 1500) }
+  const copy = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(token).then(done).catch(() => fallbackCopy(token, done))
+    } else {
+      fallbackCopy(token, done)
+    }
+  }
+  return (
+    <button
+      onClick={copy}
+      aria-label={copied ? 'Copied' : label}
+      title={copied ? 'Copied' : label}
+      style={{
+        flexShrink: 0,
+        marginLeft: 'auto',
+        background: 'var(--pt-surface-2)',
+        border: '1px solid var(--pt-border-dim)',
+        borderRadius: 6,
+        cursor: 'pointer',
+        padding: '3px 8px',
+        fontSize: '9px',
+        fontFamily: 'var(--pt-font-mono)',
+        letterSpacing: '0.1em',
+        textTransform: 'uppercase',
+        color: copied ? 'var(--pt-neon-bright)' : 'var(--pt-text-dim)',
+      }}
+    >
+      {copied ? 'COPIED' : '⎘ COPY'}
+    </button>
+  )
+}
+
 function Routine({ r }: { r: Bot['routines'][number] }) {
   const failed = r.lastRunStatus === 'error'
   return (
@@ -55,6 +114,7 @@ function Routine({ r }: { r: Bot['routines'][number] }) {
 
 function BotCard({ bot }: { bot: Bot }) {
   const gw = bot.gateway
+  const platforms = gw.platforms?.length ? gw.platforms.map(p => p.name).join(' · ') : ''
   return (
     <Window tag="◇" title={bot.name}>
       <div className="mc-tile-body">
@@ -73,6 +133,59 @@ function BotCard({ bot }: { bot: Bot }) {
           <span className="mc-bots-gw-detail">{gw.detail}</span>
         </div>
 
+        <div
+          className="mc-bots-connect"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '4px 8px',
+            marginTop: 10,
+            paddingTop: 10,
+            borderTop: '1px solid var(--pt-rule)',
+            minWidth: 0,
+          }}
+        >
+          <span
+            className="mc-bots-connect-label"
+            style={{
+              fontFamily: 'var(--pt-font-mono)',
+              fontSize: 9,
+              letterSpacing: '0.12em',
+              color: 'var(--pt-text-dim)',
+            }}
+          >
+            {platforms ? `CONNECT · ${platforms}` : 'CONNECT'}
+          </span>
+          {bot.telegramToken ? (
+            <>
+              <code
+                className="mc-bots-connect-token"
+                style={{
+                  fontFamily: 'var(--pt-font-mono)',
+                  fontSize: 11,
+                  letterSpacing: '0.04em',
+                  color: 'var(--pt-text-mute)',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  minWidth: 0,
+                }}
+              >
+                {maskToken(bot.telegramToken)}
+              </code>
+              <CopyTokenButton token={bot.telegramToken} label={`Copy ${bot.name} Telegram token`} />
+            </>
+          ) : (
+            <span
+              className="mc-bots-connect-none"
+              style={{ fontSize: 11, color: 'var(--pt-text-mute)' }}
+            >
+              no telegram token on file
+            </span>
+          )}
+        </div>
+
         <div className="mc-bots-stats">
           <span className="mc-bots-stat"><em>{bot.sessions}</em>sessions</span>
           <span className="mc-bots-stat"><em>{bot.messages.toLocaleString()}</em>messages</span>
@@ -85,7 +198,15 @@ function BotCard({ bot }: { bot: Bot }) {
             {bot.routines.map(r => <Routine key={r.id} r={r} />)}
           </ul>
         ) : (
-          <div className="mc-bots-routines-empty">no routines — schedule one with <code>[bot:{bot.name}]</code></div>
+          <div className="mc-empty is-compact">
+            <div className="mc-empty-glyph">◷</div>
+            <div className="mc-empty-title">NO ROUTINES</div>
+            <p className="mc-empty-desc">
+              schedule one with the{' '}
+              <code style={{ fontFamily: 'var(--pt-font-mono)' }}>[bot:{bot.name}]</code>{' '}
+              cron namespace
+            </p>
+          </div>
         )}
       </div>
     </Window>

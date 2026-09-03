@@ -62,6 +62,10 @@ export type Bot = {
   messages: number
   /** Max message timestamp across the bot's sessions, epoch ms. */
   lastActiveAt: number | null
+  /** The bot's Telegram connection token (full value) from its profile
+   *  `.env`, or null when the profile has none on file. Displayed masked;
+   *  copied in full so Michael can re-wire a bot from the roster. */
+  telegramToken: string | null
   routineCount: number
   routines: BotRoutine[]
   /** First letter of the name, upper-cased — a placeholder avatar. */
@@ -210,7 +214,33 @@ function readGateway(entry: ProfileEntry): BotGateway {
   }
 }
 
-/* ── routines (namespaced cron jobs) ─────────────────────── */
+/* ── profile .env read (connection token) ───────────────── */
+
+/** Best-effort `TELEGRAM_BOT_TOKEN` from the profile's own `.env` — for the
+ *  default profile that's `<hermes-root>/.env`, for named profiles
+ *  `<profile dir>/.env` (entry.dir covers both). The value is never logged;
+ *  it reaches the dashboard only so the human can copy it to re-wire a bot. */
+function readTelegramToken(entry: ProfileEntry): string | null {
+  const file = path.join(entry.dir, '.env')
+  try {
+    if (!fs.existsSync(file)) return null
+    const m = fs.readFileSync(file, 'utf8').match(/^\s*TELEGRAM_BOT_TOKEN\s*=\s*(.*)$/m)
+    if (!m) return null
+    let value = m[1].trim()
+    const q = value[0]
+    if ((q === '"' || q === "'") && value.length > 1 && value.endsWith(q)) {
+      value = value.slice(1, -1)
+    } else {
+      value = value.split(/\s+#/)[0].trim()
+    }
+    return value.length ? value : null
+  } catch (err) {
+    logger.error('bots/token', err)
+    return null
+  }
+}
+
+/* ── routines (namespaced cron jobs) ────────────────────── */
 
 const ROUTINE_NS = /^\[bot:\s*([^\]]+)\]\s*(.*)$/i
 
@@ -270,6 +300,7 @@ export async function collectBots(): Promise<BotsSnapshot> {
       sessions: db.sessions,
       messages: db.messages,
       lastActiveAt: db.lastActiveAt,
+      telegramToken: readTelegramToken(entry),
       routineCount: routines.length,
       routines,
       avatarInitial: (entry.name[0] || '?').toUpperCase(),
