@@ -1,0 +1,131 @@
+/*
+ * v2-lane.css — V2 lane of the matrix-glass-blue overhaul (Delivery / Build).
+ * Covers: /pipeline, /kanban, /projects, /costs, /github.
+ *
+ * Contract (DESIGN-SPEC §6): this lane never edits globals.css / tokens /
+ * theme. Every rule here is additive and scoped under `.mc-main` so it beats
+ * the single-class base rules without touching source order, and every colour
+ * comes from the --mc-* tokens V0 guarantees — no new hex, semantics untouched.
+ *
+ * The base sheet still carries a few magenta-era flat card fills
+ * (rgba(14,17,23,·), rgba(0,0,0,·)) that read as dead near-black. This lane
+ * restates the delivery surfaces on the periwinkle glass language: one glass
+ * tint over the cool panel base, hairlines on --mc-glass-line. Tint only — the
+ * board columns scroll over the fixed rain canvas, so no backdrop-filter here
+ * (§5 120hz contract).
+ */
+
+/* ── JP accent eyebrow (DESIGN-SPEC §4) ───────────────────────────────
+   One per view, dropped into the SectionHead `pre` slot. A short kanji tag
+   in periwinkle next to the latin section label — cyberpunk flavour, not a
+   heading. Noto Sans JP, never letter-spaced, a touch more line-height. */
+.mc-main .mc-ascii-head .v2-jp {
+  font-family: var(--mc-font-jp), var(--pt-font-sans);
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: 0;
+  color: var(--mc-neon);
+  text-shadow: 0 0 12px rgba(var(--mc-neon-rgb), 0.3);
+  white-space: nowrap;
+}
+
+/* ── Pipeline board ──────────────────────────────────────────────────
+   Columns (.mc-window) already ride the repainted surface tokens; the
+   lead cards carried a hardcoded rgba(14,17,23,0.7). Restate on glass. */
+.mc-main .mc-pipe-card {
+  border-color: var(--mc-glass-line);
+  background:
+    linear-gradient(var(--mc-glass), var(--mc-glass)),
+    var(--mc-panel);
+}
+.mc-main .mc-pipe-card:hover {
+  border-color: var(--mc-neon-2);
+}
+.mc-main .mc-pipe-log {
+  border-color: var(--mc-glass-line);
+  background:
+    linear-gradient(var(--mc-glass), var(--mc-glass)),
+    var(--mc-bg-2);
+}
+
+/* ── Kanban board ───────────────────────────────────────────────────
+   .mc-kb-col / .mc-kb-col-head / .mc-kb-card all used opaque black washes
+   (rgba(0,0,0,·)). Swap for the glass tint so the mirror board reads in
+   the same periwinkle vocabulary as the rest of Delivery. */
+.mc-main .mc-kb-col {
+  border-color: var(--mc-glass-line);
+  background: linear-gradient(var(--mc-glass), var(--mc-glass)), transparent;
+}
+.mc-main .mc-kb-col-head {
+  border-bottom-color: var(--mc-glass-line);
+  background: rgba(var(--mc-neon-rgb), 0.05);
+}
+.mc-main .mc-kb-card {
+  border-color: var(--mc-glass-line);
+  background:
+    linear-gradient(var(--mc-glass), var(--mc-glass)),
+    var(--mc-panel);
+}
+.mc-main .mc-kb-card:hover {
+  border-color: var(--mc-neon-2);
+  background: rgba(var(--mc-neon-rgb), 0.08);
+}
+/* Drawer + create modal: static, non-moving panels — glass tint + a small
+   blur is allowed here (§5). */
+.mc-main .mc-drawer {
+  border-color: var(--mc-glass-line);
+  background:
+    linear-gradient(var(--mc-glass), var(--mc-glass)),
+    var(--mc-panel);
+  backdrop-filter: blur(6px);
+}
+
+/* ── Projects grid ──────────────────────────────────────────────────
+   The project windows sit on the shared .mc-window surface; nudge the
+   hairline onto the glass line so the tri-grid reads as one glass sheet. */
+.mc-main .mc-proj-tilt .mc-window {
+  border-color: var(--mc-glass-line);
+  background:
+    linear-gradient(var(--mc-glass), var(--mc-glass)),
+    var(--mc-surface);
+}
+
+/* ── Costs view ─────────────────────────────────────────────────────
+   Tables + stat tiles: hairlines to the glass line, table wrapper gets the
+   faint periwinkle wash so the ranked lists don't float on bare black. */
+.mc-main .cp-tablewrap {
+  border: 1px solid var(--mc-glass-line);
+  border-radius: var(--pt-r-md, 8px);
+  background: linear-gradient(var(--mc-glass), var(--mc-glass)), var(--mc-surface);
+}
+.mc-main .cp-table th {
+  border-bottom-color: var(--mc-glass-line);
+}
+.mc-main .cp-stat {
+  border-color: var(--mc-glass-line);
+}
+
+/* ── GitHub view ───────────────────────────────────────────────────
+   Stat tiles + repo cards carried the same rgba(14,17,23,·) flat fill.
+   Restate on glass; keep the semantic amber "private" badge untouched. */
+.mc-main .mc-gh-stat,
+.mc-main .mc-repo-card {
+  border-color: var(--mc-glass-line);
+  background:
+    linear-gradient(var(--mc-glass), var(--mc-glass)),
+    var(--mc-panel);
+}
+.mc-main .mc-repo-card:hover {
+  border-color: var(--mc-neon-2);
+}
+.mc-main .mc-gh-profile:hover {
+  border-color: var(--mc-neon-2);
+}
+
+/* ── Reduced motion: drop the one blur this lane adds ─────────────────
+   Union of the OS setting and the in-app motion toggle (§5). */
+@media (prefers-reduced-motion: reduce) {
+  .mc-main .mc-drawer { backdrop-filter: none; }
+}
+html[data-motion="reduced"] .mc-main .mc-drawer,
+html[data-motion="off"] .mc-main .mc-drawer { backdrop-filter: none; }
