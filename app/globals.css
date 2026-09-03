@@ -657,6 +657,9 @@ body {
      references it so it doesn't flatten the whole breakpoint ladder. */
   padding: 22px var(--mc-gutter) 80px;
   position: relative;
+  /* No page rubber-band on iOS pull-to-refresh / Android overscroll glow.
+     x behavior is left to the full-bleed-child rules below. */
+  overscroll-behavior-y: contain;
 }
 .mc-main::-webkit-scrollbar { width: 6px; }
 .mc-main::-webkit-scrollbar-thumb { background: var(--pt-border-dim); border-radius: 3px; }
@@ -945,6 +948,11 @@ body {
 .mc-setup-tabrow-label em { font-style: normal; color: var(--pt-text-mute); font-size: 10px; }
 .mc-setup-tabrow-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .mc-setup-tabrow-actions .mc-btn { min-width: 34px; padding-left: 8px; padding-right: 8px; }
+/* HTML5 drag-reorder is desktop-only, so on touch these ▲/▼ buttons are the
+   sole way to reorder setup tabs — give them a full 44px target. */
+@media (pointer: coarse) {
+  .mc-setup-tabrow-actions .mc-btn { min-width: 44px; min-height: 44px; }
+}
 
 /* ── Hero brand title (configurable app name) ─────────── */
 .mc-hero-brand {
@@ -1934,7 +1942,7 @@ h1 {
   .mc-mobile-nav-inner { width: 100%; height: 52px; max-height: 52px; border-radius: 18px; }
   .mc-mobile-item { max-height: 52px; min-width: 56px; padding: 6px 2px; }
   .mc-mobile-glyph { font-size: 18px; }
-  .mc-mobile-label { font-size: 8px; }
+  .mc-mobile-label { font-size: 10px; }
 }
 
 /* ── Model router rack (Hermes / OpenClaw / etc.) ─────── */
@@ -5147,6 +5155,19 @@ html[data-motion="off"] .mc-home-tile.tone-err::after {
   }
 }
 
+/* iOS Safari force-zooms into any input/textarea whose computed font-size is
+   below 16px on focus. Bump the composer + command-palette fields to 16px on
+   coarse pointers only — fine-pointer (desktop) sizes above are untouched. */
+@media (pointer: coarse) {
+  .mc-chat-input textarea,
+  .cc-composer textarea,
+  .cmdp-input,
+  .mc-kb-compose textarea,
+  .mc-kb-input {
+    font-size: 16px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .mc-task, .mc-agent-card, .mc-cal-card, .mc-commit, .mc-kb-card, .mc-home-tile {
     will-change: auto;
@@ -5244,6 +5265,42 @@ html[data-motion="off"] .mc-home-tile.tone-err::after {
 }
 @keyframes more-rise { from { transform: translateY(28px); opacity: 0 } to { transform: none; opacity: 1 } }
 @keyframes more-fade { from { opacity: 0 } to { opacity: 1 } }
+
+/* ── More sheet: search row → command palette ──
+   The sidebar "Jump to…" trigger is display:none ≤820px, and Ctrl+K / `/`
+   need a keyboard — so mobile has no way into the palette without this.
+   Full-width, styled like a search field; mirrors .mc-cmdp-trigger tokens.
+   Purely additive. */
+.mc-more-search {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; box-sizing: border-box;
+  margin: 2px 2px 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--pt-surface);
+  border: 1px solid var(--pt-border-dim);
+  color: var(--pt-text-dim);
+  font-family: var(--pt-font-mono);
+  font-size: 12px; letter-spacing: normal;
+  text-align: left; cursor: pointer;
+  transition: color .2s ease, background .2s ease, border-color .2s ease, transform .15s ease;
+}
+.mc-more-search:active { transform: scale(0.99); }
+.mc-more-search:hover {
+  border-color: var(--pt-border-strong);
+  color: var(--pt-text-high);
+  background: rgba(var(--pt-neon-rgb),0.08);
+}
+.mc-more-search-ic { color: var(--pt-neon-bright); display: inline-flex; font-size: 14px; }
+.mc-more-search-ph { flex: 1; }
+.mc-more-search-kbd {
+  font-family: var(--pt-font-mono);
+  font-size: 9px;
+  color: var(--pt-text-mute);
+  border: 1px solid var(--pt-border-dim);
+  border-radius: var(--pt-r-sm);
+  padding: 1px 5px;
+}
 
 /* Coarse pointers: drop the sheet blur (same battery rationale as the bar). */
 @media (pointer: coarse) {
@@ -6340,6 +6397,20 @@ body {
   textarea {
     touch-action: manipulation;
   }
+}
+
+/* Explicit double-tap-zoom kill on the named interactive surfaces (some are
+   plain divs / Links the tag-based rule above still catches, but pinning them
+   by class keeps the intent legible and survives markup changes). Draggable
+   drop zones and pan/scroll bodies are deliberately excluded — .mc-kb-card
+   uses native HTML5 drag, which touch-action does not affect. */
+.mc-btn,
+.mc-mobile-item,
+.mc-more-cell,
+.mc-kb-card,
+.mc-nav-item,
+.mc-more-search {
+  touch-action: manipulation;
 }
 
 /* Unfolded inner display — Pixel Pro Fold ~788px CSS near-square and the

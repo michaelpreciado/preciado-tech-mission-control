@@ -60,6 +60,12 @@ export function CommandPalette() {
   const [convItems, setConvItems] = useState<Item[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
+  // Set by the `mc:open-cmdp` CustomEvent ({ detail: { focus: true } }) so a
+  // caller with no keyboard (mobile More sheet) can ask the palette to
+  // autofocus its input. The Ctrl+K / `/` paths never set this — they keep the
+  // deliberate no-autofocus behavior so the on-screen keyboard doesn't cover
+  // the list on touch devices.
+  const focusOnOpenRef = useRef(false)
 
   const toggle = useCallback(() => {
     setOpen(o => {
@@ -80,7 +86,10 @@ export function CommandPalette() {
         if (e.key === '/' && !open) { e.preventDefault(); toggle(); setQuery('') }
       }
     }
-    const onOpen = () => toggle()
+    const onOpen = (e: Event) => {
+      if ((e as CustomEvent).detail?.focus) focusOnOpenRef.current = true
+      toggle()
+    }
     window.addEventListener('keydown', onKey)
     window.addEventListener('mc:open-cmdp', onOpen)
     return () => {
@@ -97,6 +106,11 @@ export function CommandPalette() {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
     window.addEventListener('keydown', onKey)
     setCursor(0)
+    // Only autofocus when a caller explicitly asked for it (see focusOnOpenRef).
+    if (focusOnOpenRef.current) {
+      focusOnOpenRef.current = false
+      inputRef.current?.focus()
+    }
     return () => window.removeEventListener('keydown', onKey)
   }, [open])
 

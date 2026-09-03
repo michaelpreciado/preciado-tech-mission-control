@@ -85,6 +85,19 @@ function supportedTransition(from: string, to: string): DropAction | null {
   return null
 }
 
+/** Legal "move to…" targets for the drawer control (touch has no DnD, and the
+ *  desktop drag affordance is invisible to non-draggers). Every target here is
+ *  expressible via the `set-status` action — mirror of supportedTransition's
+ *  set-status arm. blocked/failed → todo|ready is intentionally omitted: the
+ *  dedicated unblock button already covers it and also handles `failed`, which
+ *  set-status cannot. */
+const MOVE_TARGETS: Record<string, string[]> = {
+  todo: ['ready', 'blocked'],
+  ready: ['review', 'blocked'],
+  running: ['review', 'blocked'],
+  review: ['ready', 'todo'],
+}
+
 /* ── Detail drawer (reuse the proven Hermes task detail layout) ───── */
 const STATUS_TONE: Record<string, string> = {
   running: 'run', in_progress: 'run',
@@ -164,6 +177,8 @@ function DetailDrawer({ id, onClose, onChanged }: { id: string; onClose: () => v
       setBusy(null)
     }
   }, [id, load, onChanged])
+
+  const moveTargets = detail ? (MOVE_TARGETS[detail.status] ?? []) : []
 
   const dispatchClaude = useCallback(async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -251,6 +266,22 @@ function DetailDrawer({ id, onClose, onChanged }: { id: string; onClose: () => v
               {dispatchInfo && <div className="mc-hk-run-summary" role="status">✦ {dispatchInfo}</div>}
               {actErr && <div className="mc-kb-acterr" role="alert">⚠ {actErr}</div>}
             </div>
+
+            {/* Move to… — column transitions (same API as desktop drag-and-drop) */}
+            {moveTargets.length > 0 && (
+              <div className="mc-drawer-section">
+                <div className="lbl">MOVE TO…</div>
+                <div className="mc-kb-actions">
+                  {moveTargets.map(target => (
+                    <Button key={target} variant="ghost" loading={busy === 'set-status'} disabled={!!busy}
+                      onClick={() => void act('set-status', { status: target })}
+                      aria-label={`Move ${detail.title} to ${target}`}>
+                      {busy === 'set-status' ? 'moving…' : `▸ ${target}`}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Comment composer */}
             <div className="mc-drawer-section">

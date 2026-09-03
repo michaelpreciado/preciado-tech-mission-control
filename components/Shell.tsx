@@ -143,6 +143,19 @@ function MoreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
       <div className="mc-more-backdrop" onClick={onClose} />
       <div className="mc-more-sheet" onClick={e => e.stopPropagation()}>
         <div className="mc-more-handle" />
+        <button
+          type="button"
+          className="mc-more-search"
+          aria-label="Jump to a page, agent, or task"
+          onClick={() => {
+            onClose()
+            window.dispatchEvent(new CustomEvent('mc:open-cmdp', { detail: { focus: true } }))
+          }}
+        >
+          <span className="mc-more-search-ic" aria-hidden="true">⌕</span>
+          <span className="mc-more-search-ph">Jump to…</span>
+          <kbd className="mc-more-search-kbd">⌘K</kbd>
+        </button>
         <div className="mc-more-title">&gt; MORE</div>
         {nav.map(sec => {
           const items = sec.items.filter(it => !PRIMARY_IDS.has(it.id))
