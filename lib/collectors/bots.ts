@@ -86,7 +86,7 @@ export type BotsSnapshot = {
  *  for the default profile, or at `<root>/profiles/<name>/gateway_state.json`
  *  for a named one). Resolving from the ancestor keeps `default` + every named
  *  profile discoverable regardless of which profile the file points at. */
-function hermesDir(): string {
+export function hermesDir(): string {
   const start = path.dirname(getConfig().paths.gatewayStateFile)
   let dir = start
   while (dir !== path.dirname(dir)) {
@@ -282,10 +282,12 @@ async function routinesByBot(): Promise<Map<string, BotRoutine[]>> {
 let cache: { snap: BotsSnapshot; at: number } | null = null
 const TTL_MS = 5_000
 
-/** Every local Bot (Hermes profile) with its metadata + routine readout. */
-export async function collectBots(): Promise<BotsSnapshot> {
+/** Every local Bot (Hermes profile) with its metadata + routine readout.
+ *  Pass `refresh = true` to bypass the short TTL (used right after a
+ *  create/delete so the caller sees the on-disk truth immediately). */
+export async function collectBots(refresh = false): Promise<BotsSnapshot> {
   const now = Date.now()
-  if (cache && now - cache.at < TTL_MS) return cache.snap
+  if (!refresh && cache && now - cache.at < TTL_MS) return cache.snap
 
   const [profiles, routineMap] = [discoverProfiles(), await routinesByBot()]
 
