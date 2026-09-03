@@ -6360,3 +6360,89 @@ body {
     padding-bottom: calc(18px + env(safe-area-inset-bottom));
   }
 }
+
+/* ── LOGIN (portable/cloud auth) ─────────────────────────── */
+.mc-login {
+  min-height: calc(100vh - 120px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.mc-login-card {
+  width: 100%;
+  max-width: 340px;
+  background: var(--pt-surface, rgba(24, 10, 30, 0.72));
+  border: 1px solid var(--pt-line, rgba(255, 255, 255, 0.08));
+  border-radius: 14px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+}
+.mc-login-brand {
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.08em;
+  color: var(--pt-neon, #00d4ff);
+}
+.mc-login-kicker {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--pt-muted, rgba(255, 255, 255, 0.5));
+  margin-bottom: 6px;
+}
+.mc-login-label {
+  font-size: 12px;
+  color: var(--pt-muted, rgba(255, 255, 255, 0.6));
+  margin-top: 4px;
+}
+.mc-login-input {
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--pt-line, rgba(255, 255, 255, 0.14));
+  color: inherit;
+  font: inherit;
+  font-size: 15px;
+}
+.mc-login-input:focus {
+  outline: none;
+  border-color: var(--pt-neon, #00d4ff);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pt-neon, #00d4ff) 25%, transparent);
+}
+.mc-login-btn {
+  margin-top: 8px;
+  padding: 11px 14px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: linear-gradient(135deg, var(--pt-neon, #00d4ff), color-mix(in srgb, var(--pt-neon, #00d4ff) 55%, #7b2ff7));
+  color: #07080b;
+  font-weight: 600;
+  cursor: pointer;
+}
+.mc-login-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.mc-login-btn-ghost {
+  background: transparent;
+  border-color: var(--pt-line, rgba(255, 255, 255, 0.14));
+  color: var(--pt-muted, rgba(255, 255, 255, 0.7));
+}
+.mc-login-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mc-login-error {
+  color: #ff6b6b;
+  font-size: 13px;
+}
+.mc-login-muted {
+  color: var(--pt-muted, rgba(255, 255, 255, 0.55));
+  font-size: 13px;
+}

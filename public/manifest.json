@@ -2,8 +2,14 @@
   "name": "F.R.I.D.A.Y. · Mission Control",
   "short_name": "F.R.I.D.A.Y.",
   "description": "Framework for Running Intelligent Deployed Agents — local-first agent dashboard",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
   "background_color": "#07080b",
   "theme_color": "#07080b",
   "orientation": "any",

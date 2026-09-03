@@ -20,6 +20,7 @@ import { Icon } from '@/components/icons'
 import { Markdown } from '@/components/Markdown'
 import { cleanTitle, dayBucket, isJunk, sourceGlyph, type DayBucket } from '@/lib/conv-format'
 import { ChatIntel } from '@/components/views/ChatIntel'
+import LiveChatMirror from '@/components/LiveChatMirror'
 import type { ConversationStats } from '@/lib/conversations'
 import '../app/vf/v1-lane.css'
 
@@ -255,6 +256,17 @@ export default function ChatConsole() {
   const [showNew, setShowNew] = useState(false)
   const [newProfile, setNewProfile] = useState('jarvis')
   const [newDevice, setNewDevice] = useState('')
+
+  /* Deep-link support: /chat?profile=<name> (from the Bots roster's ENGAGE
+     action) pre-filters the list AND presets the NEW composer to that bot.
+     Read once on mount; afterwards the user's own filter choices win. */
+  useEffect(() => {
+    const preset = new URLSearchParams(window.location.search).get('profile')
+    if (preset) {
+      setFilterProfile(preset)
+      setNewProfile(preset)
+    }
+  }, [])
 
   const [cursor, setCursor] = useState(-1)
   /* Bumped after a send so the list effect re-runs and picks up the new
@@ -605,6 +617,13 @@ export default function ChatConsole() {
               )
             })}
           </div>
+
+          {/* LIVE MIRROR — ongoing desktop chats, streamed in real time.
+              Click a row for the inline thread; ⇱ jumps to the console view. */}
+          <LiveChatMirror
+            localDevice={devices.find(d => d.isLocal)?.name ?? 'local'}
+            onOpen={c => { setShowNew(false); void openThread(c) }}
+          />
 
           {/* Filters are ALWAYS mounted. They used to be gated on a filter
               already being set, which made them unreachable: the only controls

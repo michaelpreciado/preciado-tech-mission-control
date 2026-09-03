@@ -65,6 +65,8 @@ export interface FridayServices {
   ollamaUrl: string
   /** Local OpenAI-compatible server (LM Studio / LLMster) probe URL. */
   llmsterUrl: string
+  /** Cloud-relay upstream (home MC instance) for the /api/upstream/* passthrough ('' = relay disabled). */
+  apiRelayBase: string
 }
 
 export interface FridayAppearance {
@@ -244,6 +246,7 @@ function buildConfig(): FridayConfig {
       openclawGatewayUrl: str(env.FRIDAY_OPENCLAW_URL, str(s.openclawGatewayUrl, 'http://127.0.0.1:18789/')),
       ollamaUrl: str(env.FRIDAY_OLLAMA_URL, str(s.ollamaUrl, 'http://127.0.0.1:11434/api/version')),
       llmsterUrl: str(env.FRIDAY_LLMSTER_URL, str(s.llmsterUrl, 'http://127.0.0.1:1234/v1/models')),
+      apiRelayBase: str(env.API_RELAY_BASE, str(s.apiRelayBase, '')),
     },
     keys: {
       openrouterApiKey: str(env.OPENROUTER_API_KEY, str(file.keys?.openrouterApiKey, '')),
