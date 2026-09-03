@@ -28,6 +28,8 @@ const nextConfig: NextConfig = {
   redirects: async () => [
     // /team was removed — the Bots page supersedes it. Land stale bookmarks somewhere real.
     { source: '/team', destination: '/bots', permanent: true },
+    // /ml-content was renamed to /content-creation — keep old links/bookmarks working.
+    { source: '/ml-content', destination: '/content-creation', permanent: true },
   ],
   headers: async () => [
     {
