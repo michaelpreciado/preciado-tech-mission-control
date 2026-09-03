@@ -11,6 +11,7 @@ import {
   DAILY_WINDOW_DAYS, HEATMAP_WINDOW_DAYS, type FileAggregate, type UsageRecord,
 } from './costs-aggregate'
 import { type ThroughputSample } from './ollama-throughput'
+import { collectHermesUsage } from './hermes-usage'
 
 async function resolveOpenRouterKey(): Promise<string | null> {
   if (process.env.OPENROUTER_API_KEY) return process.env.OPENROUTER_API_KEY
@@ -194,6 +195,16 @@ export async function collectCosts(): Promise<CostDashboard> {
   // Drop cache entries for files that were deleted or rotated away.
   for (const key of fileCache.keys()) if (!live.has(key)) fileCache.delete(key)
   if (reparsed) logger.info('costs', `parsed ${reparsed}/${files.length} session files (rest cached)`)
+
+  // ── Hermes sessions (SQLite profile stores) ─────────────────────────────
+  // The OpenClaw walk above only covers sessions run through OpenClaw agents.
+  // Hermes (gateway/telegram/cron/kanban dispatches) records usage in
+  // per-profile SQLite `sessions` tables — merged into the same record set so
+  // every downstream figure (modes, billing, local-vs-API, cost-avoided)
+  // includes it. Records are keyed `hermes:<session>` and dedup on re-read.
+  for (const rec of collectHermesUsage()) {
+    records.set(`hermes:${rec.timestamp}:${rec.provider}::${rec.model}:${rec.input}:${rec.output}`, rec)
+  }
 
   const { byModel, byDay } = foldRecords(records)
   const throughputSamples = [...sampleMap.values()]

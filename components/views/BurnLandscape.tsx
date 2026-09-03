@@ -1,20 +1,19 @@
 'use client'
 
 /**
- * BurnLandscape — daily token burn as an AXONOMETRIC (isometric) bar landscape.
+ * BurnLandscape — daily token burn, LAST 14 DAYS, as a 2D stacked bar chart.
  *
- * Why not the perspective 3D canvas this replaces: perspective foreshortens.
- * A column near the camera renders taller than an identical column at the back,
- * so the encoding contradicts the data, and a slow auto-orbit meant no bar ever
- * held a stable position long enough to compare against its neighbour. There
- * were also no axes, no ticks and no labels — nothing on screen let you read a
- * value off it.
- *
- * Axonometric projection has no vanishing point: parallel lines stay parallel
- * and a unit of height is the same number of pixels everywhere on the plot. So
- * the landscape look survives while heights become genuinely comparable, and
- * with a value axis, gridlines and per-day labels the chart can actually be
- * read. Pure SVG — no WebGL, no three.js, no canvas, and it renders in SSR.
+ * History: this was an axonometric (isometric) SVG "landscape" — visually
+ * distinct, but the 3D rake made day-over-day comparison and value reads
+ * slower than a flat chart, and Michael asked for simple-and-readable over
+ * clever (2026-09-01). The 2D rewrite keeps everything that mattered:
+ *   - calendar-true 14-day window (a sparse slice used to stretch it)
+ *   - per-mode segmentation in fixed SEG_ORDER, never summed across modes
+ *   - "nice" axis ticks that round UP past the max (no bar escaping its scale)
+ *   - zero days rendered as flat markers, not silent gaps
+ *   - hover readout that never reflows the chart
+ * Colors are the shared CATEGORICAL palette (lib/chart-colors) so the chart
+ * reads as part of Mission Control, not a one-off.
  */
 
 import { useMemo, useState } from 'react'
@@ -22,49 +21,15 @@ import { CATEGORICAL } from '@/lib/chart-colors'
 import type { CostDashboard, BillingMode } from '@/lib/types'
 import { billingMode } from '@/lib/collectors/costs-usage'
 
-/* Projection — anisotropic axonometric: the two ground axes get DIFFERENT
-   angles. True 30/30 isometric sends a 14-column row marching steeply down the
-   frame, which wastes most of the canvas on empty diagonal and drives the date
-   labels into the tiles. A shallow rake on the day axis keeps the row close to
-   horizontal (compact, labels sit flat beneath their column) while the deeper
-   z angle still gives each bar a readable top and side.
-
-   This is still a PARALLEL projection: no vanishing point, no foreshortening,
-   so equal heights remain equal pixels anywhere in the plot. That property is
-   the whole reason for the chart's existence and survives the change. */
-const DAY_A = (8 * Math.PI) / 180    // rake of the day axis
-const DEPTH_A = (34 * Math.PI) / 180 // depth axis
-const DX = Math.cos(DAY_A), DY = Math.sin(DAY_A)
-const ZX = Math.cos(DEPTH_A), ZY = Math.sin(DEPTH_A)
-
-/** World → screen. y is the value axis and the ONLY thing whose contribution to
- *  the vertical encodes magnitude. */
-function project(x: number, y: number, z: number): [number, number] {
-  return [x * DX - z * ZX, x * DY + z * ZY - y]
-}
-
 const SEG_ORDER: BillingMode[] = ['metered', 'subscription', 'local', 'cloud-routed']
 const SEG_COLOR: Record<BillingMode, string> = {
-  metered: CATEGORICAL[0],
-  subscription: CATEGORICAL[3],
-  local: CATEGORICAL[2],
-  'cloud-routed': CATEGORICAL[5],
+  metered: CATEGORICAL[0],        // blue — brand accent
+  subscription: CATEGORICAL[3],   // violet
+  local: CATEGORICAL[2],          // lime
+  'cloud-routed': CATEGORICAL[5], // orange
 }
 const SEG_LABEL: Record<BillingMode, string> = {
   metered: 'METERED', subscription: 'SUBSCRIPTION', local: 'LOCAL', 'cloud-routed': 'CLOUD-ROUTED',
-}
-
-/* Face shading. A single hue per series, three fixed lightnesses — the light
-   direction is constant, so brightness reads as orientation and never as a
-   fourth data dimension. */
-const FACE = { top: 1, right: 0.72, left: 0.48 }
-
-function shade(hex: string, k: number): string {
-  const n = parseInt(hex.slice(1), 16)
-  const r = Math.round(((n >> 16) & 255) * k)
-  const g = Math.round(((n >> 8) & 255) * k)
-  const b = Math.round((n & 255) * k)
-  return `rgb(${r},${g},${b})`
 }
 
 function tok(n: number): string {
@@ -74,14 +39,9 @@ function tok(n: number): string {
   return String(n)
 }
 
-/**
- * "Nice" axis ticks — 1/2/5 × 10ⁿ, so labels land on round numbers.
- *
- * The top tick is rounded UP past the maximum, never to the last step that
- * still fits under it. Stopping at the largest tick <= max let a 301M day sit
- * above a 300M axis: the tallest bar escaped its own scale and touched the top
- * gridline, which is both wrong and unreadable.
- */
+/** "Nice" axis ticks — 1/2/5 × 10ⁿ, top tick rounds UP past the max so the
+ *  tallest bar can never escape its own scale. (Unit-tested semantics kept
+ *  from the axonometric version.) */
 function ticks(max: number, count = 4): number[] {
   if (max <= 0) return [0, 1]
   const raw = max / count
@@ -96,10 +56,6 @@ function ticks(max: number, count = 4): number[] {
 type Day = { date: string; segs: Record<BillingMode, number>; total: number }
 
 const DAYS = 14
-const COL_W = 1.05     // footprint width  (x)
-const COL_D = 0.85     // footprint depth  (z)
-const PITCH = 1.5      // spacing between column centres along x
-const H = 5.6          // world height of the tallest column
 
 export default function BurnLandscape({ costs }: { costs: CostDashboard }) {
   const [hover, setHover] = useState<number | null>(null)
@@ -134,110 +90,56 @@ export default function BurnLandscape({ costs }: { costs: CostDashboard }) {
   const max = Math.max(...days.map(d => d.total), 1)
   const axis = ticks(max)
   const axisMax = axis[axis.length - 1]
-  const scale = H / axisMax
-  const present = SEG_ORDER.filter(k => days.some(d => d.segs[k] > 0))
-
-  // Project every extreme point so the viewBox fits the plot exactly rather
-  // than relying on hand-tuned padding that breaks at other aspect ratios.
-  const xs: number[] = [], ys: number[] = []
-  const X1 = (DAYS - 1) * PITCH + COL_W
-  for (const bx of [-0.4, X1 + 0.4]) for (const by of [0, H]) for (const bz of [0, COL_D]) {
-    const [px, py] = project(bx, by, bz); xs.push(px); ys.push(py)
-  }
-  const PAD_L = 3.0, PAD_R = 0.6, PAD_T = 0.4, PAD_B = 2.0
-  const minX = Math.min(...xs) - PAD_L, maxX = Math.max(...xs) + PAD_R
-  const minY = Math.min(...ys) - PAD_T, maxY = Math.max(...ys) + PAD_B
-
-  const poly = (pts: [number, number][]) => pts.map(([a, b]) => `${a.toFixed(3)},${b.toFixed(3)}`).join(' ')
-
-  /** The three visible faces of one box. Hidden faces are never emitted, so the
-   *  SVG carries no geometry the viewer cannot see. */
-  function box(x: number, y0: number, y1: number, color: string, dim: boolean, key: string) {
-    const x1 = x + COL_W, z1 = COL_D
-    const p = (a: number, b: number, c: number) => project(a, b, c)
-    const o = dim ? 0.32 : 1
-    return (
-      <g key={key} opacity={o}>
-        {/* left face (z = z1) */}
-        <polygon points={poly([p(x, y0, z1), p(x, y1, z1), p(x1, y1, z1), p(x1, y0, z1)])}
-          fill={shade(color, FACE.left)} />
-        {/* right face (x = x1) */}
-        <polygon points={poly([p(x1, y0, z1), p(x1, y1, z1), p(x1, y1, 0), p(x1, y0, 0)])}
-          fill={shade(color, FACE.right)} />
-        {/* top face */}
-        <polygon points={poly([p(x, y1, z1), p(x, y1, 0), p(x1, y1, 0), p(x1, y1, z1)])}
-          fill={shade(color, FACE.top)} />
-      </g>
-    )
-  }
 
   const hovered = hover != null ? days[hover] : null
 
   return (
-    <div className="cp-iso">
-      <svg viewBox={`${minX} ${minY} ${maxX - minX} ${maxY - minY}`} role="img"
+    <div className="cp-burn2d">
+      <svg viewBox="0 0 720 240" role="img"
         aria-label={`Daily token burn over the last ${DAYS} days, by billing mode`}>
-        {/* ── Ground plane ── */}
-        <polygon
-          points={poly([
-            project(-0.4, 0, 0), project((DAYS - 1) * PITCH + COL_W + 0.4, 0, 0),
-            project((DAYS - 1) * PITCH + COL_W + 0.4, 0, COL_D), project(-0.4, 0, COL_D),
-          ])}
-          fill="rgba(255,255,255,0.028)" stroke="var(--pt-border-dim)" strokeWidth={0.018} />
-
-        {/* ── Value gridlines + ticks, drawn on the back edge (z = 0) so they
-             never cross in front of a column and misread as data. ── */}
+        {/* ── Horizontal gridlines + value ticks ── */}
         {axis.map(v => {
-          const y = v * scale
-          const [ax, ay] = project(-0.4, y, 0)
-          const [bx, by] = project((DAYS - 1) * PITCH + COL_W + 0.4, y, 0)
+          const y = 210 - (v / axisMax) * 190
           return (
             <g key={v}>
-              <line x1={ax} y1={ay} x2={bx} y2={by}
-                stroke="var(--pt-border-dim)" strokeWidth={0.016}
-                strokeDasharray={v === 0 ? undefined : '0.09 0.11'} />
-              <text x={ax - 0.22} y={ay + 0.13} textAnchor="end" className="cp-iso-tick">{tok(v)}</text>
+              <line x1={44} y1={y} x2={706} y2={y}
+                stroke="var(--pt-border-dim)" strokeWidth={1}
+                strokeDasharray={v === 0 ? undefined : '2 4'} />
+              <text x={38} y={y + 3} textAnchor="end" className="cp-burn2d-tick">{tok(v)}</text>
             </g>
           )
         })}
 
-        {/* ── Columns, painted back-to-front so nearer bars overlap farther ones ── */}
+        {/* ── Bars: stacked by mode in SEG_ORDER, back-to-front = bottom-to-top ── */}
         {days.map((d, i) => {
-          const x = i * PITCH
+          const x = 48 + i * 46
           const dim = hover !== null && hover !== i
-          let y = 0
-          const parts = SEG_ORDER.filter(k => d.segs[k] > 0).map(k => {
-            const h = d.segs[k] * scale
-            const el = box(x, y, y + h, SEG_COLOR[k], dim, `${d.date}-${k}`)
-            y += h
-            return el
+          const w = 30
+          let y = 210
+          const rects = SEG_ORDER.filter(k => d.segs[k] > 0).map(k => {
+            const h = (d.segs[k] / axisMax) * 190
+            y -= h
+            return <rect key={k} x={x} y={y} width={w} height={Math.max(h, 0.5)}
+              fill={SEG_COLOR[k]} opacity={dim ? 0.28 : 1} rx={1.5} />
           })
-          const [hx] = project(x + COL_W / 2, 0, COL_D / 2)
           return (
             <g key={d.date} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)} style={{ cursor: 'crosshair' }}>
-              {/* Zero days get a flat marker: an absent column and a day with no
-                  logged activity must not look like the same thing. */}
+              {/* Zero days: flat marker, never a silent gap */}
               {d.total === 0 && (
-                <polygon points={poly([project(x, 0, COL_D), project(x, 0, 0), project(x + COL_W, 0, 0), project(x + COL_W, 0, COL_D)])}
-                  fill="rgba(255,255,255,0.05)" stroke="var(--pt-border-dim)" strokeWidth={0.014} opacity={dim ? 0.3 : 1} />
+                <rect x={x} y={209} width={w} height={2} fill="rgba(255,255,255,0.12)"
+                  stroke="var(--pt-border-dim)" strokeWidth={0.5} opacity={dim ? 0.3 : 1} rx={1} />
               )}
-              {parts}
-              {/* Invisible hit target so thin/zero columns are still hoverable. */}
-              <polygon points={poly([project(x, 0, COL_D), project(x, H, COL_D), project(x + COL_W, H, 0), project(x + COL_W, 0, 0)])}
-                fill="transparent" />
-              {/* Dates sit on ONE flat baseline rather than following the
-                  ground rake: raked labels drift apart vertically, collide with
-                  their neighbours, and stop reading as a shared axis. */}
-              <text x={hx} y={maxY - 0.55} textAnchor="middle"
-                className={`cp-iso-day${hover === i ? ' is-on' : ''}`}>{d.date.slice(5)}</text>
-              <line x1={hx} y1={maxY - 1.02} x2={hx} y2={maxY - 0.86}
-                stroke="var(--pt-border-dim)" strokeWidth={0.016} />
+              {rects}
+              {/* Full-height hit target so thin/zero columns stay hoverable */}
+              <rect x={x - 4} y={12} width={w + 8} height={200} fill="transparent" />
+              <text x={x + w / 2} y={224} textAnchor="middle"
+                className={`cp-burn2d-day${hover === i ? ' is-on' : ''}`}>{d.date.slice(5)}</text>
             </g>
           )
         })}
       </svg>
 
-      {/* ── Readout. Fixed height so hovering never reflows the chart. ── */}
+      {/* ── Readout. Reserved height — hover must not reflow the chart. ── */}
       <div className="cp-iso-readout">
         {hovered ? (
           <>
@@ -250,15 +152,15 @@ export default function BurnLandscape({ costs }: { costs: CostDashboard }) {
             ))}
           </>
         ) : (
-          <span className="cp-iso-hint">hover a column for that day&apos;s split · axis in tokens processed</span>
+          <span className="cp-iso-hint">hover a bar for that day&apos;s split · axis in tokens processed</span>
         )}
       </div>
 
       <div className="cp-iso-legend">
-        {present.map(k => (
+        {SEG_ORDER.filter(k => days.some(d => d.segs[k] > 0)).map(k => (
           <span key={k}><i style={{ background: SEG_COLOR[k] }} />{SEG_LABEL[k]}</span>
         ))}
-        <span className="cp-iso-proj">AXONOMETRIC · EQUAL HEIGHTS READ EQUAL AT ANY POSITION</span>
+        <span className="cp-iso-proj">2D STACKED · TOKENS PROCESSED PER DAY</span>
       </div>
     </div>
   )

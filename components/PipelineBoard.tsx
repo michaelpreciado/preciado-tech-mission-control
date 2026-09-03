@@ -108,6 +108,12 @@ function LeadCard({ lead, liveNote }: { lead: PipelineLead; liveNote?: string })
           {lead.playStoreUrl && <a className="mc-pipe-link" href={lead.playStoreUrl} target="_blank" rel="noreferrer">play store ↗</a>}
         </div>
       )}
+      {(lead.extraData?.preview_url || lead.extraData?.previewUrl) && (
+        <div className="mc-pipe-row" style={{ display: 'flex', gap: '.5rem', margin: '.4rem 0' }}>
+          <a className="mc-pipe-preview" href={lead.extraData?.preview_url || lead.extraData?.previewUrl} target="_blank" rel="noreferrer"
+             style={{ flex: 1, textAlign: 'center' }}>▶ VIEW PREVIEW</a>
+        </div>
+      )}
 
       {lead.stage === 'social_scraped' && <SocialLinks lead={lead} />}
       {lead.stage === 'concept_ready' && lead.concept && (
@@ -124,7 +130,11 @@ function LeadCard({ lead, liveNote }: { lead: PipelineLead; liveNote?: string })
       {lead.stage === 'completed' && <CompletedState lead={lead} />}
 
       {Object.entries(lead.extraData ?? {}).slice(0, 3).map(([k, v]) => (
-        <div key={k} className="mc-pipe-row dim">{k.replace(/_/g, ' ')}: {v}</div>
+        <div key={k} className="mc-pipe-row dim">{k.replace(/_/g, ' ')}: {
+          typeof v === 'string' && /^https?:\/\//.test(v)
+            ? <a className="mc-pipe-link" href={v} target="_blank" rel="noreferrer">{v.replace(/^https?:\/\//, '').replace(/\/$/, '').slice(0, 42)}{v.length > 42 ? '…' : ''}</a>
+            : String(v)
+        }</div>
       ))}
       <div className="mc-pipe-when">{lead.updatedAt ? fmtDate(lead.updatedAt) : ''}</div>
     </div>

@@ -99,7 +99,12 @@ async function hermesGatewayHealth(): Promise<ServiceHealth> {
 
 async function fileHealth(f: { id: string; name: string; file: string; staleAfterMin: number | null }): Promise<ServiceHealth> {
   try {
-    const st = await fs.stat(f.file)
+    // WAL-mode SQLite (e.g. kanban.db): writes land in -wal and only checkpoint
+    // into the main .db later, so the main file's mtime can lag days behind
+    // real activity. Judge freshness by the freshest of db/-wal/-shm.
+    const candidates = [f.file, `${f.file}-wal`, `${f.file}-shm`]
+    const mtimes = await Promise.all(candidates.map(p => fs.stat(p).then(s => s.mtimeMs).catch(() => 0)))
+    const st = { mtimeMs: Math.max(...mtimes) }
     const min = ageMinutes(st.mtimeMs)
     const stale = f.staleAfterMin !== null && min > f.staleAfterMin
     return {
