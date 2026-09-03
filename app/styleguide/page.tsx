@@ -13,12 +13,13 @@ import {
   designTokens, SEMANTIC, CATEGORICAL, FONT, TYPE_SCALE, SPACING,
   RADIUS, GLOW, MOTION, DENSITY, ACCENT_DEFAULT,
 } from '@/lib/tokens'
+import '../vf/v3-lane.css'
 
 /* ---------- specimen helpers ---------- */
 
 function Swatch({ name, color, ink }: { name: string; color: string; ink?: string }) {
   return (
-    <div className="sg-swatch" style={{ background: color, color: ink ?? '#0a020c' }}>
+    <div className="sg-swatch" style={{ background: color, color: ink ?? '#07080b' }}>
       <span className="sg-swatch-name">{name}</span>
       <span className="sg-swatch-hex">{color}</span>
     </div>
@@ -113,6 +114,9 @@ function TypeRoleSpecimens() {
       <VariantCard title="type · ui (Inter sans) — all prose & card content">
         <p className="sg-prose">This is body copy rendered in the UI sans. Long-form prose, card descriptions, and readable content all live here — never in uppercase mono. It reads soft against the phosphor labels above it.</p>
       </VariantCard>
+      <VariantCard title="type · jp accent (Noto Sans JP) — eyebrow kickers only, 1–2 per view, never prose">
+        <div className="sg-jp">記憶 · 制作 · 設定<small>--mc-font-jp — cyberpunk flavour tag, no letter-spacing on kanji</small></div>
+      </VariantCard>
     </div>
   )
 }
@@ -155,6 +159,7 @@ export default function StyleGuide() {
   return (
     <div className="sg">
       <SectionHead label="DESIGN SYSTEM / STYLEGUIDE" post={<span className="sg-count">source: lib/tokens.ts</span>} />
+      <div className="v3-kicker"><span className="jp">設計</span> matrix-glass-blue · source of truth</div>
 
       <Section id="sg-color" label="COLOR · SEMANTIC + ONE ACCENT">
         <p className="sg-desc">One accent + four semantic states. Red is always semantic — never decorative. All four resolve through lib/tokens.ts.</p>
@@ -185,6 +190,7 @@ export default function StyleGuide() {
         <div className="sg-rows">
           <TokenRow k="--pt-font-sans (prose)" v="Inter (loaded via next/font)" />
           <TokenRow k="--pt-font-mono / display" v={FONT.mono} />
+          <TokenRow k="--mc-font-jp (accent)" v="Noto Sans JP 400/700 (loaded via next/font) — eyebrow kickers only" />
         </div>
       </Section>
 
