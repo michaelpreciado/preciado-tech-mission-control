@@ -14,6 +14,7 @@ import { useLiveData } from './LiveDataProvider'
 import { useUiSettings } from './ui-settings'
 import { SectionHead, SkeletonPanel, fmtDate } from './ui'
 import { Sparkline } from './Sparkline'
+import { CoreHalo } from './views/CoreHalo'
 import dynamic from 'next/dynamic'
 import type { MissionTask } from '@/lib/types'
 import '../app/vf/v1-lane.css'
@@ -314,8 +315,11 @@ export function HomeDeck() {
       {/* 3 · What is live */}
       <div className="mc-home-corewrap">
         <div className="mc-home-coreorb-holder">
-          {/* Off (Setup → UI CUSTOMIZATION): pure ambient decoration, so the
-              holder's own gradient/border frame stands alone — no data is lost. */}
+          {/* CoreHalo is the always-on CSS command-core motif — it makes the
+              frame a real instrument. The 3D globe layers on top of it.
+              Off (Setup → UI CUSTOMIZATION): the holder still reads as a
+              live core, just without the point cloud — no data is lost. */}
+          <CoreHalo />
           {elements3d.homeGlobe && <CoreOrb3D />}
         </div>
         <div className="mc-home-corebody">

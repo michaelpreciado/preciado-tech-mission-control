@@ -1,0 +1,175 @@
+/*
+ * v1-core.css — Home command-core motif (CoreHalo).
+ *
+ * Same contract as v1-lane.css (DESIGN-SPEC §6): additive, scoped under
+ * `.mc-main`, and every colour resolves through the --mc-* / --pt-* tokens
+ * V0 guarantees. No new hex — the lane-scoped --v1-halo-* tokens below only
+ * re-point at existing accent-family tokens.
+ *
+ * All motion is compositor-only (transform / opacity). Static frame under
+ * prefers-reduced-motion or the app motion toggle (.is-static); animations
+ * park via animation-play-state when the tab is hidden (.is-paused).
+ */
+
+.mc-main .v1-corehalo {
+  /* idle = dim, deep accent; active = energetic, bright accent */
+  --v1-halo-rgb: var(--mc-neon-rgb);
+  --v1-halo-dim: var(--mc-neon-deep);
+  --v1-halo-hot: var(--mc-neon-bright);
+  --v1-halo-edge: var(--v1-halo-dim);
+  --v1-halo-sweep-dur: 13s;
+  --v1-halo-core-glow: 0 0 10px rgba(var(--v1-halo-rgb), 0.35);
+
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+  color: var(--v1-halo-edge);
+  transition: color 900ms ease;
+}
+
+/* keep the 3D globe painting above the CSS motif (halo is a positioned
+   child; the canvas wrapper is static and would otherwise sit under it) */
+.mc-main .mc-home-coreorb-holder .mc-coreorb {
+  position: relative;
+  z-index: 1;
+}
+
+.mc-main .v1-corehalo[data-active] {
+  --v1-halo-edge: var(--v1-halo-hot);
+  --v1-halo-sweep-dur: 5.5s;
+  --v1-halo-core-glow:
+    0 0 8px rgba(var(--v1-halo-rgb), 0.6),
+    0 0 22px rgba(var(--v1-halo-rgb), 0.4);
+}
+
+/* stacked, centred layers — kept to a fixed scope so it reads the same on
+   the 640px single-column fallback where the holder is shorter */
+.mc-main .v1-corehalo > span {
+  position: absolute;
+  border-radius: 50%;
+}
+
+/* faint field grid — static, no motion */
+.mc-main .v1-corehalo-grid {
+  width: 150px;
+  height: 150px;
+  border-radius: 0;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 15px, rgba(var(--v1-halo-rgb), 0.05) 15px 16px),
+    repeating-linear-gradient(90deg, transparent 0 15px, rgba(var(--v1-halo-rgb), 0.05) 15px 16px);
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 38%, transparent 72%);
+  mask-image: radial-gradient(circle at 50% 50%, #000 38%, transparent 72%);
+  opacity: 0.7;
+}
+
+/* concentric radar pings */
+.mc-main .v1-corehalo-ring {
+  width: 118px;
+  height: 118px;
+  border: 1px solid currentColor;
+  opacity: 0;
+  transform: scale(0.32);
+  animation: v1-halo-ping 5.4s cubic-bezier(0.16, 0.7, 0.3, 1) infinite;
+}
+.mc-main .v1-corehalo-ring:nth-of-type(3) { animation-delay: -1.8s; }
+.mc-main .v1-corehalo-ring:nth-of-type(4) { animation-delay: -3.6s; }
+
+@keyframes v1-halo-ping {
+  0%   { opacity: 0;    transform: scale(0.3); }
+  12%  { opacity: 0.55; }
+  70%  { opacity: 0.06; }
+  100% { opacity: 0;    transform: scale(1); }
+}
+
+/* slow conic sweep — the sonar arm */
+.mc-main .v1-corehalo-sweep {
+  width: 120px;
+  height: 120px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(var(--v1-halo-rgb), 0.02) 40deg,
+    rgba(var(--v1-halo-rgb), 0.22) 88deg,
+    rgba(var(--v1-halo-rgb), 0.02) 92deg,
+    transparent 120deg,
+    transparent 360deg
+  );
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 14px, #000 15px, #000 58px, transparent 60px);
+  mask-image: radial-gradient(circle at 50% 50%, transparent 14px, #000 15px, #000 58px, transparent 60px);
+  animation: v1-halo-spin var(--v1-halo-sweep-dur) linear infinite;
+}
+@keyframes v1-halo-spin { to { transform: rotate(360deg); } }
+
+/* breathing centre */
+.mc-main .v1-corehalo-core {
+  width: 14px;
+  height: 14px;
+  background: radial-gradient(circle at 50% 45%,
+    rgba(var(--v1-halo-rgb), 0.95),
+    rgba(var(--v1-halo-rgb), 0.35) 60%,
+    transparent 72%);
+  box-shadow: var(--v1-halo-core-glow);
+  animation: v1-halo-breathe 3.4s ease-in-out infinite;
+}
+@keyframes v1-halo-breathe {
+  0%, 100% { transform: scale(0.82); opacity: 0.72; }
+  50%      { transform: scale(1.12); opacity: 1; }
+}
+
+/* drifting scanline */
+.mc-main .v1-corehalo-scan {
+  width: 132px;
+  height: 1px;
+  border-radius: 0;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(var(--v1-halo-rgb), 0.35) 20%,
+    rgba(var(--v1-halo-rgb), 0.5) 50%,
+    rgba(var(--v1-halo-rgb), 0.35) 80%,
+    transparent);
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 40%, transparent 78%);
+  mask-image: radial-gradient(circle at 50% 50%, #000 40%, transparent 78%);
+  animation: v1-halo-scan 4.2s ease-in-out infinite;
+}
+@keyframes v1-halo-scan {
+  0%, 100% { transform: translateY(-52px); opacity: 0; }
+  12%, 88% { opacity: 1; }
+  50%      { transform: translateY(52px); }
+}
+
+/* tab hidden — freeze every layer, no main-thread cost */
+.mc-main .v1-corehalo.is-paused * { animation-play-state: paused; }
+
+/* app motion toggle (reduced / off) or OS reduced-motion → static frame */
+.mc-main .v1-corehalo.is-static .v1-corehalo-ring,
+.mc-main .v1-corehalo.is-static .v1-corehalo-sweep,
+.mc-main .v1-corehalo.is-static .v1-corehalo-core,
+.mc-main .v1-corehalo.is-static .v1-corehalo-scan {
+  animation: none;
+}
+.mc-main .v1-corehalo.is-static .v1-corehalo-ring {
+  opacity: 0.18;
+  transform: scale(1);
+}
+.mc-main .v1-corehalo.is-static .v1-corehalo-ring:nth-of-type(3) { transform: scale(0.68); }
+.mc-main .v1-corehalo.is-static .v1-corehalo-ring:nth-of-type(4) { transform: scale(0.4); }
+.mc-main .v1-corehalo.is-static .v1-corehalo-core { transform: scale(1); opacity: 1; }
+.mc-main .v1-corehalo.is-static .v1-corehalo-scan { opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mc-main .v1-corehalo-ring,
+  .mc-main .v1-corehalo-sweep,
+  .mc-main .v1-corehalo-core,
+  .mc-main .v1-corehalo-scan {
+    animation: none;
+  }
+  .mc-main .v1-corehalo-ring { opacity: 0.18; transform: scale(1); }
+  .mc-main .v1-corehalo-ring:nth-of-type(3) { transform: scale(0.68); }
+  .mc-main .v1-corehalo-ring:nth-of-type(4) { transform: scale(0.4); }
+  .mc-main .v1-corehalo-core { transform: scale(1); opacity: 1; }
+  .mc-main .v1-corehalo-scan { opacity: 0; }
+}
