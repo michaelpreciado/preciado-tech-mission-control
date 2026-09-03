@@ -92,6 +92,8 @@ export type MemoryGraphNode = {
   kind: 'note' | 'tag'
   excerpt?: string
   updatedAt?: string
+  /** Vault-relative note path (posix, no `.md`) for `obsidian://open` deep links — note nodes only. */
+  path?: string
   /** True when the note has neither an outgoing/incoming link nor a tag. */
   isolated: boolean
   /** Tag nodes only: how many notes carry this tag. */
@@ -109,6 +111,8 @@ export type MemoryGraph = {
   edges: MemoryGraphEdge[]
   totalNotes: number
   connectedNotes: number
+  /** Obsidian vault name (folder basename) for `obsidian://open` deep links. */
+  vaultName?: string
 }
 
 export type GitHubRepoSignal = {
@@ -630,6 +634,10 @@ export type TickTickTask = {
   status?: number
   priority?: number
   projectName?: string
+  /** Project id from TickTick `/project` — used to key color dots. */
+  projectId?: string
+  /** Project hex color from TickTick `/project` (e.g. "#F5347E"). */
+  projectColor?: string
 }
 
 /* ── Live agent activity (office floor) ───────────────── */

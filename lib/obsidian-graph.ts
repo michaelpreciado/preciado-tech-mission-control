@@ -316,6 +316,7 @@ export function buildGraph(notes: ParsedNote[]): BuiltGraph {
     kind: 'note',
     excerpt: n.excerpt,
     updatedAt: n.updatedAt,
+    path: n.id,
     isolated: (degree.get(n.id) ?? 0) === 0,
   }))
   for (const [tag, count] of tagNoteCounts) {

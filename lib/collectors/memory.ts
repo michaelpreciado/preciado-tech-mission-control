@@ -47,5 +47,5 @@ export async function collectMemoryGraph(): Promise<MemoryGraph> {
     const stat = await fs.stat(file).catch(() => null)
     notes.push(parseNote(relPath, text, stat?.mtime.toISOString()))
   }
-  return buildGraph(notes)
+  return { ...buildGraph(notes), vaultName: path.basename(vaultRoot) }
 }

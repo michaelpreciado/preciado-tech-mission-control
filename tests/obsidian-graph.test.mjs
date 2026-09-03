@@ -229,6 +229,9 @@ test('buildGraph creates note nodes, link edges, and tag hub nodes', () => {
   assert.equal(untouched.isolated, true)
   const identity = graph.nodes.find(n => n.id === '100 Memory System/Identity')
   assert.equal(identity.isolated, false)
+  // Note nodes carry the vault-relative path (posix, no .md) for obsidian://open deep links.
+  assert.equal(identity.path, '100 Memory System/Identity')
+  for (const t of tagNodes) assert.equal(t.path, undefined)
 
   assert.equal(graph.totalNotes, 3)
   assert.equal(graph.connectedNotes, 2)

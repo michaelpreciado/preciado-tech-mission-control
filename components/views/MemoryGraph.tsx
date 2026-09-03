@@ -1,8 +1,10 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { forceSimulation, forceManyBody, forceLink, forceCenter, forceCollide, forceX, forceY } from 'd3-force'
 import type { SimulationNodeDatum } from 'd3-force'
+import { select } from 'd3-selection'
+import { zoom as d3Zoom, type ZoomTransform } from 'd3-zoom'
 import { Window, SkeletonPanel, EmptyTerminal, Clamp, Button, fmtDate } from '../ui'
 import { MemoryStream } from './MemoryStream'
 import { useUiSettings } from '../ui-settings'
@@ -65,6 +67,24 @@ export function MemoryGraphView() {
   const [search, setSearch] = useState('')
   const [activeTags, setActiveTags] = useState<string[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  // Pan + zoom state (d3-zoom). The transform is rendered on the inner
+  // <g class="mc-mem-zoom">, so node click coordinates keep working
+  // regardless of how far the user has panned/zoomed.
+  const svgRef = useRef<SVGSVGElement>(null)
+  const [zoomTransform, setZoomTransform] = useState<ZoomTransform | null>(null)
+
+  useEffect(() => {
+    const svg = svgRef.current
+    if (!svg || effectiveListView) return
+    const behavior = d3Zoom<SVGSVGElement, unknown>()
+      .scaleExtent([1, 4])
+      .on('zoom', (event: { transform: ZoomTransform }) => setZoomTransform(event.transform))
+      .on('dblclick.zoom', null)
+    select(svg).call(behavior)
+    return () => { select(svg).on('.zoom', null) }
+    // Wire once the graph svg actually exists (after first data load) and
+    // re-wire on view toggles; data polls keep the boolean stable.
+  }, [effectiveListView, data !== null])
 
   useEffect(() => {
     let cancelled = false
@@ -109,7 +129,11 @@ export function MemoryGraphView() {
     return searchOk && tagOk
   }
 
-  const selected = selectedId ? positioned.find(n => n.id === selectedId) ?? null : null
+  const selected = selectedId
+    ? positioned.find(n => n.id === selectedId)
+      ?? data?.nodes.find(n => n.id === selectedId)
+      ?? null
+    : null
   const neighborIds = useMemo(() => {
     if (!selected) return null
     const set = new Set<string>([selected.id])
@@ -123,6 +147,31 @@ export function MemoryGraphView() {
   }, [selected, links])
 
   const toggleTag = (tag: string) => setActiveTags(cur => cur.includes(tag) ? cur.filter(t => t !== tag) : [...cur, tag])
+
+  // Folder color legend — one swatch per unique top-level folder (matching
+  // the folderColor() hash the nodes themselves use), in note-count order.
+  const legendFolders = useMemo(() => {
+    if (!data) return []
+    const counts = new Map<string, { top: string; color: string; count: number }>()
+    for (const n of data.nodes) {
+      if (n.kind !== 'note') continue
+      const top = n.folder.split('/')[0] || '(root)'
+      const entry = counts.get(top)
+      if (entry) entry.count++
+      else counts.set(top, { top, color: folderColor(n.folder), count: 1 })
+    }
+    return [...counts.values()].sort((a, b) => b.count - a.count).slice(0, 12)
+  }, [data])
+
+  // RECENTLY UPDATED rail — top notes by updatedAt (fallback for the empty
+  // detail state; also used when a recent note isn't in the current layout).
+  const recentNotes = useMemo(() => {
+    if (!data) return []
+    return data.nodes
+      .filter(n => n.kind === 'note' && n.updatedAt)
+      .sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)))
+      .slice(0, 8)
+  }, [data])
 
   if (loadError) return <EmptyTerminal label="failed to load memory graph" />
   if (!data) return <SkeletonPanel label="loading vault graph" />
@@ -179,27 +228,42 @@ export function MemoryGraphView() {
       {effectiveListView ? (
         <MemoryStream />
       ) : (
-        <div className="mc-mem-body">
-          <div className="mc-mem-svg-wrap">
-            <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="mc-mem-svg" role="img" aria-label="Vault note graph">
-              <g className="mc-mem-edges">
-                {links.map((l, i) => {
-                  const s = typeof l.source === 'string' ? null : l.source
-                  const t = typeof l.target === 'string' ? null : l.target
-                  if (!s || !t) return null
-                  const dim = !matches(s) || !matches(t)
-                  const focusDim = neighborIds && (!neighborIds.has(s.id) || !neighborIds.has(t.id))
-                  return (
-                    <line
-                      key={i}
-                      x1={s.x} y1={s.y} x2={t.x} y2={t.y}
-                      className={`mc-mem-edge mc-mem-edge-${l.kind}`}
-                      opacity={dim || focusDim ? 0.08 : l.kind === 'tag' ? 0.22 : 0.4}
-                    />
-                  )
-                })}
-              </g>
-              <g className="mc-mem-nodes">
+        <>
+          {legendFolders.length > 0 && (
+            <div className="mc-mem-legend">
+              {legendFolders.map(({ top, color, count }) => (
+                <span key={top} className="mc-mem-legend-item">
+                  <svg className="mc-mem-legend-swatch" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+                    <circle cx="5" cy="5" r="5" fill={color} />
+                  </svg>
+                  <span className="mc-mem-legend-label">{top}</span>
+                  <span className="mc-mem-legend-count">{count}</span>
+                </span>
+              ))}
+            </div>
+          )}
+          <div className="mc-mem-body">
+            <div className="mc-mem-svg-wrap">
+              <svg ref={svgRef} viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="mc-mem-svg" role="img" aria-label="Vault note graph">
+                <g transform={zoomTransform ? zoomTransform.toString() : undefined}>
+                  <g className="mc-mem-edges">
+                    {links.map((l, i) => {
+                      const s = typeof l.source === 'string' ? null : l.source
+                      const t = typeof l.target === 'string' ? null : l.target
+                      if (!s || !t) return null
+                      const dim = !matches(s) || !matches(t)
+                      const focusDim = neighborIds && (!neighborIds.has(s.id) || !neighborIds.has(t.id))
+                      return (
+                        <line
+                          key={i}
+                          x1={s.x} y1={s.y} x2={t.x} y2={t.y}
+                          className={`mc-mem-edge mc-mem-edge-${l.kind}`}
+                          opacity={dim || focusDim ? 0.08 : l.kind === 'tag' ? 0.22 : 0.4}
+                        />
+                      )
+                    })}
+                  </g>
+                  <g className="mc-mem-nodes">
                 {positioned.map(n => {
                   const dim = !matches(n) || (neighborIds && !neighborIds.has(n.id))
                   const isTag = n.kind === 'tag'
@@ -243,9 +307,10 @@ export function MemoryGraphView() {
                     </g>
                   )
                 })}
-              </g>
-            </svg>
-          </div>
+                </g>
+                </g>
+              </svg>
+            </div>
 
           <div className="mc-mem-detail">
             {selected ? (
@@ -260,16 +325,45 @@ export function MemoryGraphView() {
                     {selected.tags.map(t => <span key={t} className="mc-task-tag">#{t}</span>)}
                   </div>
                 )}
+                {selected.kind === 'note' && selected.path && data.vaultName && (
+                  <a
+                    className="mc-mem-open"
+                    href={`obsidian://open?vault=${encodeURIComponent(data.vaultName)}&file=${encodeURIComponent(selected.path)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    OPEN IN OBSIDIAN ↗
+                  </a>
+                )}
                 {selected.excerpt
-                  ? <Clamp className="mc-mem-detail-excerpt" text={selected.excerpt} lines={6} label={selected.title} />
+                  ? <Clamp className="mc-mem-detail-excerpt" text={selected.excerpt} lines={20} label={selected.title} />
                   : selected.kind === 'tag' && <div className="mc-mem-detail-excerpt">{selected.noteCount} notes tagged #{selected.title.slice(1)}</div>}
                 <Button variant="ghost" onClick={() => setSelectedId(null)}>CLOSE</Button>
               </>
             ) : (
-              <div className="mc-mem-detail-empty">click a node to preview its excerpt</div>
+              <div className="mc-mem-detail-empty">
+                <div>click a node to preview its excerpt</div>
+                {recentNotes.length > 0 && (
+                  <div className="mc-mem-recent">
+                    <div className="mc-mem-recent-label">RECENTLY UPDATED</div>
+                    {recentNotes.map(n => (
+                      <button
+                        key={n.id}
+                        className="mc-mem-recent-item"
+                        onClick={() => setSelectedId(n.id)}
+                        type="button"
+                      >
+                        <span className="mc-mem-recent-title">{n.title}</span>
+                        <span className="mc-mem-recent-date">{n.updatedAt && fmtDate(n.updatedAt)}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
+        </>
       )}
     </Window>
   )

@@ -13,7 +13,7 @@ import type { TickTickTask, TickTickWeekData } from './types'
 
 const BASE = 'https://api.ticktick.com/open/v1'
 
-type RawProject = { id: string; name?: string }
+type RawProject = { id: string; name?: string; color?: string }
 type RawTask = {
   id: string
   title?: string
@@ -58,6 +58,8 @@ export async function fetchTickTickWeek(): Promise<TickTickWeekData> {
                 status: t.status,
                 priority: t.priority,
                 projectName: p.name,
+                projectId: p.id,
+                projectColor: p.color,
               }
             })
             .filter((t): t is TickTickTask => t !== null)

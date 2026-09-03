@@ -824,6 +824,95 @@ body {
   .mc-week-day { min-height: 0; border-bottom: 1px solid var(--pt-border-dim); }
   .mc-week-day:nth-child(2n) { border-right: none; }
 }
+
+/* ── V3 migration re-token (was v1-lane.css §glass wash) ─────────────
+   The calendar page no longer imports v1-lane.css; restate the periwinkle
+   glass tint + hairline the lane used to provide, so the panel keeps the
+   same surface after the lane is dropped. Tint only, no backdrop-filter
+   (120hz contract — .mc-main scrolls over the fixed rain canvas). */
+.mc-main .mc-week {
+  border-color: var(--mc-glass-line);
+  background:
+    linear-gradient(var(--mc-glass), var(--mc-glass)),
+    var(--mc-panel);
+}
+
+/* ── Month view (TickTick) ──────────────────────────────────────────
+   7-column month grid, MON-first like the week grid. The first row is the
+   day-name strip; subsequent children are day cells, leading/trailing days
+   of adjacent months render as .is-blank to keep rows aligned. Cells carry
+   a neon count chip when the day has tasks. */
+.mc-week-scroll { overflow-x: auto; }
+.mc-week-month {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  min-width: 560px;
+}
+.mc-week-month-dow {
+  padding: 6px 8px;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--pt-text-mute);
+  border-right: 1px solid var(--pt-border-dim);
+  border-bottom: 1px solid var(--pt-border-dim);
+}
+.mc-week-month-dow:nth-child(7n) { border-right: none; }
+.mc-week-month-day {
+  min-height: 72px;
+  padding: 5px 7px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  border-right: 1px solid var(--pt-border-dim);
+  border-bottom: 1px solid var(--pt-border-dim);
+  background: rgba(0,0,0,0.10);
+}
+.mc-week-month-day:nth-child(7n) { border-right: none; }
+.mc-week-month-day.is-weekend { background: rgba(0,0,0,0.22); }
+.mc-week-month-day.is-blank { background: transparent; }
+.mc-week-month-day.is-today {
+  background: rgba(var(--pt-neon-rgb),0.07);
+  box-shadow: inset 0 0 0 1px var(--pt-border);
+}
+.mc-week-month-daynum {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--pt-text-dim);
+  font-variant-numeric: tabular-nums;
+}
+.mc-week-month-day.is-today .mc-week-month-daynum {
+  color: var(--pt-neon-bright);
+  text-shadow: var(--pt-glow-sm);
+}
+.mc-week-month-chip {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  color: var(--pt-neon-bright);
+  background: rgba(var(--pt-neon-rgb),0.10);
+  border: 1px solid var(--pt-border-dim);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+.mc-week-month-note {
+  padding: 10px 14px;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pt-text-mute);
+  border-bottom: 1px solid var(--pt-border-dim);
+}
+/* Project color dot — small tick on every task mark; falls back to a
+   neutral border dot when the TickTick project has no color. */
+.mc-week-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 2px;
+  background: var(--pt-border);
+}
 @media (max-width: 520px) {
   .mc-week-grid { grid-template-columns: 1fr; }
   .mc-week-day { border-right: none; }
@@ -6130,6 +6219,53 @@ html[data-motion="off"] .mc-window, html[data-motion="off"] .mc-window:hover {
 }
 .mc-mem-detail-tags { display: flex; flex-wrap: wrap; gap: 5px; }
 .mc-mem-detail-excerpt { color: var(--pt-text-dim); font-size: 11.5px; line-height: 1.5; }
+
+/* Batch 7: folder color legend */
+.mc-mem-legend {
+  display: flex; flex-wrap: wrap; gap: 6px 14px;
+  padding: 10px 14px 0;
+}
+.mc-mem-legend-item {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--pt-font-mono); font-size: 9px;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--pt-text-mute);
+}
+.mc-mem-legend-swatch { flex: none; border-radius: 50%; }
+.mc-mem-legend-count { opacity: 0.55; }
+
+/* Batch 7: open-in-Obsidian deep link */
+.mc-mem-open {
+  align-self: flex-start; font-size: 10px; letter-spacing: 0.08em;
+  text-transform: uppercase; text-decoration: none;
+  font-family: var(--pt-font-mono); color: var(--pt-neon-bright);
+  border: 1px dashed var(--pt-border-dim); border-radius: var(--pt-r-sm);
+  padding: 5px 10px; transition: border-color 200ms var(--pt-ease);
+}
+.mc-mem-open:hover { border-color: var(--pt-neon); }
+
+/* Batch 7: recently-updated rail (empty detail state) */
+.mc-mem-recent {
+  display: flex; flex-direction: column; gap: 4px;
+  border-top: 1px solid var(--pt-border-dim);
+  margin-top: 10px; padding-top: 8px; text-align: left;
+}
+.mc-mem-recent-label {
+  font-family: var(--pt-font-mono); font-size: 9px;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--pt-text-mute);
+  margin-bottom: 2px;
+}
+.mc-mem-recent-item {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+  padding: 4px 0; color: var(--pt-text-dim); font-size: 11px;
+  border: none; background: none; cursor: pointer; text-align: left;
+  font-family: inherit; line-height: 1.4;
+}
+.mc-mem-recent-item:hover { color: var(--pt-text-high); }
+.mc-mem-recent-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mc-mem-recent-date {
+  flex: none; font-family: var(--pt-font-mono); font-size: 9px;
+  color: var(--pt-text-mute);
+}
 
 @media (max-width: 820px) {
   .mc-mem-body { grid-template-columns: 1fr; }

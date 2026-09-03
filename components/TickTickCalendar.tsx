@@ -1,24 +1,30 @@
 'use client'
 
 /**
- * Weekly calendar sourced from TickTick (lib/ticktick.ts → /api/ticktick).
+ * Weekly/monthly calendar sourced from TickTick (lib/ticktick.ts → /api/ticktick).
  *
  * Terminal aesthetic, but a real CSS grid rather than a fixed-width <pre>:
  * monospace ASCII columns forced every title to a hard character budget, so
  * anything longer than ~18 chars was truncated and the 7th day fell off the
  * edge. The grid keeps the box-drawing look while letting titles wrap.
+ *
+ * Views: GRID (7-day week grid), LIST (7-day agenda), MONTH (month grid with
+ * per-day count chips). All three bucket the same task set by local-day key,
+ * so a task's day is consistent across views. Task marks carry a project color
+ * dot when TickTick's /project response provides a color.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button, SkeletonPanel } from './ui'
 import { EmptyState } from './EmptyState'
 import type { TickTickTask, TickTickWeekData } from '@/lib/types'
-import '../app/vf/v1-lane.css'
 
 const POLL_MS = 60_000
 const DAY_NAMES = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
 const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
 
 type WeekDay = { key: string; name: string; dayNum: number; isToday: boolean; isWeekend: boolean }
+type MonthCell = { key: string; dayNum: number; isToday: boolean; isWeekend: boolean } | null
+type ViewMode = 'grid' | 'agenda' | 'month'
 
 /** Local-time YYYY-MM-DD. Avoids toISOString(), which shifts across UTC. */
 function dayKey(d: Date): string {
@@ -42,6 +48,31 @@ function buildWeek(offset: number): { days: WeekDay[]; monday: Date } {
     }
   })
   return { days, monday }
+}
+
+/** Month grid, MON-first. Leading/trailing days of adjacent months are null. */
+function buildMonth(offset: number): { cells: MonthCell[]; label: string } {
+  const now = new Date()
+  const first = new Date(now.getFullYear(), now.getMonth() + offset, 1)
+  const year = first.getFullYear()
+  const month = first.getMonth()
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const lead = (first.getDay() + 6) % 7 // MON=0..SUN=6
+  const todayKey = dayKey(now)
+  const cells: MonthCell[] = []
+  for (let i = 0; i < lead; i++) cells.push(null)
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(year, month, d)
+    const dow = date.getDay()
+    cells.push({
+      key: dayKey(date),
+      dayNum: d,
+      isToday: dayKey(date) === todayKey,
+      isWeekend: dow === 0 || dow === 6,
+    })
+  }
+  while (cells.length % 7 !== 0) cells.push(null)
+  return { cells, label: `${MONTHS[month]} ${year}` }
 }
 
 function bucketByDay(tasks: TickTickTask[]): Map<string, TickTickTask[]> {
@@ -75,13 +106,13 @@ function rangeLabel(monday: Date): string {
   return `${a}–${b}`
 }
 
-type ViewMode = 'grid' | 'agenda'
-
 export function TickTickCalendar() {
   const [data, setData] = useState<TickTickWeekData | null>(null)
-  const [offset, setOffset] = useState(0)
+  const [offset, setOffset] = useState(0)       // weeks (grid/agenda)
+  const [monthOffset, setMonthOffset] = useState(0) // months (month view)
   const [view, setView] = useState<ViewMode>('grid')
   const { days, monday } = useMemo(() => buildWeek(offset), [offset])
+  const { cells: monthCells, label: monthLabel } = useMemo(() => buildMonth(monthOffset), [monthOffset])
 
   const load = useCallback(async () => {
     try {
@@ -105,6 +136,24 @@ export function TickTickCalendar() {
     () => days.reduce((n, d) => n + (byDay.get(d.key)?.length ?? 0), 0),
     [days, byDay],
   )
+  const monthCount = useMemo(
+    () => monthCells.reduce((n, c) => n + (c ? (byDay.get(c.key)?.length ?? 0) : 0), 0),
+    [monthCells, byDay],
+  )
+
+  /** Jump from a month cell to that day's week in GRID view. */
+  const jumpToWeek = (key: string) => {
+    const d = new Date(`${key}T00:00:00`)
+    if (Number.isNaN(d.getTime())) return
+    const now = new Date()
+    const nowDow = now.getDay()
+    const curMonday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + (nowDow === 0 ? -6 : 1 - nowDow))
+    const dDow = d.getDay()
+    const dayMonday = new Date(d.getFullYear(), d.getMonth(), d.getDate() + (dDow === 0 ? -6 : 1 - dDow))
+    const diff = Math.round((dayMonday.getTime() - curMonday.getTime()) / (7 * 86400000))
+    setOffset(diff)
+    setView('grid')
+  }
 
   if (!data) return <SkeletonPanel label="loading ticktick" />
 
@@ -118,16 +167,19 @@ export function TickTickCalendar() {
     )
   }
 
+  const stepBack = () => (view === 'month' ? setMonthOffset(o => o - 1) : setOffset(o => o - 1))
+  const stepForward = () => (view === 'month' ? setMonthOffset(o => o + 1) : setOffset(o => o + 1))
+  const stepToday = () => (view === 'month' ? setMonthOffset(0) : setOffset(0))
+  const isTodayOffset = view === 'month' ? monthOffset === 0 : offset === 0
+  const rangeShown = view === 'month' ? monthLabel : rangeLabel(monday)
+  const countShown = view === 'month' ? monthCount : weekCount
+
   return (
     <div className="mc-week">
-      <div className="v1-kicker">
-        <span className="jp" lang="ja">暦</span>
-        <span>Time discipline</span>
-      </div>
       <div className="mc-week-bar">
         <span className="mc-week-title">▦ TICKTICK</span>
-        <span className="mc-week-range">{rangeLabel(monday)}</span>
-        <span className="mc-week-count">{weekCount} {weekCount === 1 ? 'task' : 'tasks'}</span>
+        <span className="mc-week-range">{rangeShown}</span>
+        <span className="mc-week-count">{countShown} {countShown === 1 ? 'task' : 'tasks'}</span>
         <span className="mc-week-view-toggle">
           <button
             className={view === 'grid' ? 'is-active' : ''}
@@ -143,17 +195,53 @@ export function TickTickCalendar() {
           >
             ☰ LIST
           </button>
+          <button
+            className={view === 'month' ? 'is-active' : ''}
+            onClick={() => setView('month')}
+            aria-pressed={view === 'month'}
+          >
+            ▤ MONTH
+          </button>
         </span>
         <span className="mc-week-nav">
-          <button onClick={() => setOffset(o => o - 1)} aria-label="Previous week">◂</button>
-          <button onClick={() => setOffset(0)} disabled={offset === 0}>today</button>
-          <button onClick={() => setOffset(o => o + 1)} aria-label="Next week">▸</button>
+          <button onClick={stepBack} aria-label={view === 'month' ? 'Previous month' : 'Previous week'}>◂</button>
+          <button onClick={stepToday} disabled={isTodayOffset}>today</button>
+          <button onClick={stepForward} aria-label={view === 'month' ? 'Next month' : 'Next week'}>▸</button>
         </span>
       </div>
 
       {data.error && <div className="mc-week-error" role="alert">⚠ {data.error}</div>}
 
-      {weekCount === 0 ? (
+      {view === 'month' ? (
+        <>
+          {monthCount === 0 && <div className="mc-week-month-note">no tasks this month</div>}
+          <div className="mc-week-scroll">
+            <div className="mc-week-month">
+              {DAY_NAMES.map(n => <div key={n} className="mc-week-month-dow">{n}</div>)}
+              {monthCells.map((c, i) =>
+                c === null ? (
+                  <div key={`blank-${i}`} className="mc-week-month-day is-blank" />
+                ) : (
+                  <div
+                    key={c.key}
+                    className={`mc-week-month-day ${c.isToday ? 'is-today' : ''} ${c.isWeekend ? 'is-weekend' : ''}`}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`${c.key}${(byDay.get(c.key)?.length ?? 0) > 0 ? `, ${byDay.get(c.key)?.length} tasks` : ', no tasks'}`}
+                    onClick={() => jumpToWeek(c.key)}
+                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); jumpToWeek(c.key) } }}
+                  >
+                    <span className="mc-week-month-daynum">{c.dayNum}</span>
+                    {(byDay.get(c.key)?.length ?? 0) > 0 && (
+                      <span className="mc-week-month-chip">{byDay.get(c.key)!.length}</span>
+                    )}
+                  </div>
+                ),
+              )}
+            </div>
+          </div>
+        </>
+      ) : weekCount === 0 ? (
         <EmptyState
           glyph="▦"
           title="No events this week"
@@ -180,7 +268,8 @@ export function TickTickCalendar() {
                       + add
                     </a>
                   ) : items.map(t => (
-                    <div key={t.id} className={`mc-week-task ${t.status === 2 ? 'is-done' : ''}`} title={t.projectName}>
+                    <div key={t.id} className={`mc-week-task ${t.status === 2 ? 'is-done' : ''}`} title={t.projectName ?? undefined}>
+                      <span className="mc-week-dot" style={t.projectColor ? { backgroundColor: t.projectColor } : undefined} />
                       <span className="mc-week-mark">{t.status === 2 ? '✓' : '▸'}</span>
                       <span className="mc-week-tasktext">
                         {timeLabel(t) && <span className="mc-week-time">{timeLabel(t)} </span>}
@@ -207,7 +296,8 @@ export function TickTickCalendar() {
                   {items.length === 0 ? (
                     <span className="mc-week-agenda-empty">—</span>
                   ) : items.map(t => (
-                    <div key={t.id} className={`mc-week-task ${t.status === 2 ? 'is-done' : ''}`} title={t.projectName}>
+                    <div key={t.id} className={`mc-week-task ${t.status === 2 ? 'is-done' : ''}`} title={t.projectName ?? undefined}>
+                      <span className="mc-week-dot" style={t.projectColor ? { backgroundColor: t.projectColor } : undefined} />
                       <span className="mc-week-mark">{t.status === 2 ? '✓' : '▸'}</span>
                       <span className="mc-week-tasktext">
                         {timeLabel(t) && <span className="mc-week-time">{timeLabel(t)} </span>}
