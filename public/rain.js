@@ -8,20 +8,35 @@
   var prefersReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (prefersReduced) return;
 
+  /* DPR-aware backing store: render at min(devicePixelRatio, 2) so a
+     high-DPR display (Fold inner ~2.5–3x, retina) gets crisp glyphs without
+     paying 3x+ the fill cost per frame. All drawing math stays in CSS px via
+     setTransform, so column count / glyph size are DPR-independent. */
+  var MAX_DPR = 2;
+
   function start(canvas) {
     var ctx = canvas.getContext('2d');
     var rafId = null;
     var running = false;
 
     function fit() {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
+      var dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
+      var w = Math.max(1, Math.round(canvas.offsetWidth * dpr));
+      var h = Math.max(1, Math.round(canvas.offsetHeight * dpr));
+      /* Only resize when the backing store actually changed — resizing clears
+         the canvas, so skipping no-op resizes avoids a full repaint (and an
+         Android Chrome URL-bar show/hide fires resize at same dimensions). */
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w;
+        canvas.height = h;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
     }
     fit();
     window.addEventListener('resize', fit);
 
     var fs = 14;
-    var drops = new Array(Math.floor(canvas.width / fs)).fill(0);
+    var drops = new Array(Math.floor(canvas.offsetWidth / fs)).fill(0);
     var STEP_MS = 90;            /* one rain-step per ~90ms — slow, ambient drift */
     var lastStep = 0;
 
@@ -33,9 +48,9 @@
       }
       lastStep = ts;
       ctx.fillStyle = 'rgba(7,8,11,0.09)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
       ctx.font = fs + "px 'JetBrains Mono', monospace";
-      var cols = Math.floor(canvas.width / fs);
+      var cols = Math.floor(canvas.offsetWidth / fs);
       if (drops.length !== cols) drops = new Array(cols).fill(0);
       for (var i = 0; i < drops.length; i++) {
         var ch = Math.random() < 0.5 ? '0' : '1';
@@ -45,7 +60,7 @@
           ? 'rgba(188,208,255,0.85)'
           : 'rgba(127,160,255,' + (0.06 + Math.random() * 0.16) + ')';
         ctx.fillText(ch, i * fs, y);
-        if (y > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        if (y > canvas.offsetHeight && Math.random() > 0.975) drops[i] = 0;
         drops[i]++;
       }
       if (running && !rafId) rafId = requestAnimationFrame(frame);

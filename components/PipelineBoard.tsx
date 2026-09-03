@@ -148,6 +148,9 @@ export function PipelineBoard() {
   const [liveNotes, setLiveNotes] = useState<Record<string, string>>({})
   const dataRef = useRef<PipelineData | null>(null)
   dataRef.current = data
+  // Rate gate for bus-triggered refetches — same 3s pattern as KanbanBoard so
+  // a busy task.progress stream can't hammer /api/pipeline on a phone.
+  const lastEventRef = useRef(0)
 
   const refresh = useCallback(async () => {
     try {
@@ -180,7 +183,11 @@ export function PipelineBoard() {
         const watched = (dataRef.current?.leads ?? []).some(l => l.development?.taskId === evt.task_id)
         if (!watched) return
         setLiveNotes(prev => ({ ...prev, [evt.task_id as string]: `${evt.raw_kind ?? 'event'} · ${evt.title ?? evt.task_id}` }))
-        void refresh()
+        const now = Date.now()
+        if (now - lastEventRef.current > 3000) {
+          lastEventRef.current = now
+          void refresh()
+        }
       } catch { /* non-JSON keepalive */ }
     }
     // The bus emits named SSE events (task.created, task.progress, ...) — listen broadly.

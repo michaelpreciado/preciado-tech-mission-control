@@ -4,8 +4,8 @@
   "description": "Framework for Running Intelligent Deployed Agents — local-first agent dashboard",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "background_color": "#07080b",
+  "theme_color": "#07080b",
   "orientation": "any",
   "icons": [
     {

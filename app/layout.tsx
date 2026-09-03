@@ -67,6 +67,10 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   viewportFit: 'cover',
+  // Android Chrome URL-bar show/hide resizes the visual viewport only
+  // (100dvh chrome stays put) instead of reflowing the whole layout —
+  // the single biggest Android scroll-jank fix for a 100dvh app shell.
+  interactiveWidget: 'resizes-content',
   themeColor: '#07080b',
   colorScheme: 'dark',
 }
