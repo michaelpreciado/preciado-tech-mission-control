@@ -17,7 +17,7 @@ import { Sparkline } from './Sparkline'
 import { CoreHalo } from './views/CoreHalo'
 import dynamic from 'next/dynamic'
 import type { MissionTask } from '@/lib/types'
-import '../app/vf/v1-lane.css'
+import '../app/vf/v3-lane.css'
 
 const CommandHeader = dynamic(() => import('./views/CommandHeader').then(m => m.CommandHeader), { ssr: false, loading: () => <SkeletonPanel label="loading header" /> })
 const ActionFeed = dynamic(() => import('./ActionFeed').then(m => m.ActionFeed), { ssr: false })

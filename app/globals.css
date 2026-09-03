@@ -7083,3 +7083,50 @@ body {
   transition: opacity var(--pt-dur-fast) var(--pt-ease), color var(--pt-dur-fast) var(--pt-ease);
 }
 .mc-task-link:hover .mc-task-chev { opacity: 1; color: var(--pt-neon-bright); }
+
+/* ── V1-lane retirement re-token (was v1-lane.css §consumers) ────────
+   HomeDeck + ChatConsole no longer import v1-lane.css (swapped to
+   v3-lane.css with the rest of the board). Restate the rules those
+   two components still use so their surface is unchanged after the
+   lane file is dropped. Tint only, no backdrop-filter (120hz contract). */
+.mc-main .v1-kicker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 2px 0 16px;
+  font-family: var(--pt-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--mc-ink-mute);
+}
+.mc-main .v1-kicker::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--mc-line);
+}
+.mc-main .v1-kicker .jp {
+  font-family: var(--mc-font-jp), var(--pt-font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--mc-neon);
+  text-shadow: 0 0 12px rgba(var(--mc-neon-rgb), 0.32);
+}
+.mc-main .mc-home-tile {
+  background:
+    radial-gradient(120% 120% at 100% 0%, rgba(var(--mc-neon-rgb), 0.14), transparent 55%),
+    linear-gradient(var(--mc-glass), var(--mc-glass)),
+    var(--mc-bg-tint);
+}
+.mc-main .cc-listpane,
+.mc-main .cc-threadpane,
+.mc-main .ci-panel,
+.mc-main .mc-cal-card {
+  border-color: var(--mc-glass-line);
+  background:
+    linear-gradient(var(--mc-glass), var(--mc-glass)),
+    var(--mc-panel);
+}

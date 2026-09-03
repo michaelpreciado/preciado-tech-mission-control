@@ -22,7 +22,7 @@ import { cleanTitle, dayBucket, isJunk, sourceGlyph, type DayBucket } from '@/li
 import { ChatIntel } from '@/components/views/ChatIntel'
 import LiveChatMirror from '@/components/LiveChatMirror'
 import type { ConversationStats } from '@/lib/conversations'
-import '../app/vf/v1-lane.css'
+import '../app/vf/v3-lane.css'
 
 /* ── Types (mirror the API) ─────────────────────────────── */
 
