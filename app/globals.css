@@ -6746,3 +6746,131 @@ body {
 .mc-setup-tabrow[draggable="true"] { cursor: grab; }
 .mc-setup-tabrow.setup-tabrow--dragging { opacity: 0.45; }
 .mc-setup-tabrow.setup-tabrow--over { box-shadow: inset 0 2px 0 0 var(--pt-neon); }
+
+/* ============================================================
+   Failure surfaces: loading / error / 404 (token-backed only)
+   Single writer: these classes consume design tokens from the
+   --pt-* block injected by lib/tokens.ts (root layout). The view
+   components (app/loading.tsx, app/error.tsx, app/not-found.tsx)
+   reference them; no color/type/tracking values are hardcoded.
+   global-error.tsx carries its own self-contained copy because it
+   renders outside the root layout (tokens re-emitted from tokens.ts).
+   ============================================================ */
+
+/* Type roles — micro: mono uppercase kicker; mono: fixed-width label */
+.pt-micro {
+  font-family: var(--pt-font-mono);
+  font-size: var(--pt-fs-kicker);
+  letter-spacing: var(--pt-ls-kicker);
+  text-transform: uppercase;
+}
+.pt-mono {
+  font-family: var(--pt-font-mono);
+}
+
+/* Text roles for failure surfaces */
+.pt-info { color: var(--pt-info-ink); }
+.pt-sub {
+  font-size: var(--pt-fs-xs);
+  letter-spacing: var(--pt-ls-kicker);
+  text-transform: uppercase;
+  color: var(--pt-text-mute);
+}
+
+/* Loading — boot pulse on the token near-black ramp */
+.pt-loading-core {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: var(--pt-s-2);
+  height: 26px;
+}
+.pt-loading-core span,
+.pt-loading-core i,
+.pt-loading-core b {
+  display: block;
+  width: 4px;
+  border-radius: var(--pt-r-sm);
+  background: linear-gradient(180deg, var(--pt-neon-bright), var(--pt-neon));
+  box-shadow: var(--pt-glow-sm);
+  animation: pt-boot-pulse 1s var(--pt-ease-enter) infinite alternate;
+}
+.pt-loading-core span { height: 10px; }
+.pt-loading-core i { height: 18px; animation-delay: 0.18s; }
+.pt-loading-core b { height: 14px; animation-delay: 0.36s; }
+@keyframes pt-boot-pulse {
+  from { transform: scaleY(0.4); opacity: 0.45; }
+  to { transform: scaleY(1); opacity: 1; }
+}
+
+/* Fault screens (error boundary + 404) */
+.pt-fault-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: var(--pt-s-8);
+  background: var(--pt-bg);
+}
+.pt-fault-panel {
+  max-width: 28rem;
+  width: 100%;
+  padding: var(--pt-s-6);
+  text-align: center;
+  border-radius: var(--pt-r-lg);
+  border: 1px solid color-mix(in srgb, var(--pt-error) 30%, transparent);
+  background: color-mix(in srgb, var(--pt-error) 8%, var(--pt-surface));
+  box-shadow: var(--pt-glow-sm);
+}
+.pt-fault-panel .pt-fault-mark {
+  margin-bottom: var(--pt-s-4);
+  font-family: var(--pt-font-mono);
+  font-size: 2.5rem;
+  line-height: 1;
+  color: var(--pt-error);
+}
+.pt-fault-panel .pt-404-mark {
+  margin-bottom: var(--pt-s-4);
+  font-family: var(--pt-font-mono);
+  font-weight: 700;
+  font-size: clamp(2.5rem, 8vw, 4rem);
+  line-height: 1;
+  color: var(--pt-error-ink);
+}
+.pt-fault-panel .pt-fault-title {
+  margin-bottom: var(--pt-s-2);
+  font-family: var(--pt-font-mono);
+  font-weight: 700;
+  font-size: var(--pt-fs-h3);
+  color: var(--pt-error-ink);
+  text-shadow: none;
+}
+.pt-fault-panel .pt-fault-copy {
+  margin-bottom: var(--pt-s-4);
+  font-size: var(--pt-fs-sm);
+  line-height: var(--pt-lh-body);
+  color: var(--pt-text-dim);
+}
+.pt-fault-panel .pt-fault-ref {
+  margin-bottom: var(--pt-s-4);
+  font-family: var(--pt-font-mono);
+  font-size: var(--pt-fs-xs);
+  color: var(--pt-error);
+  opacity: 0.6;
+}
+.pt-fault-panel .pt-fault-btn {
+  display: inline-block;
+  cursor: pointer;
+  padding: var(--pt-s-3) var(--pt-s-6);
+  font-family: var(--pt-font-mono);
+  font-size: var(--pt-fs-sm);
+  font-weight: 600;
+  color: var(--pt-error-ink);
+  border-radius: var(--pt-r-md);
+  border: 1px solid color-mix(in srgb, var(--pt-error) 40%, transparent);
+  background: color-mix(in srgb, var(--pt-error) 20%, transparent);
+  transition: background var(--pt-dur-fast) var(--pt-ease);
+}
+.pt-fault-panel .pt-fault-btn:hover {
+  background: color-mix(in srgb, var(--pt-error) 32%, transparent);
+}
