@@ -12,6 +12,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button, SkeletonPanel } from './ui'
 import { EmptyState } from './EmptyState'
 import type { TickTickTask, TickTickWeekData } from '@/lib/types'
+import '../app/vf/v1-lane.css'
 
 const POLL_MS = 60_000
 const DAY_NAMES = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
@@ -119,6 +120,10 @@ export function TickTickCalendar() {
 
   return (
     <div className="mc-week">
+      <div className="v1-kicker">
+        <span className="jp" lang="ja">暦</span>
+        <span>Time discipline</span>
+      </div>
       <div className="mc-week-bar">
         <span className="mc-week-title">▦ TICKTICK</span>
         <span className="mc-week-range">{rangeLabel(monday)}</span>
