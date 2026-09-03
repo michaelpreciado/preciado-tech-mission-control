@@ -59,6 +59,17 @@ const STATUS_TONE: Record<string, string> = {
   blocked: 'bad', failed: 'bad', crashed: 'bad', timed_out: 'bad',
 }
 
+/** Whole-card surface tone, mirroring the mc-hk-status vocabulary so the
+ *  card reads at a glance: tone-run = live work, tone-done = shipped,
+ *  tone-bad = stuck. Empty string keeps todo/ready/archived neutral. */
+function cardTone(status: string): string {
+  const t = STATUS_TONE[status]
+  if (t === 'run') return 'tone-run'
+  if (t === 'done') return 'tone-done'
+  if (t === 'bad') return 'tone-bad'
+  return ''
+}
+
 function DetailDrawer({ id, onClose, onChanged }: { id: string; onClose: () => void; onChanged: () => void }) {
   const [detail, setDetail] = useState<HermesTaskDetail | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -468,7 +479,7 @@ function KanbanCard({ task, pinned, pendingParents, onOpen, onTogglePin }: {
 }) {
   return (
     <div
-      className={`mc-kb-card${pinned ? ' is-pinned' : ''}`}
+      className={['mc-kb-card', pinned ? 'is-pinned' : '', cardTone(task.status)].filter(Boolean).join(' ')}
       role="button"
       tabIndex={0}
       aria-label={`Open ${task.title}`}
@@ -491,7 +502,7 @@ function KanbanCard({ task, pinned, pendingParents, onOpen, onTogglePin }: {
           {pinned ? '📌' : '·'}
         </button>
       </div>
-      <div className="mc-kb-card-title">{task.title}</div>
+      <div className="mc-kb-card-title" title={task.title}>{task.title}</div>
       {pendingParents.length > 0 && (
         <span
           className="mc-kb-dep"
@@ -501,9 +512,10 @@ function KanbanCard({ task, pinned, pendingParents, onOpen, onTogglePin }: {
         </span>
       )}
       <div className="mc-kb-card-meta">
-        {task.assignee && <span className="who">{task.assignee}</span>}
+        {task.assignee && <span className="who" title={`assignee · ${task.assignee}`}>{task.assignee}</span>}
+        {task.origin && <span className="mc-kb-card-origin" title={`board · ${task.origin}`}>⊙ {task.origin}</span>}
         {task.createdAt && (
-          <span className="time">
+          <span className="time" title={new Date(task.createdAt).toLocaleString()}>
             <RelativeTime ts={new Date(task.createdAt).getTime()} frame="ago" />
           </span>
         )}
@@ -521,11 +533,13 @@ function Column({ def, tasks, pinned, byId, onOpen, onTogglePin }: {
   onTogglePin: (id: string) => void
 }) {
   const sorted = [...tasks].sort((a, b) => taskSort(a, b, pinned))
+  const active = def.tone === 'run'
   return (
-    <div className="mc-kb-col">
-      <div className={`mc-kb-col-head ${def.tone}`}>
+    <div className={`mc-kb-col${active ? ' is-active' : ''}`}>
+      <div className={`mc-kb-col-head ${def.tone}`} title={`${def.label} · ${tasks.length}`}>
         <span className="mc-kb-col-glyph">{def.glyph}</span>
         <span>{def.label}</span>
+        {active && <span className="mc-kb-col-live" aria-hidden="true" />}
         <span className="mc-kb-col-count">{tasks.length}</span>
       </div>
       <div className="mc-kb-col-body">
