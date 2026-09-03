@@ -6116,3 +6116,169 @@ html[data-motion="off"] .mc-shift-badge.is-working::after {
   /* tap target floor: even though the whole row is tappable, guarantee height */
   .mc-shift-row .mc-sub-row-main { min-height: 40px; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   BOTS · Hermes profile roster (2026-09-02) — coordinator CSS for the
+   mc-bots-* classes returned by the HANDOFF-BOTS Claude run.
+   ══════════════════════════════════════════════════════════════════════════ */
+.mc-bots-summary {
+  font-family: var(--pt-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--pt-text-dim);
+}
+.mc-bots-stale { color: var(--pt-warn); }
+.mc-bots-id {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.mc-bots-avatar {
+  flex: 0 0 34px;
+  width: 34px; height: 34px;
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  border-radius: 8px;
+  background: var(--pt-neon-wash);
+  border: 1px solid var(--pt-border-dim);
+  color: var(--pt-neon-bright);
+  font-family: var(--pt-font-mono);
+  font-size: 14px; font-weight: 700;
+}
+.mc-bots-id-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.mc-bots-name {
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+.mc-bots-model {
+  font-family: var(--pt-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--pt-text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mc-bots-gw {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--pt-rule);
+}
+.mc-bots-gw-status {
+  font-family: var(--pt-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--pt-text-dim);
+}
+.mc-bots-gw-detail {
+  flex-basis: 100%;
+  font-size: 11px;
+  color: var(--pt-text-mute);
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+.mc-bots-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--pt-rule);
+}
+.mc-bots-stat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  font-family: var(--pt-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--pt-text-mute);
+}
+.mc-bots-stat em {
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--pt-text);
+}
+.mc-bots-routines {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.mc-bots-routine {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--pt-surface-2);
+  border: 1px solid var(--pt-border-dim);
+}
+.mc-bots-routine-dot {
+  flex: 0 0 6px;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--pt-ok);
+  box-shadow: 0 0 6px rgba(40,200,64,0.55);
+}
+.mc-bots-routine.is-off { opacity: 0.55; }
+.mc-bots-routine.is-off .mc-bots-routine-dot { background: var(--pt-text-mute); box-shadow: none; }
+.mc-bots-routine.is-failed .mc-bots-routine-dot { background: var(--pt-error); box-shadow: 0 0 6px rgba(255,95,87,0.6); }
+.mc-bots-routine-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  overflow-wrap: break-word;
+}
+.mc-bots-routine-sched {
+  font-family: var(--pt-font-mono);
+  font-size: 10px;
+  color: var(--pt-text-dim);
+}
+.mc-bots-routine-when {
+  flex-basis: 100%;
+  font-family: var(--pt-font-mono);
+  font-size: 10px;
+  color: var(--pt-text-mute);
+}
+.mc-bots-routines-empty {
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--pt-text-mute);
+}
+.mc-bots-routines-empty code {
+  font-family: var(--pt-font-mono);
+  font-size: 10px;
+  color: var(--pt-neon);
+}
+
+/* Fold / compact (≤ 660px): tighten the roster cards to phone width. */
+@media (max-width: 660px) {
+  .mc-bots-avatar { flex-basis: 28px; width: 28px; height: 28px; font-size: 12px; }
+  .mc-bots-model { font-size: 9px; }
+  .mc-bots-gw-detail { font-size: 10px; }
+  .mc-bots-stat { gap: 4px; }
+  .mc-bots-routine-when { flex-basis: auto; margin-left: 14px; }
+}
+
+/* Bots roster cards: below the shell's 980px fold, drop the hard 3-up and
+   let the base auto-fill grid decide (2-up on tablet, 1-up on phones). */
+@media (max-width: 980px) {
+  .mc-tile-grid--tri { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+}

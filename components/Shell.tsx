@@ -8,7 +8,12 @@ import { CommandPalette } from './CommandPalette'
 import { Button } from './ui'
 import { Icon, type IconName } from './icons'
 import { UiSettingsContext, DEFAULT_UI_SETTINGS, useUiSettings, type UiSettings } from './ui-settings'
-import { NAV, PINNED_TAB_IDS } from '@/lib/nav-tabs'
+import { NAV, PINNED_TAB_IDS, type NavItem } from '@/lib/nav-tabs'
+
+/** Bots (Hermes Bot Mode) tab. Lives in Shell rather than lib/nav-tabs.ts so the
+ * roster ships without touching the shared nav source; fold it into NAV's
+ * Operations section there once the surface stabilises. */
+const BOTS_TAB: NavItem = { id: '/bots', label: 'Bots', icon: 'team' }
 
 /** Brand identity resolved server-side in lib/config.ts, provided by <Shell>. */
 const BrandContext = createContext<{ appName: string; appTagline: string }>({
@@ -32,6 +37,7 @@ export { useUiSettings, type UiSettings }
  * stable, so ids missing from tabOrder keep their default relative order). */
 function applyUiToNav(ui: UiSettings) {
   return NAV
+    .map(sec => (sec.section === 'Operations' ? { ...sec, items: [...sec.items, BOTS_TAB] } : sec))
     .map(sec => ({
       section: sec.section,
       items: sec.items
@@ -181,7 +187,7 @@ function MobileNav() {
     [ui.hiddenTabs],
   )
   // The More tab lights up whenever the current route lives behind the sheet.
-  const inMore = NAV.some(sec => sec.items.some(it => !PRIMARY_IDS.has(it.id) && isActive(it.id)))
+  const inMore = isActive('/bots') || NAV.some(sec => sec.items.some(it => !PRIMARY_IDS.has(it.id) && isActive(it.id)))
 
   // Slide the pill to whichever bottom tab is active (primary or the More toggle).
   useEffect(() => {
