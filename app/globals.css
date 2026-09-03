@@ -6874,3 +6874,76 @@ body {
 .pt-fault-panel .pt-fault-btn:hover {
   background: color-mix(in srgb, var(--pt-error) 32%, transparent);
 }
+
+/* ── HOME batch (kanban t_1317b43a): tile extras, task/header deep links ── */
+.mc-home-tile-spark.is-local {
+  right: 10px;
+  bottom: 30px;
+  width: 30%;
+  height: 16px;
+  opacity: 0.55;
+}
+.mc-home-tile.is-hero .mc-home-tile-spark.is-local {
+  right: 16px;
+  bottom: 44px;
+  width: 24%;
+  height: 20px;
+  opacity: 0.5;
+}
+.mc-home-tile-heat {
+  position: absolute;
+  left: 16px;
+  bottom: 6px;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  pointer-events: none;
+}
+.mc-home-tile.is-hero .mc-home-tile-heat {
+  left: 20px;
+  bottom: 10px;
+}
+.mc-home-tile-heat-cell {
+  flex: none;
+  width: 5px;
+  height: 14px;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--mc-cat-3) 12%, transparent);
+}
+.mc-home-tile-heat-cell[data-lvl="1"] { background: color-mix(in srgb, var(--mc-cat-3) 26%, transparent); }
+.mc-home-tile-heat-cell[data-lvl="2"] { background: color-mix(in srgb, var(--mc-cat-3) 45%, transparent); }
+.mc-home-tile-heat-cell[data-lvl="3"] { background: color-mix(in srgb, var(--mc-cat-3) 70%, transparent); }
+.mc-home-tile-heat-cell[data-lvl="4"] { background: var(--mc-cat-3); box-shadow: 0 0 6px color-mix(in srgb, var(--mc-cat-3) 60%, transparent); }
+
+/* Task column headers + rows now deep-link to /kanban */
+.mc-tcol-head-link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: color var(--pt-dur-fast) var(--pt-ease), border-color var(--pt-dur-fast) var(--pt-ease);
+}
+.mc-tcol-head-link:hover { color: var(--pt-text-high); border-bottom-color: var(--pt-border); }
+.mc-tcol-head-link:hover .mc-tcol-count { color: var(--pt-text); border-color: var(--pt-border); }
+.mc-tcol-chev {
+  margin-left: 6px;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--pt-text-mute);
+  opacity: 0.5;
+  transition: opacity var(--pt-dur-fast) var(--pt-ease), color var(--pt-dur-fast) var(--pt-ease);
+}
+.mc-tcol-head-link:hover .mc-tcol-chev { opacity: 1; color: var(--pt-neon-bright); }
+.mc-task-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+.mc-task-chev {
+  margin-left: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--pt-text-mute);
+  opacity: 0.4;
+  transition: opacity var(--pt-dur-fast) var(--pt-ease), color var(--pt-dur-fast) var(--pt-ease);
+}
+.mc-task-link:hover .mc-task-chev { opacity: 1; color: var(--pt-neon-bright); }

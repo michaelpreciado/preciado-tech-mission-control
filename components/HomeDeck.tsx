@@ -58,7 +58,34 @@ function PresenceClock({ generatedAt, isLive }: { generatedAt?: string; isLive: 
 
 /* ── Live status tiles (tappable → deep link) ────────────────────────── */
 
-type TileDef = { key: string; label: string; glyph: string; href: string; value: string; sub: string; tone: 'ok' | 'warn' | 'err' | 'info'; spark?: number[] }
+type TileDef = { key: string; label: string; glyph: string; href: string; value: string; sub: string; tone: 'ok' | 'warn' | 'err' | 'info'; spark?: number[]; spark2?: number[]; heat?: number[] }
+
+/** Normalise a contribution count to a 0–4 intensity step against its own series. */
+function heatLevel(v: number, series: number[]): number {
+  const max = Math.max(1, ...series)
+  if (v <= 0) return 0
+  return Math.min(4, Math.max(1, Math.ceil((v / max) * 4)))
+}
+
+/** Secondary tile visuals: local-compute spark + GH contribution heatstrip. */
+function TileExtras({ tile }: { tile: TileDef }) {
+  return (
+    <>
+      {tile.spark2 && tile.spark2.length > 1 && (
+        <span className="mc-home-tile-spark is-local" aria-hidden="true">
+          <Sparkline points={tile.spark2} color="var(--mc-cat-3)" />
+        </span>
+      )}
+      {tile.heat && tile.heat.length > 0 && (
+        <span className="mc-home-tile-heat" aria-hidden="true">
+          {tile.heat.map((v, i) => (
+            <i key={i} className="mc-home-tile-heat-cell" data-lvl={heatLevel(v, tile.heat as number[])} />
+          ))}
+        </span>
+      )}
+    </>
+  )
+}
 
 function StatusTiles() {
   const { data } = useLiveData()
@@ -68,13 +95,31 @@ function StatusTiles() {
     const working = crew.filter(c => c.status === 'active' || c.status === 'on-demand')
     const offline = crew.filter(c => c.status === 'offline' || c.status === 'sleeping')
     const tasks = data.tasks ?? []
-    const open = data.counts?.openTasks ?? tasks.filter(t => t.status !== 'done').length
+    // Board is canonical — kanban openTasks wins, counts.openTasks is the fallback.
+    const open = data.kanban?.openTasks ?? data.counts?.openTasks ?? tasks.filter(t => t.status !== 'done').length
     // Only count FAILING ENABLED jobs. Disabled/dormant jobs aren't failures —
     // they're parked, and shouldn't keep the hero red forever.
     const cronFails = (data.cron ?? []).filter(c => c.enabled !== false && c.lastRunStatus === 'error').length
     const billing = data.costs?.billing?.[0]
     const costMonth = billing ? `$${(billing.planAmount + (billing.openRouterUsd ?? 0)).toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—'
+    // Freshness cue trumps the savings line — stale numbers get an amber warning
+    // instead of being shown silently.
+    const staleDays = data.costs?.freshness?.staleDays ?? 0
+    const localSaved = data.costs?.localCompute?.costAvoidedMonthUsd
+    const costSub = staleDays > 0
+      ? `⚠ data ${staleDays}d old`
+      : localSaved != null
+        ? `this month · local saved $${Math.round(localSaved)}`
+        : 'this month'
+    const costTone: TileDef['tone'] = staleDays > 0 ? 'warn' : 'info'
+    // Second spark: local-compute daily tokens (53 days) — distinct lime series.
+    const localSpark = (data.costs?.localCompute?.daily ?? []).slice(-30).map(d => d.tokens ?? 0)
     const ghStreak = data.github?.currentStreak ?? 0
+    // 12-week contribution heatstrip — sum each week's contributionDays so
+    // empty weeks still register as a 0 cell (type: { contributionDays: [...] }[]).
+    const ghHeat = (data.github?.weeks ?? []).slice(-12).map(w =>
+      (w.contributionDays ?? []).reduce((sum, d) => sum + (d.contributionCount ?? 0), 0)
+    )
     const kb = data.kanban
     // "WORKING NOW" = live crew agents, not the kanban open count (which can be
     // 0 mid-flight). It answers "is anything happening right now".
@@ -89,8 +134,8 @@ function StatusTiles() {
       { key: 'working', label: 'WORKING NOW', glyph: '▶', href: '/bots', value: String(running), sub: 'agents working', tone: running ? 'ok' : 'info' },
       { key: 'open', label: 'OPEN TASKS', glyph: '≡', href: '/kanban', value: String(open), sub: 'kanban board', tone: open ? 'warn' : 'ok' },
       { key: 'cron', label: 'CRON FAILS', glyph: '○', href: '/calendar', value: String(cronFails), sub: 'jobs failing', tone: cronFails ? 'err' : 'ok' },
-      { key: 'cost', label: 'COST · THIS MO', glyph: '$', href: '/costs', value: costMonth, sub: 'this month', tone: 'info', spark: costSpark },
-      { key: 'gh', label: 'GH STREAK', glyph: '★', href: '/github', value: `${ghStreak}d`, sub: 'contributions', tone: ghStreak ? 'ok' : 'info' },
+      { key: 'cost', label: 'COST · THIS MO', glyph: '$', href: '/costs', value: costMonth, sub: costSub, tone: costTone, spark: costSpark, spark2: localSpark.length > 1 ? localSpark : undefined },
+      { key: 'gh', label: 'GH STREAK', glyph: '★', href: '/github', value: `${ghStreak}d`, sub: 'contributions', tone: ghStreak ? 'ok' : 'info', heat: ghHeat },
       { key: 'proj', label: 'PROJECTS', glyph: '▤', href: '/projects', value: String(data.counts?.projects ?? data.projects.length), sub: 'active repos', tone: 'info' },
     ] as TileDef[]
   }, [data])
@@ -115,6 +160,7 @@ function StatusTiles() {
             {heroTile.spark && heroTile.spark.length > 1 && (
               <span className="mc-home-tile-spark" aria-hidden="true"><Sparkline points={heroTile.spark} color="var(--pt-neon-bright)" /></span>
             )}
+            <TileExtras tile={heroTile} />
           </Link>
         </div>
       )}
@@ -130,6 +176,7 @@ function StatusTiles() {
             {t.spark && t.spark.length > 1 && (
               <span className="mc-home-tile-spark" aria-hidden="true"><Sparkline points={t.spark} color="var(--pt-info)" /></span>
             )}
+            <TileExtras tile={t} />
           </Link>
         ))}
       </div>
@@ -266,24 +313,26 @@ function TaskCol({ headLabel, headGlyph, alert, items }: {
 }) {
   return (
     <div className="mc-window mc-tcol">
-      <div className={`mc-tcol-head ${alert ? 'alert' : ''}`}>
+      <Link href="/kanban" className={`mc-tcol-head mc-tcol-head-link ${alert ? 'alert' : ''}`}>
         <span className="mc-tcol-glyph">{headGlyph}</span>
         <span>{headLabel}</span>
         <span className="mc-tcol-count">{items.length}</span>
-      </div>
+        <span className="mc-tcol-chev" aria-hidden="true">›</span>
+      </Link>
       <div className="mc-tcol-body">
         {items.length === 0 ? (
           <div className="mc-tcol-sentinel">— all clear —</div>
         ) : items.map(t => (
-          <div key={t.id} className="mc-task">
+          <Link key={t.id} href="/kanban" className="mc-task mc-task-link">
             <div className="mc-task-head">
               <div className="mc-task-title" title={t.title}>{t.title}</div>
+              <span className="mc-task-chev" aria-hidden="true">›</span>
             </div>
             <div className="mc-task-meta">
               <span className="agent">{t.ownerName}</span>
               <span className={`mc-task-tag ${PRIORITY_TONE[t.priority] ?? ''}`}>{t.priority}</span>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>
@@ -312,7 +361,12 @@ export function HomeDeck() {
         <PresenceClock generatedAt={data?.generatedAt} isLive={isLive} />
       </div>
 
-      {/* 3 · What is live */}
+      {/* 3 · What needs me / what's live — pulse numbers first, above the fold */}
+      <SectionHead label="SYSTEM PULSE" />
+      <StatusTiles />
+      <AgentPulse />
+
+      {/* 4 · System core + rig telemetry — heavier visuals sit below the pulse */}
       <div className="mc-home-corewrap">
         <div className="mc-home-coreorb-holder">
           {/* CoreHalo is the always-on CSS command-core motif — it makes the
@@ -328,15 +382,11 @@ export function HomeDeck() {
         </div>
       </div>
 
-      <SectionHead label="SYSTEM PULSE" />
-      <StatusTiles />
-      <AgentPulse />
-
-      {/* 4 · What's scheduled */}
+      {/* 5 · What's scheduled */}
       <SectionHead label="SCHEDULER / TODAY" />
       <CalendarList limit={5} />
 
-      {/* 5 · Live ops + integrations */}
+      {/* 6 · Live ops + integrations */}
       <SectionHead label="OPS / LIVE STREAM" />
       <LiveActivity />
       <HealthSummary />
