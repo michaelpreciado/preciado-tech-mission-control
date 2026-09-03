@@ -22,8 +22,16 @@
 
     var fs = 14;
     var drops = new Array(Math.floor(canvas.width / fs)).fill(0);
+    var STEP_MS = 90;            /* one rain-step per ~90ms — slow, ambient drift */
+    var lastStep = 0;
 
-    function frame() {
+    function frame(ts) {
+      rafId = 0;
+      if (ts - lastStep < STEP_MS) {
+        if (running) rafId = requestAnimationFrame(frame);
+        return;
+      }
+      lastStep = ts;
       ctx.fillStyle = 'rgba(7,8,11,0.09)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.font = fs + "px 'JetBrains Mono', monospace";
@@ -40,13 +48,14 @@
         if (y > canvas.height && Math.random() > 0.975) drops[i] = 0;
         drops[i]++;
       }
-      if (running) rafId = requestAnimationFrame(frame);
+      if (running && !rafId) rafId = requestAnimationFrame(frame);
     }
 
     function startAnimation() {
       if (running) return;
       running = true;
-      rafId = requestAnimationFrame(frame);
+      lastStep = 0;
+      if (!rafId) rafId = requestAnimationFrame(frame);
     }
 
     function stopAnimation() {
