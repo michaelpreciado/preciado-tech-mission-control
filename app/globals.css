@@ -4365,6 +4365,11 @@ html[data-motion="reduced"] .mc-hud-progress-fill, html[data-motion="off"] .mc-h
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 12px;
 }
+@media (max-width: 520px) {
+  /* Status data arrives after the shell; hold the measured grid footprint so
+     the sections below do not jump when the skeleton becomes live tiles. */
+  .mc-home-tiles { min-height: 385px; }
+}
 .mc-home-tile {
   display: flex; align-items: center; gap: 12px;
   padding: 14px 16px;
