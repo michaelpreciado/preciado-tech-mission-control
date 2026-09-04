@@ -322,7 +322,7 @@ export async function collectCosts(): Promise<CostDashboard> {
       month: key,
       plan: plan.plan,
       planAmount: plan.amount,
-      fairUseMonthlyTokens: billCfg.fairUseMonthlyTokens,
+      fairUse: billCfg.fairUse,
       openRouterUsd: orHistory[key] ?? (back === 0 ? (orUsage?.usageMonthly ?? null) : null),
       apiTokens: api,
       claudeTokens: claudeTk,

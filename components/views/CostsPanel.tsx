@@ -780,17 +780,6 @@ function SubscriptionTools({ costs }: { costs: CostDashboard }) {
       ? 'No recent workload logged'
       : `${usage[claudeTokens > codexTokens ? 0 : 1].name} is the heavier workload`
 
-  const billing = costs.billing?.[0]
-  const band = billing?.fairUseMonthlyTokens
-  const burn = billing && Number.isFinite(billing.claudeTokens) && Number.isFinite(billing.codexTokens)
-    ? billing.claudeTokens + billing.codexTokens
-    : null
-  const validBand = typeof band === 'number' && Number.isFinite(band) && band > 0
-  const showBand = burn != null && burn >= 0 && validBand
-  const burnRatio = showBand ? burn / (band as number) : 0
-  const burnPercent = showBand ? burnRatio * 100 : 0
-  const burnTone = burnPercent > 85 ? 'var(--pt-error)' : burnPercent >= 60 ? 'var(--pt-warn)' : 'var(--pt-ok)'
-
   return (
     <>
       <SectionHead label="SUBSCRIPTION TOOLS — USE & KEEP" />
@@ -820,18 +809,50 @@ function SubscriptionTools({ costs }: { costs: CostDashboard }) {
       <div style={{ padding: '9px 16px 12px', color: 'var(--pt-text-dim)', fontFamily: 'var(--font-mono)', fontSize: 9.5, borderBottom: '1px solid var(--pt-border-dim)' }}>
         Claude Code: {tok(claudeTokens)} tokens · Codex: {tok(codexTokens)} · {delta}
       </div>
-      {showBand && (
-        <div className="cp-plan-band" aria-label={`In-plan burn ${tok(burn as number)} of a ${tok(band as number)} soft band, ${burnPercent.toFixed(0)} percent`}>
+    </>
+  )
+}
+
+function FairUseGuard({ costs }: { costs: CostDashboard }) {
+  const billing = costs.billing?.[0]
+  const ceiling = billing?.fairUse?.codexTokens
+  const burn = billing?.codexTokens
+  if (!billing || typeof ceiling !== 'number' || !Number.isFinite(ceiling) || ceiling <= 0 || typeof burn !== 'number' || !Number.isFinite(burn) || burn < 0) return null
+  const ceilingValue = ceiling
+  const burnValue = burn
+
+  const ratio = burnValue / ceilingValue
+  const percent = ratio * 100
+  const tone = percent >= 90 ? 'var(--pt-error)' : percent >= 70 ? 'var(--pt-warn)' : CATEGORICAL[4]
+  const verdict = percent >= 90 ? 'THROTTLE RISK' : percent >= 70 ? 'WATCH' : 'COMFORT'
+  const daily = (costs.codexUsage?.daily ?? []).slice(-7)
+  const maxDaily = Math.max(...daily.map(day => day.tokens), 1)
+
+  return (
+    <>
+      <SectionHead label="FAIR-USE GUARD" />
+      <div className="cp-fairuse" title={billing.fairUse.note}>
+        <div className="cp-fairuse-main">
           <div className="cp-plan-band-head">
-            <span>IN-PLAN BURN vs SOFT BAND</span>
-            <span>~{tok(burn as number)} of a {tok(band as number)} soft band · {burnPercent.toFixed(0)}%</span>
+            <span>CODEX MONTHLY BURN</span>
+            <span>{tok(burnValue)} of {tok(ceilingValue)} estimate · {percent.toFixed(0)}%</span>
           </div>
-          <div className="cp-plan-band-track" role="img" aria-label={`In-plan burn is ${burnPercent.toFixed(0)} percent of the soft band`}>
-            <span style={{ width: `${Math.min(100, burnRatio * 100)}%`, background: burnTone }} />
+          <div className="cp-plan-band-track" role="img" aria-label={`Codex burn is ${percent.toFixed(0)} percent of the estimated monthly ceiling`}>
+            <span style={{ width: `${Math.min(100, ratio * 100)}%`, background: tone }} />
           </div>
-          <div className="cp-plan-band-hint">soft band: editable in data/config.json → billing.fairUseMonthlyTokens</div>
+          <div className="cp-fairuse-verdict" style={{ color: tone }}>{verdict} · {percent.toFixed(0)}% of estimated ceiling</div>
+          <div className="cp-plan-band-hint">estimate only · owner-adjustable in data/config.json → billing.fairUse.codexTokens</div>
         </div>
-      )}
+        <div className="cp-fairuse-trend" aria-label="Codex daily token cadence for the last 7 days">
+          <div className="cp-fairuse-trend-label">7-DAY CADENCE</div>
+          <div className="cp-fairuse-ticks">
+            {daily.map(day => (
+              <span key={day.date} title={`${day.date}: ${tok(day.tokens)} tokens`} style={{ height: `${Math.max(8, (day.tokens / maxDaily) * 100)}%`, background: tone }} />
+            ))}
+          </div>
+          <div className="cp-fairuse-trend-dates"><span>{daily[0]?.date.slice(5) ?? '—'}</span><span>{daily.at(-1)?.date.slice(5) ?? '—'}</span></div>
+        </div>
+      </div>
     </>
   )
 }
@@ -926,6 +947,7 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
       <MeteredSpend costs={costs} />
       <MonthlyBilling costs={costs} />
       <SubscriptionTools costs={costs} />
+      <FairUseGuard costs={costs} />
 
       <SectionHead label="WHAT IT DID" />
       <Activity costs={costs} modeOf={view.modeOf} />

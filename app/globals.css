@@ -4244,6 +4244,32 @@ html[data-motion="reduced"] .mc-hud-progress-fill, html[data-motion="off"] .mc-h
 
 .cp-stat { min-width: 0; }
 
+.cp-fairuse {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px;
+  gap: 22px;
+  padding: 14px 16px 15px;
+  border: 1px solid var(--pt-border);
+  background: rgba(0,0,0,0.16);
+  font-family: var(--font-mono);
+}
+.cp-fairuse-main { min-width: 0; }
+.cp-plan-band-head { display: flex; justify-content: space-between; gap: 12px; color: var(--pt-text-mute); font-size: 9px; letter-spacing: 0.12em; }
+.cp-plan-band-track { height: 10px; margin-top: 10px; overflow: hidden; border: 1px solid var(--pt-border-dim); background: rgba(3,8,20,0.85); }
+.cp-plan-band-track > span { display: block; height: 100%; transition: width 480ms var(--pt-ease); }
+.cp-fairuse-verdict { margin-top: 12px; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; }
+.cp-plan-band-hint { margin-top: 8px; color: var(--pt-text-mute); font-size: 8.5px; letter-spacing: 0.06em; }
+.cp-fairuse-trend { display: flex; min-width: 0; flex-direction: column; justify-content: end; }
+.cp-fairuse-trend-label { color: var(--pt-text-mute); font-size: 8px; letter-spacing: 0.14em; }
+.cp-fairuse-ticks { display: flex; align-items: end; gap: 5px; height: 48px; margin-top: 8px; }
+.cp-fairuse-ticks > span { flex: 1; min-height: 4px; opacity: 0.85; }
+.cp-fairuse-trend-dates { display: flex; justify-content: space-between; margin-top: 5px; color: var(--pt-text-mute); font-size: 8px; }
+
+@media (max-width: 600px) {
+  .cp-fairuse { grid-template-columns: 1fr; gap: 15px; }
+  .cp-fairuse-trend { max-width: 220px; }
+}
+
 /* ── Isometric burn landscape ─────────────────────────────────────────
    The SVG carries a viewBox in WORLD units, so every stroke width and font
    size inside it is a world unit too — that is why the numbers here look

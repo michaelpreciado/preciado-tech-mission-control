@@ -125,9 +125,16 @@ export interface FridayKeys {
   ticktickToken: string
 }
 
+export interface FridayFairUse {
+  /** Owner estimate of the monthly Codex token ceiling for fair-use monitoring. */
+  codexTokens: number
+  /** Human-readable provenance note for the estimate. */
+  note: string
+}
+
 export interface FridayBilling {
-  /** Soft monthly token band used as an in-plan usage signal, not a hard cap. */
-  fairUseMonthlyTokens: number
+  /** Owner-set estimate used as an in-plan usage signal, not a hard cap. */
+  fairUse: FridayFairUse
   /** Claude plan by month 'YYYY-MM' → { plan, amount }. Editable in data/config.json — no code changes to reprice a month. */
   subscriptions: Record<string, { plan: string; amount: number }>
   /** Plan used for any month not listed (current lean setup). */
@@ -181,7 +188,7 @@ export type ConfigFile = Partial<
     paths: Partial<FridayPaths>
     services: Partial<FridayServices>
     keys: Partial<FridayKeys>
-    billing: Partial<FridayBilling>
+    billing: Partial<Omit<FridayBilling, 'fairUse'> & { fairUse: Partial<FridayFairUse> }>
     appearance: Partial<Omit<FridayAppearance, 'elements3d'> & { elements3d: Partial<FridayAppearance['elements3d']> }>
     chat: Partial<FridayChat>
     kanbanRemotes: FridayKanbanRemote[]
@@ -255,9 +262,14 @@ function buildConfig(): FridayConfig {
       ticktickToken: str(env.TICKTICK_API_TOKEN, str(file.keys?.ticktickToken, '')),
     },
     billing: {
-      fairUseMonthlyTokens: typeof file.billing?.fairUseMonthlyTokens === 'number' && Number.isFinite(file.billing.fairUseMonthlyTokens) && file.billing.fairUseMonthlyTokens > 0
-        ? file.billing.fairUseMonthlyTokens
-        : 200_000_000,
+      fairUse: {
+        codexTokens: typeof file.billing?.fairUse?.codexTokens === 'number' && Number.isFinite(file.billing.fairUse.codexTokens) && file.billing.fairUse.codexTokens > 0
+          ? file.billing.fairUse.codexTokens
+          : 500_000_000,
+        note: typeof file.billing?.fairUse?.note === 'string' && file.billing.fairUse.note.trim()
+          ? file.billing.fairUse.note
+          : 'Owner estimate of ChatGPT Plus fair-use ceiling (tokens/month, Codex). Adjust as OpenAI changes policy.',
+      },
       subscriptions: file.billing?.subscriptions && typeof file.billing.subscriptions === 'object'
         ? (file.billing.subscriptions as Record<string, { plan: string; amount: number }>)
         : {
