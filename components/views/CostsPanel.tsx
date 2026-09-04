@@ -55,6 +55,18 @@ function tok(n: number): string {
   return String(n)
 }
 
+function timeAgo(value?: string | null): string {
+  if (!value) return '—'
+  const elapsed = Math.max(0, Date.now() - new Date(value).getTime())
+  const minutes = Math.floor(elapsed / 60_000)
+  if (minutes < 1) return 'now'
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
+}
+
 /** Never renders a non-zero share as "0%" — a real but tiny slice reading as
  *  zero is the same lie as omitting it. */
 function pct(n: number, d: number): string {
@@ -734,6 +746,73 @@ function MonthlyBilling({ costs }: { costs: CostDashboard }) {
   )
 }
 
+/* ── Subscription tools: real usage against the one flat plan ───────── */
+
+function SubscriptionTools({ costs }: { costs: CostDashboard }) {
+  const days = costs.dailyWindowDays ?? 30
+  const claude = costs.claudeUsage
+  const codex = costs.codexUsage
+  const usage = [
+    {
+      name: 'Claude Code',
+      data: claude,
+      windowTokens: (claude?.daily ?? []).reduce((sum, day) => sum + day.tokens, 0),
+      sessions: claude?.sessionsCount ?? 0,
+      lastActive: [...(claude?.daily ?? [])].reverse().find(day => day.tokens > 0)?.date ?? null,
+      model: claude?.models?.[0]?.model,
+      tag: null,
+    },
+    {
+      name: 'Codex',
+      data: codex,
+      windowTokens: (codex?.daily ?? []).reduce((sum, day) => sum + day.tokens, 0),
+      sessions: codex?.sessionsCount ?? 0,
+      lastActive: codex?.lastActivityAt,
+      model: codex?.models?.[0]?.model,
+      tag: codex?.planType ? `via ${codex.planType.toLowerCase() === 'plus' ? 'ChatGPT Plus' : codex.planType}` : null,
+    },
+  ]
+  const claudeTokens = usage[0].windowTokens
+  const codexTokens = usage[1].windowTokens
+  const delta = claudeTokens === codexTokens
+    ? 'Equal logged workload'
+    : claudeTokens === 0 && codexTokens === 0
+      ? 'No recent workload logged'
+      : `${usage[claudeTokens > codexTokens ? 0 : 1].name} is the heavier workload`
+
+  return (
+    <>
+      <SectionHead label="SUBSCRIPTION TOOLS — USE & KEEP" />
+      <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))' }}>
+        {usage.map(tool => {
+          const hasUsage = !!tool.data?.models?.length || tool.windowTokens > 0
+          return (
+            <Window key={tool.name} tag="◎" title={tool.name} meta="flat plan · usage logged locally">
+              <div style={{ padding: '14px 16px 15px', fontFamily: 'var(--font-mono)', opacity: hasUsage ? 1 : 0.55 }}>
+                {tool.tag && <div style={{ display: 'inline-block', padding: '3px 7px', border: '1px solid var(--pt-border)', color: CATEGORICAL[3], fontSize: 8, letterSpacing: '0.12em', marginBottom: 9 }}>{tool.tag}</div>}
+                {hasUsage ? (
+                  <>
+                    <Stat value={tok(tool.windowTokens)} label={`${days}-DAY TOKENS`} size="hero" glow />
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px 18px', marginTop: 15, fontSize: 9.5, color: 'var(--pt-text-dim)', lineHeight: 1.55 }}>
+                      <div><span style={{ color: 'var(--pt-text-mute)', display: 'block', fontSize: 8, letterSpacing: '0.12em' }}>ALL-TIME TOKENS</span>{tok(tool.data?.totalTokens ?? 0)}</div>
+                      <div><span style={{ color: 'var(--pt-text-mute)', display: 'block', fontSize: 8, letterSpacing: '0.12em' }}>SESSIONS</span>{tool.sessions.toLocaleString()}</div>
+                      <div><span style={{ color: 'var(--pt-text-mute)', display: 'block', fontSize: 8, letterSpacing: '0.12em' }}>LAST ACTIVE</span>{timeAgo(tool.lastActive)}</div>
+                      <div><span style={{ color: 'var(--pt-text-mute)', display: 'block', fontSize: 8, letterSpacing: '0.12em' }}>TOP MODEL</span><span style={{ overflowWrap: 'anywhere' }}>{tool.model ?? '—'}</span></div>
+                    </div>
+                  </>
+                ) : <div style={{ padding: '22px 0', fontSize: 10, color: 'var(--pt-text-mute)', letterSpacing: '0.12em' }}>— NO USAGE LOGGED —</div>}
+              </div>
+            </Window>
+          )
+        })}
+      </div>
+      <div style={{ padding: '9px 16px 12px', color: 'var(--pt-text-dim)', fontFamily: 'var(--font-mono)', fontSize: 9.5, borderBottom: '1px solid var(--pt-border-dim)' }}>
+        Claude Code: {tok(claudeTokens)} tokens · Codex: {tok(codexTokens)} · {delta}
+      </div>
+    </>
+  )
+}
+
 /* ── Panel ──────────────────────────────────────────────────────────── */
 
 export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = {}) {
@@ -823,6 +902,7 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
       <ActualSpend costs={costs} />
       <MeteredSpend costs={costs} />
       <MonthlyBilling costs={costs} />
+      <SubscriptionTools costs={costs} />
 
       <SectionHead label="WHAT IT DID" />
       <Activity costs={costs} modeOf={view.modeOf} />

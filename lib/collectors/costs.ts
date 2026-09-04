@@ -154,6 +154,7 @@ async function collectClaudeUsage(): Promise<CostDashboard['claudeUsage']> {
     totalOutputTokens: models.reduce((s, m) => s + m.outputTokens, 0),
     totalCacheTokens: models.reduce((s, m) => s + m.cacheTokens, 0),
     totalTokens: models.reduce((s, m) => s + m.totalTokens, 0),
+    sessionsCount: files.length,
     daily,
     monthlyTokens,
   }

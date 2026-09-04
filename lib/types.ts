@@ -229,6 +229,8 @@ export type CostDashboard = {
     totalOutputTokens: number
     totalCacheTokens: number
     totalTokens: number
+    /** session file count over all history */
+    sessionsCount: number
     /** Trailing `dailyWindowDays` calendar days. `models`/`totalTokens` above
      *  are all-time and are NOT limited to this window. */
     daily: { date: string; tokens: number; byModel: Record<string, number> }[]

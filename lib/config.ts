@@ -259,7 +259,7 @@ function buildConfig(): FridayConfig {
             '2026-07': { plan: 'Claude Max', amount: 125 },
             '2026-08': { plan: 'Claude Pro', amount: 20 },
           },
-      defaultPlan: file.billing?.defaultPlan ?? { plan: 'Claude Pro', amount: 20 },
+      defaultPlan: file.billing?.defaultPlan ?? { plan: 'ChatGPT Plus', amount: 20 },
     },
     appearance: {
       accentColor: str(env.NEXT_PUBLIC_ACCENT_COLOR, str(file.appearance?.accentColor, '#ff10f0')),
