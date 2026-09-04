@@ -166,6 +166,62 @@ function Bar({ value, max, color }: { value: number; max: number; color: string 
   )
 }
 
+function BurnTrendSparkline({
+  codexDaily,
+  windowDays,
+  tone,
+}: {
+  codexDaily: { date: string; tokens: number }[]
+  windowDays: number
+  tone: string
+}) {
+  const series = new Map(codexDaily.map(day => [day.date, day.tokens]))
+  const activeDays = [...series.entries()].sort(([a], [b]) => a.localeCompare(b))
+  const latestDate = activeDays.at(-1)?.[0]
+  if (!latestDate) return null
+
+  const daysInWindow = Math.max(1, windowDays)
+  const latestCalendarDate = new Date(`${latestDate}T00:00:00Z`)
+  const days = Array.from({ length: daysInWindow }, (_, index) => {
+    const date = new Date(latestCalendarDate)
+    date.setUTCDate(latestCalendarDate.getUTCDate() - (daysInWindow - index - 1))
+    const dateKey = date.toISOString().slice(0, 10)
+    return [dateKey, series.get(dateKey) ?? 0] as [string, number]
+  })
+  const values = days.map(([, value]) => value)
+  if (values.every(value => value === 0)) return null
+
+  const width = 320
+  const height = 44
+  const padX = 4
+  const padY = 5
+  const max = Math.max(...values, 1)
+  const x = (index: number) => days.length === 1 ? width / 2 : padX + (index / (days.length - 1)) * (width - padX * 2)
+  const y = (value: number) => height - padY - (value / max) * (height - padY * 2)
+  const points = values.map((value, index) => `${x(index)},${y(value)}`).join(' ')
+  const areaPoints = `${padX},${height - padY} ${points} ${width - padX},${height - padY}`
+  const first = values[0]
+  const latest = values.at(-1) ?? 0
+  const direction = latest > first ? 'up' : latest < first ? 'down' : 'flat'
+  const peakIndex = values.reduce((best, value, index) => value > values[best] ? index : best, 0)
+  const label = `Last ${days.length} days Codex burn against the estimated monthly ceiling, trending ${direction}, peak ${tok(values[peakIndex])} on ${days[peakIndex][0]}`
+
+  return (
+    <div className="cp-plan-band-sparkline">
+      <svg
+        role="img"
+        aria-label={label}
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="none"
+      >
+        <polygon points={areaPoints} fill={tone} opacity="0.12" />
+        <polyline points={points} fill="none" stroke={tone} strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" />
+        <circle cx={x(values.length - 1)} cy={y(latest)} r="2.5" fill={tone} />
+      </svg>
+    </div>
+  )
+}
+
 /* ── 1 · What you actually paid ─────────────────────────────────────── */
 
 function ActualSpend({ costs }: { costs: CostDashboard }) {
@@ -840,6 +896,7 @@ function FairUseGuard({ costs }: { costs: CostDashboard }) {
           <div className="cp-plan-band-track" role="img" aria-label={`Codex burn is ${percent.toFixed(0)} percent of the estimated monthly ceiling`}>
             <span style={{ width: `${Math.min(100, ratio * 100)}%`, background: tone }} />
           </div>
+          <BurnTrendSparkline codexDaily={costs.codexUsage?.daily ?? []} windowDays={7} tone={tone} />
           <div className="cp-fairuse-verdict" style={{ color: tone }}>{verdict} · {percent.toFixed(0)}% of estimated ceiling</div>
           <div className="cp-plan-band-hint">estimate only · owner-adjustable in data/config.json → billing.fairUse.codexTokens</div>
         </div>
