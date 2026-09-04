@@ -292,6 +292,7 @@ export type CostDashboard = {
     month: string
     plan: string
     planAmount: number
+    fairUseMonthlyTokens: number
     openRouterUsd: number | null
     apiTokens: number
     claudeTokens: number

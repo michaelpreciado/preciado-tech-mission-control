@@ -780,6 +780,17 @@ function SubscriptionTools({ costs }: { costs: CostDashboard }) {
       ? 'No recent workload logged'
       : `${usage[claudeTokens > codexTokens ? 0 : 1].name} is the heavier workload`
 
+  const billing = costs.billing?.[0]
+  const band = billing?.fairUseMonthlyTokens
+  const burn = billing && Number.isFinite(billing.claudeTokens) && Number.isFinite(billing.codexTokens)
+    ? billing.claudeTokens + billing.codexTokens
+    : null
+  const validBand = typeof band === 'number' && Number.isFinite(band) && band > 0
+  const showBand = burn != null && burn >= 0 && validBand
+  const burnRatio = showBand ? burn / (band as number) : 0
+  const burnPercent = showBand ? burnRatio * 100 : 0
+  const burnTone = burnPercent > 85 ? 'var(--pt-error)' : burnPercent >= 60 ? 'var(--pt-warn)' : 'var(--pt-ok)'
+
   return (
     <>
       <SectionHead label="SUBSCRIPTION TOOLS — USE & KEEP" />
@@ -809,6 +820,18 @@ function SubscriptionTools({ costs }: { costs: CostDashboard }) {
       <div style={{ padding: '9px 16px 12px', color: 'var(--pt-text-dim)', fontFamily: 'var(--font-mono)', fontSize: 9.5, borderBottom: '1px solid var(--pt-border-dim)' }}>
         Claude Code: {tok(claudeTokens)} tokens · Codex: {tok(codexTokens)} · {delta}
       </div>
+      {showBand && (
+        <div className="cp-plan-band" aria-label={`In-plan burn ${tok(burn as number)} of a ${tok(band as number)} soft band, ${burnPercent.toFixed(0)} percent`}>
+          <div className="cp-plan-band-head">
+            <span>IN-PLAN BURN vs SOFT BAND</span>
+            <span>~{tok(burn as number)} of a {tok(band as number)} soft band · {burnPercent.toFixed(0)}%</span>
+          </div>
+          <div className="cp-plan-band-track" role="img" aria-label={`In-plan burn is ${burnPercent.toFixed(0)} percent of the soft band`}>
+            <span style={{ width: `${Math.min(100, burnRatio * 100)}%`, background: burnTone }} />
+          </div>
+          <div className="cp-plan-band-hint">soft band: editable in data/config.json → billing.fairUseMonthlyTokens</div>
+        </div>
+      )}
     </>
   )
 }

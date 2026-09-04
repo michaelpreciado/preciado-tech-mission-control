@@ -10,6 +10,7 @@
  */
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { useLiveData } from './LiveDataProvider'
 import { useUiSettings } from './ui-settings'
 import { SectionHead, SkeletonPanel, fmtDate } from './ui'
@@ -58,7 +59,38 @@ function PresenceClock({ generatedAt, isLive }: { generatedAt?: string; isLive: 
 
 /* ── Live status tiles (tappable → deep link) ────────────────────────── */
 
-type TileDef = { key: string; label: string; glyph: string; href: string; value: string; sub: string; tone: 'ok' | 'warn' | 'err' | 'info'; spark?: number[]; spark2?: number[]; heat?: number[] }
+type TileDef = { key: string; label: string; glyph: string; href: string; value: string; sub: string; tone: 'ok' | 'warn' | 'err' | 'info'; animateValue?: boolean; spark?: number[]; spark2?: number[]; heat?: number[] }
+
+function useCountUp(target: number, duration = 600): number {
+  const [value, setValue] = useState(target)
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { setValue(target); return }
+    const start = performance.now()
+    const from = value
+    let frame = 0
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - start) / duration)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setValue(from + (target - from) * eased)
+      if (progress < 1) frame = requestAnimationFrame(tick)
+    }
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  // Capture the settled value as the start when the target changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target, duration])
+  return value
+}
+
+function AnimatedTileValue({ tile }: { tile: TileDef }) {
+  if (!tile.animateValue) return <>{tile.value}</>
+  const numeric = Number(tile.value.replace(/[^0-9.-]/g, ''))
+  const value = useCountUp(numeric, 600)
+  if (!Number.isFinite(numeric)) return <>{tile.value}</>
+  const prefix = tile.value.startsWith('$') ? '$' : ''
+  const suffix = tile.value.endsWith('d') ? 'd' : ''
+  return <>{prefix}{Math.round(value).toLocaleString()}{suffix}</>
+}
 
 /** Normalise a contribution count to a 0–4 intensity step against its own series. */
 function heatLevel(v: number, series: number[]): number {
@@ -142,7 +174,8 @@ function StatusTiles() {
       { key: 'working', label: 'WORKING NOW', glyph: '▶', href: '/bots', value: String(running), sub: 'agents working', tone: running ? 'ok' : 'info' },
       { key: 'open', label: 'OPEN TASKS', glyph: '≡', href: '/kanban', value: String(open), sub: 'kanban board', tone: open ? 'warn' : 'ok' },
       { key: 'cron', label: 'CRON FAILS', glyph: '○', href: '/calendar', value: String(cronFails), sub: 'jobs failing', tone: cronFails ? 'err' : 'ok' },
-      { key: 'cost', label: 'COST · THIS MO', glyph: '$', href: '/costs', value: costMonth, sub: costSub, tone: costTone, spark: costSpark, spark2: localSpark.length > 1 ? localSpark : undefined },
+      { key: 'cost', label: 'COST · THIS MO', glyph: '$', href: '/costs', value: costMonth, sub: costSub, tone: costTone, animateValue: true, spark: costSpark, spark2: localSpark.length > 1 ? localSpark : undefined },
+      { key: 'plan', label: 'IN-PLAN BURN', glyph: '◈', href: '/costs', value: formatCompact(planTokens), sub: 'Claude + Codex · 30d', tone: 'info', animateValue: true },
       { key: 'gh', label: 'GH STREAK', glyph: '★', href: '/github', value: `${ghStreak}d`, sub: 'contributions', tone: ghStreak ? 'ok' : 'info', heat: ghHeat },
       { key: 'proj', label: 'PROJECTS', glyph: '▤', href: '/projects', value: String(data.counts?.projects ?? data.projects.length), sub: 'active repos', tone: 'info' },
     ] as TileDef[]
@@ -158,13 +191,13 @@ function StatusTiles() {
     <>
       {heroTile && (
         <div className="mc-home-tile-hero">
-          <Link href={heroTile.href} className={`mc-home-tile tone-${heroTile.tone} is-hero`}>
+          <Link href={heroTile.href} style={{ '--i': 0 } as CSSProperties} className={`mc-home-tile tone-${heroTile.tone} is-hero`}>
             <span className="mc-home-tile-glyph">{heroTile.glyph}</span>
             <span className="mc-home-tile-mid">
               <span className="mc-home-tile-label">{heroTile.label}</span>
               <span className="mc-home-tile-sub">{heroTile.sub}</span>
             </span>
-            <span className="mc-home-tile-value">{heroTile.value}</span>
+            <span className="mc-home-tile-value"><AnimatedTileValue tile={heroTile} /></span>
             {heroTile.spark && heroTile.spark.length > 1 && (
               <span className="mc-home-tile-spark" aria-hidden="true"><Sparkline points={heroTile.spark} color="var(--pt-neon-bright)" /></span>
             )}
@@ -173,14 +206,14 @@ function StatusTiles() {
         </div>
       )}
       <div className="mc-home-tiles">
-        {rest.map(t => (
-          <Link key={t.key} href={t.href} className={`mc-home-tile tone-${t.tone}`}>
+        {rest.map((t, i) => (
+          <Link key={t.key} href={t.href} style={{ '--i': i + 1 } as CSSProperties} className={`mc-home-tile tone-${t.tone}`}>
             <span className="mc-home-tile-glyph">{t.glyph}</span>
             <span className="mc-home-tile-mid">
               <span className="mc-home-tile-label">{t.label}</span>
               <span className="mc-home-tile-sub">{t.sub}</span>
             </span>
-            <span className="mc-home-tile-value">{t.value}</span>
+            <span className="mc-home-tile-value"><AnimatedTileValue tile={t} /></span>
             {t.spark && t.spark.length > 1 && (
               <span className="mc-home-tile-spark" aria-hidden="true"><Sparkline points={t.spark} color="var(--pt-info)" /></span>
             )}

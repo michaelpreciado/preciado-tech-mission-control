@@ -126,6 +126,8 @@ export interface FridayKeys {
 }
 
 export interface FridayBilling {
+  /** Soft monthly token band used as an in-plan usage signal, not a hard cap. */
+  fairUseMonthlyTokens: number
   /** Claude plan by month 'YYYY-MM' → { plan, amount }. Editable in data/config.json — no code changes to reprice a month. */
   subscriptions: Record<string, { plan: string; amount: number }>
   /** Plan used for any month not listed (current lean setup). */
@@ -253,6 +255,9 @@ function buildConfig(): FridayConfig {
       ticktickToken: str(env.TICKTICK_API_TOKEN, str(file.keys?.ticktickToken, '')),
     },
     billing: {
+      fairUseMonthlyTokens: typeof file.billing?.fairUseMonthlyTokens === 'number' && Number.isFinite(file.billing.fairUseMonthlyTokens) && file.billing.fairUseMonthlyTokens > 0
+        ? file.billing.fairUseMonthlyTokens
+        : 200_000_000,
       subscriptions: file.billing?.subscriptions && typeof file.billing.subscriptions === 'object'
         ? (file.billing.subscriptions as Record<string, { plan: string; amount: number }>)
         : {

@@ -3935,7 +3935,7 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
 
 /* ── Keyboard focus — always visible, Apple-crisp ────────────────────── */
 :where(button, [role="button"], a, [tabindex]):focus-visible {
-  outline: 2px solid var(--pt-neon-bright);
+  outline: var(--mc-focus-ring, 2px solid var(--pt-neon-bright));
   outline-offset: 2px;
   border-radius: var(--pt-r-sm);
 }
@@ -3986,6 +3986,7 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   .mc-brand::after, .mc-nav-scan, .mc-scanlines, .mc-hud-grid,
   .mc-hud-ring-rot, .mc-sub-edge, .mc-hud-beam, .mc-hud-progress-fill { animation: none !important; }
   .mc-main > * { animation: none !important; }
+  .mc-home-tile, .cp-plan-band-track span { animation: none !important; transition: none !important; }
 }
 /* Same freeze, driven by the in-app motion setting (Setup → UI CUSTOMIZATION)
    — a union with prefers-reduced-motion above, per DESIGN-SPEC §5. Ambient
@@ -4375,6 +4376,13 @@ html[data-motion="reduced"] .mc-hud-progress-fill, html[data-motion="off"] .mc-h
   position: relative; overflow: hidden;
   transition: transform 200ms var(--pt-ease), border-color 200ms var(--pt-ease), box-shadow 200ms var(--pt-ease);
 }
+@media (prefers-reduced-motion: no-preference) {
+  .mc-home-tile { animation: mc-home-tile-enter 320ms var(--pt-ease) both; animation-delay: calc(var(--i, 0) * 32ms); }
+}
+@keyframes mc-home-tile-enter {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .mc-home-tile::before {
   content: ''; position: absolute; inset: 0 0 auto 0; height: 2px;
   background: var(--pt-neon); opacity: 0.6;
@@ -4383,6 +4391,10 @@ html[data-motion="reduced"] .mc-hud-progress-fill, html[data-motion="off"] .mc-h
   transform: translateY(-2px);
   border-color: var(--pt-border);
   box-shadow: var(--pt-glow-md);
+}
+@media (pointer: fine) {
+  .mc-home-tile { transition: transform 80ms var(--pt-ease), border-color 200ms var(--pt-ease), box-shadow 200ms var(--pt-ease); }
+  .mc-home-tile:active { transform: scale(0.985); box-shadow: none; }
 }
 .mc-home-tile-glyph {
   font-size: 22px; color: var(--pt-neon-bright);
@@ -4414,6 +4426,20 @@ html[data-motion="reduced"] .mc-hud-progress-fill, html[data-motion="off"] .mc-h
   box-shadow: 0 0 0 6px rgba(255,95,87,0.35);
   animation: home-tile-err 1.2s ease-in-out infinite;
 }
+
+/* Shared keyboard focus token for interactive tiles and rows. */
+:root { --mc-focus-ring: 2px solid var(--pt-neon-bright); }
+:where(button, [role="button"], a, [tabindex]):focus-visible {
+  outline: var(--mc-focus-ring);
+  outline-offset: 2px;
+}
+
+.cp-plan-band { padding: 13px 16px 15px; border-bottom: 1px solid var(--pt-border-dim); font-family: var(--font-mono); }
+.cp-plan-band-head { display: flex; justify-content: space-between; gap: 12px; color: var(--pt-text-dim); font-size: 9px; letter-spacing: .1em; flex-wrap: wrap; }
+.cp-plan-band-head span:last-child { color: var(--pt-text-high); font-variant-numeric: tabular-nums; letter-spacing: .03em; }
+.cp-plan-band-track { height: 7px; margin: 9px 0 6px; overflow: hidden; background: var(--pt-border-dim); border-radius: 99px; }
+.cp-plan-band-track span { display: block; height: 100%; border-radius: inherit; transition: width 300ms var(--pt-ease); }
+.cp-plan-band-hint { color: var(--pt-text-mute); font-size: 8px; letter-spacing: .05em; }
 @keyframes home-tile-err { 0%,100% { opacity: 0; } 50% { opacity: 1; } }
 html[data-motion="reduced"] .mc-home-tile.tone-err::after,
 html[data-motion="off"] .mc-home-tile.tone-err::after {
