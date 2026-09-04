@@ -1,11 +1,11 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { SectionHead } from '@/components/ui'
+import { SectionHead, SkeletonPanel } from '@/components/ui'
 import '../vf/v2-lane.css'
 
-const KanbanBoard = dynamic(() => import('@/components/KanbanBoard').then(m => m.KanbanBoard), { ssr: false })
-const CommandHeader = dynamic(() => import('@/components/views/CommandHeader').then(m => m.CommandHeader), { ssr: false })
+const KanbanBoard = dynamic(() => import('@/components/KanbanBoard').then(m => m.KanbanBoard), { loading: () => <SkeletonPanel label="loading kanban" /> })
+const CommandHeader = dynamic(() => import('@/components/views/CommandHeader').then(m => m.CommandHeader), { loading: () => <SkeletonPanel label="loading header" /> })
 
 export default function KanbanPage() {
   return (

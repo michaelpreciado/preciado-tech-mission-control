@@ -35,6 +35,7 @@ import {
   type GpuCard,
 } from './collectors/host-parsers'
 import { logger } from './logger'
+import { getCachedCollector } from './collector-cache'
 
 const pexec = promisify(execFile)
 
@@ -388,7 +389,7 @@ function stop(): void {
 
 /* ── Read side ──────────────────────────────────────────────────────── */
 
-export async function getHostMetrics(): Promise<HostMetrics> {
+async function getHostMetricsFresh(): Promise<HostMetrics> {
   lastReadAt = Date.now()
   if (!staticInfo) staticInfo = await readStatic()
   const cold = !timer
@@ -426,4 +427,8 @@ export async function getHostMetrics(): Promise<HostMetrics> {
       gpu: Array.from({ length: gpuCount }, (_, i) => samples.map(s => s.gpus[i]?.utilPct ?? 0)),
     },
   }
+}
+
+export function getHostMetrics(): Promise<HostMetrics> {
+  return getCachedCollector('host-metrics', getHostMetricsFresh)
 }

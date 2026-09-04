@@ -2,13 +2,15 @@
 
 import { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { usePathname } from 'next/navigation'
 import { LiveDataProvider, useLiveData } from './LiveDataProvider'
-import { CommandPalette } from './CommandPalette'
 import { Button } from './ui'
 import { Icon, type IconName } from './icons'
 import { UiSettingsContext, DEFAULT_UI_SETTINGS, useUiSettings, type UiSettings } from './ui-settings'
 import { NAV, PINNED_TAB_IDS } from '@/lib/nav-tabs'
+
+const CommandPalette = dynamic(() => import('./CommandPalette').then(m => m.CommandPalette), { ssr: false })
 
 /** Brand identity resolved server-side in lib/config.ts, provided by <Shell>. */
 const BrandContext = createContext<{ appName: string; appTagline: string }>({

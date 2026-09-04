@@ -23,6 +23,7 @@ import { DatabaseSync } from 'node:sqlite'
 import { getConfig } from '../config'
 import { logger } from '../logger'
 import { collectCron } from './cron'
+import { getCachedCollector } from '../collector-cache'
 
 /* ── Types ───────────────────────────────────────────────── */
 
@@ -279,16 +280,15 @@ async function routinesByBot(): Promise<Map<string, BotRoutine[]>> {
 
 /* ── Public API ──────────────────────────────────────────── */
 
-let cache: { snap: BotsSnapshot; at: number } | null = null
-const TTL_MS = 5_000
-
 /** Every local Bot (Hermes profile) with its metadata + routine readout.
  *  Pass `refresh = true` to bypass the short TTL (used right after a
  *  create/delete so the caller sees the on-disk truth immediately). */
 export async function collectBots(refresh = false): Promise<BotsSnapshot> {
-  const now = Date.now()
-  if (!refresh && cache && now - cache.at < TTL_MS) return cache.snap
+  return getCachedCollector('bots', collectBotsFresh, 5_000, refresh)
+}
 
+async function collectBotsFresh(): Promise<BotsSnapshot> {
+  const now = Date.now()
   const [profiles, routineMap] = [discoverProfiles(), await routinesByBot()]
 
   const bots: Bot[] = profiles.map(entry => {
@@ -320,6 +320,5 @@ export async function collectBots(refresh = false): Promise<BotsSnapshot> {
       running: bots.filter(b => b.gateway.status === 'running').length,
     },
   }
-  cache = { snap, at: now }
   return snap
 }

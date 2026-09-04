@@ -20,6 +20,7 @@ import { getConfig } from './config'
 import { logger } from './logger'
 import type { AgentChannel, AgentActivity } from './types'
 import { LIVE_WINDOW_MS, dominantKind, isLive } from './agent-work'
+import { getCachedCollector } from './collector-cache'
 
 const execFileAsync = promisify(execFile)
 
@@ -182,7 +183,7 @@ async function readCodex(now: number): Promise<CodexActivity> {
   }
 }
 
-export async function collectAgentActivity(now = Date.now()): Promise<AgentActivity> {
+async function collectAgentActivityFresh(now = Date.now()): Promise<AgentActivity> {
   const [{ rows, tools }, terminals, gateway, codex] = await Promise.all([
     Promise.resolve(readSessions(now)),
     readTerminals(),
@@ -227,6 +228,10 @@ export async function collectAgentActivity(now = Date.now()): Promise<AgentActiv
     terminals: terminals.map(t => ({ tty: t.tty, from: t.from })),
     gatewayRunning: gateway.running,
   }
+}
+
+export function collectAgentActivity(now = Date.now()): Promise<AgentActivity> {
+  return getCachedCollector('agent-activity', () => collectAgentActivityFresh(now))
 }
 
 export { LIVE_WINDOW_MS, workKindForTool, dominantKind, isLive } from './agent-work'

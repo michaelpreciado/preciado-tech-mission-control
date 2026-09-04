@@ -6,6 +6,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { getConfig } from './config'
+import { getCachedCollector } from './collector-cache'
 import type { ServiceHealth, SystemHealthData } from './types'
 
 const PROBE_TIMEOUT_MS = 1500
@@ -118,7 +119,7 @@ async function fileHealth(f: { id: string; name: string; file: string; staleAfte
   }
 }
 
-export async function collectSystemHealth(): Promise<SystemHealthData> {
+async function collectSystemHealthFresh(): Promise<SystemHealthData> {
   const services = await Promise.all([
     hermesGatewayHealth(),
     ...httpProbes().map(httpProbe),
@@ -129,4 +130,8 @@ export async function collectSystemHealth(): Promise<SystemHealthData> {
     services,
     problems: services.filter(s => s.status !== 'up').length,
   }
+}
+
+export function collectSystemHealth(): Promise<SystemHealthData> {
+  return getCachedCollector('system-health', collectSystemHealthFresh)
 }
