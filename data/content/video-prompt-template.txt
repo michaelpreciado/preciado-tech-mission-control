@@ -1,0 +1,263 @@
+# 🎬 Preciado Tech — Master Video Edit Prompt (HyperFrames + Hermes)
+
+> Paste this entire prompt into Hermes Agent. Replace anything inside <<DOUBLE BRACKETS>> with the specifics of the current video. Everything else stays the same on every run so the brand is locked in.
+
+-----
+
+## How to use this template
+
+1. Open Hermes in the project folder for the new video.
+1. Drop your raw clips, screenshots, and any UI captures into ./assets/.
+1. Replace the <<...>> slots in Section 0 — Project Brief.
+1. Paste the whole prompt (Sections 0 through 8) into Hermes.
+1. Hermes scaffolds with npx hyperframes init, runs lint, then preview, then render.
+1. Review the preview, give plain-English tweaks ("make Step 2 hold longer", "swap the transition between scenes 3 and 4 to liquid-wipe"), and re-render.
+
+-----
+
+## SECTION 9 — Autonomous Content Capture (WORKFLOW)
+
+When working on ANY project for Preciado Tech, AUTOMATICALLY capture content for future videos:
+
+### What to Capture
+- Terminal outputs (`terminal-*.txt`)
+- Code snippets (`code-*.js`, `code-*.html`)
+- Debug logs (`debug-*.log`, `debug-*.md`)
+- Screenshots of working features
+- Error messages and solutions
+
+### Capture Locations
+- **Video assets**: `/home/mp/preciatech-test/assets/`
+- **Project logs**: `<project-dir>/data/`
+- **Session summaries**: `<project-dir>/data/*-debug.md`
+
+### Capture Workflow
+Every project session should:
+1. Create `/home/mp/preciatech-test/assets/` if missing
+2. Save terminal outputs with `tee` or redirect to asset dir
+3. Copy relevant code snippets to asset dir with descriptive names
+4. Write debug summaries with error messages and solutions
+5. Tag files with timestamps for organization
+
+-----
+
+## SECTION 0 — Project Brief (the only thing that changes per video)
+TOPIC:                <<TOPIC>>
+HOOK LINE:            <<HOOK LINE>>
+NUMBER OF STEPS:      <<NUMBER OF STEPS>>
+STEP TITLES:          <<STEP TITLES>>
+STEP BULLETS:         <<STEP BULLETS>>
+TERMINAL COMMAND:     <<TERMINAL COMMAND>>
+PAYOFF / RESULT:      <<PAYOFF / RESULT>>
+CTA HANDLE:           <<CTA HANDLE>>
+CTA TEXT:             <<CTA TEXT>>
+TARGET LENGTH:        <<TARGET LENGTH>>
+PLATFORM:             <<PLATFORM>>
+SOURCE ASSETS:        <<SOURCE ASSETS>>
+
+-----
+
+## SECTION 1 — Brand Lock (do not deviate)
+
+This is the Blue Matrix Glass identity for the @preciadotech channel. Every video must look like it came from the same studio.
+
+### Color tokens (use these exact hex values)
+:root {
+  --bg-void:        #000000;
+  --bg-deep:        #02030a;
+  --neon-blue:      #00b4ff;
+  --neon-blue-soft: #4dd2ff;
+  --terminal-green: #39ff14;
+  --pure-white:     #f5f7fa;
+  --warn-red:       #ff2d55;
+  --warn-red-glow:  #ff527a;
+  --grid-line:      rgba(0,180,255,0.08);
+}
+
+### Typography
+- Display / Headers / Channel Name — "VT323", "Press Start 2P", monospace — bold, glowing blue (--neon-blue), letter-spacing 0.02em, text-shadow: 0 0 12px var(--neon-blue), 0 0 24px var(--neon-blue); glow.
+- Body / Bullets / Captions — "JetBrains Mono", "Fira Code", "Roboto Mono", monospace — regular weight, --pure-white for body, --terminal-green for keywords and active states.
+- Terminal Command — "JetBrains Mono", monospace, --terminal-green, slight CRT-style green glow.
+- Never mix in sans-serif. Never use Arial, Helvetica, or rounded fonts. Monospace is the brand.
+
+### Background — Matrix Code Rain (always on, always subtle)
+- Faint vertical streams of 0 and 1 characters in --neon-blue at 8-12% opacity.
+- Drift speed: 60-90 seconds per full screen height (slow — it's atmosphere, not a strobe).
+- Above the rain, an even fainter 80x80px grid using --grid-line adds the "blueprint" feel.
+- The rain and grid persist through the entire video. They never cut.
+
+### The Glass Window (every content card)
+- Rounded corners, border-radius: 14px.
+- 1.5px solid --neon-blue border with double-layered glow: box-shadow: 0 0 0 1px var(--neon-blue) inset, 0 0 18px rgba(0,180,255,0.55), 0 0 42px rgba(0,180,255,0.25);
+- Glassmorphism interior: background: rgba(2,3,10,0.72); backdrop-filter: blur(14px) saturate(140%);
+- Top bar of every "main window" card: a 28px-tall strip with three traffic-light dots (#ff5f56, #ffbd2e, #27c93f) on the left and a tiny user@preciadotech label in --neon-blue-soft.
+
+### The Persistent Terminal Footer
+- Single-line command at the bottom the entire video: user@preciadotech:~$ <<TERMINAL COMMAND>>
+- Thin glass-window pill with the same blue border, anchored 24px from the bottom.
+- Once the video starts, the command never changes — it is the channel's signature.
+
+### Iconography
+- Replace standard bullets with > characters in --terminal-green.
+- One emoji per step header (🤖 AI/bots, 📊 analysis/charts, ⚡ execution/speed, 💰 results/money, 🛠️ builds, 🧠 ML/inference, 🔒 security, 🌐 networking).
+- Profile/avatar (when used in the hook) is circular, centered, with the same blue neon ring.
+
+### Visual Hierarchy (ENFORCE IN EVERY VIDEO)
+- **Images must be LARGE** — minimum 400px height, preferably 500px+.
+- **Center ALL content** — vertical AND horizontal centering. Nothing off-screen.
+- **Explanatory elements**: every step must have an emoji icon, animated arrows pointing to relevant UI, and short text (2-4 words) clarifying what is happening.
+- **No "invisible" content** — if it can't be seen, the centering is wrong. Fix immediately.
+
+-----
+
+## SECTION 2 — Scene Architecture (every video follows this beat sheet)
+
+Total runtime targets ~30 seconds. Times are upper bounds — cut shorter for snappier pacing.
+
+### Scene 1 — Hook (0:00 – 0:02) ⚡ make-or-break
+- Pure black, then matrix rain fades up to ~10% in 200ms.
+- The Preciado Tech channel header types itself in character by character with a CRT-style cursor blink (GSAP SteppedEase on text reveal).
+- Beneath it, the topic subtitle stamps in with a quick chromatic-split glitch in --terminal-green.
+- The hook line (<<HOOK LINE>>) flashes onscreen as oversized, bold, glowing blue text — held for ~1.2s.
+- Subtle camera shake (transform: translate ±3px on a 0.08s loop, dampened) for the first 400ms.
+
+### Scene 2 — Setup / Step 1 (0:02 – 0:08)
+- Scene transition into Scene 2: flash-through-white shader transition (180ms, sharp).
+- 🤖 Step 1: <<STEP 1 TITLE from brief>> types in at the top of the glass window.
+- Below it, a glass-window card holds the screenshot/recording. Image entrance: scale 0.92 → 1.0 with power3.out plus a 200ms blue-glow pulse.
+- Bullet card slides up from below with staggered blocks (each > bullet reveals 80ms after the previous, terminal-green typewriter).
+- Hold beat for ~1.5s after all bullets land so a phone viewer can read.
+
+### Scene 3 — Action / Step 2 (0:08 – 0:14)
+- Transition: liquid-wipe (300ms) with a blue-tinted wave.
+- Same glass-window structure, new step header.
+- For UI screen recordings: glass window with 4px inset border and soft cyan vignette at the edges to disguise raw aspect ratios.
+- Kinetic captions for any spoken line — bouncy word-by-word reveal (GSAP back.out(2) on scale, 60ms stagger). Captions sit just above the terminal footer, pure white with 2px black stroke.
+
+### Scene 4 — Reveal / Step 3+ (0:14 – 0:22)
+- Transition: cross-warp-morph (320ms).
+- This is where you show the result. If the topic involves a number, animate it with a count-up tween 0 → target over 0.8s in massive glowing blue numerals.
+- Optional Three.js or shader background flourish (rotating wireframe sphere, audio-reactive bars, low-poly grid tilt) at 25% opacity behind the result.
+
+### Scene 5 — Payoff Beat (0:22 – 0:26)
+- Hold the result on screen.
+- One-line punchline: > result: <<PAYOFF / RESULT>> in terminal-green, typewriter-style.
+- Small green ✓ EXECUTED badge stamps in beside it with a tiny screen-shake (60ms).
+
+### Scene 6 — CTA / Outro (0:26 – 0:30)
+- Transition: chromatic-split (200ms).
+- The handle pill <<CTA HANDLE>> glides up from the bottom with a soft blue glow.
+- Below it, the red CTA button (<<CTA TEXT>>) pulses with a slow heartbeat (box-shadow 0 0 18px → 0 0 42px --warn-red-glow over 1.2s, looping twice).
+- Hold the final frame for 0.6s before the natural loop point.
+
+-----
+
+## SECTION 3 — Animation & Effects Library
+
+### Scene transitions (pick listed one per scene; never mix CSS and shader transitions in the same composition)
+- Hook → Step 1: flash-through-white shader transition.
+- Step → Step: alternate liquid-wipe and cross-warp-morph.
+- Final step → Payoff: zoom through CSS primitive.
+- Payoff → Outro: chromatic-split shader transition.
+
+### Element entrances (GSAP)
+- Headers: gsap.from(el, { y: -24, opacity: 0, duration: 0.5, ease: "power3.out" }).
+- Glass cards: scale 0.92 → 1.0 with power3.out plus one-shot blue glow boost.
+- Bullet stagger: stagger: 0.08, ease: "back.out(1.6)".
+- Numbers / stats: count-up tween, then 0.2s scale bump (1.0 → 1.08 → 1.0).
+- CTA pulse: yoyo: true, repeat: 3 on box-shadow and a 1.02 scale bump.
+
+### Always-on ambient effects
+- Matrix rain (canvas-based, ~80 columns at 1080px wide).
+- Grid overlay at 8% opacity.
+- Scanlines (1px horizontal lines at 4% opacity, every 3px).
+- 1-2% film grain layer at the very top of the stack.
+
+-----
+
+## SECTION 4 — Hermes Workflow (the exact commands)
+Run in the project folder, autonomously, stop only on errors.
+
+```bash
+# 1. Scaffold
+npx hyperframes init preciado-tech-<<topic-slug>>
+cd preciado-tech-<<topic-slug>>
+
+# 2. Drop assets (screenshots, recordings, voiceover into ./assets/)
+
+# 3. Author the composition per Sections 1-3
+
+# 4. Validate before previewing
+npx hyperframes lint --strict
+npx hyperframes validate
+npx hyperframes inspect
+
+# 5. Live preview at http://localhost:3002
+npx hyperframes preview
+
+# 6. After approval, render
+npx hyperframes render --output ./out/preciado-<<topic-slug>>.mp4 --quality high --fps 30 --format mp4
+```
+
+If any lint/validate/inspect step warns about contrast, overflow, or off-grid layout — fix it before rendering.
+
+-----
+
+## SECTION 5 — Viral / Retention Rules
+
+1. First frame = first read. Hook line on screen before 300ms. No animated pre-roll.
+2. One idea per scene. More than 4 bullets → split into two scenes.
+3. Movement every 0.8 seconds. Never a frozen frame longer than 1s.
+4. Captions on every spoken line. 70%+ of plays are muted.
+5. Pattern interrupt at the midpoint (~0:14-0:16): chromatic glitch, quick zoom, unexpected sound.
+6. Loop the ending — final frame visually echoes the first (matrix rain only) so the platform loop is invisible.
+7. Subtitles: lowercase + line breaks. Caps reserved for hooks and CTAs only.
+8. Read-time math: every text block on screen ≥ 200ms/word + 400ms buffer.
+9. One tappable CTA, never two. The follow button is the only CTA.
+
+-----
+
+## SECTION 6 — Voice & Caption Style
+
+- Conversational, direct, first person, no buzzwords. Like the operator actually talks.
+- Short sentences, often 4-7 words.
+- Tech jargon fine, but always pair with a one-line plain-English explanation.
+- No "Are you tired of..." or "What if I told you..." openers. Dead.
+- Good hook patterns:
+  - I built an AI that <<verb>> for me
+  - This local AI runs on a <<machine>>
+  - <<Number>> hours later, it actually works
+  - Nobody's talking about this <<tool / model / trick>>
+  - Watch what happens when I <<action>>
+- End every video on a forward-looking line that hints at the next one. Trains the algorithm to surface the channel as a series.
+
+-----
+
+## SECTION 7 — Acceptance Checklist (self-verify before rendering)
+
+- [ ] Aspect ratio exactly 1080x1920 at 30fps.
+- [ ] Total duration between 25 and 32 seconds.
+- [ ] Matrix rain and grid visible the entire video (never cut).
+- [ ] Every glass card has the blue neon border + double-layered glow.
+- [ ] Terminal footer with user@preciadotech:~$ ... visible from 0:01 onward.
+- [ ] All body text monospace; no sans-serif anywhere.
+- [ ] Every spoken line has a kinetic caption.
+- [ ] Hook line on screen before 300ms.
+- [ ] No frozen frame longer than 1 second.
+- [ ] Final frame visually matches the first frame for clean looping.
+- [ ] CTA is the handle pill + red follow button — and nothing else.
+- [ ] lint --strict, validate, and inspect all pass with zero errors.
+
+-----
+
+## SECTION 8 — Iterating with Hermes (talk to it like an editor)
+
+After the first preview, refine in plain English:
+- "Make the Step 2 header 20% bigger and bump the glow."
+- "The bullets in Step 3 land too fast — slow the stagger to 120ms."
+- "Swap the transition between Scenes 3 and 4 to liquid-wipe."
+- "Add a quick chromatic-split glitch at 0:15 for a pattern interrupt."
+- "Hold the payoff number for an extra 400ms before the outro."
+- "The first frame and last frame don't match — fade the matrix rain back to 10% on the final beat."
+
+Ship it.
