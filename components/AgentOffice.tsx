@@ -27,7 +27,7 @@ const KIND_META: Record<WorkKind, { label: string; glyph: string }> = {
 }
 
 const CHANNEL_GLYPH: Record<string, string> = {
-  telegram: '✈', cli: '❯', desktop: '▣', cron: '◷', subagent: '⑂',
+  telegram: '✈', cli: '❯', codex: '⌘', desktop: '▣', cron: '◷', subagent: '⑂',
 }
 
 function ago(iso: string | null): string {

@@ -14,6 +14,7 @@
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import fs from 'node:fs/promises'
+import os from 'node:os'
 import { DatabaseSync } from 'node:sqlite'
 import { getConfig } from './config'
 import { logger } from './logger'
@@ -26,6 +27,7 @@ const execFileAsync = promisify(execFile)
 const CHANNELS: { id: string; label: string }[] = [
   { id: 'telegram', label: 'Telegram' },
   { id: 'cli', label: 'Terminal' },
+  { id: 'codex', label: 'Codex' },
   { id: 'desktop', label: 'Desktop' },
   { id: 'cron', label: 'Scheduler' },
   { id: 'subagent', label: 'Subagents' },
@@ -102,11 +104,90 @@ async function readGateway(): Promise<{ running: boolean; platforms: Record<stri
   }
 }
 
+type CodexActivity = {
+  live: number
+  model: string | null
+  cwd: string | null
+  lastActivityAt: string | null
+  sessions: number
+}
+
+/** Codex CLI rollout files (`~/.codex/sessions`) are the liveness source. */
+async function readCodex(now: number): Promise<CodexActivity> {
+  const empty: CodexActivity = { live: 0, model: null, cwd: null, lastActivityAt: null, sessions: 0 }
+  try {
+    const root = `${os.homedir()}/.codex/sessions`
+    const cutoff = now - 60 * 60 * 1000
+    const files: { path: string; mtimeMs: number }[] = []
+
+    async function walk(dir: string): Promise<void> {
+      for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
+        const path = `${dir}/${entry.name}`
+        if (entry.isDirectory()) await walk(path)
+        else if (entry.isFile()) {
+          const stat = await fs.stat(path)
+          if (stat.mtimeMs >= cutoff) files.push({ path, mtimeMs: stat.mtimeMs })
+        }
+      }
+    }
+
+    await walk(root)
+    files.sort((a, b) => b.mtimeMs - a.mtimeMs)
+    const sessions = files.slice(0, 100)
+    const liveFiles = sessions.filter(file => isLive(file.mtimeMs, now))
+    let model: string | null = null
+    let cwd: string | null = null
+    if (liveFiles[0]) {
+      const fd = await fs.open(liveFiles[0].path, 'r')
+      try {
+        const chunks: Buffer[] = []
+        let size = 0
+        while (size < 128 * 1024) {
+          const chunk = Buffer.alloc(4096)
+          const { bytesRead } = await fd.read(chunk, 0, chunk.length, null)
+          if (!bytesRead) break
+          const newline = chunk.subarray(0, bytesRead).indexOf(10)
+          const part = newline >= 0 ? chunk.subarray(0, newline) : chunk.subarray(0, bytesRead)
+          chunks.push(part)
+          size += part.length
+          if (newline >= 0) break
+        }
+        const firstLine = Buffer.concat(chunks).toString('utf8')
+      const meta = JSON.parse(firstLine) as {
+        payload?: {
+          model?: unknown
+          cwd?: unknown
+          base_instructions?: { provenance?: { model?: unknown } }
+        }
+      }
+      const payload = meta.payload
+      const provenanceModel = payload?.base_instructions?.provenance?.model
+      model = typeof provenanceModel === 'string'
+        ? provenanceModel
+        : typeof payload?.model === 'string' ? payload.model : 'codex'
+      cwd = typeof payload?.cwd === 'string' ? payload.cwd : null
+      } finally {
+        await fd.close()
+      }
+    }
+    return {
+      live: liveFiles.length,
+      model,
+      cwd,
+      lastActivityAt: sessions[0] ? new Date(sessions[0].mtimeMs).toISOString() : null,
+      sessions: sessions.length,
+    }
+  } catch {
+    return empty
+  }
+}
+
 export async function collectAgentActivity(now = Date.now()): Promise<AgentActivity> {
-  const [{ rows, tools }, terminals, gateway] = await Promise.all([
+  const [{ rows, tools }, terminals, gateway, codex] = await Promise.all([
     Promise.resolve(readSessions(now)),
     readTerminals(),
     readGateway(),
+    readCodex(now),
   ])
 
   const bySource = new Map<string, SessionRow[]>()
@@ -124,15 +205,18 @@ export async function collectAgentActivity(now = Date.now()): Promise<AgentActiv
       ? gateway.platforms.telegram === 'connected'
       : id === 'cli'
         ? terminals.length > 0
+        : id === 'codex'
+          ? codex.sessions > 0
         : undefined
+    const codexChannel = id === 'codex'
     return {
       id,
       label,
-      live: live.length > 0,
-      kind: live.length ? dominantKind(tools.get(id) ?? []) : 'idle',
-      sessionCount: live.length,
-      lastActivityAt: newest?.last_ts ? new Date(newest.last_ts * 1000).toISOString() : null,
-      model: live[0]?.model ?? null,
+      live: codexChannel ? codex.live > 0 : live.length > 0,
+      kind: codexChannel ? (codex.live > 0 ? 'building' : 'idle') : (live.length ? dominantKind(tools.get(id) ?? []) : 'idle'),
+      sessionCount: codexChannel ? codex.live : live.length,
+      lastActivityAt: codexChannel ? codex.lastActivityAt : newest?.last_ts ? new Date(newest.last_ts * 1000).toISOString() : null,
+      model: codexChannel ? codex.model : live[0]?.model ?? null,
       connected,
     }
   })

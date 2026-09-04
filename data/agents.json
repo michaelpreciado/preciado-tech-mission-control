@@ -1,0 +1,15 @@
+[
+  {
+    "id": "codex",
+    "name": "Codex",
+    "role": "Deep Build Agent",
+    "station": "Deep Work",
+    "room": "DEEP WORK BAY",
+    "accent": "#f97316",
+    "model": "gpt-5.6 / codex",
+    "status": "idle",
+    "signal": null,
+    "currentTask": null,
+    "lastRun": null
+  }
+]
