@@ -67,6 +67,12 @@ function heatLevel(v: number, series: number[]): number {
   return Math.min(4, Math.max(1, Math.ceil((v / max) * 4)))
 }
 
+function formatCompact(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(value >= 10_000_000 ? 0 : 1).replace(/\.0$/, '')}M`
+  if (value >= 1_000) return `${(value / 1_000).toFixed(value >= 10_000 ? 0 : 1).replace(/\.0$/, '')}K`
+  return value.toLocaleString()
+}
+
 /** Secondary tile visuals: local-compute spark + GH contribution heatstrip. */
 function TileExtras({ tile }: { tile: TileDef }) {
   return (
@@ -102,15 +108,17 @@ function StatusTiles() {
     const cronFails = (data.cron ?? []).filter(c => c.enabled !== false && c.lastRunStatus === 'error').length
     const billing = data.costs?.billing?.[0]
     const costMonth = billing ? `$${(billing.planAmount + (billing.openRouterUsd ?? 0)).toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—'
+    const planTokens = billing ? (billing.claudeTokens ?? 0) + (billing.codexTokens ?? 0) : 0
     // Freshness cue trumps the savings line — stale numbers get an amber warning
     // instead of being shown silently.
     const staleDays = data.costs?.freshness?.staleDays ?? 0
     const localSaved = data.costs?.localCompute?.costAvoidedMonthUsd
-    const costSub = staleDays > 0
+    const costSubBase = staleDays > 0
       ? `⚠ data ${staleDays}d old`
       : localSaved != null
         ? `this month · local saved $${Math.round(localSaved)}`
         : 'this month'
+    const costSub = planTokens > 0 ? `${costSubBase} · ${formatCompact(planTokens)} in-plan tokens` : costSubBase
     const costTone: TileDef['tone'] = staleDays > 0 ? 'warn' : 'info'
     // Second spark: local-compute daily tokens (53 days) — distinct lime series.
     const localSpark = (data.costs?.localCompute?.daily ?? []).slice(-30).map(d => d.tokens ?? 0)
