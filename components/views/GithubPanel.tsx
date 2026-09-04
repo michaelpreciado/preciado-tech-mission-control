@@ -66,6 +66,11 @@ export function GithubPanel() {
     }
   })
 
+  // Relative sync age for the contributions Window meta. GitHub data refreshes
+  // slowly, so only flag `is-stale` (amber) once it's older than ~24h.
+  const ghSyncAgo = pushedAgo(gh.syncedAt)
+  const ghSyncStale = !!gh.syncedAt && Date.now() - new Date(gh.syncedAt).getTime() > 86_400_000
+
   const repos = gh.repos ?? []
   const totalStars = repos.reduce((s, r) => s + r.stars, 0)
   const totalIssues = repos.reduce((s, r) => s + r.openIssues, 0)
@@ -101,6 +106,16 @@ export function GithubPanel() {
         <Window tag="▦" title="GITHUB · CONTRIBUTIONS"
           meta={<>
             <span className="mc-gh-live"><span className="mc-led green" /> LIVE{gh.syncedAt ? ` · synced ${fmtDate(gh.syncedAt)}` : ''}</span>
+            {gh.syncedAt && (
+              <span
+                className={`mc-gh-sync${ghSyncStale ? ' is-stale' : ''}`}
+                style={ghSyncStale ? { color: 'var(--pt-warn-ink)' } : undefined}
+                title={`GitHub data synced ${fmtDate(gh.syncedAt)}`}
+                aria-label={ghSyncStale ? `GitHub sync is stale, ${ghSyncAgo}` : `GitHub synced ${ghSyncAgo}`}
+              >
+                {' '}· {ghSyncStale ? 'SYNC STALE' : 'synced'} {ghSyncAgo}
+              </span>
+            )}
             <span style={{ color: 'var(--pt-neon-bright)', textShadow: 'var(--pt-glow-sm)' }}> · {total} in the last year · {streak}-day streak{gh.streakNote ? ` (${gh.streakNote})` : ''}</span>
           </>}>
           <div className="mc-gh-heatmap-wrap">

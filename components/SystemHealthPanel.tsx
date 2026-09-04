@@ -6,6 +6,18 @@ import { SkeletonPanel } from './ui'
 
 const POLL_MS = 20_000
 
+/** Compact relative age for the panel-level `generatedAt` staleness signal. */
+function ago(iso?: string): string {
+  if (!iso) return ''
+  const s = Math.round((Date.now() - new Date(iso).getTime()) / 1000)
+  if (s < 60) return `${Math.max(1, s)}s ago`
+  const m = Math.round(s / 60)
+  if (m < 60) return `${m}m ago`
+  const h = Math.round(m / 60)
+  if (h < 24) return `${h}h ago`
+  return `${Math.round(h / 24)}d ago`
+}
+
 export function SystemHealthPanel() {
   const [data, setData] = useState<SystemHealthData | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -33,6 +45,9 @@ export function SystemHealthPanel() {
 
   const services = data?.services ?? []
   const problems = data?.problems ?? 0
+  // Panel-level probe age — poll is 20s, so older than ~2 min is stale (amber).
+  const generatedAt = data?.generatedAt
+  const healthStale = !!generatedAt && Date.now() - new Date(generatedAt).getTime() > 120_000
 
   return (
     <div className="mc-window mc-health">
@@ -40,6 +55,16 @@ export function SystemHealthPanel() {
         <span className="mc-tcol-glyph">⚡</span>
         <span>SYSTEM HEALTH</span>
         <span className="mc-tcol-count">{problems ? `${problems} ISSUE${problems > 1 ? 'S' : ''}` : 'ALL UP'}</span>
+        {generatedAt && (
+          <span
+            className={`mc-hl-sync${healthStale ? ' is-stale' : ''}`}
+            style={healthStale ? { color: 'var(--pt-warn-ink)' } : undefined}
+            title={`System probed ${new Date(generatedAt).toLocaleString()}`}
+            aria-label={healthStale ? `System health is stale, ${ago(generatedAt)}` : `System health updated ${ago(generatedAt)}`}
+          >
+            {healthStale ? `· STALE · ${ago(generatedAt)}` : `· ${ago(generatedAt)}`}
+          </span>
+        )}
       </div>
       <div className="mc-health-body">
         {error && <div className="mc-pipe-error">⚠ {error}</div>}

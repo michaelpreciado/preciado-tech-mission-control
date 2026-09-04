@@ -830,6 +830,10 @@ export function KanbanBoard() {
 
   const tasks = snap.tasks
   const sources = (snap as unknown as { sources?: KanSource[] }).sources ?? []
+  // Whole-board last-sync age. Board polls at 15s + SSE refresh, so anything
+  // older than ~2 minutes is suspicious → amber `is-stale` + copy flip.
+  const generatedAt = (snap as unknown as { generatedAt?: string }).generatedAt
+  const syncStale = !!generatedAt && Date.now() - new Date(generatedAt).getTime() > 120_000
   const byId = new Map<string, HermesTask>()
   for (const t of tasks) byId.set(t.id, t)
 
@@ -866,6 +870,17 @@ export function KanbanBoard() {
       <div className="mc-window mc-kb">
         {/* Single meta line: availability + toolbar (headers merged — one title only). */}
         <div className="mc-kb-meta">
+          {generatedAt && (
+            <span
+              className={`mc-kb-sync${syncStale ? ' is-stale' : ''}`}
+              style={syncStale ? { color: 'var(--pt-warn-ink)' } : undefined}
+              title={`Board last synced ${new Date(generatedAt).toLocaleString()}`}
+              aria-label={syncStale ? 'Board sync is stale' : 'Board last sync age'}
+            >
+              {syncStale ? 'SYNC STALE · ' : 'SYNC · '}
+              <RelativeTime ts={new Date(generatedAt).getTime()} frame="ago" />
+            </span>
+          )}
           <div className="mc-kb-sources" aria-label="Board sources">
             {sources.length === 0 && <span className="dim">no sources</span>}
             {sources.map(s => (

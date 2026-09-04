@@ -7130,3 +7130,62 @@ body {
     linear-gradient(var(--mc-glass), var(--mc-glass)),
     var(--mc-panel);
 }
+
+/* ═══════════════════════════════════════════════════════════
+   R2 FRESHNESS — staleness cues for kanban / github / system
+   tiles (kanban t_11f3771a, P2 handoff t_d6fdaa97).
+   Coordinator owns globals.css — TSX landed the three chips
+   (mc-kb-sync / mc-gh-sync / mc-hl-sync); this block styles
+   them + the `.is-stale` amber modifier. Additive only.
+   ═══════════════════════════════════════════════════════════ */
+
+/* KanbanBoard — "SYNC · 12s ago" first child of .mc-kb-meta.
+   Matches the source-dot row: tiny, tracked, dim. Stale = warn ink + weight. */
+.mc-kb-sync {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pt-text-dim);
+}
+.mc-kb-sync.is-stale {
+  color: var(--pt-warn-ink);
+  font-weight: 600;
+}
+
+/* GithubPanel — "· synced 2m ago" appended to the contributions Window meta.
+   Continues the .mc-gh-live meta line, dim/secondary. */
+.mc-gh-sync {
+  display: inline-flex;
+  align-items: baseline;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--pt-text-dim);
+}
+.mc-gh-sync.is-stale {
+  color: var(--pt-warn-ink);
+  font-weight: 600;
+}
+
+/* SystemHealthPanel — "· 12s ago" after the .mc-tcol-count chip. */
+.mc-hl-sync {
+  display: inline-flex;
+  align-items: baseline;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--pt-text-dim);
+}
+.mc-hl-sync.is-stale {
+  color: var(--pt-warn-ink);
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mc-kb-sync, .mc-gh-sync, .mc-hl-sync { transition: none; }
+}
