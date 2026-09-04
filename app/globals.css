@@ -7189,3 +7189,102 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .mc-kb-sync, .mc-gh-sync, .mc-hl-sync { transition: none; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   JARVIS HUD · STAGE 1 — core AR-HUD language (Home command deck)
+   Corner-bracket frames + hero power-core ring + holographic hover sheen.
+   Coordinator-CSS lane (single writer: globals.css). Purely additive,
+   no TSX changes. Pseudos were already claimed (::before = tone bar,
+   ::after = err pulse), so corner frames ride the tile's own background
+   layers (8 corner gradients) and the hero ring lives on the
+   .mc-home-tile-hero wrapper. All new motion freezes under
+   prefers-reduced-motion AND html[data-motion="reduced"|"off"] (P1/P3).
+   ═══════════════════════════════════════════════════════════════════════ */
+.mc-home-tile {
+  --hud-corner: rgba(var(--pt-neon-rgb), 0.30);
+  background:
+    linear-gradient(var(--hud-corner), var(--hud-corner)) left top     / 14px 1.5px no-repeat,
+    linear-gradient(var(--hud-corner), var(--hud-corner)) left top     / 1.5px 14px no-repeat,
+    linear-gradient(var(--hud-corner), var(--hud-corner)) right top    / 14px 1.5px no-repeat,
+    linear-gradient(var(--hud-corner), var(--hud-corner)) right top    / 1.5px 14px no-repeat,
+    linear-gradient(var(--hud-corner), var(--hud-corner)) left bottom  / 14px 1.5px no-repeat,
+    linear-gradient(var(--hud-corner), var(--hud-corner)) left bottom  / 1.5px 14px no-repeat,
+    linear-gradient(var(--hud-corner), var(--hud-corner)) right bottom / 14px 1.5px no-repeat,
+    linear-gradient(var(--hud-corner), var(--hud-corner)) right bottom / 1.5px 14px no-repeat,
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+  background-color: rgba(14,17,23,0.5);
+}
+.mc-home-tile:hover { --hud-corner: rgba(var(--pt-neon-rgb), 0.85); }
+
+/* Hero keeps its brighter fill — same AR corners re-stacked over it, plus a slow
+   breathing glow so the power core feels alive. */
+.mc-home-tile.is-hero {
+  background:
+    linear-gradient(var(--hud-corner), var(--hud-corner)) left top     / 14px 1.5px no-repeat,
+    linear-gradient(var(--hud-corner), var(--hud-corner)) left top     / 1.5px 14px no-repeat,
+    linear-gradient(var(--hud-corner), var(--hud-corner)) right top    / 14px 1.5px no-repeat,
+    linear-gradient(var(--hud-corner), var(--hud-corner)) right top    / 1.5px 14px no-repeat,
+    linear-gradient(var(--hud-corner), var(--hud-corner)) left bottom  / 14px 1.5px no-repeat,
+    linear-gradient(var(--hud-corner), var(--hud-corner)) left bottom  / 1.5px 14px no-repeat,
+    linear-gradient(var(--hud-corner), var(--hud-corner)) right bottom / 14px 1.5px no-repeat,
+    linear-gradient(var(--hud-corner), var(--hud-corner)) right bottom / 1.5px 14px no-repeat,
+    linear-gradient(135deg, rgba(var(--pt-neon-rgb),0.12) 0%, rgba(255,255,255,0.02) 100%);
+  background-color: rgba(16,19,24,0.72);
+  animation: hud-hero-breathe 6s ease-in-out infinite;
+}
+@keyframes hud-hero-breathe {
+  0%, 100% { box-shadow: 0 0 24px rgba(var(--pt-neon-rgb),0.12); }
+  50%      { box-shadow: 0 0 34px rgba(var(--pt-neon-rgb),0.28); }
+}
+
+/* Hero power core — rotating conic arc ring behind the glyph, on the wrapper
+   (its pseudos are unclaimed). Uses the existing radar-spin keyframe. */
+.mc-home-tile-hero { position: relative; }
+.mc-home-tile-hero::before {
+  content: ''; position: absolute;
+  left: -34px; top: 50%; margin-top: -76px;
+  width: 152px; height: 152px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg,
+    transparent 0deg 24deg, rgba(var(--pt-neon-rgb),0.35) 24deg 96deg,
+    transparent 96deg 180deg, rgba(var(--pt-neon-rgb),0.18) 180deg 210deg,
+    transparent 210deg 360deg);
+  -webkit-mask: radial-gradient(farthest-side, transparent 95.5%, #000 96.5%);
+  mask: radial-gradient(farthest-side, transparent 95.5%, #000 96.5%);
+  animation: radar-spin 16s linear infinite;
+  pointer-events: none;
+}
+
+/* Holographic hover sheen — err tiles keep their pulse (::after reserved). */
+.mc-home-tile:not(.tone-err)::after {
+  content: ''; position: absolute; inset: 0;
+  border-radius: inherit; pointer-events: none;
+  background: linear-gradient(105deg,
+    transparent 42%, rgba(255,255,255,0.05) 48%,
+    rgba(var(--pt-neon-rgb),0.12) 51%, transparent 58%);
+  transform: translateX(-130%);
+}
+.mc-home-tile:not(.tone-err):hover::after { animation: hud-sheen 900ms ease-out; }
+@keyframes hud-sheen { to { transform: translateX(130%); } }
+
+/* Small screens — keep the ring contained and quieter. */
+@media (max-width: 520px) {
+  .mc-home-tile-hero::before {
+    left: -8px; width: 118px; height: 118px; margin-top: -59px; opacity: 0.7;
+  }
+}
+
+/* Motion safety — freeze every new animation under OS + in-app settings. */
+@media (prefers-reduced-motion: reduce) {
+  .mc-home-tile.is-hero,
+  .mc-home-tile-hero::before,
+  .mc-home-tile:not(.tone-err):hover::after { animation: none; }
+}
+html[data-motion="reduced"] .mc-home-tile.is-hero,
+html[data-motion="off"] .mc-home-tile.is-hero,
+html[data-motion="reduced"] .mc-home-tile-hero::before,
+html[data-motion="off"] .mc-home-tile-hero::before,
+html[data-motion="reduced"] .mc-home-tile:not(.tone-err):hover::after,
+html[data-motion="off"] .mc-home-tile:not(.tone-err):hover::after {
+  animation: none;
+}
