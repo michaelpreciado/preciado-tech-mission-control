@@ -12,6 +12,7 @@ import {
 } from './costs-aggregate'
 import { type ThroughputSample } from './ollama-throughput'
 import { collectHermesUsage } from './hermes-usage'
+import { collectCodexUsage } from './codex-usage'
 
 async function resolveOpenRouterKey(): Promise<string | null> {
   if (process.env.OPENROUTER_API_KEY) return process.env.OPENROUTER_API_KEY
@@ -232,14 +233,23 @@ export async function collectCosts(): Promise<CostDashboard> {
       warnings.push(`OpenRouter billed $${orUsage.usageLifetime.toFixed(2)} lifetime (authoritative); local logs captured $${loggedOrCost.toFixed(2)} — logs only see sessions run on this machine`)
     }
   }
-  const claudeUsage = await collectClaudeUsage()
+  const [claudeUsage, codexUsage] = await Promise.all([collectClaudeUsage(), collectCodexUsage()])
   // Purely log-derived. OpenRouter's live number is LIFETIME spend for the key and
   // covers a different window than these logs, so folding it in here produced a
   // total that contradicted the "this month" figure rendered beside it. Lifetime
   // stays available on openRouterLive.usageLifetime for reference instead.
   const allCostUsd = models.reduce((s, m) => s + m.estimatedCostUsd, 0)
 
-  const modes = rollupModes(models)
+  const baseModes = rollupModes(models)
+  const subscriptionExtras = [claudeUsage, codexUsage].filter(Boolean)
+  const modes = baseModes.map(mode => mode.mode !== 'subscription' ? mode : {
+    ...mode,
+    models: mode.models + subscriptionExtras.reduce((sum, usage) => sum + (usage?.models.length ?? 0), 0),
+    billableTokens: mode.billableTokens + subscriptionExtras.reduce((sum, usage) => sum + (usage?.totalInputTokens ?? 0) + (usage?.totalOutputTokens ?? 0), 0),
+    totalTokens: mode.totalTokens + subscriptionExtras.reduce((sum, usage) => sum + (usage?.totalTokens ?? 0), 0),
+    inputTokens: mode.inputTokens + subscriptionExtras.reduce((sum, usage) => sum + (usage?.totalInputTokens ?? 0), 0),
+    outputTokens: mode.outputTokens + subscriptionExtras.reduce((sum, usage) => sum + (usage?.totalOutputTokens ?? 0), 0),
+  }).filter(m => m.requests > 0 || m.totalTokens > 0)
   const meteredCostUsd = modes.find(m => m.mode === 'metered')?.costUsd ?? 0
 
   // ── Freshness / self-healing staleness check ────────────────────────────
@@ -306,6 +316,7 @@ export async function collectCosts(): Promise<CostDashboard> {
       }
     }
     const claudeTk = claudeUsage?.monthlyTokens?.[key] ?? 0
+    const codexTk = codexUsage?.monthlyTokens?.[key] ?? 0
     billing.push({
       month: key,
       plan: plan.plan,
@@ -313,8 +324,9 @@ export async function collectCosts(): Promise<CostDashboard> {
       openRouterUsd: orHistory[key] ?? (back === 0 ? (orUsage?.usageMonthly ?? null) : null),
       apiTokens: api,
       claudeTokens: claudeTk,
+      codexTokens: codexTk,
       localTokens: local,
-      totalTokens: api + local + claudeTk,
+      totalTokens: api + local + claudeTk + codexTk,
       logCost,
     })
   }
@@ -422,6 +434,7 @@ export async function collectCosts(): Promise<CostDashboard> {
     estimatedCostUsd: allCostUsd,
     openRouterLive: orUsage ?? undefined,
     claudeUsage: claudeUsage ?? undefined,
+    codexUsage: codexUsage ?? undefined,
     models,
     modes,
     meteredCostUsd,

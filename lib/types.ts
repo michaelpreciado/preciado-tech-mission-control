@@ -236,6 +236,18 @@ export type CostDashboard = {
      *  this rather than `daily`, which only reaches back one window. */
     monthlyTokens: Record<string, number>
   }
+  codexUsage?: {
+    models: { model: string; inputTokens: number; outputTokens: number; cacheTokens: number; totalTokens: number }[]
+    totalInputTokens: number
+    totalOutputTokens: number
+    totalCacheTokens: number
+    totalTokens: number
+    daily: { date: string; tokens: number; byModel: Record<string, number> }[]
+    monthlyTokens: Record<string, number>
+    planType: string | null
+    sessionsCount: number
+    lastActivityAt: string | null
+  }
   daily: { date: string; requests: number; tokens: number; billableTokens: number; cost: number; byModel: Record<string, { tokens: number; billable: number; cost: number; requests: number }>; agent_id?: AgentId }[]
   /** Local (Ollama) inference analytics — token volume, tok/s throughput, and
    * cost avoided vs. the blended rate this month's real paid usage implies.
@@ -281,6 +293,7 @@ export type CostDashboard = {
     openRouterUsd: number | null
     apiTokens: number
     claudeTokens: number
+    codexTokens: number
     localTokens: number
     totalTokens: number
     logCost: number

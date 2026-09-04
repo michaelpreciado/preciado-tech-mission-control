@@ -199,7 +199,7 @@ function ActualSpend({ costs }: { costs: CostDashboard }) {
       </div>
       <Note>
         THE ONLY TWO THINGS THAT MOVE MONEY: A FLAT PLAN AND METERED API USE. TOKENS PROCESSED UNDER THE PLAN
-        ({tok(b?.claudeTokens ?? 0)} THIS MONTH) COST NOTHING EXTRA AND ARE DELIBERATELY ABSENT FROM THIS FIGURE.
+        ({tok((b?.claudeTokens ?? 0) + (b?.codexTokens ?? 0))} THIS MONTH ACROSS CLAUDE CODE + CODEX CLI) COST NOTHING EXTRA AND ARE DELIBERATELY ABSENT FROM THIS FIGURE.
         {or && <> OPENROUTER&apos;S MONTHLY NUMBER IS ITS OWN BILLING API, NOT A LOG ESTIMATE.</>}
         {displaced != null && displaced > 0 && ` DISPLACED = LOCAL TOKENS PRICED AT ${money(rate, 2)}/M, THE RATE YOUR OWN METERED USAGE IMPLIES — A COUNTERFACTUAL, NOT A REFUND.`}
       </Note>
@@ -275,15 +275,7 @@ function SourceSplit({ costs }: { costs: CostDashboard }) {
   const modes = costs.modes ?? []
   if (modes.length < 2) return null
   const lc = costs.localCompute
-  const cu = costs.claudeUsage
-
-  // Claude Code lives in a separate tree and never reaches `modes`, so its
-  // output is folded into the subscription row here rather than going missing.
-  const rows = modes.map(m => ({
-    ...m,
-    outputTokens: m.outputTokens + (m.mode === 'subscription' ? (cu?.totalOutputTokens ?? 0) : 0),
-    requests: m.requests,
-  }))
+  const rows = modes.map(m => ({ ...m, outputTokens: m.outputTokens, requests: m.requests }))
   const totalOut = rows.reduce((s, r) => s + r.outputTokens, 0)
   const maxOut = Math.max(...rows.map(r => r.outputTokens), 1)
   const rate = lc?.blendedApiRatePerMTokens ?? null
@@ -338,7 +330,7 @@ function SourceSplit({ costs }: { costs: CostDashboard }) {
         COMPARED ON OUTPUT TOKENS BECAUSE IT IS THE ONE FIGURE THAT MEANS THE SAME THING IN ALL THREE COLUMNS — TOTALS
         ARE DOMINATED BY CACHE READS THAT OLLAMA NEVER REPORTS, AND A REQUEST IS NOT A FIXED UNIT OF WORK.
         {rate != null && ` AT YOUR METERED RATE, THE ${tok(rows.find(r => r.mode === 'local')?.outputTokens ?? 0)} TOKENS THE RIG GENERATED WOULD HAVE BEEN BILLABLE WORK ELSEWHERE.`}
-        {' '}CLAUDE CODE&apos;S OUTPUT IS FOLDED INTO THE SUBSCRIPTION ROW; IT IS LOGGED IN A SEPARATE TREE AND HAS NO REQUEST COUNT.
+        {' '}CLAUDE CODE AND CODEX CLI OUTPUT ARE FOLDED INTO THE SUBSCRIPTION ROW; BOTH ARE LOGGED IN SEPARATE TREES AND HAVE NO REQUEST COUNT.
       </Note>
     </Window>
   )
@@ -469,6 +461,7 @@ function Activity({ costs, modeOf }: { costs: CostDashboard; modeOf: (m: string)
   const [hover, setHover] = useState<number | null>(null)
   const windowDays = costs.dailyWindowDays ?? 30
   const cu = costs.claudeUsage
+  const xu = costs.codexUsage
 
   const days = useMemo(() => {
     const byDate = new Map<string, Record<BillingMode, number>>()
@@ -485,6 +478,11 @@ function Activity({ costs, modeOf }: { costs: CostDashboard; modeOf: (m: string)
       slot.subscription += d.tokens
       byDate.set(d.date, slot)
     }
+    for (const d of xu?.daily ?? []) {
+      const slot = byDate.get(d.date) ?? blank()
+      slot.subscription += d.tokens
+      byDate.set(d.date, slot)
+    }
     // One column per calendar day. Plotting only active days spaces them evenly
     // and hides the quiet stretches, so a fortnight of silence would look
     // identical to a fortnight of steady work.
@@ -495,7 +493,7 @@ function Activity({ costs, modeOf }: { costs: CostDashboard; modeOf: (m: string)
       const v = byDate.get(date) ?? blank()
       return { date, ...v, total: v.metered + v.subscription + v.local + v['cloud-routed'] }
     })
-  }, [costs.daily, cu?.daily, windowDays, modeOf])
+  }, [costs.daily, cu?.daily, xu?.daily, windowDays, modeOf])
 
   const max = Math.max(...days.map(d => d.total), 1)
   const active = days.filter(d => d.total > 0).length
@@ -561,6 +559,34 @@ function Activity({ costs, modeOf }: { costs: CostDashboard; modeOf: (m: string)
         PROCESSED (CACHE READS INCLUDED), WHICH IS WHY IT IS LABELLED PROCESSED AND CARRIES NO DOLLARS: IT MEASURES
         HOW BUSY THE STACK WAS, NOT WHAT IT COST. FROM THIS MACHINE&apos;S LOGS ONLY.
       </Note>
+    </Window>
+  )
+}
+
+function CodexUsage({ costs }: { costs: CostDashboard }) {
+  const usage = costs.codexUsage
+  if (!usage || usage.totalTokens <= 0) return null
+  const max = Math.max(...usage.daily.map(day => day.tokens), 1)
+  const lastActivity = usage.lastActivityAt ? usage.lastActivityAt.slice(0, 16).replace('T', ' ') + ' UTC' : '—'
+  return (
+    <Window tag="◇" title="CODEX CLI · FLAT PLAN USAGE" meta={usage.planType ? `${usage.planType} · tokens only` : 'tokens only'}>
+      <div style={{ padding: '14px 16px 8px', display: 'flex', gap: 30, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <Stat value={usage.planType?.toUpperCase() ?? 'UNKNOWN'} label="PLAN" color={CATEGORICAL[3]} size="lg" />
+        <Stat value={tok(usage.totalTokens)} label="TOKENS" color={CATEGORICAL[3]} size="lg" />
+        <Stat value={usage.sessionsCount.toLocaleString()} label="SESSIONS" size="lg" />
+        <Stat value={lastActivity} label="LAST ACTIVITY" size="sm" />
+      </div>
+      <div style={{ padding: '4px 16px 12px' }}>
+        <div style={{ display: 'flex', gap: 2, alignItems: 'flex-end', height: 54 }} aria-label="Codex daily token activity">
+          {usage.daily.map(day => (
+            <div key={day.date} title={`${day.date} · ${tok(day.tokens)}`} style={{ flex: 1, minWidth: 3, height: `${Math.max(2, (day.tokens / max) * 52)}px`, background: CATEGORICAL[3], opacity: 0.82 }} />
+          ))}
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5, fontSize: 8, color: 'var(--pt-text-mute)' }}>
+          <span>{usage.daily[0]?.date.slice(5) ?? '—'}</span><span>{usage.daily.at(-1)?.date.slice(5) ?? '—'}</span>
+        </div>
+      </div>
+      <Note>CODEX CLI ROLLOUT LOGS · SUBSCRIPTION USAGE IS REPORTED AS TOKENS AND NEVER AS METERED SPEND.</Note>
     </Window>
   )
 }
@@ -696,7 +722,7 @@ function MonthlyBilling({ costs }: { costs: CostDashboard }) {
                 <div style={{ marginTop: 10, fontSize: 9.5, color: 'var(--pt-text-dim)', lineHeight: 1.8 }}>
                   <div>tokens · {tok(b.totalTokens)}</div>
                   <div style={{ color: 'var(--pt-text-mute)', fontSize: 9 }}>
-                    {tok(b.claudeTokens)} in plan · {tok(b.apiTokens)} api · {tok(b.localTokens)} local
+                    {tok(b.claudeTokens + b.codexTokens)} in plan · {tok(b.apiTokens)} api · {tok(b.localTokens)} local
                   </div>
                 </div>
               </div>
@@ -736,6 +762,10 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
     for (const d of costs.claudeUsage?.daily ?? []) {
       for (const [model, t] of Object.entries(d.byModel ?? {})) cuWin.set(model, (cuWin.get(model) ?? 0) + Number(t))
     }
+    const xuWin = new Map<string, number>()
+    for (const d of costs.codexUsage?.daily ?? []) {
+      for (const [model, t] of Object.entries(d.byModel ?? {})) xuWin.set(model, (xuWin.get(model) ?? 0) + Number(t))
+    }
 
     const tps = new Map((costs.localCompute?.models ?? []).map(m => [m.model, m.avgTokensPerSec]))
     const rowOf = (m: typeof models[number]): Row => ({
@@ -761,11 +791,22 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
         windowBillable: Math.round((cuWin.get(m.model) ?? 0) * share),
       }
     })
+    const codexRows: Row[] = (costs.codexUsage?.models ?? []).map(m => {
+      const billable = m.inputTokens + m.outputTokens
+      const share = m.totalTokens > 0 ? billable / m.totalTokens : 0
+      return {
+        name: m.model,
+        provider: 'codex cli', mode: 'subscription' as BillingMode,
+        billable, cache: m.cacheTokens, total: m.totalTokens,
+        requests: null, cost: 0,
+        windowBillable: Math.round((xuWin.get(m.model) ?? 0) * share),
+      }
+    })
 
     return {
       windowDays, modeOf,
       metered: models.filter(m => m.mode === 'metered').map(rowOf),
-      subscription: [...models.filter(m => m.mode === 'subscription').map(rowOf), ...claudeRows],
+      subscription: [...models.filter(m => m.mode === 'subscription').map(rowOf), ...claudeRows, ...codexRows],
       local: models.filter(m => m.mode === 'local').map(rowOf),
       cloud: models.filter(m => m.mode === 'cloud-routed').map(rowOf),
     }
@@ -773,7 +814,7 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
 
   if (!costs || !view) return <SkeletonPanel label="loading costs" />
   const or = costs.openRouterLive
-  const nothing = !or && !costs.models?.length && !costs.claudeUsage
+  const nothing = !or && !costs.models?.length && !costs.claudeUsage && !costs.codexUsage
   if (nothing) return <EmptyTerminal label="no billing data — set OPENROUTER_API_KEY in .env" />
 
   return (
@@ -787,6 +828,7 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
       <Activity costs={costs} modeOf={view.modeOf} />
       <ModeBreakdown costs={costs} />
       <SourceSplit costs={costs} />
+      <CodexUsage costs={costs} />
 
       <SectionHead label="MODELS · RANKED ON BILLABLE TOKENS" />
       {view.metered.length > 0 && (

@@ -76,6 +76,11 @@ export default function BurnLandscape({ costs }: { costs: CostDashboard }) {
       slot.subscription += d.tokens
       byDate.set(d.date, slot)
     }
+    for (const d of costs.codexUsage?.daily ?? []) {
+      const slot = byDate.get(d.date) ?? blank()
+      slot.subscription += d.tokens
+      byDate.set(d.date, slot)
+    }
     // Calendar days, not "the last 14 days that had traffic" — a sparse slice
     // silently stretched this window across two months while the title said 14.
     const now = new Date()
@@ -85,7 +90,7 @@ export default function BurnLandscape({ costs }: { costs: CostDashboard }) {
       const segs = byDate.get(date) ?? blank()
       return { date, segs, total: SEG_ORDER.reduce((s, k) => s + segs[k], 0) }
     })
-  }, [costs.daily, costs.claudeUsage?.daily, costs.models])
+  }, [costs.daily, costs.claudeUsage?.daily, costs.codexUsage?.daily, costs.models])
 
   const max = Math.max(...days.map(d => d.total), 1)
   const axis = ticks(max)
