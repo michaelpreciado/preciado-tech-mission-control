@@ -7867,13 +7867,50 @@ html[data-motion="off"] .mc-studio-cursor { animation: none; }
 .mc-main:has(.mc-home-title) .mc-feed-title,
 .mc-main:has(.mc-home-title) .mc-ascii-head .label { text-shadow: none; }
 
-/* HMK-FIX-2: compact and balance the two-row cockpit on foldable inner
-   displays, without changing the phone or desktop cockpit contracts. */
+/* HMK-FIX-2 V2: fold cockpit is one desktop-contract strip. Keep the brand
+   left-aligned, push the complete stats group to the right, and keep the LIVE
+   badge inline at the tail. This range intentionally leaves the phone (<=560)
+   and desktop (>=768) cockpit contracts unchanged. */
 @media (max-width: 767px) and (min-width: 561px) {
   .mc-cockpit { padding: 10px 16px 12px; min-height: 0; }
-  .mc-cockpit-row { gap: 8px; }
-  .mc-hero-brand { padding: 2px 0; }
-  .mc-stats { gap: 8px; justify-content: start; }
-  .mc-stat { padding: 4px 10px; }
-  .mc-stats > .mc-btn { margin-left: auto; }
+  .mc-cockpit-row {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+  }
+  .mc-hero-brand {
+    flex: 0 1 auto;
+    min-width: 0;
+    padding: 2px 0;
+  }
+  .mc-stats {
+    display: flex;
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 0;
+    height: auto;
+    margin-left: auto;
+    padding: 0;
+    gap: 6px;
+    flex-wrap: nowrap;
+    overflow: visible;
+  }
+  .mc-stat,
+  .mc-stats > .mc-btn { height: 32px; box-sizing: border-box; flex: 0 0 auto; }
+  .mc-stat { padding: 4px 6px; gap: 4px; }
+  .mc-stats > .mc-btn {
+    min-height: 0;
+    margin-left: 0;
+    padding: 4px 8px;
+    line-height: 1;
+  }
+  .mc-live-badge {
+    position: static;
+    flex: 0 0 auto;
+    padding: 4px 8px;
+    box-sizing: border-box;
+  }
+  .mc-cockpit-warn { display: none; }
 }
