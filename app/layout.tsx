@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, JetBrains_Mono, Noto_Sans_JP } from 'next/font/google'
+import { JetBrains_Mono, Noto_Sans_JP } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
 import { Shell } from '@/components/Shell'
@@ -24,14 +24,15 @@ const mono = JetBrains_Mono({
   fallback: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
 })
 
-/* UI sans for all prose/body content (Phase 1 type role). */
-const inter = Inter({
+/* Keep the UI font variable wired through Next/font, but resolve it to the
+   same mono face as the terminal role per the Blue Matrix Glass theme spec. */
+const inter = JetBrains_Mono({
   variable: '--pt-font-ui',
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
   display: 'swap',
   preload: true,
-  fallback: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+  fallback: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
 })
 
 /* Japanese accent font (DESIGN-SPEC §4) — cyberpunk flavor only: brand
