@@ -12,8 +12,9 @@
  *  - TYPE · three roles only:
  *      display  = mono, variable, for numerals & big values
  *      micro    = mono, UPPERCASE, letter-spaced, for section headers & labels
- *      ui       = real UI sans (Inter), for all prose, body & card content
- *    Mono is reserved for IDs, paths, cron, numbers, labels — never for prose.
+ *      ui       = monospace, for all prose, body & card content
+ *    Mono is the terminal identity for IDs, paths, cron, numbers, labels, and
+ *    prose on the Blue Matrix Glass home surface.
  *  - COLOR · one accent + four semantic states (info=cyan, warn=amber,
  *    error=red, ok=green). Red is ALWAYS semantic, never decorative.
  *  - SPACING · 8px scale. One radius. One border color. Two surfaces.
@@ -54,8 +55,9 @@ export const FONT = {
   display: "'JetBrains Mono','Fira Code',ui-monospace,SFMono-Regular,Menlo,Consolas,'Courier New',monospace",
   /* Micro-labels (uppercase), IDs, paths, cron, numbers. */
   mono: "'JetBrains Mono','Fira Code',ui-monospace,SFMono-Regular,Menlo,Consolas,'Courier New',monospace",
-  /* UI sans for all prose/body/card content. */
-  ui: "var(--pt-font-ui)", // resolved at runtime to the loaded Inter font
+  /* UI is deliberately mono for the Blue Matrix Glass theme: the spec calls
+     for strictly monospace typography, including prose and card content. */
+  ui: "'JetBrains Mono','Fira Code',ui-monospace,SFMono-Regular,Menlo,Consolas,'Courier New',monospace",
 } as const
 
 export const TYPE_SCALE = {
@@ -69,7 +71,7 @@ export const TYPE_SCALE = {
 } as const
 
 export const LINE_HEIGHT = { tight: 1.08, snug: 1.2, body: 1.65, ui: 1.5 } as const
-export const LETTER_SPACING = { tight: '-0.02em', kicker: '0.22em', prompt: '0.02em' } as const
+export const LETTER_SPACING = { tight: '-0.02em', bodyMono: '-0.01em', kicker: '0.22em', prompt: '0.02em' } as const
 
 /* ── Spacing — 8px scale ────────────────────────────────────────────
    s-1..s-16 are multiples of 0.25rem (4px) matching the visual 8px rhythm. */
@@ -234,10 +236,8 @@ export function buildTokenCss(): string {
   /* type — three roles */
   --pt-font-mono: ${FONT.mono};
   --pt-font-display: ${FONT.display};
-  /* UI sans for prose. --pt-font-ui is set on <body> by the loaded Inter
-     font's next/font variable class; the fallback keeps this token valid
-     at :root (custom props can't see body-scoped vars from the cascade). */
-  --pt-font-sans: var(--pt-font-ui, 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif);
+  /* UI is intentionally mono per the Blue Matrix Glass theme spec. */
+  --pt-font-sans: var(--pt-font-ui, ${FONT.ui});
 
   /* type scale */
   --pt-fs-display: ${TYPE_SCALE.display};
@@ -248,7 +248,8 @@ export function buildTokenCss(): string {
   --pt-lh-tight: ${LINE_HEIGHT.tight}; --pt-lh-snug: ${LINE_HEIGHT.snug};
   --pt-lh-body: ${LINE_HEIGHT.body}; --pt-lh-ui: ${LINE_HEIGHT.ui};
 
-  --pt-ls-tight: ${LETTER_SPACING.tight}; --pt-ls-kicker: ${LETTER_SPACING.kicker};
+  --pt-ls-tight: ${LETTER_SPACING.tight}; --pt-ls-body-mono: ${LETTER_SPACING.bodyMono};
+  --pt-ls-kicker: ${LETTER_SPACING.kicker};
   --pt-ls-prompt: ${LETTER_SPACING.prompt};
 
   /* motion */

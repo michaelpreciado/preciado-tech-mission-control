@@ -76,7 +76,7 @@ export function ActionFeed() {
   return (
     <div className={`mc-feed ${urgentCount ? 'has-urgent' : ''}`}>
       <div className="mc-feed-head">
-        <span className="mc-feed-title">▸ NEEDS YOU</span>
+        <span className="mc-feed-title">&gt; NEEDS YOU</span>
         <span className={`mc-feed-count ${urgentCount ? 'hot' : ''}`}>
           {urgentCount ? `${urgentCount} URGENT` : 'ALL CLEAR'}
         </span>
@@ -86,14 +86,14 @@ export function ActionFeed() {
           {shown.map(row => (
             <Link key={row.id} href={row.href} className={`mc-feed-row ${row.tone}`}
               aria-label={`${row.tone === 'urgent' ? 'Urgent — ' : row.tone === 'warn' ? 'Warning — ' : ''}${row.text}`}>
-              <span className="mc-feed-glyph" aria-hidden="true">{row.glyph}</span>
+              <span className="mc-feed-glyph" aria-hidden="true">&gt;</span>
               <span className="mc-feed-text" title={row.text}>{row.text}</span>
-              <span className="mc-feed-arrow" aria-hidden="true">›</span>
+              <span className="mc-feed-arrow" aria-hidden="true">&gt;</span>
             </Link>
           ))}
           {extra > 0 && (
             <div className="mc-feed-row note is-static">
-              <span className="mc-feed-glyph">＋</span>
+              <span className="mc-feed-glyph">&gt;</span>
               <span className="mc-feed-text">{extra} more…</span>
             </div>
           )}

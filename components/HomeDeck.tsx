@@ -358,7 +358,7 @@ function TaskCol({ headLabel, headGlyph, alert, items }: {
         <span className="mc-tcol-glyph">{headGlyph}</span>
         <span>{headLabel}</span>
         <span className="mc-tcol-count">{items.length}</span>
-        <span className="mc-tcol-chev" aria-hidden="true">›</span>
+        <span className="mc-tcol-chev" aria-hidden="true">&gt;</span>
       </Link>
       <div className="mc-tcol-body">
         {items.length === 0 ? (
@@ -367,7 +367,7 @@ function TaskCol({ headLabel, headGlyph, alert, items }: {
           <Link key={t.id} href="/kanban" className="mc-task mc-task-link">
             <div className="mc-task-head">
               <div className="mc-task-title" title={t.title}>{t.title}</div>
-              <span className="mc-task-chev" aria-hidden="true">›</span>
+              <span className="mc-task-chev" aria-hidden="true">&gt;</span>
             </div>
             <div className="mc-task-meta">
               <span className="agent">{t.ownerName}</span>
@@ -387,6 +387,10 @@ export function HomeDeck() {
   const { elements3d } = useUiSettings()
   return (
     <>
+      <div className="mc-home-title" aria-label="Mission Control">
+        <span className="mc-home-title-prefix">user@preciado:~</span>
+        <span className="mc-home-title-name">MISSION CONTROL</span>
+      </div>
       <CommandHeader />
 
       <div className="v1-kicker">

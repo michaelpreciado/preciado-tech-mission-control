@@ -22,12 +22,11 @@ body {
   min-width: 320px;
   color: var(--pt-text);
   background: var(--pt-bg-gradient);
-  /* Phase 1 type role: body prose is UI sans; mono is reserved for
-     labels, IDs, paths, cron, and numerals via explicit classes. */
-  font-family: var(--pt-font-sans);
+  /* Blue Matrix Glass is strictly monospace, including body prose. */
+  font-family: var(--pt-font-mono);
   font-weight: 400;
-  line-height: var(--pt-lh-ui);
-  letter-spacing: var(--pt-ls-prompt);
+  line-height: var(--pt-lh-body);
+  letter-spacing: var(--pt-ls-body-mono);
   color-scheme: dark;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -401,8 +400,37 @@ body {
   margin: 0;
   background: var(--pt-bg);
   color: var(--pt-text);
-  font-family: var(--pt-font-sans);
+  font-family: var(--pt-font-mono);
   overflow: hidden;
+}
+
+/* Terminal identity for the home deck. Kept compact so it adds at most one
+   line above the existing cockpit on narrow screens. */
+.mc-home-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-height: 28px;
+  margin: -2px 0 6px;
+  font-family: var(--pt-font-mono);
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.mc-home-title-prefix {
+  color: var(--pt-text-mute);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  flex: none;
+}
+.mc-home-title-name {
+  color: var(--pt-neon-bright);
+  font-size: clamp(1.4rem, 3vw, 1.8rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-shadow: var(--pt-glow-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ── Global background layers ─────────────────────────── */
@@ -2706,9 +2734,9 @@ html[data-theme="friday"] .mc-pipe-name { color: var(--pt-neon-bright); text-sha
 .mc-feed-row.urgent .mc-feed-glyph { color: #febc2e; text-shadow: 0 0 6px rgba(254,188,46,0.5); }
 .mc-feed-row.warn .mc-feed-glyph { color: #ff9466; }
 .mc-feed-row.note { color: var(--pt-text-dim); font-size: 10px; }
-.mc-feed-glyph { width: 16px; text-align: center; flex-shrink: 0; }
+.mc-feed-glyph { width: 16px; text-align: center; flex-shrink: 0; color: var(--pt-neon); font-family: var(--pt-font-mono); }
 .mc-feed-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mc-feed-arrow { margin-left: auto; color: var(--pt-text-mute); }
+.mc-feed-arrow { margin-left: auto; color: var(--pt-neon); font-family: var(--pt-font-mono); opacity: 0.55; }
 
 .mc-mobile-glyph { position: relative; }
 
@@ -5154,7 +5182,7 @@ html[data-motion="off"] .mc-home-tile.tone-err::after {
 }
 .cc-md-list { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 3px; }
 .cc-md-list li { line-height: 1.55; }
-.cc-md-list li::marker { color: var(--pt-neon); }
+.cc-md-list li::marker { content: '> '; color: var(--pt-neon); font-family: var(--pt-font-mono); }
 .cc-md-quote {
   margin: 0; padding: 4px 0 4px 12px;
   border-left: 2px solid var(--pt-border);
@@ -7123,7 +7151,7 @@ body {
   margin-left: 6px;
   font-size: 12px;
   line-height: 1;
-  color: var(--pt-text-mute);
+  color: var(--pt-neon);
   opacity: 0.5;
   transition: opacity var(--pt-dur-fast) var(--pt-ease), color var(--pt-dur-fast) var(--pt-ease);
 }
@@ -7137,7 +7165,7 @@ body {
   margin-left: 6px;
   font-size: 12px;
   line-height: 1.4;
-  color: var(--pt-text-mute);
+  color: var(--pt-neon);
   opacity: 0.4;
   transition: opacity var(--pt-dur-fast) var(--pt-ease), color var(--pt-dur-fast) var(--pt-ease);
 }
