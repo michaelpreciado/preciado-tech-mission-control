@@ -2731,10 +2731,10 @@ html[data-theme="friday"] .mc-pipe-name { color: var(--pt-neon-bright); text-sha
 /* Non-interactive overflow row ("N more…") — a plain div, not a Link, so it
    shouldn't pick up the hover affordance meant for the clickable rows above it. */
 .mc-feed-row.is-static:hover { background: none; }
-.mc-feed-row.urgent .mc-feed-glyph { color: #febc2e; text-shadow: 0 0 6px rgba(254,188,46,0.5); }
-.mc-feed-row.warn .mc-feed-glyph { color: #ff9466; }
+.mc-feed-row.urgent .mc-feed-text,
+.mc-feed-row.warn .mc-feed-text { color: var(--pt-warn-ink); }
 .mc-feed-row.note { color: var(--pt-text-dim); font-size: 10px; }
-.mc-feed-glyph { width: 16px; text-align: center; flex-shrink: 0; color: var(--pt-neon); font-family: var(--pt-font-mono); }
+.mc-feed-glyph { width: 16px; text-align: center; flex-shrink: 0; color: var(--pt-text-mute); text-shadow: none; font-family: var(--pt-font-mono); }
 .mc-feed-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mc-feed-arrow { margin-left: auto; color: var(--pt-neon); font-family: var(--pt-font-mono); opacity: 0.55; }
 
