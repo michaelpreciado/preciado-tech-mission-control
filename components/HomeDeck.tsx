@@ -127,6 +127,28 @@ function TileExtras({ tile }: { tile: TileDef }) {
 
 function StatusTiles() {
   const { data } = useLiveData()
+  useEffect(() => {
+    const measure = () => {
+      document.querySelectorAll<HTMLElement>('.mc-home-tile-label').forEach(label => {
+        const firstCopy = label.querySelector<HTMLElement>('.mc-tile-label-track > span')
+        if (!firstCopy) return
+        label.classList.toggle('is-flowing', firstCopy.scrollWidth + 28 > label.clientWidth)
+      })
+    }
+    const onResize = () => {
+      window.clearTimeout(resizeTimer)
+      resizeTimer = window.setTimeout(measure, 150)
+    }
+    let resizeTimer = 0
+    measure()
+    window.addEventListener('resize', onResize)
+    const settledTimer = window.setTimeout(measure, 1200)
+    return () => {
+      window.clearTimeout(resizeTimer)
+      window.clearTimeout(settledTimer)
+      window.removeEventListener('resize', onResize)
+    }
+  }, [])
   const done = useMemo(() => {
     if (!data) return []
     const crew = data.crew ?? []
@@ -194,7 +216,12 @@ function StatusTiles() {
           <Link href={heroTile.href} style={{ '--i': 0 } as CSSProperties} className={`mc-home-tile tone-${heroTile.tone} is-hero`}>
             <span className="mc-home-tile-glyph">{heroTile.glyph}</span>
             <span className="mc-home-tile-mid">
-              <span className="mc-home-tile-label">{heroTile.label}</span>
+              <span className="mc-home-tile-label" title={heroTile.label}>
+                <span className="mc-tile-label-track">
+                  <span>{heroTile.label}</span>
+                  <span aria-hidden="true">{heroTile.label}</span>
+                </span>
+              </span>
               <span className="mc-home-tile-sub">{heroTile.sub}</span>
             </span>
             <span className="mc-home-tile-value"><AnimatedTileValue tile={heroTile} /></span>
@@ -210,7 +237,12 @@ function StatusTiles() {
           <Link key={t.key} href={t.href} style={{ '--i': i + 1 } as CSSProperties} className={`mc-home-tile tone-${t.tone}`}>
             <span className="mc-home-tile-glyph">{t.glyph}</span>
             <span className="mc-home-tile-mid">
-              <span className="mc-home-tile-label">{t.label}</span>
+              <span className="mc-home-tile-label" title={t.label}>
+                <span className="mc-tile-label-track">
+                  <span>{t.label}</span>
+                  <span aria-hidden="true">{t.label}</span>
+                </span>
+              </span>
               <span className="mc-home-tile-sub">{t.sub}</span>
             </span>
             <span className="mc-home-tile-value"><AnimatedTileValue tile={t} /></span>

@@ -1988,7 +1988,7 @@ h1 {
   /* Header / cockpit — on a 375×667 screen a pinned header with five chips
      wrapping to 3-4 rows costs ~40% of the viewport before any content shows,
      so let it scroll away and pin the kanban column heads to the top instead. */
-  .mc-cockpit { position: static; padding: 12px 14px; }
+  .mc-cockpit { position: static; padding: 14px 16px; }
   :root { --mc-header-h: 0px; }
   .mc-cockpit-row { flex-wrap: wrap; gap: 8px; }
   .mc-stat { padding: 3px 9px; }
@@ -2055,7 +2055,7 @@ h1 {
 @media (max-width: 520px) {
   :root { --mc-gutter: 10px; }
   .mc-main { padding-top: 10px; padding-bottom: 88px; }
-  .mc-cockpit { padding: 10px; }
+  .mc-cockpit { padding: 14px 16px; }
   .mc-stat-val { font-size: 13px; }
   .mc-stat-head { font-size: 8px; }
   .mc-heatmap .cell { width: 8px; height: 8px; }
@@ -2218,9 +2218,9 @@ a.mc-cell {
   .mc-cockpit-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-rows: 32px 40px;
+    grid-template-rows: auto 40px;
     column-gap: 8px;
-    row-gap: 0;
+    row-gap: 10px;
     align-items: center;
   }
   .mc-hero-brand { grid-column: 1; grid-row: 1; }
@@ -2255,12 +2255,12 @@ a.mc-cell {
     line-height: 1;
   }
   .mc-live-badge {
-    position: absolute;
+    position: static;
     grid-column: 2;
     grid-row: 1;
     justify-self: end;
-    max-width: 96px;
-    padding: 4px 8px;
+    align-self: center;
+    padding: 4px 10px;
     box-sizing: border-box;
   }
   .mc-cockpit-warn { display: none; }
@@ -4555,8 +4555,24 @@ html[data-motion="reduced"] .mc-hud-progress-fill, html[data-motion="off"] .mc-h
 .mc-home-tile-label {
   font-size: 9px; letter-spacing: 0.18em; color: var(--pt-text-mute);
   text-transform: uppercase; font-weight: 600;
+  display: block; overflow: hidden; white-space: nowrap;
 }
-.mc-home-tile-sub { font-size: 10px; color: var(--pt-text-dim); }
+.mc-tile-label-track { display: inline-block; white-space: nowrap; will-change: transform; }
+/* Per-copy padding (not sibling margin) so the two copies are equidistant and
+   translateX(-50%) is exactly one full cycle → seamless. */
+.mc-tile-label-track > span { display: inline-block; padding-right: 28px; }
+.mc-home-tile-label.is-flowing .mc-tile-label-track {
+  animation: mc-label-flow 14s linear infinite;
+}
+@keyframes mc-label-flow { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) {
+  .mc-home-tile-label.is-flowing .mc-tile-label-track {
+    animation: none;
+  }
+  .mc-home-tile-label.is-flowing .mc-tile-label-track > span:last-child { display: none; }
+  .mc-home-tile-label { text-overflow: ellipsis; }
+}
+.mc-home-tile-sub { font-size: 10px; color: var(--pt-text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mc-home-tile-value {
   font-size: 26px; font-weight: 800; letter-spacing: 0.02em;
   color: var(--pt-text-high);

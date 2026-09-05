@@ -98,10 +98,6 @@ export function CommandHeader() {
               <span className="mc-stat-val">{s.value}</span>
             </div>
           ))}
-          <div className="mc-live-badge" data-state={liveState}>
-            <span className={`mc-led ${liveState === 'live' ? 'green' : liveState === 'stale' ? 'amber' : ''}`} />
-            {liveState === 'live' ? 'LIVE' : liveState === 'stale' ? 'STALE' : 'OFFLINE'}
-          </div>
           <Button
             variant="ghost"
             loading={spinning}
@@ -111,6 +107,10 @@ export function CommandHeader() {
           >
             {spinning ? null : '↻'}
           </Button>
+        </div>
+        <div className="mc-live-badge" data-state={liveState}>
+          <span className={`mc-led ${liveState === 'live' ? 'green' : liveState === 'stale' ? 'amber' : ''}`} />
+          {liveState === 'live' ? 'LIVE' : liveState === 'stale' ? 'STALE' : 'OFFLINE'}
         </div>
         {data?.warnings?.length ? (
           <div className="mc-cockpit-warn">⚠ {data.warnings[0]}</div>
