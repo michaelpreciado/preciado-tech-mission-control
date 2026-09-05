@@ -7866,3 +7866,14 @@ html[data-motion="off"] .mc-studio-cursor { animation: none; }
 .mc-main:has(.mc-home-title) .mc-home-clock,
 .mc-main:has(.mc-home-title) .mc-feed-title,
 .mc-main:has(.mc-home-title) .mc-ascii-head .label { text-shadow: none; }
+
+/* HMK-FIX-2: compact and balance the two-row cockpit on foldable inner
+   displays, without changing the phone or desktop cockpit contracts. */
+@media (max-width: 767px) and (min-width: 561px) {
+  .mc-cockpit { padding: 10px 16px 12px; min-height: 0; }
+  .mc-cockpit-row { gap: 8px; }
+  .mc-hero-brand { padding: 2px 0; }
+  .mc-stats { gap: 8px; justify-content: start; }
+  .mc-stat { padding: 4px 10px; }
+  .mc-stats > .mc-btn { margin-left: auto; }
+}
