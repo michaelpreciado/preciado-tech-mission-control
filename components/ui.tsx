@@ -171,7 +171,13 @@ export function Window({ tag, title, meta, children, style }: {
       onDoubleClick={floating ? dock : undefined}
       {...(floating ? drag : {})}
     >
+      <div className="mc-window-dots" aria-hidden="true">
+        <span className="mc-window-dot mc-window-dot--red" />
+        <span className="mc-window-dot mc-window-dot--amber" />
+        <span className="mc-window-dot mc-window-dot--green" />
+      </div>
       <div className="mc-window-title">
+        <span className="mc-prompt-user">user@mission-control:~</span>
         {tag && <span className="mc-win-tag">{tag}</span>}
         <span>{title}</span>
       </div>
@@ -194,7 +200,13 @@ export function Window({ tag, title, meta, children, style }: {
       <>
         <div className="mc-window mc-window-ghost" style={style}>
           <div className="mc-window-head">
+            <div className="mc-window-dots" aria-hidden="true">
+              <span className="mc-window-dot mc-window-dot--red" />
+              <span className="mc-window-dot mc-window-dot--amber" />
+              <span className="mc-window-dot mc-window-dot--green" />
+            </div>
             <div className="mc-window-title">
+              <span className="mc-prompt-user">user@mission-control:~</span>
               {tag && <span className="mc-win-tag">{tag}</span>}
               <span>{title}</span>
             </div>

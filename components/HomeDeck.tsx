@@ -265,7 +265,10 @@ function LiveActivity() {
   if (!files.length && !hotspots.length) {
     return (
       <div className="mc-window">
-        <div className="mc-tcol-head"><span className="mc-tcol-glyph">≋</span><span>LIVE ACTIVITY</span><span className="mc-tcol-count">0</span></div>
+        <div className="mc-tcol-head">
+          <div className="mc-window-dots" aria-hidden="true"><span className="mc-window-dot mc-window-dot--red" /><span className="mc-window-dot mc-window-dot--amber" /><span className="mc-window-dot mc-window-dot--green" /></div>
+          <span className="mc-prompt-user">user@mission-control:~</span><span className="mc-tcol-glyph">≋</span><span>LIVE ACTIVITY</span><span className="mc-tcol-count">0</span>
+        </div>
         <div className="mc-empty is-compact"><div className="mc-empty-glyph">≋</div><div className="mc-empty-title">NO RECENT ACTIVITY</div>
           <p className="mc-empty-desc">Agent work will stream in here as it happens.</p></div>
       </div>
@@ -275,7 +278,7 @@ function LiveActivity() {
   // hotspot chips
   return (
     <div className="mc-window mc-home-activity">
-      <div className="mc-tcol-head"><span className="mc-tcol-glyph">≋</span><span>LIVE ACTIVITY</span>
+      <div className="mc-tcol-head"><div className="mc-window-dots" aria-hidden="true"><span className="mc-window-dot mc-window-dot--red" /><span className="mc-window-dot mc-window-dot--amber" /><span className="mc-window-dot mc-window-dot--green" /></div><span className="mc-prompt-user">user@mission-control:~</span><span className="mc-tcol-glyph">≋</span><span>LIVE ACTIVITY</span>
         <span className="mc-tcol-count">{files.length} SIGNS</span></div>
       {hotspots.length > 0 && (
         <div className="mc-hspot-row">
@@ -355,6 +358,8 @@ function TaskCol({ headLabel, headGlyph, alert, items }: {
   return (
     <div className="mc-window mc-tcol">
       <Link href="/kanban" className={`mc-tcol-head mc-tcol-head-link ${alert ? 'alert' : ''}`}>
+        <div className="mc-window-dots" aria-hidden="true"><span className="mc-window-dot mc-window-dot--red" /><span className="mc-window-dot mc-window-dot--amber" /><span className="mc-window-dot mc-window-dot--green" /></div>
+        <span className="mc-prompt-user">user@mission-control:~</span>
         <span className="mc-tcol-glyph">{headGlyph}</span>
         <span>{headLabel}</span>
         <span className="mc-tcol-count">{items.length}</span>

@@ -1260,7 +1260,32 @@ body {
   border-bottom: 1px solid var(--pt-border-dim);
   background: linear-gradient(180deg, rgba(var(--pt-neon-rgb),0.06), transparent);
 }
-.mc-window-dots { display: none; }
+.mc-window-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+.mc-window-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: block;
+}
+/* Traffic lights are decorative window chrome explicitly required by the theme. */
+.mc-window-dot--red { background: var(--pt-tl-red); }
+.mc-window-dot--amber { background: var(--pt-tl-yellow); }
+.mc-window-dot--green { background: var(--pt-tl-green); }
+.mc-prompt-user {
+  color: var(--pt-neon);
+  opacity: 0.68;
+  font-family: var(--pt-font-mono);
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  white-space: nowrap;
+}
 .mc-window-title {
   font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
   color: var(--pt-text); flex: 1;
@@ -6045,7 +6070,7 @@ html[data-theme="friday"] .mc-cmdp-trigger:hover {
     inset 0 1px 0 rgba(255,255,255,0.05),
     0 1px 2px rgba(0,0,0,0.4),
     0 14px 34px -18px rgba(0,0,0,0.75),
-    0 0 0 1px rgba(var(--pt-neon-rgb),0.03);
+    0 0 10px rgba(var(--pt-neon-rgb),0.12);
 }
 .mc-window:hover {
   box-shadow:

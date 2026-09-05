@@ -52,6 +52,8 @@ export function SystemHealthPanel() {
   return (
     <div className="mc-window mc-health">
       <div className={`mc-tcol-head ${problems ? 'alert' : ''}`}>
+        <div className="mc-window-dots" aria-hidden="true"><span className="mc-window-dot mc-window-dot--red" /><span className="mc-window-dot mc-window-dot--amber" /><span className="mc-window-dot mc-window-dot--green" /></div>
+        <span className="mc-prompt-user">user@mission-control:~</span>
         <span className="mc-tcol-glyph">⚡</span>
         <span>SYSTEM HEALTH</span>
         <span className="mc-tcol-count">{problems ? `${problems} ISSUE${problems > 1 ? 'S' : ''}` : 'ALL UP'}</span>

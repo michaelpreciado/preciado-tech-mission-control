@@ -57,8 +57,8 @@
         var y = drops[i] * fs;
         var isHead = Math.random() < 0.12;
         ctx.fillStyle = isHead
-          ? 'rgba(188,208,255,0.85)'
-          : 'rgba(127,160,255,' + (0.06 + Math.random() * 0.16) + ')';
+          ? 'rgba(80,160,255,0.9)'
+          : 'rgba(40,110,200,' + (0.05 + Math.random() * 0.13) + ')';
         ctx.fillText(ch, i * fs, y);
         if (y > canvas.offsetHeight && Math.random() > 0.975) drops[i] = 0;
         drops[i]++;
