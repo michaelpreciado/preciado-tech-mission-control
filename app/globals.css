@@ -557,7 +557,6 @@ body {
   background: var(--pt-bg);
   color: var(--pt-neon-bright);
   font-size: 18px;
-  text-shadow: var(--pt-glow-text);
   flex-shrink: 0;
 }
 .mc-brand-text { display: flex; flex-direction: column; gap: 2px; line-height: 1; }
@@ -665,7 +664,7 @@ body {
 }
 .mc-side-footer .mc-side-foot-title {
   font-size: 9px; letter-spacing: 0.24em;
-  color: var(--pt-neon); text-shadow: var(--pt-glow-sm);
+  color: var(--pt-neon);
   margin-bottom: 6px;
 }
 
@@ -1108,7 +1107,7 @@ body {
    so the row is readable without parsing every number. */
 .mc-stat.is-alert { border-color: rgba(254,188,46,0.55); background: rgba(254,188,46,0.07); }
 .mc-stat.is-alert .mc-stat-glyph { color: var(--pt-warn-ink); }
-.mc-stat.is-alert .mc-stat-val { color: #febc2e; text-shadow: 0 0 8px rgba(254,188,46,0.45); }
+.mc-stat.is-alert .mc-stat-val { color: var(--pt-warn-ink); text-shadow: 0 0 8px rgba(254,188,46,0.45); }
 
 .mc-live-badge {
   display: inline-flex; align-items: center; gap: 6px;
@@ -3237,7 +3236,6 @@ html[data-theme="friday"] .mc-drawer-close { border-radius: 0; }
 .mc-gh-stat .val {
   font-size: 22px; font-weight: 700;
   color: var(--pt-neon-bright);
-  text-shadow: var(--pt-glow-text);
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
@@ -3374,7 +3372,7 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
 }
 .mc-desk2-tool {
   position: absolute; right: -12px; top: 6px;
-  font-size: 11px; color: var(--pt-neon-bright); text-shadow: var(--pt-glow-sm);
+  font-size: 11px; color: var(--pt-neon-bright);
 }
 
 /* Work-kind animations. Each reads differently at a glance. */
@@ -3997,7 +3995,6 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
 }
 .mc-ascii-head .label {
   color: var(--pt-neon-bright);
-  text-shadow: var(--pt-glow-text);
   letter-spacing: 0.26em;
   font-weight: 600;
   padding: 0 2px;
@@ -4172,7 +4169,7 @@ html[data-motion="reduced"] .mc-hud-progress-fill, html[data-motion="off"] .mc-h
 .mc-tile-head .mc-led { flex-shrink: 0; }
 .mc-tile-status {
   font-size: 9px; letter-spacing: 0.16em;
-  color: var(--pt-neon-bright); text-shadow: var(--pt-glow-sm);
+  color: var(--pt-neon-bright);
   text-transform: uppercase; font-weight: 600;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
@@ -4552,7 +4549,6 @@ html[data-motion="reduced"] .mc-hud-progress-fill, html[data-motion="off"] .mc-h
 }
 .mc-home-tile-glyph {
   font-size: 22px; color: var(--pt-neon-bright);
-  text-shadow: var(--pt-glow-text);
   flex-shrink: 0;
 }
 .mc-home-tile-mid { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
@@ -5147,7 +5143,7 @@ html[data-motion="off"] .mc-home-tile.tone-err::after {
 .cc-new-panel { border: 1px solid var(--pt-border); border-radius: 12px; padding: 12px 14px;
   background: rgba(var(--pt-neon-rgb),0.06); }
 .cc-new-title { font-size: 11px; letter-spacing: 0.16em; color: var(--pt-neon);
-  text-shadow: var(--pt-glow-sm); margin-bottom: 10px; }
+  margin-bottom: 10px; }
 .cc-new-fields { display: flex; gap: 8px; margin-bottom: 8px; }
 .cc-new-hint { font-size: 10px; color: var(--pt-text-dim); line-height: 1.5; }
 /* ── Composer ── */
@@ -5320,7 +5316,6 @@ html[data-motion="off"] .mc-home-tile.tone-err::after {
 .ci-stat-val {
   font-size: 20px; font-weight: 700; color: var(--pt-text-high);
   font-variant-numeric: tabular-nums; line-height: 1;
-  text-shadow: 0 0 14px rgba(var(--pt-neon-rgb),0.35);
 }
 .ci-stat-lbl { font-size: 8px; letter-spacing: 0.2em; color: var(--pt-text-mute); }
 
@@ -5986,7 +5981,6 @@ html[data-motion="off"] .mc-home-tile.is-hero.tone-err::after {
   font-family: var(--pt-font-mono);
   font-size: 13px;
   color: var(--pt-neon-bright);
-  text-shadow: var(--pt-glow-sm);
   white-space: nowrap;
 }
 .cmdp-input {
@@ -6171,15 +6165,10 @@ html[data-theme="friday"] .mc-cmdp-trigger:hover {
     0 26px 60px -20px rgba(0,0,0,0.8),
     0 0 18px -4px rgba(var(--pt-neon-rgb),0.18);
 }
-.mc-window-title .mc-win-tag {
-  text-shadow: var(--pt-glow-sm), 0 0 16px rgba(var(--pt-neon-rgb),0.35);
-}
-
 /* Glowing section labels — the ascii-section heading gets a neon
    halo so the page hierarchy reads at a glance. */
 .mc-ascii-head .label {
   color: var(--pt-text-high);
-  text-shadow: var(--pt-glow-sm), 0 0 22px rgba(var(--pt-neon-rgb),0.30);
 }
 
 /* Gradient-text hero numerals — the status-tile lead value steps
@@ -7502,7 +7491,6 @@ html[data-motion="off"] .mc-home-tile:not(.tone-err):hover::after {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.18em;
-  text-shadow: 0 0 10px rgba(0,180,255,0.75);
 }
 .mc-studio-output-head {
   min-height: 42px;
@@ -7574,7 +7562,6 @@ html[data-motion="off"] .mc-home-tile:not(.tone-err):hover::after {
   letter-spacing: 0.13em;
   padding: 10px 14px;
   cursor: pointer;
-  text-shadow: 0 0 8px rgba(57,255,20,0.55);
   transition: background 160ms ease, box-shadow 160ms ease, color 160ms ease;
 }
 .mc-studio-btn:hover,
@@ -7611,7 +7598,6 @@ html[data-motion="off"] .mc-home-tile:not(.tone-err):hover::after {
   color: var(--terminal-green, #39ff14);
   font-size: 11px;
   letter-spacing: 0.06em;
-  text-shadow: 0 0 8px rgba(57,255,20,0.45);
 }
 .mc-studio-cursor { animation: mc-studio-blink 1s steps(2) infinite; }
 @keyframes mc-studio-blink { 50% { opacity: 0; } }
@@ -7707,7 +7693,6 @@ html[data-motion="off"] .mc-home-tile:not(.tone-err):hover::after {
 .mc-signal-title:hover {
   color: var(--neon-blue, var(--pt-neon));
   text-decoration-color: var(--neon-blue, var(--pt-neon));
-  text-shadow: 0 0 8px rgba(0,180,255,0.55);
 }
 .mc-signal-meta { gap: 3px; }
 .mc-signal-summary {
@@ -7808,7 +7793,7 @@ html[data-motion="off"] .mc-studio-cursor { animation: none; }
 .mc-main:has(.mc-home-title) .mc-rig-link {
   border-bottom: 1px solid rgba(90,140,255,0.08);
 }
-.mc-main:has(.mc-home-title) .mc-home-health-chip:last-of-type,
+.mc-main:has(.mc-home-title) .mc-home-health-chip:nth-last-child(2),
 .mc-main:has(.mc-home-title) .mc-home-agent:last-child,
 .mc-main:has(.mc-home-title) .mc-rig-link:last-child { border-bottom: none; }
 .mc-main:has(.mc-home-title) .mc-feed-arrow,
