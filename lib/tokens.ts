@@ -211,6 +211,8 @@ export function buildTokenCss(): string {
   --pt-border-strong: rgba(var(--pt-neon-rgb),${BORDER.strong});
   --pt-border-dim: rgba(var(--pt-neon-rgb),${BORDER.dim});
   --pt-rule: rgba(var(--pt-neon-rgb),${BORDER.rule});
+  --pt-card-border: rgba(90,140,255,0.14);
+  --pt-card-bg: linear-gradient(180deg, rgba(13,20,34,0.55), rgba(7,11,20,0.85));
 
   /* glow / shadow — two intensities + text */
   --pt-glow-sm: ${GLOW.sm};
