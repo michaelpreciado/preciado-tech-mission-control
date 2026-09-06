@@ -10,10 +10,9 @@
  * now) to shift hue from a dim idle blue to an energetic bright one, and
  * touches no data, API or logic.
  *
- * It layers BEHIND the optional `CoreOrb3D` globe, so the holder frame reads
- * as a real instrument whether or not the 3D element is enabled.
+ * The legacy Home-core instrument is retained for lightweight reuse.
  *
- * Motion contract (mirrors CoreOrb3D / the v1 lane):
+ * Motion contract (mirrors the v1 lane):
  *  - `prefers-reduced-motion` → static frame (CSS media query).
  *  - app motion setting reduced/off → static frame (`is-static`).
  *  - `document.hidden` → animations paused (`is-paused`), zero main-thread

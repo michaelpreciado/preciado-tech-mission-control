@@ -13,7 +13,7 @@ import '../vf/v3-lane.css'
 
 type MotionSetting = 'full' | 'reduced' | 'off'
 type Density = 'compact' | 'expanded'
-type Elements3d = { homeGlobe: boolean; memoryGraph: boolean; teamGraph: boolean }
+type Elements3d = { coreOrb: boolean; memoryGraph: boolean; teamGraph: boolean }
 
 type SetupConfig = {
   appName: string
@@ -325,8 +325,8 @@ export default function SetupPage() {
               <div className="mc-setup-field">
                 <span>3D / ambient elements</span>
                 <div className="mc-setup-swatches">
-                  <Button variant="ghost" active={cfg.appearance.elements3d.homeGlobe} onClick={() => toggleElement3d('homeGlobe')}>
-                    HOME GLOBE · {cfg.appearance.elements3d.homeGlobe ? 'ON' : 'OFF'}
+                  <Button variant="ghost" active={cfg.appearance.elements3d.coreOrb} onClick={() => toggleElement3d('coreOrb')}>
+                    GLOBAL CORE ORB · {cfg.appearance.elements3d.coreOrb ? 'ON' : 'OFF'}
                   </Button>
                   <Button variant="ghost" active={cfg.appearance.elements3d.memoryGraph} onClick={() => toggleElement3d('memoryGraph')}>
                     MEMORY GRAPH · {cfg.appearance.elements3d.memoryGraph ? 'ON' : 'OFF'}
@@ -335,7 +335,7 @@ export default function SetupPage() {
                     TEAM GRAPH · {cfg.appearance.elements3d.teamGraph ? 'ON' : 'OFF'}
                   </Button>
                 </div>
-                <em>turn off the heavier WebGL/graph views on lower-power machines · Memory/Team graph fall back to their existing list views · Home globe is pure decoration, so off just leaves its frame empty</em>
+                <em>turn off the heavier WebGL/graph views on lower-power machines · Memory/Team graph fall back to their existing list views · Core orb controls the global navigation heartbeat</em>
               </div>
 
               <div className="mc-setup-field mc-setup-tabs">

@@ -68,7 +68,7 @@ const NESTED: Record<string, readonly string[]> = {
 const TAB_ID_RE = /^\/[a-z0-9-]*$/
 const MOTION_VALUES = new Set(['full', 'reduced', 'off'])
 const DENSITY_VALUES = new Set(['compact', 'expanded'])
-const ELEMENTS_3D_KEYS = ['homeGlobe', 'memoryGraph', 'teamGraph'] as const
+const ELEMENTS_3D_KEYS = ['coreOrb', 'memoryGraph', 'teamGraph'] as const
 
 /** Validate the `appearance` patch — mixed types (string/enum/array/nested
  * booleans), so it gets its own path instead of the generic string-only

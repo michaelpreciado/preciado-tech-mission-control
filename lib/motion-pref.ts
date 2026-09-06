@@ -1,6 +1,5 @@
 /**
- * Shared motion-guard helper for every ambient/3D component (CoreOrb3D,
- * AmbientNeuralField, CoreOrb3D, Tilt, ...).
+ * Shared motion-guard helper for ambient/3D components.
  *
  * Two independent signals decide whether a component freezes to a static
  * frame:

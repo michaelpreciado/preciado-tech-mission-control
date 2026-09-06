@@ -11,6 +11,7 @@ import { UiSettingsContext, DEFAULT_UI_SETTINGS, useUiSettings, type UiSettings 
 import { NAV, PINNED_TAB_IDS } from '@/lib/nav-tabs'
 
 const CommandPalette = dynamic(() => import('./CommandPalette').then(m => m.CommandPalette), { ssr: false })
+const CoreOrb = dynamic(() => import('./CoreOrb'), { ssr: false })
 
 /** Brand identity resolved server-side in lib/config.ts, provided by <Shell>. */
 const BrandContext = createContext<{ appName: string; appTagline: string }>({
@@ -66,6 +67,7 @@ function Sidebar() {
 
   return (
     <aside className="mc-side" aria-label="Main navigation">
+      <CoreOrb placement="desktop" />
       <div className="mc-brand">
         <div className="mc-brand-mark"><Icon name="brand" size={20} /></div>
         <div className="mc-brand-text">
@@ -218,6 +220,7 @@ function MobileNav() {
   return (
     <>
       <nav className="mc-mobile-nav" aria-label="Mobile navigation">
+        <CoreOrb placement="mobile" />
         <div className="mc-mobile-nav-inner" ref={navInnerRef}>
           {/* Sliding active-tab pill — glides to the active item on nav change */}
           {pill && <span className="mc-mobile-pill" style={{ left: pill.left, width: pill.width }} aria-hidden="true" />}

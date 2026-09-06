@@ -12,7 +12,14 @@ type LiveCtx = {
   refresh: () => Promise<void>
 }
 
+export type OrbActivitySignal = {
+  lastEventAt: number | null
+  runningTaskCount: number
+  now: number
+}
+
 const Ctx = createContext<LiveCtx>({ data: null, isLive: false, isLoading: true, error: null, lastUpdated: null, refresh: async () => {} })
+const OrbActivityCtx = createContext<OrbActivitySignal>({ lastEventAt: null, runningTaskCount: 0, now: 0 })
 
 // Module-level deduplication: store the parsed JSON promise (not the Response)
 // to avoid the body-already-consumed bug when multiple callers await the same promise.
@@ -28,6 +35,8 @@ export function LiveDataProvider({ children }: { children: React.ReactNode }) {
   const [lastUpdated, setLastUpdated] = useState<number | null>(null)
   const inFlight = useRef<AbortController | null>(null)
   const rafId = useRef<number | null>(null)
+  const lastSseEventRef = useRef<number | null>(null)
+  const [activityClock, setActivityClock] = useState(0)
 
   const refresh = useCallback(async () => {
     // Use cached data if still fresh (SWR pattern)
@@ -125,7 +134,11 @@ export function LiveDataProvider({ children }: { children: React.ReactNode }) {
     const timer = window.setInterval(tick, intervalMs)
 
     const onVisible = () => {
-      if (document.visibilityState === 'visible') void refreshThrottled()
+      if (document.visibilityState === 'visible') {
+        void refreshThrottled()
+        const last = lastSseEventRef.current
+        if (last != null && Date.now() - last <= 20_000) setActivityClock(Date.now())
+      }
     }
     const onOnline = () => void refreshThrottled()
     const onOffline = () => {
@@ -145,6 +158,8 @@ export function LiveDataProvider({ children }: { children: React.ReactNode }) {
     let lastEvt = 0
     const onBusEvent = () => {
       const now = Date.now()
+      lastSseEventRef.current = now
+      if (document.visibilityState === 'visible') setActivityClock(now)
       if (now - lastEvt < 6000) return
       lastEvt = now
       if (document.visibilityState === 'visible' && navigator.onLine) void refreshThrottled()
@@ -155,8 +170,17 @@ export function LiveDataProvider({ children }: { children: React.ReactNode }) {
       es.onerror = () => { /* EventSource reconnects on its own */ }
     } catch { /* noop */ }
 
+    // Only tick while an SSE event can still affect the orb. This makes the
+    // 20-second active expiry timely without a permanent provider heartbeat.
+    const activityTimer = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return
+      const last = lastSseEventRef.current
+      if (last != null && Date.now() - last <= 20_000) setActivityClock(Date.now())
+    }, 1_000)
+
     return () => {
       clearInterval(timer)
+      clearInterval(activityTimer)
       document.removeEventListener('visibilitychange', onVisible)
       window.removeEventListener('online', onOnline)
       window.removeEventListener('offline', onOffline)
@@ -170,11 +194,23 @@ export function LiveDataProvider({ children }: { children: React.ReactNode }) {
     data, isLive, isLoading, error, lastUpdated, refresh
   }), [data, isLive, isLoading, error, lastUpdated, refresh])
 
+  const orbActivity = useMemo<OrbActivitySignal>(() => ({
+    lastEventAt: lastSseEventRef.current,
+    runningTaskCount: data?.kanban?.runningTasks ?? 0,
+    now: activityClock,
+  }), [activityClock, data?.kanban?.runningTasks])
+
   return (
-    <Ctx.Provider value={contextValue}>{children}</Ctx.Provider>
+    <Ctx.Provider value={contextValue}>
+      <OrbActivityCtx.Provider value={orbActivity}>{children}</OrbActivityCtx.Provider>
+    </Ctx.Provider>
   )
 }
 
 export function useLiveData() {
   return useContext(Ctx)
+}
+
+export function useOrbActivity() {
+  return useContext(OrbActivityCtx)
 }

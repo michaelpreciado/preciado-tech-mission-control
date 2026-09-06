@@ -61,6 +61,8 @@ export interface HostSample {
   /** Epoch ms. */
   t: number
   cpuPct: number
+  /** One-minute load average from /proc/loadavg. */
+  load1: number
   /** Per-thread busy %, index-aligned with cpu0..cpuN. */
   cores: number[]
   cpuMhzMax: number | null
@@ -269,8 +271,9 @@ async function runTick(): Promise<void> {
     const now = Date.now()
     const elapsedMs = prevAt ? now - prevAt : 0
 
-    const [statRaw, memRaw, netRaw, diskRaw, cpuinfo, upRaw, psiCpuRaw, psiMemRaw, psiIoRaw] = await Promise.all([
+    const [statRaw, loadRaw, memRaw, netRaw, diskRaw, cpuinfo, upRaw, psiCpuRaw, psiMemRaw, psiIoRaw] = await Promise.all([
       readText('/proc/stat'),
+      readText('/proc/loadavg'),
       readText('/proc/meminfo'),
       readText('/proc/net/dev'),
       readText('/proc/diskstats'),
@@ -331,6 +334,7 @@ async function runTick(): Promise<void> {
       buffer.push({
         t: now,
         cpuPct: cpuUsagePct(prevStat.aggregate, stat.aggregate),
+        load1: Number.parseFloat(loadRaw?.trim().split(/\s+/)[0] ?? '0') || 0,
         cores: perCoreUsagePct(prevStat.cpus, stat.cpus),
         cpuMhzMax: clocks.max,
         cpuMhzAvg: clocks.avg,

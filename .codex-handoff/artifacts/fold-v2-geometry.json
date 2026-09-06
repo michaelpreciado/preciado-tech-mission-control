@@ -1,0 +1,30 @@
+{
+  "task": "HMK-FIX-2 V2",
+  "generatedAt": "2026-09-05",
+  "status": "live-verification-unavailable",
+  "reason": {
+    "server": "Next dev server could not bind 0.0.0.0:4175: listen EPERM",
+    "playwright": "The requested /home/mp/.home/hermes-agent/node_modules/playwright/index.mjs path is absent; the available /home/mp/.hermes/hermes-agent Playwright import launches Chromium, but Chromium exits with an Operation not permitted Crashpad/sandbox error"
+  },
+  "widths": {
+    "561": { "cockpit": null, "brand": null, "stats": null, "refresh": null, "badge": null, "hscroll": null, "overlapCount": null },
+    "600": { "cockpit": null, "brand": null, "stats": null, "refresh": null, "badge": null, "hscroll": null, "overlapCount": null },
+    "623": { "cockpit": null, "brand": null, "stats": null, "refresh": null, "badge": null, "hscroll": null, "overlapCount": null },
+    "673": { "cockpit": null, "brand": null, "stats": null, "refresh": null, "badge": null, "hscroll": null, "overlapCount": null },
+    "700": { "cockpit": null, "brand": null, "stats": null, "refresh": null, "badge": null, "hscroll": null, "overlapCount": null },
+    "720": { "cockpit": null, "brand": null, "stats": null, "refresh": null, "badge": null, "hscroll": null, "overlapCount": null },
+    "767": { "cockpit": null, "brand": null, "stats": null, "refresh": null, "badge": null, "hscroll": null, "overlapCount": null }
+  },
+  "phoneBaseline": "not captured: live browser unavailable",
+  "desktopBaseline": "not captured: live browser unavailable",
+  "screenshots": {
+    "fold-v2-673.png": "not captured: live browser unavailable",
+    "fold-v2-700.png": "not captured: live browser unavailable",
+    "fold-v2-767.png": "not captured: live browser unavailable"
+  },
+  "staticChecks": {
+    "textShadowDeclarations": 23,
+    "cssOnlyDiff": true,
+    "gitDiffCheck": true
+  }
+}

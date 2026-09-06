@@ -18,7 +18,7 @@ export const DEFAULT_UI_SETTINGS: UiSettings = {
   density: 'compact',
   hiddenTabs: [],
   tabOrder: [],
-  elements3d: { homeGlobe: true, memoryGraph: true, teamGraph: true },
+  elements3d: { coreOrb: true, memoryGraph: true, teamGraph: true },
 }
 
 export const UiSettingsContext = createContext<UiSettings>(DEFAULT_UI_SETTINGS)

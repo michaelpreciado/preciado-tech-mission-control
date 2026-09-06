@@ -89,7 +89,7 @@ export interface FridayAppearance {
   /** Explicit nav tab order (ids); tabs not listed keep their default relative order, appended at the end. */
   tabOrder: string[]
   /** Per-tab on/off switches for the heavier 3D/ambient elements (lower-power machines). */
-  elements3d: { homeGlobe: boolean; memoryGraph: boolean; teamGraph: boolean }
+  elements3d: { coreOrb: boolean; memoryGraph: boolean; teamGraph: boolean }
 }
 
 export interface FridayChatRemote {
@@ -221,6 +221,7 @@ function buildConfig(): FridayConfig {
   const p = file.paths ?? {}
   const s = file.services ?? {}
   const g = file.github ?? {}
+  const e3d = file.appearance?.elements3d as (Partial<FridayAppearance['elements3d']> & { homeGlobe?: boolean }) | undefined
 
   return {
     appName: str(env.NEXT_PUBLIC_APP_NAME, str(file.appName, 'F.R.I.D.A.Y.')),
@@ -285,9 +286,11 @@ function buildConfig(): FridayConfig {
       hiddenTabs: Array.isArray(file.appearance?.hiddenTabs) ? file.appearance!.hiddenTabs!.filter((t): t is string => typeof t === 'string') : [],
       tabOrder: Array.isArray(file.appearance?.tabOrder) ? file.appearance!.tabOrder!.filter((t): t is string => typeof t === 'string') : [],
       elements3d: {
-        homeGlobe: file.appearance?.elements3d?.homeGlobe !== false,
-        memoryGraph: file.appearance?.elements3d?.memoryGraph !== false,
-        teamGraph: file.appearance?.elements3d?.teamGraph !== false,
+        // One-release migration: an explicit new key wins; otherwise inherit
+        // the retired Home globe preference before falling back to on.
+        coreOrb: e3d?.coreOrb ?? e3d?.homeGlobe ?? true,
+        memoryGraph: e3d?.memoryGraph !== false,
+        teamGraph: e3d?.teamGraph !== false,
       },
     },
     chat: {

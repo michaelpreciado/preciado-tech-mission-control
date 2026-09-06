@@ -12,17 +12,14 @@ import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { useLiveData } from './LiveDataProvider'
-import { useUiSettings } from './ui-settings'
 import { SectionHead, SkeletonPanel, fmtDate } from './ui'
 import { Sparkline } from './Sparkline'
-import { CoreHalo } from './views/CoreHalo'
 import dynamic from 'next/dynamic'
 import type { MissionTask } from '@/lib/types'
 import '../app/vf/v3-lane.css'
 
 const CommandHeader = dynamic(() => import('./views/CommandHeader').then(m => m.CommandHeader), { ssr: false, loading: () => <SkeletonPanel label="loading header" /> })
 const ActionFeed = dynamic(() => import('./ActionFeed').then(m => m.ActionFeed), { ssr: false })
-const CoreOrb3D = dynamic(() => import('./views/CoreOrb3D').then(m => m.default), { ssr: false, loading: () => null })
 const RigHud = dynamic(() => import('./views/RigHud').then(m => m.RigHud), { ssr: false, loading: () => <SkeletonPanel label="loading rig telemetry" /> })
 const CalendarList = dynamic(() => import('./views/CalendarList').then(m => m.CalendarList), { ssr: false, loading: () => <SkeletonPanel label="loading schedule" /> })
 
@@ -421,7 +418,6 @@ function TaskCol({ headLabel, headGlyph, alert, items }: {
 
 export function HomeDeck() {
   const { data, isLive } = useLiveData()
-  const { elements3d } = useUiSettings()
   return (
     <>
       <div className="mc-home-title" aria-label="Mission Control">
@@ -448,16 +444,8 @@ export function HomeDeck() {
       <StatusTiles />
       <AgentPulse />
 
-      {/* 4 · System core + rig telemetry — heavier visuals sit below the pulse */}
+      {/* 4 · Rig telemetry — the global system core now lives in nav chrome */}
       <div className="mc-home-corewrap">
-        <div className="mc-home-coreorb-holder">
-          {/* CoreHalo is the always-on CSS command-core motif — it makes the
-              frame a real instrument. The 3D globe layers on top of it.
-              Off (Setup → UI CUSTOMIZATION): the holder still reads as a
-              live core, just without the point cloud — no data is lost. */}
-          <CoreHalo />
-          {elements3d.homeGlobe && <CoreOrb3D />}
-        </div>
         <div className="mc-home-corebody">
           <SectionHead label="SYSTEM CORE · RIG" />
           <RigHud />
