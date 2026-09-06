@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Component, useCallback, useEffect, useMemo, useRef, useState, type ErrorInfo, type ReactNode } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { Icon } from './icons'
@@ -20,6 +20,37 @@ const PARTICLE_COUNT = 192
 
 type Placement = 'desktop' | 'mobile'
 type VisualState = { state: OrbState; intensity: number }
+
+let cachedWebGLSupport: boolean | null = null
+let webglFailedForSession = false
+
+function detectWebGL(): boolean {
+  if (cachedWebGLSupport != null) return cachedWebGLSupport
+  try {
+    const canvas = document.createElement('canvas')
+    cachedWebGLSupport = Boolean(canvas.getContext('webgl2') || canvas.getContext('webgl'))
+  } catch {
+    cachedWebGLSupport = false
+  }
+  return cachedWebGLSupport
+}
+
+class WebGLErrorBoundary extends Component<{ onError: () => void; children: ReactNode }, { failed: boolean }> {
+  state = { failed: false }
+
+  static getDerivedStateFromError() {
+    return { failed: true }
+  }
+
+  componentDidCatch(_error: Error, _info: ErrorInfo) {
+    webglFailedForSession = true
+    this.props.onError()
+  }
+
+  render() {
+    return this.state.failed ? null : this.props.children
+  }
+}
 
 function useMedia(query: string): boolean {
   const [matches, setMatches] = useState(false)
@@ -88,7 +119,6 @@ const fragmentShader = /* glsl */ `
 `
 
 function OrbScene({ visual, staticMotion }: { visual: VisualState; staticMotion: boolean }) {
-  const core = useRef<THREE.ShaderMaterial>(null)
   const ring = useRef<THREE.Mesh>(null)
   const particles = useRef<THREE.Points>(null)
   const particleMaterial = useRef<THREE.PointsMaterial>(null)
@@ -106,8 +136,17 @@ function OrbScene({ visual, staticMotion }: { visual: VisualState; staticMotion:
     uTime: { value: 0 },
     uFlicker: { value: 0 },
   }), [blue])
+  const coreMaterial = useMemo(() => new THREE.ShaderMaterial({
+    uniforms,
+    vertexShader,
+    fragmentShader,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  }), [uniforms])
 
   useEffect(() => () => geometry.dispose(), [geometry])
+  useEffect(() => () => coreMaterial.dispose(), [coreMaterial])
   useEffect(() => { invalidate() }, [invalidate, visual])
 
   useFrame((frame, delta) => {
@@ -123,12 +162,10 @@ function OrbScene({ visual, staticMotion }: { visual: VisualState; staticMotion:
     const base = state === 'idle' ? 0.52 : state === 'active' ? 0.74 : 0.82
     const strength = staticMotion ? base : base + pulse * (state === 'hot' ? 0.28 : 0.16) * Math.max(0.5, visual.intensity)
 
-    if (core.current) {
-      core.current.uniforms.uColor.value.copy(currentColor.current)
-      core.current.uniforms.uIntensity.value = strength
-      core.current.uniforms.uTime.value = staticMotion ? 0 : frame.clock.elapsedTime
-      core.current.uniforms.uFlicker.value = state === 'surge' ? 7 : 0
-    }
+    coreMaterial.uniforms.uColor.value.copy(currentColor.current)
+    coreMaterial.uniforms.uIntensity.value = strength
+    coreMaterial.uniforms.uTime.value = staticMotion ? 0 : frame.clock.elapsedTime
+    coreMaterial.uniforms.uFlicker.value = state === 'surge' ? 7 : 0
     if (ring.current) {
       ring.current.rotation.z += staticMotion ? 0 : delta * speed * -0.72
       ;(ring.current.material as THREE.MeshBasicMaterial).color.copy(currentColor.current)
@@ -148,10 +185,7 @@ function OrbScene({ visual, staticMotion }: { visual: VisualState; staticMotion:
     <>
       <mesh scale={0.82}>
         <sphereGeometry args={[1, 16, 12]} />
-        <shaderMaterial
-          ref={core}
-          args={[{ uniforms, vertexShader, fragmentShader, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }]}
-        />
+        <primitive object={coreMaterial} attach="material" />
       </mesh>
       <mesh ref={ring} rotation={[1.18, 0.28, 0]} scale={1.1}>
         <torusGeometry args={[0.96, 0.025, 5, 40]} />
@@ -176,6 +210,8 @@ function OrbRuntime({ placement }: { placement: Placement }) {
   const coolBelowSince = useRef<number | null>(null)
   const abort = useRef<AbortController | null>(null)
   const [visual, setVisual] = useState<VisualState>({ state: 'idle', intensity: 0 })
+  const [webglFailed, setWebglFailed] = useState(webglFailedForSession)
+  const webglAvailable = useMemo(() => detectWebGL(), [])
 
   useEffect(() => { activityRef.current = activity }, [activity])
 
@@ -202,7 +238,9 @@ function OrbRuntime({ placement }: { placement: Placement }) {
       : { state, intensity: Math.min(1, intensity) })
   }, [])
 
-  useEffect(() => { evaluate() }, [evaluate, activity.now])
+  useEffect(() => {
+    if (visible) evaluate()
+  }, [evaluate, activity.now, visible])
 
   useEffect(() => {
     let alive = true
@@ -222,33 +260,61 @@ function OrbRuntime({ placement }: { placement: Placement }) {
         if ((error as Error).name !== 'AbortError') sampleRef.current = null
       }
     }
-    void poll()
-    const pollTimer = window.setInterval(() => { void poll() }, TELEMETRY_POLL_MS)
-    const stateTimer = window.setInterval(() => {
-      if (document.visibilityState === 'visible') evaluate()
-    }, 1_000)
-    const onVisible = () => { if (document.visibilityState === 'visible') void poll() }
+    let pollTimer: number | null = null
+    let stateTimer: number | null = null
+    const stopTimers = () => {
+      if (pollTimer != null) window.clearInterval(pollTimer)
+      if (stateTimer != null) window.clearInterval(stateTimer)
+      pollTimer = null
+      stateTimer = null
+      abort.current?.abort()
+    }
+    const startTimers = () => {
+      if (pollTimer != null || document.visibilityState !== 'visible') return
+      pollTimer = window.setInterval(() => { void poll() }, TELEMETRY_POLL_MS)
+      stateTimer = window.setInterval(evaluate, 1_000)
+    }
+    if (document.visibilityState === 'visible') {
+      startTimers()
+      void poll()
+    }
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        startTimers()
+        void poll()
+      } else {
+        stopTimers()
+      }
+    }
     document.addEventListener('visibilitychange', onVisible)
     return () => {
       alive = false
-      window.clearInterval(pollTimer)
-      window.clearInterval(stateTimer)
+      stopTimers()
       document.removeEventListener('visibilitychange', onVisible)
       abort.current?.abort()
     }
   }, [evaluate])
 
+  const markWebGLFailed = useCallback(() => {
+    webglFailedForSession = true
+    setWebglFailed(true)
+  }, [])
+
   return (
     <div className={`mc-core-orb mc-core-orb-${placement}`} data-orb-state={visual.state} aria-hidden="true">
-      <Canvas
-        dpr={[1, 1.5]}
-        camera={{ position: [0, 0, 3.35], fov: 45 }}
-        frameloop={staticMotion || !visible ? 'demand' : 'always'}
-        gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
-        style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
-      >
-        <OrbScene visual={visual} staticMotion={staticMotion} />
-      </Canvas>
+      {webglAvailable && !webglFailed && (
+        <WebGLErrorBoundary onError={markWebGLFailed}>
+          <Canvas
+            dpr={[1, 1.5]}
+            camera={{ position: [0, 0, 3.35], fov: 45 }}
+            frameloop={staticMotion || !visible ? 'demand' : 'always'}
+            gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
+            style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
+          >
+            <OrbScene visual={visual} staticMotion={staticMotion} />
+          </Canvas>
+        </WebGLErrorBoundary>
+      )}
       <span className="mc-core-orb-mark"><Icon name="brand" size={placement === 'desktop' ? 15 : 11} /></span>
     </div>
   )
