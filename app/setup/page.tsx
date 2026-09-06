@@ -335,7 +335,7 @@ export default function SetupPage() {
                     TEAM GRAPH · {cfg.appearance.elements3d.teamGraph ? 'ON' : 'OFF'}
                   </Button>
                 </div>
-                <em>turn off the heavier WebGL/graph views on lower-power machines · Memory/Team graph fall back to their existing list views · Core orb controls the global navigation heartbeat</em>
+                <em>turn off the heavier WebGL/graph views on lower-power machines · Memory/Team graph fall back to their existing list views · Core orb toggles the 3D heartbeat visual; Home navigation remains available</em>
               </div>
 
               <div className="mc-setup-field mc-setup-tabs">
@@ -348,43 +348,46 @@ export default function SetupPage() {
                       ;(acc[t.section] ??= []).push(t)
                       return acc
                     }, {}),
-                  ).map(([section, tabs]) => (
-                    <div key={section} className="mc-setup-tabsection">
-                      <div className="mc-setup-tabsection-head">{section}</div>
-                      {tabs.map((t, i) => {
-                        const hidden = cfg.appearance.hiddenTabs.includes(t.id)
-                        return (
-                          <div
-                            key={t.id}
-                            className={`mc-setup-tabrow${dragTabId === t.id ? ' setup-tabrow--dragging' : ''}${overTabId === t.id && dragTabId && dragTabId !== t.id ? ' setup-tabrow--over' : ''}`}
-                            draggable
-                            onDragStart={e => { setDragTabId(t.id); e.dataTransfer.effectAllowed = 'move' }}
-                            onDragEnd={() => { setDragTabId(null); setOverTabId(null) }}
-                            onDragOver={e => { if (dragTabId && dragTabId !== t.id) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setOverTabId(t.id) } }}
-                            onDragLeave={() => setOverTabId(prev => (prev === t.id ? null : prev))}
-                            onDrop={e => { e.preventDefault(); if (dragTabId) reorderTab(dragTabId, t.id); setDragTabId(null); setOverTabId(null) }}
-                          >
-                            <span className="setup-tabrow-grip" aria-hidden="true" title="Drag to reorder">⠿</span>
-                            <span className="mc-setup-tabrow-label">
-                              {t.label}{t.pinned && <em> · pinned</em>}
-                            </span>
-                            <div className="mc-setup-tabrow-actions">
-                              <Button variant="ghost" disabled={i === 0} onClick={() => moveTab(t.id, -1)} aria-label={`Move ${t.label} up`}>↑</Button>
-                              <Button variant="ghost" disabled={i === tabs.length - 1} onClick={() => moveTab(t.id, 1)} aria-label={`Move ${t.label} down`}>↓</Button>
-                              <Button
-                                variant="ghost"
-                                active={!hidden}
-                                disabled={t.pinned}
-                                onClick={() => toggleHiddenTab(t.id)}
-                              >
-                                {hidden ? 'HIDDEN' : 'VISIBLE'}
-                              </Button>
+                  ).map(([section, tabs]) => {
+                    const configurableTabs = tabs.filter(t => t.id !== '/')
+                    return (
+                      <div key={section} className="mc-setup-tabsection">
+                        <div className="mc-setup-tabsection-head">{section}</div>
+                        {configurableTabs.map((t, i) => {
+                          const hidden = cfg.appearance.hiddenTabs.includes(t.id)
+                          return (
+                            <div
+                              key={t.id}
+                              className={`mc-setup-tabrow${dragTabId === t.id ? ' setup-tabrow--dragging' : ''}${overTabId === t.id && dragTabId && dragTabId !== t.id ? ' setup-tabrow--over' : ''}`}
+                              draggable
+                              onDragStart={e => { setDragTabId(t.id); e.dataTransfer.effectAllowed = 'move' }}
+                              onDragEnd={() => { setDragTabId(null); setOverTabId(null) }}
+                              onDragOver={e => { if (dragTabId && dragTabId !== t.id) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setOverTabId(t.id) } }}
+                              onDragLeave={() => setOverTabId(prev => (prev === t.id ? null : prev))}
+                              onDrop={e => { e.preventDefault(); if (dragTabId) reorderTab(dragTabId, t.id); setDragTabId(null); setOverTabId(null) }}
+                            >
+                              <span className="setup-tabrow-grip" aria-hidden="true" title="Drag to reorder">⠿</span>
+                              <span className="mc-setup-tabrow-label">
+                                {t.label}{t.pinned && <em> · pinned</em>}
+                              </span>
+                              <div className="mc-setup-tabrow-actions">
+                                <Button variant="ghost" disabled={i === 0} onClick={() => moveTab(t.id, -1)} aria-label={`Move ${t.label} up`}>↑</Button>
+                                <Button variant="ghost" disabled={i === configurableTabs.length - 1} onClick={() => moveTab(t.id, 1)} aria-label={`Move ${t.label} down`}>↓</Button>
+                                <Button
+                                  variant="ghost"
+                                  active={!hidden}
+                                  disabled={t.pinned}
+                                  onClick={() => toggleHiddenTab(t.id)}
+                                >
+                                  {hidden ? 'HIDDEN' : 'VISIBLE'}
+                                </Button>
+                              </div>
                             </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  ))}
+                          )
+                        })}
+                      </div>
+                    )
+                  })}
                 </div>
                 <em>hide tabs you don&apos;t use, reorder within a section · Home and Setup can&apos;t be hidden</em>
               </div>

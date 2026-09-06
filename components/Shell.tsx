@@ -57,17 +57,41 @@ function useVisibleNav() {
   return useMemo(() => applyUiToNav(ui), [ui])
 }
 
+function HomeControl({ placement }: { placement: 'desktop' | 'mobile' }) {
+  const pathname = usePathname()
+  const active = pathname === '/'
+  const mobile = placement === 'mobile'
+  return (
+    <Link
+      href="/"
+      aria-label="Home"
+      aria-current={active ? 'page' : undefined}
+      className={`${mobile ? 'mc-mobile-item mc-mobile-home' : 'mc-home-control'}${active ? ' is-active' : ''}`}
+    >
+      <span className="mc-home-control-visual">
+        <span className="mc-home-control-fallback" aria-hidden="true"><Icon name="brand" size={mobile ? 20 : 24} /></span>
+        <CoreOrb placement={placement} />
+      </span>
+      {mobile && <span className="mc-mobile-label">Home</span>}
+    </Link>
+  )
+}
+
 function Sidebar() {
   const pathname = usePathname()
   const { data, isLive } = useLiveData()
   const { appName } = useBrand()
   const nav = useVisibleNav()
+  const sidebarNav = useMemo(
+    () => nav.map(sec => ({ ...sec, items: sec.items.filter(item => item.id !== '/') })).filter(sec => sec.items.length > 0),
+    [nav],
+  )
 
   const isActive = (href: string) => href === '/' ? pathname === '/' : pathname.startsWith(href)
 
   return (
     <aside className="mc-side" aria-label="Main navigation">
-      <CoreOrb placement="desktop" />
+      <HomeControl placement="desktop" />
       <div className="mc-brand">
         <div className="mc-brand-mark"><Icon name="brand" size={20} /></div>
         <div className="mc-brand-text">
@@ -91,7 +115,7 @@ function Sidebar() {
         <span className={`mc-led ${isLive ? 'green' : ''}`} />
         <span>MISSION CTRL {isLive ? 'ONLINE' : 'OFFLINE'}</span>
       </div>
-      {nav.map((sec) => (
+      {sidebarNav.map((sec) => (
         <div key={sec.section} className="mc-side-section">
           <div className="mc-side-label">&gt; {sec.section}</div>
           {sec.items.map((it, idx) => (
@@ -195,7 +219,7 @@ function MobileNav() {
   // Bottom-bar slots respect hiddenTabs too — a hidden tab shouldn't get a
   // reserved thumb-reach slot just because it's one of the 3 primaries.
   const visiblePrimary = useMemo(
-    () => PRIMARY.filter(p => PINNED_TAB_IDS.has(p.id) || !ui.hiddenTabs.includes(p.id)),
+    () => PRIMARY.filter(p => p.id !== '/' && (PINNED_TAB_IDS.has(p.id) || !ui.hiddenTabs.includes(p.id))),
     [ui.hiddenTabs],
   )
   // The More tab lights up whenever the current route lives behind the sheet.
@@ -220,11 +244,10 @@ function MobileNav() {
   return (
     <>
       <nav className="mc-mobile-nav" aria-label="Mobile navigation">
-        <CoreOrb placement="mobile" />
         <div className="mc-mobile-nav-inner" ref={navInnerRef}>
           {/* Sliding active-tab pill — glides to the active item on nav change */}
           {pill && <span className="mc-mobile-pill" style={{ left: pill.left, width: pill.width }} aria-hidden="true" />}
-          {visiblePrimary.map(item => {
+          {visiblePrimary.filter(item => item.id === '/kanban' || item.id === '/chat').map(item => {
             const active = isActive(item.id)
             return (
               <Link key={item.id} href={item.id} aria-current={active ? 'page' : undefined}
@@ -232,6 +255,17 @@ function MobileNav() {
                 <span className="mc-mobile-glyph">
                   <Icon name={item.icon} size={20} />
                 </span>
+                <span className="mc-mobile-label">{item.label}</span>
+              </Link>
+            )
+          })}
+          <HomeControl placement="mobile" />
+          {visiblePrimary.filter(item => item.id === '/bots').map(item => {
+            const active = isActive(item.id)
+            return (
+              <Link key={item.id} href={item.id} aria-current={active ? 'page' : undefined}
+                className={`mc-mobile-item ${active ? 'is-active' : ''}`}>
+                <span className="mc-mobile-glyph"><Icon name={item.icon} size={20} /></span>
                 <span className="mc-mobile-label">{item.label}</span>
               </Link>
             )

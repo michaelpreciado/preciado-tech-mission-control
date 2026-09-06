@@ -6488,23 +6488,58 @@ html[data-motion="off"] .mc-window, html[data-motion="off"] .mc-window:hover {
   }
 }
 
-/* ── CORE-ORB · global navigation heartbeat ───────────────────────────
-   WebGL owns the luminance; this wrapper supplies only restrained chrome
-   bloom and exact desktop/mobile placement. It never participates in input. */
-.mc-core-orb {
+/* ── CORE-NAV · semantic Home control + optional navigation heartbeat ───
+   The Link owns layout, pointer, focus, and current-page semantics. The
+   WebGL/static visual is a child and never participates in input geometry. */
+.mc-home-control {
   position: relative;
+  display: grid;
+  place-items: center;
   width: 64px;
   height: 64px;
   flex: 0 0 64px;
+  margin: 0 auto 8px;
+  border-radius: 50%;
+  color: var(--pt-neon-bright);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.mc-home-control:hover { color: var(--pt-neon-bright); }
+.mc-home-control:active { transform: scale(0.95); }
+.mc-home-control:focus-visible {
+  outline: 2px solid var(--pt-neon-bright);
+  outline-offset: 4px;
+  z-index: 2;
+}
+.mc-home-control.is-active .mc-home-control-visual {
+  box-shadow: 0 0 0 1px var(--pt-neon-bright), 0 0 18px var(--pt-neon-glow);
+}
+.mc-home-control-visual {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+.mc-home-control-fallback {
+  display: grid;
+  place-items: center;
+  color: var(--pt-neon-bright);
+  opacity: 0.9;
+}
+.mc-core-orb {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  flex: none;
   border-radius: 50%;
   pointer-events: none;
   isolation: isolate;
   background: radial-gradient(circle, rgba(var(--pt-neon-rgb),0.13), transparent 68%);
   box-shadow: 0 0 14px rgba(var(--pt-neon-rgb),0.22), inset 0 0 10px rgba(var(--pt-neon-rgb),0.08);
   transition: box-shadow 3s ease, background 3s ease;
-}
-.mc-core-orb-desktop {
-  margin: 0 auto 8px;
 }
 .mc-core-orb-mark {
   position: absolute;
@@ -6520,27 +6555,35 @@ html[data-motion="off"] .mc-window, html[data-motion="off"] .mc-window:hover {
   box-shadow: 0 0 16px color-mix(in srgb, var(--pt-error) 32%, transparent), inset 0 0 10px color-mix(in srgb, var(--pt-error) 12%, transparent);
   transition-duration: 1.5s;
 }
-.mc-core-orb[data-orb-state="hot"] .mc-core-orb-mark {
-  color: var(--pt-error);
+.mc-core-orb[data-orb-state="hot"] .mc-core-orb-mark { color: var(--pt-error); }
+.mc-mobile-home {
+  min-width: 0;
+  min-height: 0;
+  padding: 2px;
+  gap: 3px;
 }
-.mc-core-orb-mobile {
-  display: none;
+.mc-mobile-home .mc-home-control-visual { width: 32px; height: 32px; flex: 0 1 auto; }
+.mc-mobile-home:focus-visible {
+  outline: 2px solid var(--pt-neon-bright);
+  outline-offset: -2px;
+  z-index: 2;
+}
+.mc-mobile-home.is-active .mc-home-control-visual { filter: drop-shadow(0 0 5px var(--pt-neon-glow)); }
+.mc-core-orb-mobile { display: block; }
+@media (min-width: 821px) and (max-width: 980px) {
+  .mc-home-control { width: 48px; height: 48px; flex-basis: 48px; }
 }
 @media (max-width: 820px) {
-  .mc-core-orb-mobile {
-    display: block;
-    position: absolute;
-    z-index: 2;
-    top: -40px;
-    left: 50%;
-    width: 44px;
-    height: 44px;
-    transform: translateX(-50%);
-    flex-basis: 44px;
-  }
+  .mc-home-control { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .mc-core-orb { transition: none; }
+}
+
+/* ── CORE-ORB · global navigation heartbeat visual ─────────────────── */
+.mc-core-orb {
+  /* Keep visual-only interaction guarantees explicit at the final cascade. */
+  pointer-events: none;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
