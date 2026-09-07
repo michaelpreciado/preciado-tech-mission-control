@@ -126,7 +126,7 @@ function TypeRoleSpecimens() {
 
 function DensitySpecimens() {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+    <div className="sg-density-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
       <VariantCard title="density · compact">
         <div style={{ padding: DENSITY.compact.py.slice(0, 2) + ' ' + DENSITY.compact.px, display: 'flex', flexDirection: 'column', gap: DENSITY.compact.gap, background: 'var(--pt-surface)', borderRadius: 'var(--pt-r-md)', border: '1px solid var(--pt-border-dim)' }}>
           <span className="mc-tcol-glyph">▤</span><span className="sg-k">COMPACT CARD</span><span className="sg-v">10px scale</span>

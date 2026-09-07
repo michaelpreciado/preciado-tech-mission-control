@@ -565,7 +565,7 @@ export default function ChatConsole() {
   return (
     <>
       <SectionHead label="CHAT / ALL CONVERSATIONS" />
-      <div className="v1-kicker">
+      <div className="v1-kicker v4-legacy-kicker">
         <span className="jp" lang="ja">通信</span>
         <span>Comms channel</span>
       </div>

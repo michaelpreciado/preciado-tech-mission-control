@@ -21,27 +21,29 @@ html[data-motion="reduced"] .mc-main {
 html:not([data-motion="off"]) .mc-main .v4-group > :nth-child(3n + 2) { --v4-entry-name: v4-rise-middle; }
 html:not([data-motion="off"]) .mc-main .v4-group > :nth-child(3n) { --v4-entry-name: v4-rise-last; }
 @keyframes v4-rise {
-  from { opacity: 0; transform: translateY(16px); filter: blur(2px); }
-  to { opacity: 1; transform: none; filter: none; }
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
 }
 @keyframes v4-rise-middle {
-  0%, 12% { opacity: 0; transform: translateY(16px); filter: blur(2px); }
-  100% { opacity: 1; transform: none; filter: none; }
+  0%, 12% { opacity: 0; transform: translateY(16px); }
+  100% { opacity: 1; transform: none; }
 }
 @keyframes v4-rise-last {
-  0%, 24% { opacity: 0; transform: translateY(16px); filter: blur(2px); }
-  100% { opacity: 1; transform: none; filter: none; }
+  0%, 24% { opacity: 0; transform: translateY(16px); }
+  100% { opacity: 1; transform: none; }
 }
 @keyframes v4-fade {
   from { opacity: 0; }
   to { opacity: 1; }
 }
+@media (min-width: 821px) {
 @supports (animation-timeline: view()) and (animation-range: entry 0% entry 40%) {
   html:not([data-motion="off"]) .mc-main :is(.v4-entry, .v4-group > :not(.mc-ascii-head):not(.v4-divider):not(.is-floating)) {
     animation: var(--v4-entry-name) var(--v4-duration) var(--pt-ease) both !important;
     animation-timeline: view() !important;
     animation-range: entry 0% entry 40% !important;
   }
+}
 }
 @supports not ((animation-timeline: view()) and (animation-range: entry 0% entry 40%)) {
   html:not([data-motion="off"]) .mc-main .v4-seen {
@@ -53,7 +55,9 @@ html:not([data-motion="off"]) .mc-main :is(.v4-entry, .v4-group > *):focus-withi
   animation: none !important;
 }
 
-/* One fixed, hairline sweep. Native: nearest pane scroll timeline.
+/* The shell caps its desktop tracks at 232px + 1600px (1832px).
+   The 320px sweep stays within the pane even at the 821px breakpoint.
+   One fixed, hairline sweep. Native: nearest pane scroll timeline.
    Unsupported: public/v4-scroll.js, passive rAF, one transform assignment.
    Static vignette/edge tint uses the existing pane pseudo, no extra canvas. */
 .mc-main .v4-scanline { display: none; }
@@ -61,8 +65,8 @@ html:not([data-motion="off"]) .mc-main .v4-scanline {
   display: block;
   position: fixed;
   top: 0;
-  right: var(--mc-gutter);
-  width: min(1080px, calc(100% - 2 * var(--mc-gutter)));
+  right: max(var(--mc-gutter), calc((100vw - 1832px) / 2 + var(--mc-gutter)));
+  width: 320px;
   max-width: none;
   height: 1px;
   margin: 0;
@@ -187,3 +191,84 @@ html:not([data-motion="off"]) .mc-main .v4-reference { display: block; }
   .mc-main .v4-ascii-short { display: block; }
   html:not([data-motion="off"]) .mc-main .v4-kicker { font-size: 11px; margin-block: 8px 12px; }
 }
+
+
+/* PASS 3 · Final scroll contract: transform/opacity only. The pass-1 blur
+   was removed in this pass: animating a filter cannot support a strict
+   no-paint proof. No will-change is introduced, even on small elements. */
+html:not([data-motion="off"]) .mc-main > :is(.v4-group, .v4-kicker, .v4-divider) { animation: none !important; }
+html[data-motion="off"] .mc-main,
+html[data-motion="off"] .mc-main *,
+html[data-motion="off"] .mc-main *::before,
+html[data-motion="off"] .mc-main *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto;
+}
+/* Scroll timelines have no wall-clock speed. Reduced reaches its final
+   state halfway through the same entry range; fallback duration is halved. */
+@keyframes v4-rise-reduced {
+  from { opacity: 0; transform: translateY(8px); }
+  50%, 100% { opacity: 1; transform: none; }
+}
+@keyframes v4-fade-reduced { from { opacity: 0; } 50%, 100% { opacity: 1; } }
+html[data-motion="reduced"] .mc-main :is(.v4-entry, .v4-group, .v4-group > *) { --v4-entry-name: v4-rise-reduced; }
+
+/* Mechanical cleanup from the assembled deck: single divider rhythm,
+   wrapped long tokens, and no duplicate ticker copy on narrow tiles. */
+html:not([data-motion="off"]) .mc-main .v4-divider + .mc-ascii-head { margin-top: 0; }
+html:not([data-motion="off"]) .mc-main .mc-home-corebody > .v4-divider { margin-top: 0; }
+html:not([data-motion="off"]) .mc-main .v4-kicker { max-width: 1080px; }
+html:not([data-motion="off"]) .mc-main .mc-pipe-card-head { align-items: flex-start; }
+html:not([data-motion="off"]) .mc-main .mc-pipe-score { flex-shrink: 0; }
+html:not([data-motion="off"]) .mc-main .sg :is(.sg-var, .sg-row, .sg-var-body, .sg-v) { min-width: 0; overflow-wrap: anywhere; }
+html:not([data-motion="off"]) .mc-main .sg-density-grid { min-width: 0; }
+
+@media (max-width: 820px) {
+  /* All existing ambient loops settle once as well. Durations reuse the
+     micro token (including reduced); no phone loop outlives 600ms. */
+  html:not([data-motion="off"]) .mc-main *,
+  html:not([data-motion="off"]) .mc-main *::before,
+  html:not([data-motion="off"]) .mc-main *::after {
+    animation-iteration-count: 1 !important;
+    animation-duration: var(--v4-duration) !important;
+    will-change: auto !important;
+    backdrop-filter: none !important;
+  }
+  html:not([data-motion="off"]) .mc-main .v4-scanline { display: none; animation: none !important; }
+  html:not([data-motion="off"]) .mc-main .v4-corners::before { width: 12px; height: 8px; border-style: solid; border-width: 1px 0 0 1px; }
+  html:not([data-motion="off"]) .mc-main .v4-corners::after { display: none; }
+  html:not([data-motion="off"]) .mc-main :is(.v4-entry, .v4-group) { --v4-entry-name: v4-fade; }
+  html[data-motion="reduced"] .mc-main :is(.v4-entry, .v4-group) { --v4-entry-name: v4-fade-reduced; }
+  /* No child entries under a group: one whole panel, no translate/filter. */
+  html:not([data-motion="off"]) .mc-main .v4-group > :not(.mc-ascii-head):not(.v4-divider):not(.is-floating) { animation: none !important; }
+  @supports (animation-timeline: view()) and (animation-range: entry 0% entry 40%) {
+    html:not([data-motion="off"]) .mc-main :is(.v4-entry, .v4-group) {
+      animation: var(--v4-entry-name) var(--v4-duration) var(--pt-ease) both !important;
+      animation-timeline: view() !important;
+      animation-range: entry 0% entry 40% !important;
+    }
+  }
+  html:not([data-motion="off"]) .mc-main :is(.v4-entry, .v4-group):focus-within { animation: none !important; }
+  html:not([data-motion="off"]) .mc-main .v4-cursor { animation-iteration-count: 1; }
+  html:not([data-motion="off"]) .mc-main .v4-divider { margin-block: 12px 6px; }
+  html:not([data-motion="off"]) .mc-main .mc-tile-label-track { animation: none !important; transform: none; white-space: normal; }
+  html:not([data-motion="off"]) .mc-main .mc-tile-label-track > span[aria-hidden] { display: none; }
+  html:not([data-motion="off"]) .mc-main .mc-home-tile-label { white-space: normal; overflow-wrap: anywhere; }
+  html:not([data-motion="off"]) .mc-main .mc-week-nav button { min-width: 44px; min-height: 44px; }
+  html:not([data-motion="off"]) .mc-main .mc-week-view-toggle { flex-wrap: wrap; }
+  html:not([data-motion="off"]) .mc-main .mc-setup-actions.sticky { filter: none; }
+  html:not([data-motion="off"]) .mc-main .sg-row { flex-wrap: wrap; gap: 6px 12px; }
+  html:not([data-motion="off"]) .mc-main .sg-k { min-width: 0; overflow-wrap: anywhere; }
+  html:not([data-motion="off"]) .mc-main .sg-kind { margin-left: 0; }
+  html:not([data-motion="off"]) .mc-main .sg-density-grid { grid-template-columns: minmax(0, 1fr) !important; }
+}
+@media (max-width: 520px) {
+  html:not([data-motion="off"]) .mc-main .sg :is(.sg-grid--3, .sg-grid--4, .sg-grid--11) { grid-template-columns: minmax(0, 1fr); }
+  html:not([data-motion="off"]) .mc-main .sg-grid--8 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  html:not([data-motion="off"]) .mc-main .sg-space-bar { max-width: 100%; }
+}
+
+/* The base sticky offset belongs to the cockpit, not these column-local
+   title bars. Keep their chrome at the top instead of over the first card. */
+html:not([data-motion="off"]) .mc-main :is(.mc-pipe-col, .mc-pipe-log, .mc-home-activity) > .mc-tcol-head { position: relative; top: auto; }
