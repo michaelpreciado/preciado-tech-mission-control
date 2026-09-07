@@ -998,7 +998,7 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
   if (nothing) return <EmptyTerminal label="no billing data — set OPENROUTER_API_KEY in .env" />
 
   return (
-    <div className="cp-panel">
+    <div className="cp-panel v4-group">
       <SectionHead label="WHAT IT COST" />
       <ActualSpend costs={costs} />
       <MeteredSpend costs={costs} />

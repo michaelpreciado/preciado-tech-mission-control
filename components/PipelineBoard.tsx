@@ -205,7 +205,7 @@ export function PipelineBoard() {
   return (
     <>
       {error && <div className="mc-pipe-error">⚠ pipeline store unreachable — {error}</div>}
-      <div className="mc-pipeline">
+      <div className="mc-pipeline v4-group">
         {COLUMNS.map(col => {
           const items = leads.filter(l => l.stage === col.stage)
           const total = data?.counts?.[col.stage] ?? items.length
@@ -235,7 +235,7 @@ export function PipelineBoard() {
       </div>
 
       {events.length > 0 && (
-        <div className="mc-window mc-pipe-log">
+        <div className="mc-window mc-pipe-log v4-entry">
           <div className="mc-tcol-head"><div className="mc-window-dots" aria-hidden="true"><span className="mc-window-dot mc-window-dot--red" /><span className="mc-window-dot mc-window-dot--amber" /><span className="mc-window-dot mc-window-dot--green" /></div><span className="mc-prompt-user">user@mission-control:~</span><span className="mc-tcol-glyph">≋</span><span>PIPELINE EVENTS</span></div>
           <div className="mc-pipe-log-body">
             {events.slice(0, 12).map((e, i) => (

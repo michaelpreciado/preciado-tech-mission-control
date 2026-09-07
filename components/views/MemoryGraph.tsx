@@ -183,7 +183,7 @@ export function MemoryGraphView() {
       title="OBSIDIAN NODE GRAPH"
       meta={`${data.connectedNotes}/${data.totalNotes} notes connected`}
     >
-      <div className="mc-mem-toolbar">
+      <div className="mc-mem-toolbar v4-entry">
         <input
           type="search"
           className="mc-mem-search"
@@ -312,7 +312,7 @@ export function MemoryGraphView() {
               </svg>
             </div>
 
-          <div className="mc-mem-detail">
+          <div className="mc-mem-detail v4-entry">
             {selected ? (
               <>
                 <div className="mc-mem-detail-title">{selected.title}</div>

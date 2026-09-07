@@ -90,7 +90,7 @@ export function GithubPanel() {
 
   return (
     <>
-      <div className="mc-gh-stats">
+      <div className="mc-gh-stats v4-group">
         {heroStats.map(s => (
           <div key={s.label} className="mc-gh-stat">
             <div className="val">{s.value}</div>
@@ -150,7 +150,7 @@ export function GithubPanel() {
           <p className="mc-empty-desc">No public repositories are currently being surfaced for @{gh.username}.</p>
         </div>
       ) : (
-      <div className="mc-repo-grid">
+      <div className="mc-repo-grid v4-group">
         {repos.map(repo => (
           <a key={repo.name} className="mc-repo-card" href={repo.url} target="_blank" rel="noreferrer">
             <div className="mc-repo-head">

@@ -912,7 +912,7 @@ export function KanbanBoard() {
         />
 
         <div className="mc-kb-viewport">
-          <div className="mc-kb-board">
+          <div className="mc-kb-board v4-group">
             {cols.length === 0 && leftoverStatuses.length === 0 && (
               <div className="mc-pipe-empty">— no tasks match —</div>
             )}

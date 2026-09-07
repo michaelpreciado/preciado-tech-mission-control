@@ -229,7 +229,7 @@ function StatusTiles() {
           </Link>
         </div>
       )}
-      <div className="mc-home-tiles">
+      <div className="mc-home-tiles v4-group">
         {rest.map((t, i) => (
           <Link key={t.key} href={t.href} style={{ '--i': i + 1 } as CSSProperties} className={`mc-home-tile tone-${t.tone}`}>
             <span className="mc-home-tile-glyph">{t.glyph}</span>
@@ -262,7 +262,7 @@ function AgentPulse() {
   if (!data) return <SkeletonPanel label="loading agents" />
   if (!crew.length) return null
   return (
-    <div className="mc-home-agents">
+    <div className="mc-home-agents v4-entry">
       {crew.map(a => {
         const live = a.status === 'active' || a.status === 'on-demand'
         const bad = a.status === 'attention'
@@ -306,7 +306,7 @@ function LiveActivity() {
 
   // hotspot chips
   return (
-    <div className="mc-window mc-home-activity">
+    <div className="mc-window mc-home-activity v4-entry">
       <div className="mc-tcol-head"><div className="mc-window-dots" aria-hidden="true"><span className="mc-window-dot mc-window-dot--red" /><span className="mc-window-dot mc-window-dot--amber" /><span className="mc-window-dot mc-window-dot--green" /></div><span className="mc-prompt-user">user@mission-control:~</span><span className="mc-tcol-glyph">≋</span><span>LIVE ACTIVITY</span>
         <span className="mc-tcol-count">{files.length} SIGNS</span></div>
       {hotspots.length > 0 && (
@@ -346,7 +346,7 @@ function HealthSummary() {
   const up = integrations.filter(i => i.status === 'connected').length
   const down = integrations.filter(i => i.status === 'attention' || i.status === 'missing').length
   return (
-    <div className="mc-home-health">
+    <div className="mc-home-health v4-entry">
       {integrations.map(i => {
         const tone = i.status === 'connected' ? 'ok' : i.status === 'attention' ? 'warn' : i.status === 'missing' ? 'err' : 'info'
         return (
@@ -374,7 +374,7 @@ function TaskPreview() {
   const needs = tasks.filter(t => t.status === 'attention').slice(0, 5)
   const active = tasks.filter(t => t.status === 'active').slice(0, 5)
   return (
-    <div className="mc-deck-grid">
+    <div className="mc-deck-grid v4-group">
       <TaskCol headLabel="NEEDS ATTENTION" headGlyph="⚠" alert items={needs} />
       <TaskCol headLabel="ACTIVE" headGlyph="▶" items={active} />
     </div>
@@ -445,7 +445,7 @@ export function HomeDeck() {
       <AgentPulse />
 
       {/* 4 · Rig telemetry — the global system core now lives in nav chrome */}
-      <div className="mc-home-corewrap">
+      <div className="mc-home-corewrap v4-entry">
         <div className="mc-home-corebody">
           <SectionHead label="SYSTEM CORE · RIG" />
           <RigHud />

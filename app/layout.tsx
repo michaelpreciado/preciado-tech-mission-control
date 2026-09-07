@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { JetBrains_Mono, Noto_Sans_JP } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
+import './vf/v4-lane.css'
 import { Shell } from '@/components/Shell'
 import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister'
 import { getConfig } from '@/lib/config'
@@ -102,7 +103,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           appName={config.appName}
           appTagline={config.appTagline}
           ui={{ motion: appearance.motion, density: appearance.density, hiddenTabs: appearance.hiddenTabs, tabOrder: appearance.tabOrder, elements3d: appearance.elements3d }}
-        >{children}</Shell>
+        >
+          <span className="v4-scanline" aria-hidden="true" />
+          {children}
+        </Shell>
+        <Script src="/v4-scroll.js" strategy="afterInteractive" />
         <Script src="/rain.js" strategy="lazyOnload" />
         <ServiceWorkerRegister />
       </body>

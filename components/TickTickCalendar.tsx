@@ -159,7 +159,7 @@ export function TickTickCalendar() {
 
   if (!data.configured) {
     return (
-      <div className="mc-connect-card">
+      <div className="mc-connect-card v4-entry">
         <div className="mc-connect-title">◇ CONNECT TICKTICK</div>
         <p>Add your TickTick Open API bearer token in Setup to show this week&apos;s tasks here.</p>
         <Button variant="ghost" href="/setup">🛠 OPEN SETUP</Button>
@@ -253,7 +253,7 @@ export function TickTickCalendar() {
           ]}
         />
       ) : view === 'grid' ? (
-        <div className="mc-week-grid">
+        <div className="mc-week-grid v4-group">
           {days.map(d => {
             const items = byDay.get(d.key) ?? []
             return (
@@ -283,7 +283,7 @@ export function TickTickCalendar() {
           })}
         </div>
       ) : (
-        <div className="mc-week-agenda">
+        <div className="mc-week-agenda v4-group">
           {days.map(d => {
             const items = byDay.get(d.key) ?? []
             return (
