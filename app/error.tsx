@@ -1,5 +1,8 @@
 'use client'
 
+import { AsciiConsole } from './vf/Ascii'
+
+
 import { useEffect } from 'react'
 
 export default function Error({
@@ -16,7 +19,8 @@ export default function Error({
   return (
     <div className="pt-fault-screen">
       <div className="pt-fault-panel">
-        <div className="pt-fault-mark" aria-hidden="true">
+        <AsciiConsole state="FAULT" />
+        <div className="v4-legacy-mark pt-fault-mark" aria-hidden="true">
           &#x25A3;
         </div>
         <h2 className="pt-fault-title">System Fault Detected</h2>

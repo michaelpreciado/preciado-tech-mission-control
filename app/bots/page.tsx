@@ -1,5 +1,7 @@
 'use client'
 
+import { AsciiKicker } from '../vf/Ascii'
+
 import dynamic from 'next/dynamic'
 import { SkeletonPanel } from '@/components/ui'
 
@@ -10,6 +12,7 @@ export default function BotsPage() {
   return (
     <>
       <CommandHeader />
+      <AsciiKicker view="BOTS" detail="CREW-STATE" />
       <BotsPanel />
     </>
   )

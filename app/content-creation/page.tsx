@@ -1,5 +1,7 @@
 'use client'
 
+import { AsciiKicker, AsciiDivider } from '../vf/Ascii'
+
 import dynamic from 'next/dynamic'
 import { SectionHead, SkeletonPanel } from '@/components/ui'
 import '../vf/v3-lane.css'
@@ -17,16 +19,17 @@ export default function ContentCreationPage() {
   return (
     <>
       <CommandHeader />
+      <AsciiKicker view="CONTENT" detail="IDEA-STATE" />
       <SectionHead label="CONTENT CREATION / IDEA QUEUE" />
-      <div className="v3-kicker"><span className="jp">制作</span> idea queue</div>
+      <div className="v3-kicker v4-legacy-kicker"><span className="jp">制作</span> idea queue</div>
       <ContentCreationBoard />
-      <div className="mc-section-gap" />
+      <div className="mc-section-gap"><AsciiDivider /></div>
       <SectionHead label="CONTENT CREATION / PRODUCTION STUDIO" />
-      <div className="v3-kicker"><span className="jp">制作</span> production studio</div>
+      <div className="v3-kicker v4-legacy-kicker"><span className="jp">制作</span> production studio</div>
       <VideoPromptStudio />
-      <div className="mc-section-gap" />
+      <div className="mc-section-gap"><AsciiDivider /></div>
       <SectionHead label="CONTENT CREATION / SIGNAL FEED" />
-      <div className="v3-kicker"><span className="jp">信号</span> interest-matched signal feed</div>
+      <div className="v3-kicker v4-legacy-kicker"><span className="jp">信号</span> interest-matched signal feed</div>
       <SignalFeed />
     </>
   )

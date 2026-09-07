@@ -1,5 +1,7 @@
 'use client'
 
+import { AsciiKicker } from '../vf/Ascii'
+
 import dynamic from 'next/dynamic'
 import { SectionHead } from '@/components/ui'
 import '../vf/v3-lane.css'
@@ -11,8 +13,9 @@ export default function MemoryPage() {
   return (
     <>
       <CommandHeader />
+      <AsciiKicker view="MEMORY" detail="VAULT-STATE" />
       <SectionHead label="MEMORY / VAULT GRAPH" />
-      <div className="v3-kicker"><span className="jp">記憶</span> vault graph</div>
+      <div className="v3-kicker v4-legacy-kicker"><span className="jp">記憶</span> vault graph</div>
       <MemoryGraphView />
     </>
   )

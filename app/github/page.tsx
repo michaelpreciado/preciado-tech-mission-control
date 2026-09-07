@@ -1,5 +1,7 @@
 'use client'
 
+import { AsciiKicker } from '../vf/Ascii'
+
 import dynamic from 'next/dynamic'
 import { SectionHead } from '@/components/ui'
 import '../vf/v2-lane.css'
@@ -11,6 +13,7 @@ export default function GithubPage() {
   return (
     <>
       <CommandHeader />
+      <AsciiKicker view="GITHUB" detail="REPO-STATE" />
       <SectionHead pre={<span className="v2-jp">貢献</span>} label="GITHUB / CONTRIBUTION GRAPH" />
       <GithubPanel />
     </>

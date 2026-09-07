@@ -1,5 +1,7 @@
 'use client'
 
+import { AsciiKicker, AsciiDivider } from '../vf/Ascii'
+
 /**
  * STYLEGUIDE — renders every design token and component variant from the
  * single source of truth (lib/tokens.ts). This is the living spec: if a
@@ -40,6 +42,7 @@ function Section({ id, label, children }: { id: string; label: string; children:
   return (
     <>
       <div id={id} className="sg-anchor" />
+      <AsciiDivider />
       <SectionHead label={label} />
       {children}
     </>
@@ -158,8 +161,32 @@ function ElevationSpecimens() {
 export default function StyleGuide() {
   return (
     <div className="sg">
+      <AsciiKicker view="STYLEGUIDE" detail="DECK-VOCABULARY" />
       <SectionHead label="DESIGN SYSTEM / STYLEGUIDE" post={<span className="sg-count">source: lib/tokens.ts</span>} />
-      <div className="v3-kicker"><span className="jp">設計</span> matrix-glass-blue · source of truth</div>
+      <div className="v3-kicker v4-legacy-kicker"><span className="jp">設計</span> matrix-glass-blue · source of truth</div>
+
+      <div className="v4-reference">
+        <Section id="sg-ascii-kicker" label="ASCII / ROUTE KICKER">
+          <p className="sg-desc">Inert text in the existing mono voice. Full route/state line above 820px; a separate short line below. No client measurement. Maximum 48 characters at 12px; the longest mobile label is 22 characters at 11px.</p>
+          <AsciiKicker view="PIPELINE" detail="FUNNEL-STATE" />
+        </Section>
+        <Section id="sg-ascii-divider" label="ASCII / SECTION DIVIDER">
+          <p className="sg-desc">One shared hairline and a small glyph break. Decorative text is aria-hidden; the following heading carries the meaning.</p>
+          <AsciiDivider />
+        </Section>
+        <Section id="sg-ascii-corners" label="ASCII / HERO CORNERS">
+          <p className="sg-desc">Two static pseudo-element brackets using the accent token. Reserved for the dashboard rig core and the pipeline funnel header. Mobile uses a single accent.</p>
+          <AsciiKicker view="CORE" detail="HERO-FRAME" framed />
+        </Section>
+        <Section id="sg-scroll-entry" label="SCROLL / PANEL ENTRY">
+          <p className="sg-desc">Native view timeline: entry 0% to entry 40%, with three sibling holds. The shared observer fallback fires once at 15% visibility. Durations use --pt-dur-fast, halved in reduced. Off hides this vocabulary and restores the original deck. Mobile settles whole panels with opacity only.</p>
+          <div className="sg-grid sg-grid--3 v4-group">
+            <div className="sg-var">[ 01 // ACQUIRE ]</div>
+            <div className="sg-var">[ 02 // RESOLVE ]</div>
+            <div className="sg-var">[ 03 // SETTLE ]</div>
+          </div>
+        </Section>
+      </div>
 
       <Section id="sg-color" label="COLOR · SEMANTIC + ONE ACCENT">
         <p className="sg-desc">One accent + four semantic states. Red is always semantic — never decorative. All four resolve through lib/tokens.ts.</p>

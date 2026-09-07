@@ -1,3 +1,5 @@
+import { AsciiConsole } from './vf/Ascii'
+
 import Link from 'next/link'
 
 // Rendered inside the root layout, so design tokens + globals.css are mounted.
@@ -6,7 +8,8 @@ export default function NotFound() {
   return (
     <div className="pt-fault-screen">
       <div className="pt-fault-panel">
-        <div className="pt-404-mark mb-4" aria-hidden="true">
+        <AsciiConsole state="404 / NO SIGNAL" />
+        <div className="v4-legacy-mark pt-404-mark mb-4" aria-hidden="true">
           404
         </div>
         <h2 className="pt-fault-title">Signal Lost</h2>

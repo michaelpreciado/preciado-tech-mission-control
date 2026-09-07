@@ -9,6 +9,7 @@
  * glow, crisp 2-up/3-up tile grids, and tasteful micro-motion.
  */
 import Link from 'next/link'
+import { AsciiKicker, AsciiDivider } from '@/app/vf/Ascii'
 import { useEffect, useMemo, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { useLiveData } from './LiveDataProvider'
@@ -425,8 +426,9 @@ export function HomeDeck() {
         <span className="mc-home-title-name">MISSION CONTROL</span>
       </div>
       <CommandHeader />
+      <AsciiKicker view="MISSION CONTROL" detail="SYSTEM-STATE" />
 
-      <div className="v1-kicker">
+      <div className="v1-kicker v4-legacy-kicker">
         <span className="jp" lang="ja">司令部</span>
         <span>Command deck</span>
       </div>
@@ -440,27 +442,32 @@ export function HomeDeck() {
       </div>
 
       {/* 3 · What needs me / what's live — pulse numbers first, above the fold */}
+      <AsciiDivider />
       <SectionHead label="SYSTEM PULSE" />
       <StatusTiles />
       <AgentPulse />
 
       {/* 4 · Rig telemetry — the global system core now lives in nav chrome */}
-      <div className="mc-home-corewrap v4-entry">
+      <div className="mc-home-corewrap v4-entry v4-corners">
         <div className="mc-home-corebody">
-          <SectionHead label="SYSTEM CORE · RIG" />
+          <AsciiDivider />
+      <SectionHead label="SYSTEM CORE · RIG" />
           <RigHud />
         </div>
       </div>
 
       {/* 5 · What's scheduled */}
+      <AsciiDivider />
       <SectionHead label="SCHEDULER / TODAY" />
       <CalendarList limit={5} />
 
       {/* 6 · Live ops + integrations */}
+      <AsciiDivider />
       <SectionHead label="OPS / LIVE STREAM" />
       <LiveActivity />
       <HealthSummary />
 
+      <AsciiDivider />
       <SectionHead label="TASKS" />
       <TaskPreview />
     </>

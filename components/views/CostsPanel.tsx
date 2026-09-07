@@ -1,5 +1,7 @@
 'use client'
 
+import { AsciiDivider } from '@/app/vf/Ascii'
+
 import { useMemo, useState, type ReactNode } from 'react'
 import { useLiveData } from '../LiveDataProvider'
 import { SectionHead, Window, EmptyTerminal, SkeletonPanel } from '../ui'
@@ -696,6 +698,7 @@ function LocalAI({ costs }: { costs: CostDashboard }) {
 
   return (
     <>
+      <AsciiDivider />
       <SectionHead label="LOCAL AI · OLLAMA" />
       <Window tag="◆" title="LOCAL INFERENCE · WHAT THE RIG DID" meta={`${lc.totalRequests.toLocaleString()} requests all-time`}>
         <div style={{ padding: '14px 16px 12px', display: 'flex', gap: 28, flexWrap: 'wrap' }}>
@@ -765,6 +768,7 @@ function MonthlyBilling({ costs }: { costs: CostDashboard }) {
   if (!billing.length) return null
   return (
     <>
+      <AsciiDivider />
       <SectionHead label="BILLING HISTORY" />
       <div className="mc-viz-grid" style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))' }}>
         {billing.map(b => {
@@ -838,6 +842,7 @@ function SubscriptionTools({ costs }: { costs: CostDashboard }) {
 
   return (
     <>
+      <AsciiDivider />
       <SectionHead label="SUBSCRIPTION TOOLS — USE & KEEP" />
       <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))' }}>
         {usage.map(tool => {
@@ -886,6 +891,7 @@ function FairUseGuard({ costs }: { costs: CostDashboard }) {
 
   return (
     <>
+      <AsciiDivider />
       <SectionHead label="FAIR-USE GUARD" />
       <div className="cp-fairuse" title={billing.fairUse.note}>
         <div className="cp-fairuse-main">
@@ -999,6 +1005,7 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
 
   return (
     <div className="cp-panel v4-group">
+      <AsciiDivider />
       <SectionHead label="WHAT IT COST" />
       <ActualSpend costs={costs} />
       <MeteredSpend costs={costs} />
@@ -1006,12 +1013,14 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
       <SubscriptionTools costs={costs} />
       <FairUseGuard costs={costs} />
 
+      <AsciiDivider />
       <SectionHead label="WHAT IT DID" />
       <Activity costs={costs} modeOf={view.modeOf} />
       <ModeBreakdown costs={costs} />
       <SourceSplit costs={costs} />
       <CodexUsage costs={costs} />
 
+      <AsciiDivider />
       <SectionHead label="MODELS · RANKED ON BILLABLE TOKENS" />
       {view.metered.length > 0 && (
         <ModelTable tag="◆" title="METERED · PAID PER TOKEN" rows={view.metered} windowDays={view.windowDays} showCost
@@ -1042,6 +1051,7 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
 
       <LocalAI costs={costs} />
 
+      <AsciiDivider />
       <SectionHead label="BURN LANDSCAPE · LAST 14 DAYS" />
       <Window tag="▦" title="DAILY BURN · BY BILLING MODE" meta="tokens processed per day">
         <BurnLandscape costs={costs} />

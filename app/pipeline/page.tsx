@@ -1,5 +1,7 @@
 'use client'
 
+import { AsciiKicker } from '../vf/Ascii'
+
 import dynamic from 'next/dynamic'
 import { SectionHead } from '@/components/ui'
 import '../vf/v2-lane.css'
@@ -11,6 +13,7 @@ export default function PipelinePage() {
   return (
     <>
       <CommandHeader />
+      <AsciiKicker view="PIPELINE" detail="FUNNEL-STATE" framed />
       <SectionHead pre={<span className="v2-jp">開発</span>} label="WEB DEV PIPELINE / SCRAPE → SCAFFOLD → ENHANCE → DEPLOY" />
       <PipelineBoard />
     </>
