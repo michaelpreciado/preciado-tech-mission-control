@@ -7,6 +7,7 @@ import { Icon } from './icons'
 import { useOrbActivity } from './LiveDataProvider'
 import { useUiSettings } from './ui-settings'
 import OrbitalKanbanRing from './OrbitalKanbanRing'
+import PipelineOrbit, { PipelineKanbanFit } from './PipelineOrbit'
 import { ACCENT_DEFAULT, SEMANTIC } from '@/lib/tokens'
 import type { HostMetrics, HostSample } from '@/lib/host-metrics'
 import {
@@ -203,6 +204,7 @@ function OrbRuntime({ placement }: { placement: Placement }) {
   const { motion, density, elements3d } = useUiSettings()
   const ringViewport = useMedia('(min-width: 900px)')
   const showRing = elements3d.coreOrb && density !== 'compact' && ringViewport
+  const showOrbit = elements3d.coreOrb && density !== 'compact' && ringViewport && elements3d.pipelineOrbit
   const activity = useOrbActivity()
   const activityRef = useRef(activity)
   const visible = usePageVisible()
@@ -308,15 +310,18 @@ function OrbRuntime({ placement }: { placement: Placement }) {
       {webglAvailable && !webglFailed && (
         <WebGLErrorBoundary onError={markWebGLFailed}>
           <Canvas
-            key={showRing ? 'orb-with-ring' : 'orb'}
+            key={`orb-ring-${showRing}-pipeline-${showOrbit}`}
             dpr={[1, 1.5]}
-            camera={{ position: [0, 0, showRing ? 8.5 : 3.35], fov: 45 }}
+            camera={{ position: [0, 0, showRing || showOrbit ? 8.5 : 3.35], fov: 45 }}
             frameloop={staticMotion || !visible ? 'demand' : 'always'}
             gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
             style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
           >
             <OrbScene visual={visual} staticMotion={staticMotion} />
-            {showRing && <OrbitalKanbanRing staticMotion={staticMotion} visible={visible} />}
+            {showRing && (showOrbit
+              ? <PipelineKanbanFit><OrbitalKanbanRing staticMotion={staticMotion} visible={visible} /></PipelineKanbanFit>
+              : <OrbitalKanbanRing staticMotion={staticMotion} visible={visible} />)}
+            {showOrbit && <PipelineOrbit staticMotion={staticMotion} visible={visible} />}
           </Canvas>
         </WebGLErrorBoundary>
       )}

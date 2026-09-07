@@ -8,21 +8,30 @@
  * creating a circular import back into Shell.tsx. The Provider itself still
  * lives in Shell — this file only owns the type/context/hook.
  */
-import { createContext, useContext } from 'react'
+import { createContext, useContext, useMemo } from 'react'
 import type { FridayAppearance } from '@/lib/config'
 
-export type UiSettings = Pick<FridayAppearance, 'motion' | 'density' | 'hiddenTabs' | 'tabOrder' | 'elements3d'>
+type PersistedUiSettings = Pick<FridayAppearance, 'motion' | 'density' | 'hiddenTabs' | 'tabOrder' | 'elements3d'>
+export type UiSettings = Omit<PersistedUiSettings, 'elements3d'> & {
+  elements3d: PersistedUiSettings['elements3d'] & { pipelineOrbit?: boolean }
+}
 
-export const DEFAULT_UI_SETTINGS: UiSettings = {
+type ResolvedUiSettings = UiSettings & { elements3d: UiSettings['elements3d'] & { pipelineOrbit: boolean } }
+
+export const DEFAULT_UI_SETTINGS: ResolvedUiSettings = {
   motion: 'full',
   density: 'compact',
   hiddenTabs: [],
   tabOrder: [],
-  elements3d: { coreOrb: true, memoryGraph: true, teamGraph: true },
+  elements3d: { coreOrb: true, memoryGraph: true, teamGraph: true, pipelineOrbit: true },
 }
 
-export const UiSettingsContext = createContext<UiSettings>(DEFAULT_UI_SETTINGS)
+export const UiSettingsContext = createContext<PersistedUiSettings | UiSettings>(DEFAULT_UI_SETTINGS)
 
 export function useUiSettings() {
-  return useContext(UiSettingsContext)
+  const settings = useContext(UiSettingsContext)
+  return useMemo<ResolvedUiSettings>(() => ({
+    ...settings,
+    elements3d: { ...DEFAULT_UI_SETTINGS.elements3d, ...settings.elements3d },
+  }), [settings])
 }
