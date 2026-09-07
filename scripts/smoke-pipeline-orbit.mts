@@ -35,6 +35,7 @@ assert.equal(empty.maxRadius, 5.5)
 assert.ok(empty.orbits.every(ring => ring.nodes.length === 0 && ring.planet === null && ring.count === 0))
 const tied = layoutPipelineOrbit([{ id: 'b', stage: 'approval', score: 2 }, { id: 'a', stage: 'approval', score: 2 }])
 assert.equal(tied.orbits[1].planet?.id, 'a')
+assert.equal(layoutPipelineOrbit([{ id: 'pending', stage: 'approval', approved: false }]).orbits[1].planet?.tone, 'warn')
 const cases = layoutPipelineOrbit([
   { id: 'lost', stage: 'lost' }, { id: 'shipped', stage: 'shipped', score: 1 },
   { id: 'blocked', stage: 'development', blocked: true },

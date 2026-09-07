@@ -52,9 +52,9 @@ const rank = (lead: OrbitLead) => ['approval', 'development'].includes(orbitStag
   : ['shipped', 'lost'].includes(orbitStage(lead.stage)) ? 2 : 1
 function nodeFor(lead: OrbitLeadDetails, radius: number, angle: number): OrbitNode {
   const stage = orbitStage(lead.stage)
-  const rejected = lead.approval?.status === 'rejected' || lead.approved === false
+  const rejected = lead.approval?.status === 'rejected'
   const tone: OrbitTone = stage === 'lost' || rejected ? 'muted' : lead.blocked ? 'error'
-    : lead.approval?.status === 'pending' ? 'warn'
+    : lead.approval?.status === 'pending' || (stage === 'approval' && !lead.approved && lead.approval?.status !== 'approved') ? 'warn'
     : lead.approved || lead.approval?.status === 'approved' || stage === 'shipped' ? 'success'
     : stage === 'development' && lead.progress == null ? 'warn' : 'info'
   return {
