@@ -89,7 +89,7 @@ export interface FridayAppearance {
   /** Explicit nav tab order (ids); tabs not listed keep their default relative order, appended at the end. */
   tabOrder: string[]
   /** Per-tab on/off switches for the heavier 3D/ambient elements (lower-power machines). */
-  elements3d: { coreOrb: boolean; memoryGraph: boolean; teamGraph: boolean }
+  elements3d: { coreOrb: boolean; memoryGraph: boolean; teamGraph: boolean; pipelineOrbit: boolean }
 }
 
 export interface FridayChatRemote {
@@ -291,6 +291,7 @@ function buildConfig(): FridayConfig {
         coreOrb: e3d?.coreOrb ?? e3d?.homeGlobe ?? true,
         memoryGraph: e3d?.memoryGraph !== false,
         teamGraph: e3d?.teamGraph !== false,
+        pipelineOrbit: e3d?.pipelineOrbit !== false,
       },
     },
     chat: {
