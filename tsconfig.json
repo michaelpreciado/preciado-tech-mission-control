@@ -43,6 +43,7 @@
     "stocks-app",
     "stripe-server",
     "business-page",
-    ".next"
+    ".next",
+    "artifacts"
   ]
 }

@@ -13,6 +13,7 @@
  */
 import type { ReactNode } from 'react'
 import { Button } from './ui'
+import { AsciiTerminalArt } from '@/app/vf/Ascii'
 
 export type EmptyStateAction = {
   label: string
@@ -44,6 +45,7 @@ export function EmptyState({
 }) {
   return (
     <div className={`mc-empty is-${tone}${compact ? ' is-compact' : ''}`} role="status" aria-live="polite">
+      <AsciiTerminalArt compact={compact} />
       <span className="mc-empty-glyph" aria-hidden>{glyph}</span>
       <span className="mc-empty-title">{title}</span>
       {desc && <p className="mc-empty-desc">{desc}</p>}

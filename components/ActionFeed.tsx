@@ -21,7 +21,7 @@ type FeedRow = {
  * markdown-sourced attention tasks and live Hermes kanban.db blocked/failing
  * tasks), data warnings. Everything taps through to its tab.
  */
-export function ActionFeed() {
+export function ActionFeed({ compact = false }: { compact?: boolean }) {
   const { data } = useLiveData()
   const [health, setHealth] = useState<SystemHealthData | null>(null)
   const [blockedTasks, setBlockedTasks] = useState<HermesTask[]>([])
@@ -67,6 +67,16 @@ export function ActionFeed() {
   }
   for (const task of blockedTasks.slice(0, 3)) {
     rows.push({ id: `hermes:${task.id}`, tone: 'warn', glyph: '⚠', text: `Hermes task ${task.status} — ${task.title}`, href: '/kanban' })
+  }
+
+  if (compact) {
+    const alerts = rows.filter(row => row.tone !== 'note').sort((a, b) => Number(b.tone === 'urgent') - Number(a.tone === 'urgent'))
+    return <details className="mc-urgent-strip">
+      <summary><span className="mc-urgent-dot" data-alert={alerts.length > 0} aria-hidden="true" /><strong>{alerts.length ? `${alerts.length} need attention` : !health ? 'Checking notifications…' : 'No urgent notifications'}</strong><span className="mc-urgent-preview">{alerts[0]?.text || 'Your command center is ready'}</span><span className="mc-urgent-toggle" aria-hidden="true">⌄</span></summary>
+      <div className="mc-urgent-details">
+        {alerts.length ? alerts.map(row => <Link key={row.id} href={row.href === '/' ? '#home-system-telemetry' : row.href}>{row.text}<span aria-hidden="true">↗</span></Link>) : <p>No services or tasks currently need your attention.</p>}
+      </div>
+    </details>
   }
 
   const shown = rows.slice(0, 8)

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { HerdrAgent, HerdrKind, HerdrSnapshot } from '@/lib/herdr-types';
 import styles from './AgentDeck.module.css';
+import { AsciiPanelTrim } from '@/app/vf/Ascii';
 
 // Memory only: credentials are discarded when this component unmounts.
 export default function AgentDeck({ onCredentialChange }: { onCredentialChange?: (token: string) => void }) {
@@ -112,7 +113,8 @@ export default function AgentDeck({ onCredentialChange }: { onCredentialChange?:
   const close = () => { setSelected(null); setLauncher(false); };
   const current = snapshot?.agents.find(agent => agent.id === selected?.id) ?? selected;
 
-  return <section className={styles.deck} aria-label="Live agent deck">
+  return <section className={`${styles.deck} cyber-agent-deck`} aria-label="Live agent deck">
+    <AsciiPanelTrim />
     <header className={styles.header}><div><h2>Agent deck</h2><p>Live local agent instances · updates every 4 seconds</p></div>
       <button type="button" disabled={busy || !snapshot?.available} onClick={() => { setLauncher(true); setError(''); setNotice(''); }}>New agent</button></header>
     <details className={styles.access}><summary>Access</summary><form onSubmit={event => { event.preventDefault(); const nextToken = credential.trim(); setToken(nextToken); onCredentialChange?.(nextToken); setCredential(''); }}>

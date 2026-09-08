@@ -100,12 +100,15 @@ export function CommandHeader() {
           ))}
           <Button
             variant="ghost"
+            className="mc-cockpit-refresh"
             loading={spinning}
             aria-label="Refresh"
             title="Refresh"
             onClick={() => { setSpinning(true); refresh(); setTimeout(() => setSpinning(false), 800) }}
           >
-            {spinning ? null : '↻'}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+              <path d="M20 7v5h-5M20 12a8 8 0 1 0-2 5" />
+            </svg>
           </Button>
         </div>
         <div className="mc-live-badge" data-state={liveState}>

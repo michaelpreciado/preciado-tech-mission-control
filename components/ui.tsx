@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { AsciiPanelTrim, AsciiTerminalArt } from '@/app/vf/Ascii'
 
 export function fmtDate(value?: string) {
   if (!value) return '—'
@@ -222,6 +223,7 @@ export function Window({ tag, title, meta, children, style }: {
           >
             {head(true)}
             <div className="mc-window-float-body">{children}</div>
+            <AsciiPanelTrim />
             <div className="mc-window-resize" title="Resize" {...resize} />
           </div>,
           document.body,
@@ -234,6 +236,7 @@ export function Window({ tag, title, meta, children, style }: {
     <div className="mc-window" style={style}>
       {head(false)}
       {children}
+      <AsciiPanelTrim />
     </div>
   )
 }
@@ -242,6 +245,7 @@ export function SkeletonPanel({ label }: { label: string }) {
   return (
     <div className="mc-window" role="status" aria-live="polite">
       <div style={{ padding: 14, color: 'var(--pt-text-dim)', fontSize: 11, letterSpacing: '0.14em' }}>
+        <span className="cyber-loading-mark" aria-hidden="true">{'[ / / / ] '}</span>
         {label}...
       </div>
     </div>
@@ -323,7 +327,7 @@ export function Clamp({ text, lines = 2, label = 'FULL TEXT', className }: {
 export function EmptyTerminal({ label }: { label: string }) {
   return (
     <div className="mc-window" style={{ padding: 24, textAlign: 'center' }}>
-      <pre style={{ color: 'var(--pt-text-dim)', fontSize: 11, marginBottom: 8 }}>{`  .----.\n / zZ /\\\n'----'  '`}</pre>
+      <AsciiTerminalArt />
       <div style={{ fontSize: 10, letterSpacing: '0.22em', color: 'var(--pt-text-mute)', textTransform: 'uppercase' }}>{label}</div>
     </div>
   )

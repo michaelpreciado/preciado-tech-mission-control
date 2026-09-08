@@ -79,8 +79,8 @@ export function MemoryGraphView() {
     const behavior = d3Zoom<SVGSVGElement, unknown>()
       .scaleExtent([1, 4])
       .on('zoom', (event: { transform: ZoomTransform }) => setZoomTransform(event.transform))
-      .on('dblclick.zoom', null)
-    select(svg).call(behavior)
+    // Double-click is a DOM listener, not a zoom-dispatch event type.
+    select(svg).call(behavior).on('dblclick.zoom', null)
     return () => { select(svg).on('.zoom', null) }
     // Wire once the graph svg actually exists (after first data load) and
     // re-wire on view toggles; data polls keep the boolean stable.

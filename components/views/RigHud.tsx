@@ -97,7 +97,7 @@ function arcPath(cx: number, cy: number, r: number, fromDeg: number, sweepDeg: n
   return `M${x1.toFixed(2)} ${y1.toFixed(2)} A${r} ${r} 0 ${sweep > 180 ? 1 : 0} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`
 }
 
-function Dial({ label, pct, value, unit, sub, color, capacity, subTone }: {
+export function Dial({ label, pct, value, unit, sub, color, capacity, subTone }: {
   label: string
   pct: number
   value: string
@@ -168,7 +168,7 @@ const SCOPE_H = 46
  * One 120-second channel. `series` is oldest→newest; the head of the line is
  * "now", so the trace scrolls right-to-left as samples arrive.
  */
-function Trace({ label, series, color, readout, max }: {
+export function Trace({ label, series, color, readout, max }: {
   label: string
   series: number[]
   color: string
@@ -252,7 +252,7 @@ function Vital({ label, value, tone }: { label: string; value: string; tone?: st
 
 /* ── Polling hook ───────────────────────────────────────────────────── */
 
-function useHostMetrics() {
+export function useHostMetrics() {
   const [data, setData] = useState<HostMetrics | null>(null)
   const [error, setError] = useState(false)
   const abort = useRef<AbortController | null>(null)

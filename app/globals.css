@@ -496,7 +496,7 @@ body {
 .mc-shell {
   position: relative; z-index: 5;
   display: grid;
-  grid-template-columns: 232px 1fr;
+  grid-template-columns: 232px minmax(0, 1fr);
   grid-template-rows: 1fr;
   /* vh fallback first: browsers without dvh (older WebView/Chrome) get the
      fixed-unit shell instead of a collapsed grid; dvh wins where supported.
@@ -1724,24 +1724,17 @@ h1 {
 }
 
 @media (max-width: 1200px) {
-  .mc-shell { grid-template-columns: 200px 1fr; }
+  .mc-shell { grid-template-columns: 200px minmax(0, 1fr); }
   .mc-cockpit { padding: 8px 16px; }
   .mc-deck-grid { grid-template-columns: 1fr; }
   .mc-stat { padding: 3px 9px; }
   .mc-stat-val { font-size: 13px; }
 }
 
-/* Compact icon rail.
-   The second clause is for foldables: a near-square inner display can report
-   anywhere from ~940 to ~1080 CSS px depending on the DPR the browser picks.
-   Without it, unfolding *further* makes the content area narrower — crossing
-   980px swaps the 64px rail for the 200px sidebar and costs ~136px of content
-   on a screen that has no horizontal room to spare. The aspect-ratio guard
-   keeps narrow *desktop* windows (which are wide, not square) on the full
-   sidebar. */
-@media (max-width: 980px),
-       (min-width: 981px) and (max-width: 1100px) and (max-aspect-ratio: 5/4) {
-  .mc-shell { grid-template-columns: 64px 1fr; }
+/* Compact rail stays stable across folding, rotation, and window resizing.
+   Full labels return only once there is enough horizontal content space. */
+@media (max-width: 1100px) {
+  .mc-shell { grid-template-columns: 64px minmax(0, 1fr); }
   .mc-side { padding: 14px 8px; }
   .mc-side-label, .mc-side-footer, .mc-status-pill span:not(.mc-led) { display: none; }
   /* Only the mark fits in a 64px rail — the wordmark was being clipped
@@ -5645,7 +5638,7 @@ html[data-motion="off"] .mc-home-tile.tone-err::after {
 .mc-more-search {
   display: flex; align-items: center; gap: 8px;
   width: 100%; box-sizing: border-box;
-  margin: 2px 2px 12px;
+  margin: 2px 0 12px;
   padding: 10px 12px;
   border-radius: 12px;
   background: var(--pt-surface);
@@ -6100,6 +6093,27 @@ html[data-theme="friday"] .mc-cmdp-trigger:hover {
   box-shadow: none;
 }
 .mc-cmdp-trigger-ic { color: var(--pt-neon-bright); display: inline-flex; }
+/* Let the label shrink inside the flex row instead of wrapping outside it. */
+.mc-cmdp-trigger,
+.mc-more-search {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  flex-wrap: nowrap;
+}
+.mc-cmdp-trigger-label,
+.mc-more-search-ph {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+.mc-cmdp-trigger-ic,
+.mc-more-search-ic,
+.mc-cmdp-trigger-kbd,
+.mc-more-search-kbd { flex-shrink: 0; }
 .mc-cmdp-trigger-kbd {
   margin-left: auto;
   font-family: var(--pt-font-mono);
@@ -6570,7 +6584,7 @@ html[data-motion="off"] .mc-window, html[data-motion="off"] .mc-window:hover {
 }
 .mc-mobile-home.is-active .mc-home-control-visual { filter: drop-shadow(0 0 5px var(--pt-neon-glow)); }
 .mc-core-orb-mobile { display: block; }
-@media (min-width: 821px) and (max-width: 980px) {
+@media (min-width: 821px) and (max-width: 1100px) {
   .mc-home-control { width: 48px; height: 48px; flex-basis: 48px; }
 }
 @media (max-width: 820px) {
@@ -7992,4 +8006,104 @@ html[data-motion="off"] .mc-studio-cursor { animation: none; }
     box-sizing: border-box;
   }
   .mc-cockpit-warn { display: none; }
+}
+
+/* Fold navigation: preserve touch geometry even in short landscape windows. */
+.mc-side { min-width: 0; min-height: 0; overflow-x: hidden; overscroll-behavior: contain; }
+.mc-side > * { flex-shrink: 0; }
+.mc-side-section .mc-nav-item { flex-shrink: 0; }
+.mc-main { min-width: 0; min-height: 0; }
+.mc-brand-text { min-width: 0; }
+.mc-brand-name { overflow-wrap: anywhere; }
+
+@media (min-width: 821px) and (max-width: 1100px) {
+  .mc-side { gap: 10px; }
+  .mc-side .mc-brand { display: none; }
+  .mc-side .mc-home-control { margin-bottom: 0; width: 44px; height: 44px; flex-basis: 44px; }
+  .mc-side .mc-cmdp-trigger { min-height: 44px; padding: 0; margin: 0; justify-content: center; }
+  .mc-side .mc-cmdp-trigger-label,
+  .mc-side .mc-cmdp-trigger-kbd { display: none; }
+  .mc-side .mc-nav-item { min-height: 44px; }
+}
+
+@media (min-width: 821px) {
+  .mc-main { padding-bottom: max(24px, env(safe-area-inset-bottom, 0px)); }
+  .mc-chat-input, .mc-setup-actions.sticky { bottom: 12px; }
+  .mc-more-layer { display: none; }
+}
+
+@media (max-width: 820px) {
+  .mc-more-sheet {
+    left: max(8px, env(safe-area-inset-left, 0px));
+    right: max(8px, env(safe-area-inset-right, 0px));
+    max-width: 620px;
+    margin-inline: auto;
+    max-height: min(70dvh, calc(100dvh - 100px - env(safe-area-inset-bottom, 0px)));
+    overscroll-behavior: contain;
+  }
+}
+
+/* UX QA: reserve readable space for content and explicit mobile controls. */
+.mc-stats > .mc-cockpit-refresh {
+  width: 36px;
+  min-width: 36px;
+  padding: 0;
+  letter-spacing: 0;
+}
+.mc-cockpit-refresh svg { flex-shrink: 0; }
+.mc-cockpit-refresh.is-loading svg { display: none; }
+.mc-more-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.mc-more-heading .mc-more-title { margin: 0; }
+.mc-more-sheet { overscroll-behavior: contain; }
+@media (max-width: 560px) {
+  .mc-window-head .mc-prompt-user,
+  .mc-tcol-head .mc-prompt-user { display: none; }
+  .mc-window-title { min-width: 0; overflow-wrap: anywhere; letter-spacing: .1em; }
+  .mc-setup-actions.sticky { position: static; }
+}
+/* Compact project cards need their full title width on desktop too. */
+.mc-proj-tilt .mc-prompt-user { display: none; }
+.mc-proj-tilt .mc-window-title { min-width: 0; overflow-wrap: anywhere; }
+.mc-home-tile-label:not(.is-flowing) .mc-tile-label-track > span:last-child { display: none; }
+@media (min-width: 821px) {
+  .mc-home-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1200px) {
+  .mc-home-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .mc-home-title-prefix { display: none; }
+}
+/* Pipeline stage names and counts must remain visible within each lane. */
+.mc-pipeline { grid-auto-columns: minmax(280px, 1fr); }
+.mc-pipe-col .mc-prompt-user { display: none; }
+.mc-pipe-col .mc-tcol-head > span:not([class]) { min-width: 0; overflow-wrap: anywhere; }
+.mc-pipe-col .mc-tcol-count { flex-shrink: 0; white-space: nowrap; }
+
+/* Conversation-first Home: tabs stay in the left sidebar or left drawer. */
+.mc-shell.is-home .mc-main { padding: 16px max(16px, env(safe-area-inset-left)) 32px max(16px, env(safe-area-inset-right)); }
+.mc-home-nav-drawer { position: fixed; inset: 0 auto 0 0; width: min(300px, calc(100vw - 36px)); max-width: none; height: 100dvh; max-height: 100dvh; margin: 0; padding: 18px max(16px, env(safe-area-inset-left)) max(20px, env(safe-area-inset-bottom)); border: 0; border-right: 1px solid var(--pt-border); background: #08121f; color: var(--pt-text-high); overflow-y: auto; overscroll-behavior: contain; }
+.mc-home-nav-drawer::backdrop { background: #0009; }
+.mc-home-nav-drawer header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.mc-home-nav-drawer header strong { font-size: 11px; letter-spacing: .1em; }
+.mc-home-nav-drawer header button { width: 44px; height: 44px; border: 1px solid var(--pt-border); border-radius: 8px; background: transparent; color: inherit; font-size: 24px; }
+.mc-home-nav-drawer nav p { color: var(--pt-text-dim); font-size: 10px; margin: 20px 8px 8px; }
+.mc-home-nav-drawer nav a { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 10px; border-radius: 8px; color: var(--pt-text-high); text-decoration: none; font-size: 12px; }
+.mc-home-nav-drawer nav a[aria-current='page'], .mc-home-nav-drawer nav a:hover { background: #14304b; }
+@media (max-width: 820px) {
+  .mc-shell.is-home ~ .mc-mobile-nav { display: none; }
+  .mc-shell.is-home .mc-main { padding-top: 12px; padding-inline: 12px; }
+}
+/* An unfolded Home has room for the compact left tab rail. */
+@media (min-width: 701px) and (max-width: 820px) {
+  .mc-shell.is-home { grid-template-columns: 64px minmax(0, 1fr); }
+  .mc-shell.is-home .mc-side { display: flex; gap: 10px; padding: 12px 8px; }
+  .mc-shell.is-home .mc-side .mc-brand { display: none; }
+  .mc-shell.is-home .mc-home-control { display: grid; width: 44px; height: 44px; flex-basis: 44px; margin-bottom: 0; }
+  .mc-shell.is-home .mc-cmdp-trigger { min-height: 44px; padding: 0; margin: 0; justify-content: center; }
+  .mc-shell.is-home .mc-cmdp-trigger-label,
+  .mc-shell.is-home .mc-cmdp-trigger-kbd { display: none; }
+}
+@media (max-width: 820px) {
+  .mc-shell.is-home .mc-main { padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); }
 }
