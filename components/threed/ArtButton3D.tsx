@@ -28,10 +28,10 @@ function GlassButton({ label, width, onClick }: { label: 'S' | 'M' | 'L'; width:
     onPointerUp={() => { interaction.current.pressed = false }} onPointerCancel={() => { interaction.current.pressed = false }} onLostPointerCapture={() => { interaction.current.pressed = false }}
     onKeyDown={event => { if (event.key === ' ' || event.key === 'Enter') interaction.current.pressed = true }}
     onKeyUp={() => { interaction.current.pressed = false }}
-    style={{ width, maxWidth: '100%', height: 108, position: 'relative', border: 0, padding: 0, background: 'transparent', color: '#c1f5ff', cursor: 'pointer', borderRadius: 12, flexShrink: 1 }}>
+    style={{ width, maxWidth: '100%', height: 108, position: 'relative', border: 0, padding: 0, background: 'transparent', color: '#f4f7fb', cursor: 'pointer', borderRadius: 12, flexShrink: 1 }}>
     <ArtCanvas build={build} label={`${label} extruded cyan glass plate`} />
     <span style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', fontSize: 10, letterSpacing: 2, pointerEvents: 'none' }}>LAUNCH</span>
-    <span style={{ position: 'absolute', bottom: -6, left: 0, right: 0, fontSize: 9, color: '#628498', letterSpacing: 2 }}>{label} / {width}</span>
+    <span style={{ position: 'absolute', bottom: -6, left: 0, right: 0, fontSize: 9, color: '#6f7886', letterSpacing: 2 }}>{label} / {width}</span>
   </button>
 }
 
@@ -42,6 +42,6 @@ export function ArtButton3D({ onClick }: ArtButton3DProps) {
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 220 }}>
       {(['S', 'M', 'L'] as const).map((label, i) => <GlassButton key={label} label={label} width={100 + i * 32} onClick={size => { setLast(`${size} PLATE ENGAGED`); onClick?.(size) }} />)}
     </div>
-    <p role="status" style={{ textAlign: 'center', fontSize: 9, letterSpacing: 1.5, color: '#6f9db0', minHeight: 16 }}>{last}</p>
+    <p role="status" style={{ textAlign: 'center', fontSize: 9, letterSpacing: 1.5, color: '#99a3b2', minHeight: 16 }}>{last}</p>
   </div>
 }

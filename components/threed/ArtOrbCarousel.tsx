@@ -15,7 +15,7 @@ export function ArtOrbCarousel({ count = 7, highlighted = 0 }: ArtOrbCarouselPro
     return { ...base, update: art.update }
   }, [total, selected])
   return <div style={{ width: '100%' }}>
-    <ArtCanvas build={build} label={`${total} orbiting task orbs; node ${selected + 1} highlighted. Blue running, amber queued, red attention.`} style={{ height: 270, background: 'radial-gradient(ellipse, #003b5528, transparent 68%)' }} />
+    <ArtCanvas build={build} label={`${total} orbiting task orbs; node ${selected + 1} highlighted. Blue running, amber queued, red attention.`} style={{ height: 270, background: 'radial-gradient(ellipse, rgba(157,180,236,0.16), transparent 68%)' }} />
     <div style={{ display: 'flex', justifyContent: 'center', gap: 16, fontSize: 10, letterSpacing: 1 }}>
       <span style={{ color: '#48aaff' }}>● RUNNING</span><span style={{ color: '#ffb747' }}>● QUEUED</span><span style={{ color: '#ff6461' }}>● ATTENTION</span>
     </div>

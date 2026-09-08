@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { apiUrl } from '@/lib/api-base'
 
@@ -86,6 +87,8 @@ export default function LoginPage() {
   return (
     <main className="mc-login">
       <form className="mc-login-card" onSubmit={submit}>
+        <Image src="/brand/preciado-tech-logo.jpg" alt="Preciado Tech" width={64} height={64} priority style={{ display: 'block', margin: '0 auto', borderRadius: 10 }} />
+        <div aria-hidden="true" style={{ height: 1, margin: '16px 0', background: 'linear-gradient(90deg, transparent, rgba(157,180,236,0.9), #f4f7fb, rgba(157,180,236,0.9), transparent)' }} />
         <div className="mc-login-brand">F.R.I.D.A.Y.</div>
         <div className="mc-login-kicker">MISSION CONTROL</div>
 

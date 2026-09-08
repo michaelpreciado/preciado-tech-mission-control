@@ -65,7 +65,7 @@ export function ArtCanvas({ build, label, style }: { build: ArtBuilder; label: s
   }, [build])
   return <div style={{ position: 'relative', width: '100%', height: '100%', ...style }}>
     <canvas ref={ref} role="img" aria-label={label} style={{ display: 'block', width: '100%', height: '100%' }} />
-    {failed && <span role="status" style={{ position: 'absolute', inset: 16, color: '#8cecff', fontSize: 12 }}>3D preview unavailable — WebGL2 is required.</span>}
+    {failed && <span role="status" style={{ position: 'absolute', inset: 16, color: '#c7ced8', fontSize: 12 }}>3D preview unavailable — WebGL2 is required.</span>}
   </div>
 }
 

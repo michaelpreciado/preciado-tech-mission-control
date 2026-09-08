@@ -41,10 +41,14 @@ export function NeuralUplink() {
           <Link href="/kanban"><strong>{tasks ?? '—'}</strong><span>open tasks</span><i aria-hidden="true">↗</i></Link>
         </div>
       </div>
-      <div className={styles.reactor} aria-hidden="true">
+      <div className={styles.reactor}>
         <div className={styles.halo} />
-        <div className={styles.orbit}><b /><b /><b /></div>
-        <div className={styles.scan} />
+        <picture className={styles.portrait}>
+          <source media="(max-width: 820px)" srcSet="/brand/michael-profile.jpg" />
+          <Image src="/brand/mp.jpeg" alt="Michael Preciado" width={160} height={160} priority />
+        </picture>
+        <div className={styles.orbit} aria-hidden="true"><b /><b /><b /></div>
+        <div className={styles.scan} aria-hidden="true" />
         <span className={styles.caption}>{isLive ? 'SIGNAL CONNECTED' : 'SIGNAL STANDBY'}</span>
       </div>
       <span className={styles.corner} aria-hidden="true">MC / 01</span>
