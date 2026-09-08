@@ -1,0 +1,44 @@
+{
+  "desktop": {
+    "canvases": 6,
+    "draws": [
+      "2",
+      "2",
+      "2",
+      "2",
+      "2",
+      "2"
+    ],
+    "fallback": false
+  },
+  "interactions": {
+    "button": "S PLATE ENGAGED",
+    "focus": "07 NODES / FOCUS 2"
+  },
+  "afterInteractions": {
+    "fallback": false,
+    "draws": [
+      "2",
+      "2",
+      "2",
+      "2",
+      "2",
+      "2"
+    ]
+  },
+  "keyboard": "M PLATE ENGAGED",
+  "mobile": {
+    "width": 313,
+    "scrollWidth": 313,
+    "draws": [
+      "2",
+      "2",
+      "2",
+      "2",
+      "2",
+      "2"
+    ]
+  },
+  "reducedMotion": true,
+  "errors": []
+}
