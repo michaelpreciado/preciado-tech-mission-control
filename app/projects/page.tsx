@@ -1,6 +1,6 @@
 'use client'
 
-import { AsciiKicker } from '../vf/Ascii'
+import { AsciiKicker, AsciiDivider } from '../vf/Ascii'
 
 import dynamic from 'next/dynamic'
 import { SectionHead } from '@/components/ui'
@@ -15,6 +15,7 @@ export default function ProjectsPage() {
       <CommandHeader />
       <AsciiKicker view="PROJECTS" detail="BUILD-STATE" />
       <SectionHead pre={<span className="v2-jp">案件</span>} label="PROJECTS / ACTIVE REPOS" />
+      <div className="srule-divider"><AsciiDivider /></div>
       <ProjectGrid />
     </>
   )

@@ -1,6 +1,7 @@
 'use client'
 
 import { Dial, useHostMetrics } from './views/RigHud'
+import { SectionRule } from './ui'
 import styles from './HomeWorkspace.module.css'
 
 const rate = (value: number) => value > 1048576 ? `${(value / 1048576).toFixed(1)} MB/s` : `${(value / 1024).toFixed(1)} KB/s`
@@ -13,7 +14,7 @@ export function HomeSystem() {
   const gpu = sample?.gpus[0]
   return (
     <section className={styles.section} aria-labelledby="home-system-telemetry">
-      <header className={styles.sectionHeader}><div><span className={styles.kicker}>YOUR MACHINE</span><h2 id="home-system-telemetry">System telemetry</h2></div><span className={styles.live} data-stale={error}>{error ? 'Connection lost' : sample ? '● Live · 2s' : 'Connecting…'}</span></header>
+      <SectionRule label="SYSTEM" index={3} id="home-system-telemetry" post={<span className={styles.live} data-stale={error}>{error ? 'Connection lost' : sample ? '● Live · 2s' : 'Connecting…'}</span>} />
       {error && <p role="status" className={styles.error}>{data ? 'Showing the last received sample while reconnecting.' : 'Telemetry is unavailable. Reconnecting…'}</p>}
       {!sample && !error && <p className={styles.empty}>Waiting for the first hardware sample…</p>}
       {sample && <>

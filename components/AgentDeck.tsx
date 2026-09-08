@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { HerdrAgent, HerdrKind, HerdrSnapshot } from '@/lib/herdr-types';
+import { TFrame } from './ui'
 import styles from './AgentDeck.module.css';
 import { AsciiPanelTrim } from '@/app/vf/Ascii';
 
@@ -126,11 +127,11 @@ export default function AgentDeck({ onCredentialChange }: { onCredentialChange?:
     {!snapshot && !error && <p role="status">Connecting to herdr…</p>}
     {snapshot && !snapshot.available && <p role="status">Herdr is unavailable. {snapshot.error || 'Start herdr on this machine to connect.'}</p>}
     {snapshot?.available && snapshot.agents.length === 0 && <p>No agent instances yet. Launch an agent to begin.</p>}
-    <div className={styles.grid}>{snapshot?.agents.map(agent => <button key={agent.id} type="button" className={`${styles.tile} ${agent.focused ? styles.focused : ''}`} onClick={() => { setSelected(agent); setRename(agent.name); setPrompt(''); setError(''); setNotice(''); }}>
+    <div className={styles.grid}>{snapshot?.agents.map(agent => <TFrame key={agent.id}><button type="button" className={`${styles.tile} ${agent.focused ? styles.focused : ''}`} onClick={() => { setSelected(agent); setRename(agent.name); setPrompt(''); setError(''); setNotice(''); }}>
       <span className={styles.row}><strong>{agent.name || agent.id}</strong><span>{agent.kind || 'unknown'}</span></span>
       <span className={styles.row}><span>● {agent.status || 'unknown'}</span>{agent.focused && <small>Focused</small>}</span>
       <span className={styles.path} title={agent.cwd}>{agent.cwd || 'Working directory unavailable'}</span>
-    </button>)}</div>
+    </button></TFrame>)}</div>
     {snapshot && <small>Last snapshot: {new Date(snapshot.generatedAt).toLocaleTimeString()}</small>}
     <dialog ref={dialog} className={styles.dialog} aria-labelledby="agent-deck-dialog-title" onCancel={close} onClose={close}>
       <header className={styles.header}><h2 id="agent-deck-dialog-title">{launcher ? 'Launch agent' : current?.name || current?.id}</h2><button type="button" onClick={close}>Close</button></header>

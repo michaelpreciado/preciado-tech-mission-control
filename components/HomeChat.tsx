@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { Markdown } from './Markdown'
 import { Icon } from './icons'
+import { SectionRule } from './ui'
 import styles from './HomeWorkspace.module.css'
 
 type Message = { role: 'user' | 'assistant'; content: string }
@@ -96,8 +97,9 @@ export function HomeChat() {
   )
 
   return <section className={styles.chat} data-empty={messages.length === 0} aria-label="Mission Control chat">
-    <header className={styles.chatHeader}>
-      <div><span className={styles.kicker}>MISSION CONTROL</span><span className={styles.connection}><span className={styles.connectionDot} data-status={available === false ? 'unavailable' : available ? 'connected' : 'connecting'} aria-hidden="true" />{available === false ? 'Agent unavailable' : available ? 'Agent connected' : 'Connecting…'}</span></div>
+    <header className={`${styles.chatHeader} srule-home-header`}>
+      <SectionRule label="MISSION CONTROL" index={1} />
+      <div><span className={styles.connection}><span className={styles.connectionDot} data-status={available === false ? 'unavailable' : available ? 'connected' : 'connecting'} aria-hidden="true" />{available === false ? 'Agent unavailable' : available ? 'Agent connected' : 'Connecting…'}</span></div>
       <div className={styles.chatActions}><Link href="/chat" aria-label="Open chat history">History</Link><button onClick={newChat} disabled={busy || !ready} aria-label="Start a new chat">＋ New chat</button></div>
     </header>
     <div className={styles.messages} ref={log} role="log" aria-label="Conversation" onScroll={() => {

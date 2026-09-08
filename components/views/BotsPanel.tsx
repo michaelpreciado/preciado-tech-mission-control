@@ -33,7 +33,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import dynamic from 'next/dynamic'
 import { useUiSettings } from '../ui-settings'
 import { useRouter } from 'next/navigation'
-import { SectionHead, SkeletonPanel, EmptyTerminal, Window, Badge } from '../ui'
+import { TFrame, SectionRule, SkeletonPanel, EmptyTerminal, Window, Badge } from '../ui'
 import type { Bot, BotGatewayStatus, BotsSnapshot } from '@/lib/collectors/bots'
 
 const HoloDispatchPanel = dynamic(() => import('./SubAgentPanel').then(module => module.SubAgentPanel), { ssr: false })
@@ -347,7 +347,7 @@ function BotCard({
   }
 
   return (
-    <Window tag="◇" title={bot.name}>
+    <TFrame><Window tag="◇" title={bot.name}>
       <div className="mc-tile-body">
         <div className="mc-bots-id">
           <span className="mc-bots-avatar" aria-hidden="true">{bot.avatarInitial}</span>
@@ -568,7 +568,7 @@ function BotCard({
           )}
         </div>
       </div>
-    </Window>
+    </Window></TFrame>
   )
 }
 
@@ -741,7 +741,7 @@ export function BotsPanel() {
 
   return (
     <>
-      <SectionHead
+      <SectionRule
         label="BOTS / HERMES PROFILES"
         post={
           <span className="mc-bots-summary">

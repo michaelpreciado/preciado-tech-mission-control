@@ -7,7 +7,7 @@ import type {
   HermesTaskDetail,
   KanbanSourceStatus,
 } from '@/lib/types'
-import { Button, SkeletonPanel, fmtDate } from './ui'
+import { TFrame, Button, SkeletonPanel, fmtDate } from './ui'
 import { RelativeTime } from './RelativeTime'
 import { TaskOverview } from './TaskOverview'
 
@@ -666,7 +666,7 @@ function Column({ def, tasks, pinned, byId, onOpen, onTogglePin, dnd, drag, onCa
   const [over, setOver] = useState(false)
   const dropOk = dnd && !!drag && supportedTransition(drag.from, def.status) !== null
   return (
-    <div className={`mc-kb-col${active ? ' is-active' : ''}`}>
+    <TFrame><div className={`mc-kb-col${active ? ' is-active' : ''}`}>
       <div className={`mc-kb-col-head ${def.tone}`} title={`${def.label} · ${tasks.length}`}>
         <span className="mc-kb-col-glyph">{def.glyph}</span>
         <span>{def.label}</span>
@@ -693,7 +693,7 @@ function Column({ def, tasks, pinned, byId, onOpen, onTogglePin, dnd, drag, onCa
                 onDragEnd={onCardDragEnd} />
             })}
       </div>
-    </div>
+    </div></TFrame>
   )
 }
 

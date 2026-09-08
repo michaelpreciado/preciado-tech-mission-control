@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import type { HermesKanbanSnapshot } from '@/lib/types'
+import { TFrame, SectionRule } from './ui'
 import styles from './HomeWorkspace.module.css'
 
 const closed = new Set(['done', 'completed', 'cancelled', 'canceled', 'archived'])
@@ -32,12 +33,12 @@ export function HomeTasks() {
   const rank = (status: string) => ['running', 'in_progress'].includes(status) ? 0 : ['blocked', 'failed'].includes(status) ? 1 : 2
   const shown = [...tasks].sort((a, b) => rank(a.status) - rank(b.status) || b.priority - a.priority).slice(0, 8)
   return <section className={styles.section} aria-labelledby="home-open-tasks">
-    <header className={styles.sectionHeader}><div><span className={styles.kicker}>WORK QUEUE</span><h2 id="home-open-tasks">Open tasks {snapshot && <span>{tasks.length}</span>}</h2></div><Link href="/kanban">View board ↗</Link></header>
+    <SectionRule label="OPEN TASKS" index={2} id="home-open-tasks" post={<><span>{snapshot ? `${tasks.length} open` : 'Work queue'}</span><Link href="/kanban">View board ↗</Link></>} />
     {error && <p role="status" className={styles.error}>{error}{snapshot ? ' Showing the last loaded tasks.' : ''}</p>}
     {!snapshot && !error && <p className={styles.empty}>Loading your tasks…</p>}
     {snapshot && !snapshot.available && <p className={styles.empty}>Task board is currently unavailable.</p>}
     {snapshot?.available && !tasks.length && <p className={styles.empty}>All clear. No open tasks.</p>}
-    <div className={styles.tasks}>{shown.map(task => {
+    <TFrame><div className={styles.tasks}>{shown.map(task => {
       const running = rank(task.status) === 0
       const attention = rank(task.status) === 1
       return <Link className={styles.task} key={task.id} href="/kanban" data-state={running ? 'running' : attention ? 'attention' : 'queued'} data-running={running}>
@@ -48,7 +49,7 @@ export function HomeTasks() {
             ? `${task.assignee || 'unassigned'} · ${task.status}`
             : `${task.assignee || 'unassigned'} · queued · ${ago(task.createdAt)} ago`}</span></div><span aria-hidden="true">↗</span>
       </Link>
-    })}</div>
+    })}</div></TFrame>
     {tasks.length > shown.length && <Link className={styles.moreTasks} href="/kanban">See all {tasks.length} open tasks →</Link>}
   </section>
 }

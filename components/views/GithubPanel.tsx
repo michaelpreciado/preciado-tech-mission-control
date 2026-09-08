@@ -3,7 +3,7 @@
 import { AsciiDivider } from '@/app/vf/Ascii'
 
 import { useLiveData } from '../LiveDataProvider'
-import { SectionHead, Window, EmptyTerminal, SkeletonPanel, fmtDate } from '../ui'
+import { TFrame, SectionHead, Window, EmptyTerminal, SkeletonPanel, fmtDate } from '../ui'
 import { Heatmap } from '../Viz'
 import { ConnectCard } from './shared'
 
@@ -155,7 +155,7 @@ export function GithubPanel() {
       ) : (
       <div className="mc-repo-grid v4-group">
         {repos.map(repo => (
-          <a key={repo.name} className="mc-repo-card" href={repo.url} target="_blank" rel="noreferrer">
+          <TFrame key={repo.name}><a className="mc-repo-card" href={repo.url} target="_blank" rel="noreferrer">
             <div className="mc-repo-head">
               <span className="mc-repo-name" title={repo.name}>{repo.name}</span>
               {repo.private && <span className="mc-repo-private">PRIVATE</span>}
@@ -173,7 +173,7 @@ export function GithubPanel() {
               {(repo.openPrs ?? 0) > 0 && <span>⇄ {repo.openPrs}</span>}
               <span className="when">{pushedAgo(repo.pushedAt)}</span>
             </div>
-          </a>
+          </a></TFrame>
         ))}
       </div>
       )}
