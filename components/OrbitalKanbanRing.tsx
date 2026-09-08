@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import type { HermesTask } from '@/lib/types'
+import { createTaskTokenGeometry, createTaskTokenMaterial } from '@/components/threed/task-token'
 import {
   kanbanRingArcs, layoutKanbanRing, RING_LIMIT, RING_RADII, ringLane,
   type RingLayout,
@@ -67,33 +68,6 @@ function useKanbanSnapshot(): KanbanSnapshot | null {
   return snapshot
 }
 
-const vertexShader = /* glsl */ `
-  attribute vec2 nodeEnergy;
-  varying vec3 vColor;
-  varying vec2 vEnergy;
-  varying float vFacet;
-  void main() {
-    vColor = instanceColor;
-    vEnergy = nodeEnergy;
-    vFacet = 0.65 + 0.35 * abs(normal.z);
-    gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.0);
-  }
-`
-const fragmentShader = /* glsl */ `
-  uniform float uTime;
-  uniform float uMotion;
-  varying vec3 vColor;
-  varying vec2 vEnergy;
-  varying float vFacet;
-  void main() {
-    // Self-emissive per-instance energy: failed nodes pulse without another pass.
-    float pulse = 1.0 + vEnergy.x * uMotion * (0.35 + 0.35 * sin(uTime * 3.0));
-    gl_FragColor = vec4(vColor * vEnergy.y * vFacet * pulse, 0.85);
-    #include <tonemapping_fragment>
-    #include <colorspace_fragment>
-  }
-`
-
 function RingInstances({ layout, staticMotion, visible }: {
   layout: RingLayout
   staticMotion: boolean
@@ -106,16 +80,8 @@ function RingInstances({ layout, staticMotion, visible }: {
   const previousIds = useRef<string[]>([])
   const elapsed = useRef(0)
   const scratch = useMemo(() => ({ transform: new THREE.Object3D(), color: new THREE.Color() }), [])
-  const geometry = useMemo(() => {
-    const result = new THREE.IcosahedronGeometry(1, 0)
-    result.setAttribute('nodeEnergy', new THREE.InstancedBufferAttribute(new Float32Array(RING_LIMIT * 2), 2))
-    return result
-  }, [])
-  const material = useMemo(() => new THREE.ShaderMaterial({
-    uniforms: { uTime: { value: 0 }, uMotion: { value: 1 } },
-    vertexShader, fragmentShader, transparent: true, depthWrite: false,
-    blending: THREE.AdditiveBlending, toneMapped: false,
-  }), [])
+  const geometry = useMemo(() => createTaskTokenGeometry(RING_LIMIT), [])
+  const material = useMemo(() => createTaskTokenMaterial(), [])
   const arcs = useMemo(() => layout.arcs.map(arc => {
     const segments = 96
     const positions = new Float32Array((segments + 1) * 3)
