@@ -69,3 +69,9 @@
   .portrait img { object-position: 50% 58%; }
   .copy p { max-width: calc(100% - 76px); }
 }
+
+/* Out of flow and behind the photo: neither medium changes the hero height. */
+.portraitArt { position: absolute; top: 0; right: 46px; opacity: .3; pointer-events: none; }
+@media (max-width: 820px) {
+  .portraitArt { top: -8px; right: 12px; }
+}

@@ -1,5 +1,5 @@
 /** Inert terminal vocabulary. Both lengths are rendered; CSS owns the swap. */
-import { ROUTE_ART as EMBLEMS } from './AsciiArt'
+import { ROUTE_ART as EMBLEMS, WORDMARK, WORDMARK_SLANT, PORTRAIT } from './AsciiArt'
 
 function emblemFor(view: string) {
   if (/CHAT|CONTENT/.test(view)) return EMBLEMS.signal
@@ -18,45 +18,50 @@ export function AsciiKicker({ view, detail, framed = false }: { view: string; de
         <span className="v4-ascii-full">[ {view} / {detail} ]</span>
         <span className="v4-ascii-short">[ {view} ]</span>
       </div>
-      <span className="cyber-route-code">{'++\n||\n++'}</span>
+      <span className="cyber-route-code">{`++\n||\n++`}</span>
     </div>
   )
 }
 
 export function AsciiDivider() {
-  return <div className="v4-divider" aria-hidden="true"><span>{'+--[ / / / ::: / / / ]--+'}</span></div>
+  return <div className="v4-divider" aria-hidden="true"><span>{`+--[ / / / ::: / / / ]--+`}</span></div>
 }
 
 export function AsciiSkyline() {
-  return <pre className="cyber-skyline" aria-hidden="true">{'       |       .      \n   .  [::]     |      \n  [|] |::| .  [|]     \n _|:|_|::|[|]_|:|_    \n|:|:|:|::|:|:|:|:|    \n====================  \n  P R E C I A D O     '}</pre>
+  return <pre className="cyber-skyline" aria-hidden="true">{EMBLEMS.core}</pre>
 }
 
 export function AsciiPanelTrim() {
-  return <div className="cyber-panel-trim" aria-hidden="true"><span>{'+--'}</span><span>{'[== / :: + :: / ==]'}</span><span>{'--+'}</span></div>
+  return <div className="cyber-panel-trim" aria-hidden="true"><span>{`+--`}</span><span>{`[== / :: + :: / ==]`}</span><span>{`--+`}</span></div>
 }
 
 export function AsciiWordmark() {
   return <div className="cyber-wordmark" aria-hidden="true">
-    <pre>{' /\\     /\\   .========.\n/  \\   /  \\  ||\n||  \\ /  ||  ||\n||   V   ||  ||\n||       ||  \\========/'} </pre>
-    <div><span>MISSION CONTROL</span><small>{'[ HUMAN + MACHINE ]'}</small></div>
+    <pre className="cyber-wordmark-shadow">{WORDMARK}</pre>
+    <pre className="cyber-wordmark-slant">{WORDMARK_SLANT}</pre>
+    <div><small>{`[ HUMAN + MACHINE ]`}</small></div>
   </div>
+}
+
+export function AsciiPortrait() {
+  return <pre className="cyber-portrait" aria-hidden="true">{PORTRAIT}</pre>
 }
 
 export function AsciiCity() {
   return <div className="cyber-city" aria-hidden="true">
-    <pre>{'      .       |         .\n  |       .--[+]--.       |\n [#]      | [] [] |      [#]\n |#| .--. | [] [] | .--. |#|\n |#| |::| |======| |::| |#|\n_|#|_|::|_|_|++|_|_|::|_|#|_\n=============================\n /_/ /_/ /_/ /_/ /_/ /_/ /_/'}</pre>
-    <div><span>{'// PRECIADO'}</span><span>{'[ END OF TRANSMISSION ]'}</span></div>
+    <pre>{EMBLEMS.archive}</pre>
+    <div><span>{`// PRECIADO`}</span><span>{`[ END OF TRANSMISSION ]`}</span></div>
   </div>
 }
 
 export function AsciiTerminalArt({ compact = false }: { compact?: boolean }) {
-  return <pre className={`cyber-terminal-art${compact ? ' is-compact' : ''}`} aria-hidden="true">{compact ? '[ / >_ / ]' : '   .------------.\n   |  / >_      |\n   |____________|\n      _|____|_\n     /________\\'}</pre>
+  return <pre className={`cyber-terminal-art${compact ? ' is-compact' : ''}`} aria-hidden="true">{compact ? `[ / >_ / ]` : `   .------------.\n   |  / >_      |\n   |____________|\n      _|____|_\n     /________\\`}</pre>
 }
 
 export function AsciiConsole({ state }: { state: 'SCANNING' | 'FAULT' | '404 / NO SIGNAL' }) {
   return (
     <pre className="v4-console" aria-hidden="true">
-      {'+--------------------------+\n| > '}{state}<span className="v4-cursor">_</span>{' '.repeat(22 - state.length) + '|\n+--------------------------+'}
+      {`+--------------------------+\n| > `}{state}<span className="v4-cursor">_</span>{' '.repeat(22 - state.length) + `|\n+--------------------------+`}
     </pre>
   )
 }

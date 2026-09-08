@@ -2,12 +2,12 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useLiveData } from './LiveDataProvider'
 import styles from './NeuralUplink.module.css'
 
 /** Decorative orbital geometry surrounds real, actionable mission telemetry. */
-export function NeuralUplink() {
+export function NeuralUplink({ portraitArt }: { portraitArt?: ReactNode }) {
   const { data, isLive } = useLiveData()
   const root = useRef<HTMLElement>(null)
   const [moving, setMoving] = useState(false)
@@ -43,6 +43,7 @@ export function NeuralUplink() {
       </div>
       <div className={styles.reactor}>
         <div className={styles.halo} />
+        <div className={styles.portraitArt} aria-hidden="true">{portraitArt}</div>
         <picture className={styles.portrait}>
           <source media="(max-width: 820px)" srcSet="/brand/michael-profile.jpg" />
           <Image src="/brand/mp.jpeg" alt="Michael Preciado" width={160} height={160} priority />

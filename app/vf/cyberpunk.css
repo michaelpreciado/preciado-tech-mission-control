@@ -114,21 +114,34 @@ html .mc-main .cyber-route:not(.v4-corners)::after { display: none; }
   .cyber-panel-trim, .cyber-terminal-art, .cyber-loading-mark { color: CanvasText; }
 }
 
-/* Expanded ASCII edition: illustrations are deliberately foreground details. */
+/* Brand artwork and compact route monoliths. */
 html .mc-main .v4-kicker.cyber-route { min-height: 134px; gap: 24px; }
-.cyber-route-art { font-size: 11px; line-height: 1.1; color: #85d9ff; }
+.cyber-route-art { font-size: 11px; line-height: 1.1; color: #9db4ec; text-shadow: none; }
 .cyber-panel-trim { opacity: .85; padding-block: 7px; color: var(--cyber-pink); }
 .cyber-wordmark {
   display: flex; align-items: center; gap: 28px;
   margin: 8px 0 18px; padding: 18px 22px;
   border-block: 1px solid var(--pt-border);
-  background: linear-gradient(90deg, rgba(0,173,255,.08), transparent);
+  background: linear-gradient(90deg, rgba(157,180,236,.08), #07080b);
   pointer-events: none;
 }
 .cyber-wordmark pre {
-  margin: 0; color: var(--pt-neon-bright);
-  font: 13px/1.15 var(--pt-font-mono), monospace; letter-spacing: 0;
-  text-shadow: 0 0 16px rgba(30,144,255,.25); white-space: pre;
+  flex: 0 0 auto; margin: 0; color: #9db4ec;
+  font: clamp(4px, 1.05vw, 8px)/1.02 var(--pt-font-mono), monospace;
+  letter-spacing: 0; font-variant-ligatures: none;
+  text-shadow: 0 0 12px rgba(157,180,236,.35); white-space: pre;
+}
+.cyber-wordmark .cyber-wordmark-slant { display: none; }
+.cyber-portrait {
+  width: 56ch; margin: 0; padding: 0;
+  font: clamp(3px, .9vw, 7px)/1.02 var(--pt-font-mono), monospace;
+  letter-spacing: 0; font-variant-ligatures: none; white-space: pre;
+  color: rgba(157,180,236,.55); background: #07080b;
+  text-shadow: none; pointer-events: none;
+}
+@media (width < 700px) {
+  .cyber-wordmark .cyber-wordmark-shadow { display: none; }
+  .cyber-wordmark .cyber-wordmark-slant { display: block; }
 }
 .cyber-wordmark > div { display: grid; gap: 12px; min-width: 0; }
 .cyber-wordmark span { font: 12px/1.5 var(--pt-font-mono), monospace; letter-spacing: .2em; color: var(--cyber-pink); }
@@ -145,7 +158,6 @@ html .mc-main .v4-kicker.cyber-route { min-height: 134px; gap: 24px; }
   html .mc-main .v4-kicker.cyber-route { min-height: 116px; gap: 14px; }
   .cyber-route-art { font-size: 9px; }
   .cyber-wordmark { gap: 16px; padding: 14px 10px; flex-wrap: wrap; }
-  .cyber-wordmark pre { font-size: 11px; }
   .cyber-wordmark > div { gap: 5px; }
   .cyber-city { flex-wrap: wrap; gap: 16px; padding-inline: 8px; }
   .cyber-city pre { font-size: 10px; }
@@ -158,5 +170,5 @@ html .mc-main .v4-kicker.cyber-route { min-height: 134px; gap: 24px; }
   .cyber-city > div { font-size: 8px; }
 }
 @media (forced-colors: active) {
-  .cyber-wordmark pre, .cyber-route-art, .cyber-city { color: CanvasText; text-shadow: none; }
+  .cyber-wordmark pre, .cyber-portrait, .cyber-route-art, .cyber-city { color: CanvasText; text-shadow: none; }
 }
