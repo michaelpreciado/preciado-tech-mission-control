@@ -30,9 +30,26 @@
  *    REMOVE; routine toggles use the same zone without the typed gate.
  */
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import dynamic from 'next/dynamic'
+import { useUiSettings } from '../ui-settings'
 import { useRouter } from 'next/navigation'
 import { SectionHead, SkeletonPanel, EmptyTerminal, Window, Badge } from '../ui'
 import type { Bot, BotGatewayStatus, BotsSnapshot } from '@/lib/collectors/bots'
+
+const HoloDispatchPanel = dynamic(() => import('./SubAgentPanel').then(module => module.SubAgentPanel), { ssr: false })
+
+function HoloDispatchSection() {
+  const [open, setOpen] = useState(false)
+  const { elements3d } = useUiSettings()
+  return <section style={{ marginTop: 20 }}>
+    <button type="button" className="mc-btn" aria-expanded={open} aria-controls="bots-holo-dispatch" onClick={() => setOpen(value => !value)}>
+      Holo dispatch view {open ? '−' : '+'}
+    </button>
+    <div id="bots-holo-dispatch">
+      {open && (elements3d.teamGraph ? <HoloDispatchPanel initialHolo /> : <p>Enable the team graph in UI customization to use Holo dispatch.</p>)}
+    </div>
+  </section>
+}
 
 const POLL_MS = 20_000
 
@@ -694,9 +711,10 @@ export function BotsPanel() {
   )
 
   if (!data) {
-    return err
-      ? <EmptyTerminal label="bots endpoint unreachable" />
-      : <SkeletonPanel label="loading bots" />
+    return <>
+      {err ? <EmptyTerminal label="bots endpoint unreachable" /> : <SkeletonPanel label="loading bots" />}
+      <HoloDispatchSection />
+    </>
   }
 
   const { totals } = data
@@ -763,6 +781,7 @@ export function BotsPanel() {
             ))}
           </div>
         )}
+      <HoloDispatchSection />
     </>
   )
 }

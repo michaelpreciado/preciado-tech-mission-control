@@ -1,438 +1,158 @@
 'use client'
 
-/**
- * HoloHud3D — command-center 3D dispatch tree (WebGL via react-three-fiber).
- *
- * v2 (command hierarchy):
- *   HERMES (root) → JARVIS (hub / operator) → agent clusters
- *     OPS  · friday, edith          (the desktop + sentinel)
- *     CREW · openclaw, echo, sage, forge  (shared capabilities)
- *
- * Why v2: the v1 tree rendered an EMPTY stage the moment no agent was
- * working (MESH STANDBY). That hid the crew right when it went quiet —
- * which is most of the day. v2 keeps the whole roster ALWAYS visible and
- * informative:
- *  - idle/waiting agents stay bright and legible (name + role + host), not
- *    faded to invisibility.
- *  - offline is dimmed/desaturated but still present (asleep ≠ missing).
- *  - errored stays the loudest thing (red ring + hard flash).
- *  - working pulls full color + animated energy flow + breathing scale.
- *
- * Apple-UX applied: restrained pastel cards, no neon, crisp SVG icons that
- * always face the camera, and calm motion — the only "active" animation is a
- * genuinely working agent (pulsing ring + traveling branch energy).
- * Touch: drag to orbit, pinch to zoom (drei OrbitControls).
- *
- * WebGL is client-only; loaded ssr:false from the Team page.
- */
-import { useMemo, useRef } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
-import { RoundedBox, Line, Html, OrbitControls, ContactShadows } from '@react-three/drei'
+import { Component, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Html, OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
-import type { Line2 } from 'three-stdlib'
-import type { AgentNode, TelemetryTask } from '@/lib/telemetry-types'
-import { HEARTBEAT_STALE_MS } from '@/lib/telemetry'
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
+import { createAgentChassis } from '@/components/threed/agent-chassis'
+import { createDispatchHub } from '@/components/threed/dispatch-hub'
+import { useUiSettings } from '../ui-settings'
+import type { AgentNode } from '@/lib/telemetry-types'
+import { HOLO_NODE_CAP } from '@/components/threed/holo-config'
 
-/* ── Layout constants (world units) ───────────────────────────────────── */
+type PositionedNode = { node: AgentNode; position: THREE.Vector3; hub: boolean }
 
-const ROOT_POS: [number, number, number] = [0, 3.0, 0]
-const HUB_POS: [number, number, number] = [0, 1.9, 0]
-const AGENT_Y = 0.45
-const CARD_W = 1.7
-const CARD_H = 0.66
-const CARD_D = 0.05
-const ROOT_W = 2.0
-const ROOT_H = 0.78
-
-/** Command-cluster layout: which cluster each agent belongs to + x offset. */
-type Cluster = 'OPS' | 'CREW'
-const CLUSTER_OFFSET: Record<Cluster, number> = { OPS: -2.9, CREW: 2.9 }
-const AGENT_CLUSTER: Record<string, { cluster: Cluster; slot: number }> = {
-  friday:  { cluster: 'OPS', slot: 0 },
-  edith:   { cluster: 'OPS', slot: 1 },
-  openclaw:{ cluster: 'CREW', slot: 0 },
-  echo:    { cluster: 'CREW', slot: 1 },
-  sage:    { cluster: 'CREW', slot: 2 },
-  forge:   { cluster: 'CREW', slot: 3 },
-}
-const CLUSTER_SPACING = 1.95
-
-function agentPos(id: string): [number, number, number] {
-  const def = AGENT_CLUSTER[id]
-  if (!def) return [0, AGENT_Y, 0]
-  const baseX = CLUSTER_OFFSET[def.cluster]
-  const x = baseX + (def.slot - 0.5) * CLUSTER_SPACING
-  return [x, AGENT_Y, 0]
+function layout(nodes: AgentNode[]): PositionedNode[] {
+  const root = nodes.find(n => n.id === 'hermes')
+  const hub = nodes.find(n => n.id === 'jarvis') ?? nodes.find(n => n !== root)
+  const agents = nodes.filter(n => n !== root && n !== hub)
+  return [
+    ...(root ? [{ node: root, position: new THREE.Vector3(-1.5, 3, 0), hub: false }] : []),
+    ...(hub ? [{ node: hub, position: new THREE.Vector3(1.5, 3, 0), hub: true }] : []),
+    ...agents.map((node, i) => ({ node, position: new THREE.Vector3((i % 6 - 2.5) * 2, 1.2 - Math.floor(i / 6) * 1.7, 0), hub: false })),
+  ]
 }
 
-function clusterCenter(cluster: Cluster): [number, number, number] {
-  return [CLUSTER_OFFSET[cluster], 0.0, 0]
-}
-
-function isStaleNode(n: AgentNode): boolean {
-  if (n.state === 'offline' || n.state === 'working') return false
-  if (n.lastSeenAt === null) return false
-  const ts = n.lastSeenAt > 1e12 ? n.lastSeenAt : n.lastSeenAt * 1000
-  return Date.now() - ts > HEARTBEAT_STALE_MS
-}
-
-/* ── SF-Symbol-style icons (inline SVG, crisp at any DPI) ─────────────── */
-
-type IconProps = { color: string; size?: number }
-
-const ICONS: Record<string, (p: IconProps) => React.ReactNode> = {
-  hermes:   ({ color }) => <><circle cx="12" cy="12" r="6.5" stroke={color} strokeWidth="2" fill="none" /><circle cx="12" cy="12" r="2" fill={color} /></>,
-  jarvis:   ({ color }) => <><rect x="3.5" y="7" width="17" height="11.5" rx="2.5" stroke={color} strokeWidth="2" fill="none" /><path d="M9 7v-1a3 3 0 0 1 6 0v1" stroke={color} strokeWidth="2" fill="none" strokeLinecap="round" /></>,
-  friday:   ({ color }) => <><path d="M5 5l6 7-6 7" stroke={color} strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /><path d="M12 19h7" stroke={color} strokeWidth="2" strokeLinecap="round" /></>,
-  edith:    ({ color }) => <><path d="M12 4C7 4 3.5 8 2.5 12 3.5 16 7 20 12 20s8.5-4 9.5-8C20.5 8 17 4 12 4z" stroke={color} strokeWidth="2" fill="none" strokeLinejoin="round" /><circle cx="12" cy="12" r="3.2" stroke={color} strokeWidth="2" fill="none" /></>,
-  openclaw: ({ color }) => <><circle cx="12" cy="12" r="3" stroke={color} strokeWidth="2" fill="none" /><path d="M12 5V3M12 21v-2M5 12H3M21 12h-2M7.05 7.05L5.6 5.6M18.4 18.4l-1.45-1.45M16.95 7.05l1.45-1.45M5.6 18.4l1.45-1.45" stroke={color} strokeWidth="2" strokeLinecap="round" /></>,
-  echo:     ({ color }) => <><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4" stroke={color} strokeWidth="2.2" strokeLinecap="round" fill="none" /></>,
-  sage:     ({ color }) => <><circle cx="10.5" cy="10.5" r="6.5" stroke={color} strokeWidth="2" fill="none" /><path d="M15.5 15.5L21 21" stroke={color} strokeWidth="2" strokeLinecap="round" /><circle cx="8" cy="8.2" r="1" fill={color} /></>,
-  forge:    ({ color }) => <><path d="M4 20l4.5-4.5a3.2 3.2 0 0 1 4.5-4.5L20 4.5a2.5 2.5 0 0 1 3.5 3.5L17 14a3.2 3.2 0 0 1-4.5 4.5L8 23z" stroke={color} strokeWidth="2" fill="none" strokeLinejoin="round" /></>,
-}
-
-function AgentIcon({ id, color, size = 18 }: { id: string; color: string; size?: number }) {
-  const render = ICONS[id] ?? ICONS.hermes
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" className="mc-agicon" aria-hidden="true">
-      {render({ color })}
-    </svg>
-  )
-}
-
-/* ── Tree branch (smooth animated connector) ──────────────────────────── */
-
-function Branch({ from, to, accent, active }: { from: [number, number, number]; to: [number, number, number]; accent: string; active: boolean }) {
-  const points = useMemo(() => {
-    const mid = (from[1] + to[1]) / 2
-    return [
-      new THREE.Vector3(...from),
-      new THREE.Vector3((from[0] + to[0]) / 2, mid, from[2]),
-      new THREE.Vector3((from[0] + to[0]) / 2, mid, to[2]),
-      new THREE.Vector3(...to),
-    ]
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [from[0], from[1], from[2], to[0], to[1], to[2]])
-
-  const curve = useMemo(() => new THREE.CatmullRomCurve3(points), [points])
-  const geo = useMemo(() => new THREE.TubeGeometry(curve, 48, active ? 0.02 : 0.014, 6, false), [curve, active])
-
-  const base = useRef<THREE.Mesh>(null)
-  useFrame((state) => {
-    if (!base.current) return
-    const mat = base.current.material as THREE.MeshStandardMaterial
-    if (!active) { mat.opacity = 0.45; return }
-    const t = state.clock.elapsedTime
-    mat.emissiveIntensity = 0.6 + (Math.sin(t * 5) * 0.5 + 0.5) * 1.1
-    mat.opacity = 0.95
-  })
-
-  return (
-    <mesh ref={base} geometry={geo}>
-      <meshStandardMaterial
-        color={active ? accent : '#aab4c4'}
-        emissive={active ? accent : '#000000'}
-        emissiveIntensity={0}
-        transparent
-        opacity={0.6}
-        roughness={0.5}
-        metalness={0.1}
-      />
-    </mesh>
-  )
-}
-
-/* ── Task leaf (agent's currentTask — a graph leaf hanging off its owner) ─
- * Deliberately lighter-weight than Branch: a thin drei <Line> instead of a
- * TubeGeometry mesh (leaves are numerous-ish and low-priority next to the
- * org-tree's main branches), and a small octahedron instead of the agents'
- * RoundedBox card — shape + dimmer glow make "this is a task, not an agent"
- * readable at a glance without just shrinking the same visual language.
- * Unmounts entirely (not just fades) whenever the owning node has no
- * currentTask — callers gate this behind `node.currentTask &&`.
- */
-
-function TaskLink({ from, to, accent, active }: { from: [number, number, number]; to: [number, number, number]; accent: string; active: boolean }) {
-  const points = useMemo(
-    () => [new THREE.Vector3(...from), new THREE.Vector3(...to)],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [from[0], from[1], from[2], to[0], to[1], to[2]],
-  )
-  const ref = useRef<Line2>(null)
-  useFrame((state) => {
-    const mat = ref.current?.material as THREE.LineBasicMaterial | undefined
-    if (!mat) return
-    mat.opacity = active ? 0.3 + (Math.sin(state.clock.elapsedTime * 5) * 0.5 + 0.5) * 0.35 : 0.22
-  })
-  return <Line ref={ref} points={points} color={accent} transparent opacity={0.22} lineWidth={1} />
-}
-
-function TaskLeaf({ task, pos, accent, active }: { task: TelemetryTask; pos: [number, number, number]; accent: string; active: boolean }) {
-  const mesh = useRef<THREE.Mesh>(null)
-  useFrame((state) => {
-    if (!mesh.current) return
-    mesh.current.rotation.y = state.clock.elapsedTime * 0.6
-    mesh.current.rotation.x = state.clock.elapsedTime * 0.35
-    mesh.current.scale.setScalar(active ? 1 + Math.sin(state.clock.elapsedTime * 5) * 0.1 : 1)
-  })
-  return (
-    <group position={pos}>
-      <mesh ref={mesh}>
-        <octahedronGeometry args={[0.085, 0]} />
-        <meshStandardMaterial
-          color={accent}
-          transparent
-          opacity={active ? 0.8 : 0.42}
-          emissive={accent}
-          emissiveIntensity={active ? 0.85 : 0.18}
-          roughness={0.45}
-          metalness={0.15}
-        />
-      </mesh>
-      {/* Non-interactive label (no onClick, unlike the agent card chip) —
-          pointerEvents: 'none' so it never steals the drag-orbit / pinch-zoom
-          gesture from OrbitControls when a touch starts on top of a task
-          leaf. Html's own `pointerEvents` prop only takes effect in
-          `transform` mode, so it has to go through `style` here. */}
-      <Html position={[0, -0.19, 0]} center zIndexRange={[8, 0]} style={{ pointerEvents: 'none' }}>
-        <div className={`mc-task-chip${active ? ' is-active' : ''}`} title={task.title ?? task.id}>
-          <span className="mc-task-dot" style={{ background: accent }} />
-          <span className="mc-task-txt">{task.title || task.id}</span>
-        </div>
-      </Html>
-    </group>
-  )
-}
-
-/* ── Card node ────────────────────────────────────────────────────────── */
-
-function Card({
-  node,
-  pos,
-  w,
-  h,
-  selected,
-  isRoot,
-  onClick,
-}: {
-  node: AgentNode
-  pos: [number, number, number]
-  w: number
-  h: number
-  selected: boolean
-  isRoot: boolean
-  onClick: () => void
-}) {
-  const group = useRef<THREE.Group>(null)
-  const ring = useRef<THREE.Mesh>(null)
-  const stale = isStaleNode(node)
-
-  const accent = isRoot ? '#4caf50' : node.accent
-  const ringColor = node.state === 'errored' ? '#ff5f57' : node.state === 'offline' ? '#9aa3b2' : accent
-
-  // v2: idle agents stay BRIGHT and present. Only offline/stale dim — but
-  // never to invisibility, so the roster always reads as a full crew.
-  const dimmed = stale ? 0.55 : 1
-  const greyed = node.state === 'offline' ? 0.72 : 1
-  const cardOpacity = Math.min(dimmed, greyed) * 0.96
-
-  useFrame((state) => {
-    if (!group.current) return
-    if (node.state === 'working') {
-      const t = state.clock.elapsedTime
-      const s = 1 + Math.sin(t * 4) * 0.03
-      group.current.scale.setScalar(s)
-    } else {
-      group.current.scale.setScalar(1)
+/** All branches/task links in one draw call. Replacement geometry is owned by Scene. */
+function branchGeometry(items: PositionedNode[]) {
+  const hub = items.find(item => item.hub)
+  const parts: THREE.BufferGeometry[] = []
+  for (const item of items) {
+    if (hub && item !== hub) {
+      const from = hub.position
+      const to = item.position
+      const curve = new THREE.CatmullRomCurve3([from, new THREE.Vector3(from.x, from.y, -0.5), new THREE.Vector3(to.x, to.y, -0.5), to])
+      parts.push(new THREE.TubeGeometry(curve, 12, 0.012, 4, false))
     }
-    if (ring.current) {
-      const mat = ring.current.material as THREE.MeshBasicMaterial
-      if (node.state === 'working') {
-        mat.opacity = 0.5 + Math.sin(state.clock.elapsedTime * 5) * 0.3
-      } else if (selected) {
-        mat.opacity = 0.7
-      } else if (node.state === 'errored') {
-        mat.opacity = 0.45 + Math.sin(state.clock.elapsedTime * 8) * 0.3
-      } else {
-        mat.opacity = 0.14
+    if (item.node.currentTask) {
+      const curve = new THREE.LineCurve3(item.position, item.position.clone().add(new THREE.Vector3(0, -0.62, 0)))
+      parts.push(new THREE.TubeGeometry(curve, 1, 0.012, 4, false))
+    }
+  }
+  const geometry = parts.length ? mergeGeometries(parts)! : new THREE.BufferGeometry()
+  parts.forEach(part => part.dispose())
+  return geometry
+}
+
+function stateColor(node: AgentNode, selected: boolean) {
+  return selected ? '#ffffff' : node.state === 'errored' ? '#ff5f57' : node.state === 'offline' ? '#657183' : node.accent
+}
+
+function Scene({ nodes, selectedId, staticMotion }: { nodes: AgentNode[]; selectedId: string | null; staticMotion: boolean }) {
+  const viewport = useThree(state => state.viewport)
+  const fit = Math.min(1, viewport.width / 13, viewport.height / 9)
+  const items = useMemo(() => layout(nodes), [nodes])
+  const resources = useMemo(() => ({
+    chassis: createAgentChassis(), hub: createDispatchHub(), task: new THREE.OctahedronGeometry(0.09, 0),
+    body: new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.4, metalness: 0.45 }),
+    wire: new THREE.MeshBasicMaterial({ color: '#778ca6', transparent: true, opacity: 0.45 }),
+  }), [])
+  const branches = useMemo(() => branchGeometry(items), [items])
+  useEffect(() => () => branches.dispose(), [branches])
+  useEffect(() => () => { Object.values(resources).forEach(resource => resource.dispose()) }, [resources])
+  const agents = useRef<THREE.InstancedMesh>(null)
+  const hubs = useRef<THREE.InstancedMesh>(null)
+  const tasks = useRef<THREE.InstancedMesh>(null)
+  const dummy = useMemo(() => new THREE.Object3D(), [])
+  const color = useMemo(() => new THREE.Color(), [])
+
+  useFrame(({ clock }) => {
+    if (!agents.current || !hubs.current || !tasks.current) return
+    let a = 0, h = 0, t = 0
+    for (const item of items) {
+      const mesh = item.hub ? hubs.current : agents.current
+      const index = item.hub ? h++ : a++
+      const pulse = !staticMotion && item.node.state === 'working' ? 1 + Math.sin(clock.elapsedTime * 2) * 0.025 : 1
+      dummy.position.copy(item.position)
+      dummy.rotation.set(0, 0, 0)
+      dummy.scale.set(1.35 * pulse, 0.7 * pulse, 1)
+      dummy.updateMatrix()
+      mesh.setMatrixAt(index, dummy.matrix)
+      color.set(stateColor(item.node, item.node.id === selectedId))
+      mesh.setColorAt(index, color)
+      if (item.node.currentTask) {
+        dummy.position.y -= 0.62
+        dummy.scale.setScalar(1)
+        dummy.rotation.y = staticMotion ? 0 : clock.elapsedTime * 0.4
+        dummy.updateMatrix()
+        tasks.current.setMatrixAt(t, dummy.matrix)
+        tasks.current.setColorAt(t++, color)
       }
     }
+    for (const [mesh, count] of [[agents.current, a], [hubs.current, h], [tasks.current, t]] as const) {
+      mesh.count = count
+      mesh.instanceMatrix.needsUpdate = true
+      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
+    }
   })
 
-  return (
-    <group>
-      {/* branch from HUB to this card — unless it IS the hub */}
-      {!isRoot && node.id !== 'jarvis' && (
-        <Branch
-          from={[HUB_POS[0], HUB_POS[1] - ROOT_H / 2 - 0.04, 0]}
-          to={[pos[0], pos[1] + h / 2 + 0.04, pos[2]]}
-          accent={node.accent}
-          active={node.state === 'working'}
-        />
-      )}
-
-      {/* card body */}
-      <group ref={group} position={pos}>
-        {/* soft colored accent ring (state) */}
-        <mesh ref={ring} position={[0, 0, -0.02]}>
-          <planeGeometry args={[w + 0.16, h + 0.16]} />
-          <meshBasicMaterial color={ringColor} transparent opacity={0.14} />
-        </mesh>
-        <RoundedBox args={[w, h, CARD_D]} radius={0.14} smoothness={8}>
-          <meshStandardMaterial
-            color="#ffffff"
-            transparent
-            opacity={cardOpacity}
-            roughness={0.35}
-            metalness={0}
-          />
-        </RoundedBox>
-      </group>
-
-      {/* task leaf — the agent's currentTask, hanging off the card below-front.
-          Fully unmounted (not faded) the instant the agent has no currentTask. */}
-      {node.currentTask && (
-        <>
-          <TaskLink
-            from={[pos[0], pos[1] - h / 2 - 0.03, pos[2]]}
-            to={[pos[0], pos[1] - h / 2 - 0.36, pos[2] + 0.48]}
-            accent={accent}
-            active={node.state === 'working'}
-          />
-          <TaskLeaf
-            task={node.currentTask}
-            pos={[pos[0], pos[1] - h / 2 - 0.36, pos[2] + 0.48]}
-            accent={accent}
-            active={node.state === 'working'}
-          />
-        </>
-      )}
-
-      {/* label chip — always crisp, screen-space, carries role + host */}
-      <Html position={[pos[0], pos[1] + h / 2 + 0.34, pos[2]]} center zIndexRange={[10, 0]}>
-        <div
-          className={`mc-card-chip state-${node.state}${isRoot ? ' is-root' : ''}${selected ? ' is-selected' : ''}`}
-          onClick={onClick}
-          role="button"
-          aria-label={`${node.name} · ${node.state}${node.currentTask ? ` · ${node.currentTask.title}` : ''}`}
-        >
-          <span className="mc-chip-icon" style={{ background: `${accent}22` }}>
-            <AgentIcon id={node.id} color={accent} size={18} />
-          </span>
-          <span className="mc-chip-txt">
-            <span className="mc-chip-name">{node.name}</span>
-            <span className="mc-chip-sub">{node.host ?? '—'}</span>
-          </span>
-          <span className="mc-chip-dot" style={{ background: node.state === 'errored' ? '#ff5f57' : node.state === 'offline' ? '#8a93a3' : accent }} />
-        </div>
-      </Html>
+  return <>
+    <ambientLight intensity={1.5} />
+    <directionalLight position={[3, 8, 6]} intensity={2} />
+    <group scale={fit}>
+    <group dispose={null}>
+      <mesh geometry={branches} material={resources.wire} />
+      <instancedMesh ref={agents} args={[resources.chassis, resources.body, HOLO_NODE_CAP]} frustumCulled={false} />
+      <instancedMesh ref={hubs} args={[resources.hub, resources.body, 1]} frustumCulled={false} />
+      <instancedMesh ref={tasks} args={[resources.task, resources.body, HOLO_NODE_CAP]} frustumCulled={false} />
     </group>
-  )
-}
-
-/* ── Cluster label (OPS / CREW) ───────────────────────────────────────── */
-
-function ClusterTag({ label, pos }: { label: string; pos: [number, number, number] }) {
-  return (
-    <Html position={pos} center zIndexRange={[5, 0]}>
-      <div className="mc-cluster-tag">{label}</div>
-    </Html>
-  )
-}
-
-/* ── Hub (Jarvis) card ────────────────────────────────────────────────── */
-
-function HubCard({ node, selected, onClick }: { node: AgentNode; selected: boolean; onClick: () => void }) {
-  return (
-    <group>
-      {/* HERMES → JARVIS */}
-      <Branch
-        from={[ROOT_POS[0], ROOT_POS[1] - ROOT_H / 2 - 0.04, 0]}
-        to={[HUB_POS[0], HUB_POS[1] + ROOT_H / 2 + 0.04, 0]}
-        accent={node.accent}
-        active={node.state === 'working'}
-      />
-      <Card node={node} pos={HUB_POS} w={ROOT_W} h={ROOT_H} selected={selected} isRoot={false} onClick={onClick} />
+    {/* One plain, noninteractive projection per capped node; task details live in the roster. */}
+    {items.map(({ node, position }) => <Html key={node.id} position={[position.x, position.y + 0.55, position.z]} center zIndexRange={[1, 0]} style={{ pointerEvents: 'none' }}>
+      <span style={{ display: 'block', maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 11, color: 'var(--pt-text)', background: 'var(--pt-surface-2)', padding: '2px 5px', borderRadius: 4 }}>{node.name}</span>
+    </Html>)}
     </group>
-  )
+    <OrbitControls target={[0, 0, 0]} enablePan={false} enableZoom={false} enableDamping={!staticMotion} minPolarAngle={Math.PI / 3} maxPolarAngle={Math.PI * 2 / 3} minAzimuthAngle={-0.3} maxAzimuthAngle={0.3} />
+  </>
 }
 
-/* ── The full scene ───────────────────────────────────────────────────── */
-
-function Scene({ nodes, selectedId, onSelect }: { nodes: AgentNode[]; selectedId: string | null; onSelect: (id: string) => void }) {
-  const hermes = useMemo(() => nodes.find(n => n.id === 'hermes'), [nodes])
-  const jarvis = useMemo(() => nodes.find(n => n.id === 'jarvis') ?? nodes.find(n => n.id !== 'hermes'), [nodes])
-  const hubId = jarvis?.id
-  const agents = useMemo(() => nodes.filter(n => n.id !== 'hermes' && n.id !== hubId), [nodes, hubId])
-  const hasOps = useMemo(() => agents.some(n => AGENT_CLUSTER[n.id]?.cluster === 'OPS'), [agents])
-  const hasCrew = useMemo(() => agents.some(n => AGENT_CLUSTER[n.id]?.cluster === 'CREW'), [agents])
-
-  return (
-    <>
-      <ambientLight intensity={1.2} />
-      <directionalLight position={[3, 8, 6]} intensity={1.1} />
-      <directionalLight position={[-4, 5, -4]} intensity={0.35} color="#eef2ff" />
-
-      {/* HERMES root */}
-      {hermes && (
-        <Card node={hermes} pos={[...ROOT_POS]} w={ROOT_W} h={ROOT_H} selected={selectedId === hermes.id} isRoot onClick={() => onSelect(hermes.id)} />
-      )}
-
-      {/* JARVIS hub */}
-      {jarvis && (
-        <HubCard node={jarvis} selected={selectedId === jarvis.id} onClick={() => onSelect(jarvis.id)} />
-      )}
-
-      {/* cluster separators */}
-      {hasOps && <ClusterTag label="OPS" pos={[CLUSTER_OFFSET.OPS, 1.15, 0]} />}
-      {hasCrew && <ClusterTag label="CREW" pos={[CLUSTER_OFFSET.CREW, 1.15, 0]} />}
-
-      {/* agents */}
-      {agents.map((n) => {
-        const pos = agentPos(n.id)
-        return (
-          <Card key={n.id} node={n} pos={pos} w={CARD_W} h={CARD_H} selected={selectedId === n.id} isRoot={false} onClick={() => onSelect(n.id)} />
-        )
-      })}
-
-      <ContactShadows position={[0, -0.85, 0]} opacity={0.45} scale={26} blur={2.8} far={4} resolution={256} color="#000000" />
-
-      <OrbitControls
-        target={[0, 1.4, 0]}
-        enablePan={false}
-        enableZoom
-        minDistance={5}
-        maxDistance={14}
-        autoRotate
-        autoRotateSpeed={0.12}
-        enableDamping
-        dampingFactor={0.15}
-      />
-    </>
-  )
+class HoloBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false }
+  static getDerivedStateFromError() { return { failed: true } }
+  render() { return this.state.failed ? <p>3D unavailable. Use the roster below.</p> : this.props.children }
 }
 
-/* ── Canvas wrapper ───────────────────────────────────────────────────── */
-
-export default function HoloHud3D({
-  nodes,
-  selectedId,
-  onSelect,
-}: {
-  nodes: AgentNode[]
-  selectedId: string | null
-  onSelect: (id: string) => void
-}) {
-  return (
-    <div className="mc-hud3d">
-      <Canvas
-        dpr={[1, 2]}
-        gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
-        camera={{ position: [0.2, 4.6, 10.5], fov: 38 }}
-        style={{ width: '100%', height: '100%', touchAction: 'none', background: 'transparent' }}
-      >
-        <Scene nodes={nodes} selectedId={selectedId} onSelect={onSelect} />
+export default function HoloHud3D({ nodes, selectedId }: { nodes: AgentNode[]; selectedId: string | null }) {
+  const { motion, elements3d } = useUiSettings()
+  const host = useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = useState(false)
+  const [inView, setInView] = useState(false)
+  const [reduced, setReduced] = useState(true)
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const updateMotion = () => setReduced(media.matches)
+    const updateVisibility = () => setVisible(document.visibilityState === 'visible')
+    updateMotion(); updateVisibility()
+    media.addEventListener('change', updateMotion)
+    document.addEventListener('visibilitychange', updateVisibility)
+    const observer = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting))
+    if (host.current) observer.observe(host.current)
+    return () => {
+      observer.disconnect()
+      media.removeEventListener('change', updateMotion)
+      document.removeEventListener('visibilitychange', updateVisibility)
+    }
+  }, [])
+  const bounded = useMemo(() => {
+    const unique = Array.from(new Map(nodes.map(node => [node.id, node])).values())
+    return [...unique.filter(n => n.id === 'hermes' || n.id === 'jarvis'), ...unique.filter(n => n.id !== 'hermes' && n.id !== 'jarvis')].slice(0, HOLO_NODE_CAP)
+  }, [nodes])
+  const staticMotion = reduced || motion === 'reduced' || motion === 'off'
+  return <div ref={host} className="mc-hud3d" aria-hidden="true">
+    {visible && inView && elements3d.teamGraph && <HoloBoundary>
+      <Canvas dpr={[1, 1.5]} frameloop={staticMotion ? 'demand' : 'always'} camera={{ position: [0, 0, 16], fov: 40 }} gl={{ alpha: true, antialias: true }} fallback={<p>3D unavailable. Use the roster below.</p>}>
+        <Scene nodes={bounded} selectedId={selectedId} staticMotion={staticMotion} />
       </Canvas>
-    </div>
-  )
+    </HoloBoundary>}
+  </div>
 }

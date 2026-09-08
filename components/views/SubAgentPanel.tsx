@@ -1,28 +1,13 @@
 'use client'
 
 /**
- * Sub-agent dispatch — the Team tab.
- *
- * ONE primary view: a clean SHIFT ROSTER. Every crew member is a row showing
- * name + role, a single status badge, the current task title + elapsed time,
- * and host/model as secondary. A compact "now" strip up top is the pulse of
- * the team at a glance. `working` rows pop (tinted accent + subtle glow),
- * idle/offline recede, `errored` is the loudest state (red).
- *
- * The WebGL 3D orbital HUD (HoloHud3D) is OPT-IN: it only mounts when the
- * user clicks the HOLO 3D toggle (and only if Setup → UI CUSTOMIZATION has
- * `elements3d.teamGraph` enabled). Default view is the roster.
- *
- * Encoding rules (brief-preserving):
- *  - State is carried by color AND shape/motion, never color alone.
- *  - Motion is reserved for genuinely active agents; idle agents are static.
- *  - Animated beam flows along the active agent's edge only.
- *  - Stale agents render desaturated with a "last seen" marker in detail.
- *  - Errored agents are the loudest thing (red, hard flash).
- *  - Offline nodes (desktop asleep) are a normal state, distinct from errors.
+ * Dispatch telemetry roster, optionally accompanied by the decorative HoloHud3D.
+ * /bots opts in by mounting with initialHolo; teamGraph remains the settings gate.
+ * The complete keyboard-accessible roster stays mounted while holo is shown.
  */
 import { useEffect, useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
+import { HOLO_NODE_CAP } from '@/components/threed/holo-config'
 import { RelativeTime } from '../RelativeTime'
 import { Button } from '../ui'
 import { useUiSettings } from '../ui-settings'
@@ -116,7 +101,6 @@ function RosterRow({ node, now, onSelect }: { node: AgentNode; now: number; onSe
       type="button"
       className={`mc-sub-row mc-shift-row state-${node.state}`}
       onClick={() => onSelect(node.id)}
-      role="listitem"
       style={{ '--shift-accent': node.accent } as React.CSSProperties}
       aria-label={`${node.name}, ${STATE_META[node.state].label}${task ? `, ${task.title}` : ''}`}
     >
@@ -149,7 +133,7 @@ function ShiftRoster({ nodes, now, onSelect }: { nodes: AgentNode[]; now: number
   )
   return (
     <div className="mc-sub-list" role="list" aria-label="agent shift roster">
-      {sorted.map(n => <RosterRow key={n.id} node={n} now={now} onSelect={onSelect} />)}
+      {sorted.map(n => <div role="listitem" key={n.id}><RosterRow node={n} now={now} onSelect={onSelect} /></div>)}
     </div>
   )
 }
@@ -249,12 +233,12 @@ const STREAM_META: Record<string, { label: string; cls: string }> = {
   offline: { label: 'OFFLINE', cls: 'dim' },
 }
 
-export function SubAgentPanel() {
+export function SubAgentPanel({ initialHolo = false }: { initialHolo?: boolean }) {
   const snap = useSubAgentTelemetry()
   const { elements3d } = useUiSettings()
   const holoAllowed = elements3d.teamGraph
   // Holo is OPT-IN: default off, mounted only when the user toggles it.
-  const [holoOn, setHoloOn] = useState(false)
+  const [holoOn, setHoloOn] = useState(initialHolo)
   const showHolo = holoAllowed && holoOn
 
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -303,7 +287,7 @@ export function SubAgentPanel() {
       {showHolo ? (
         <>
           <div className="mc-hud3d-frame" aria-hidden="true">
-            <HoloHud3D nodes={snap.tree} selectedId={selectedId} onSelect={setSelectedId} />
+            <HoloHud3D nodes={snap.tree} selectedId={selectedId} />
             <div className="mc-hud3d-overlay">
               <div className="mc-hud3d-hudtag"><span className="mc-hud-brack">◤</span> COMMAND MESH <span className="mc-hud-brack">◢</span></div>
               <div className="mc-hud3d-counters">
@@ -330,12 +314,12 @@ export function SubAgentPanel() {
             ) : erroredNode ? (
               <div className="mc-hud-idle">
                 <span className="mc-hud-idle-line" style={{ color: 'var(--pt-error-ink)' }}>⚠ {erroredNode.name} ERRORED</span>
-                <span className="mc-hud-idle-sub">{erroredNode.currentTask?.title ?? 'no task label'} — tap the node for details</span>
+                <span className="mc-hud-idle-sub">{erroredNode.currentTask?.title ?? 'no task label'} — select the agent below for details</span>
               </div>
             ) : (
               <div className="mc-hud-idle">
                 <span className="mc-hud-idle-line">CREW ON STANDBY — {snap.tree.filter(n => n.state !== 'offline').length} OF {snap.tree.length} AGENTS AWAKE</span>
-                <span className="mc-hud-idle-sub">tap ROSTER to return · drag to orbit · scroll to zoom · click a node for details</span>
+                <span className="mc-hud-idle-sub">drag to orbit · select an agent in the roster below for details</span>
               </div>
             )}
           </div>
@@ -346,6 +330,11 @@ export function SubAgentPanel() {
           <ShiftRoster nodes={snap.tree} now={now} onSelect={setSelectedId} />
         </>
       )}
+
+      {showHolo && <>
+        <p>Visual map: up to {HOLO_NODE_CAP} agents. Select any agent in the complete roster below.</p>
+        <ShiftRoster nodes={snap.tree} now={now} onSelect={setSelectedId} />
+      </>}
 
       {selected && <DetailSheet node={selected} onClose={() => setSelectedId(null)} />}
     </div>
