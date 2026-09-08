@@ -1,4 +1,4 @@
-import { AsciiConsole } from './vf/Ascii'
+import { AsciiConsole, AsciiHorizon } from './vf/Ascii'
 
 import Link from 'next/link'
 
@@ -9,9 +9,7 @@ export default function NotFound() {
     <div className="pt-fault-screen">
       <div className="pt-fault-panel">
         <AsciiConsole state="404 / NO SIGNAL" />
-        <div className="v4-legacy-mark pt-404-mark mb-4" aria-hidden="true">
-          404
-        </div>
+        <AsciiHorizon />
         <h2 className="pt-fault-title">Signal Lost</h2>
         <p className="pt-fault-copy">
           The page you requested is off the grid. It may have moved, or it never existed.
