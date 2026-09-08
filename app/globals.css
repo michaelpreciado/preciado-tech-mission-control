@@ -8113,3 +8113,56 @@ html[data-motion="off"] .mc-studio-cursor { animation: none; }
 @media (max-width: 820px) {
   .mc-shell.is-home .mc-main { padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); }
 }
+
+/* W2-I: finite POST and shared fault console. */
+.boot-loading, .boot-fault-screen, .boot-overlay {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 60vh; padding: 24px 12px;
+  font-family: var(--pt-font-mono), monospace; color: #9db4ec;
+}
+.boot-overlay {
+  position: fixed; inset: 0; z-index: 150; min-height: 0;
+  background: #07080b; opacity: 1; transition: opacity 300ms ease;
+  flex-direction: column;
+}
+.boot-overlay.boot-leaving { opacity: 0; pointer-events: none; }
+.boot-console { font-size: clamp(10px, 2.6vw, 14px); line-height: 1.9; letter-spacing: 0; }
+.boot-console .cyber-terminal-art { color: #9db4ec; opacity: .45; margin: 0 0 20px; }
+.boot-eyebrow, .boot-footer, .boot-skip { color: #9db4ec; opacity: .42; font-size: .8em; }
+.boot-eyebrow { margin-bottom: 18px; letter-spacing: .12em; }
+.boot-readout { border-left: 1px solid #9db4ec30; padding-left: 18px; }
+.boot-row { display: flex; height: 1.9em; }
+.boot-line {
+  display: inline-block; white-space: pre; overflow: hidden; width: calc(var(--boot-chars) * 1ch);
+  animation: boot-type 170ms steps(var(--boot-chars), end) var(--boot-delay) both,
+    boot-land 170ms linear var(--boot-delay) both;
+}
+.boot-cursor { opacity: 0; animation: boot-blink 85ms steps(1, end) var(--boot-delay) 2; }
+.boot-footer { margin-top: 22px; }
+.boot-skip { margin-top: 34px; font-size: 10px; letter-spacing: .12em; }
+.boot-fault-panel { max-width: 100%; }
+.boot-frame {
+  margin: 0 0 24px; color: #9db4ec55; line-height: 1.7;
+  font-size: clamp(9px, 2vw, 15px); letter-spacing: 0; white-space: pre;
+}
+.boot-fault-status { color: #9db4ec; animation: boot-flicker 240ms steps(2, end) 2; }
+.boot-error-word { color: #ff5f57; }
+.boot-fault-details { max-width: 46ch; font-size: 13px; }
+.boot-fault-details p { color: #9db4ecaa; }
+.boot-reference { overflow-wrap: anywhere; }
+.boot-action { display: inline-block; padding: 12px 0; color: #9db4ec; background: transparent; border: 0; font: inherit; cursor: pointer; text-decoration: none; }
+.boot-action:hover { text-shadow: 0 0 12px #9db4ec80; }
+.boot-action:focus-visible { outline: 1px solid #9db4ec; outline-offset: 5px; }
+.boot-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@keyframes boot-type { from { width: 0; } }
+@keyframes boot-land { from { opacity: .16; } to { opacity: .78; } }
+@keyframes boot-blink { 0%, 100% { opacity: 0; } 50% { opacity: .9; } }
+@keyframes boot-flicker { 0%, 100% { opacity: 1; } 50% { opacity: .72; } }
+@media (prefers-reduced-motion: reduce) {
+  .boot-line, .boot-cursor, .boot-fault-status { animation: none; }
+  .boot-line { opacity: .78; }
+  .boot-overlay { display: none; transition: none; }
+}
+/* Dialogs can live inside the shell's own stacking context. Yield the
+   decorative overlay entirely while one is open, including native dialogs. */
+body:has([role="dialog"], dialog[open]) .boot-overlay { visibility: hidden; }

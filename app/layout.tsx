@@ -4,6 +4,7 @@ import Script from 'next/script'
 import './globals.css'
 import './vf/v4-lane.css'
 import './vf/cyberpunk.css'
+import { BootOverlay } from '@/components/boot/BootOverlay'
 import { Shell } from '@/components/Shell'
 import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister'
 import { getConfig } from '@/lib/config'
@@ -108,6 +109,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <span className="v4-scanline" aria-hidden="true" />
           {children}
         </Shell>
+        <BootOverlay />
         <Script src="/v4-scroll.js" strategy="afterInteractive" />
         <Script src="/rain.js" strategy="lazyOnload" />
         <ServiceWorkerRegister />
