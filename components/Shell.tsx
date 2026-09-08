@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import { usePathname } from 'next/navigation'
 import { LiveDataProvider, useLiveData } from './LiveDataProvider'
@@ -94,7 +95,7 @@ function Sidebar() {
     <aside className="mc-side" aria-label="Main navigation">
       <HomeControl placement="desktop" />
       <div className="mc-brand">
-        <div className="mc-brand-mark"><Icon name="brand" size={20} /></div>
+        <div className="mc-brand-mark"><Image src="/brand/preciado-tech-logo.jpg" alt="Preciado Tech" width={28} height={28} style={{ borderRadius: 2 }} /></div>
         <div className="mc-brand-text">
           <div className="mc-brand-name">
             {appName.split(' ').map(word => <span key={word} style={{ display: 'block' }}>{word}</span>)}

@@ -30,7 +30,9 @@ export function createOrbArt(nodes: OrbNode[], orbit = false, intensity = 1) {
     tint.push(color.r, color.g, color.b); attrs.push(node.phase, node.scale, node.selected ? 1.7 : 1)
   }
   nodes.forEach(node => {
-    const color = new THREE.Color().setHSL(((node.hue % 360) + 360) % 360 / 360, .95, .58)
+    const color = orbit
+      ? new THREE.Color().setHSL(((node.hue % 360) + 360) % 360 / 360, .95, .58)
+      : new THREE.Color('#9db4ec').offsetHSL((node.hue - 222.532) / 360, 0, 0)
     const p = core.getAttribute('position'), n = core.getAttribute('normal')
     for (let i = 0; i < p.count; i++) append(corePositions, coreNormals, coreTints, coreNodes, new THREE.Vector3().fromBufferAttribute(p, i), new THREE.Vector3().fromBufferAttribute(n, i), color, node)
     const edge = shell.getAttribute('position')

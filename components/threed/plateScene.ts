@@ -32,14 +32,14 @@ export function createPlate(width: number, height: number, consolePanel = false)
         float emblem=stripe(abs(e.x)+abs(e.y)-.19,.012);
         float ink=consolePanel*(grid+scan+bracket*.85+emblem*.8)*front;
         float sheen=pow(max(0.,1.-abs(uv.x+uv.y-1.1)),8.)*.13;
-        vec3 color=vec3(.018,.065,.11)+vec3(0.,.65,1.)*(rim*.8+ink+sheen)*energy;
-        color+=vec3(.02,.13,.22)*(1.-front);
+        vec3 color=vec3(.00335,.00402,.00605)+vec3(.33716,.45641,.83880)*(rim*.8+ink+sheen)*energy;
+        color+=vec3(.33716,.45641,.83880)*.16*(1.-front);
         gl_FragColor=vec4(color,.93);
         #include <colorspace_fragment>
       }` })
   const group = new THREE.Group()
   group.add(new THREE.Mesh(geometry, material))
   const edges = new THREE.EdgesGeometry(geometry, 30)
-  group.add(new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: '#00d4ff', transparent: true, opacity: .45, blending: THREE.AdditiveBlending, depthWrite: false })))
+  group.add(new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: '#9db4ec', transparent: true, opacity: .45, blending: THREE.AdditiveBlending, depthWrite: false })))
   return { group, uniforms }
 }
