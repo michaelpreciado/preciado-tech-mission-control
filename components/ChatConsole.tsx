@@ -1,5 +1,7 @@
 'use client'
 
+import { AsciiMsg, AsciiPromptGutter, messageSide } from '@/components/ascii-msg'
+
 /**
  * CHAT CONSOLE — every Hermes conversation, every agent, every device, in one
  * mobile-first surface.
@@ -181,7 +183,7 @@ function CopyButton({ text }: { text: string }) {
         alignItems: 'center',
         justifyContent: 'center',
         fontSize: '11px',
-        fontFamily: 'monospace',
+        fontFamily: 'var(--pt-font-mono, "JetBrains Mono"), monospace',
         letterSpacing: '0.08em',
         opacity: copied ? 1 : 0.4,
         color: copied ? 'var(--mc-neon)' : 'inherit',
@@ -569,9 +571,9 @@ export default function ChatConsole() {
         <span className="jp" lang="ja">通信</span>
         <span>Comms channel</span>
       </div>
-      <div className="cc">
+      <div className="cc amsg-surface">
         {/* ── LIST PANE ── */}
-        <div className={`cc-listpane ${hasActiveThread ? 'is-hidden-mobile' : ''}`}>
+        <div className={`amsg-container cc-listpane ${hasActiveThread ? 'is-hidden-mobile' : ''}`}>
           <div className="cc-toolbar">
             <div className="cc-search">
               <Icon name="chat" size={14} />
@@ -623,7 +625,7 @@ export default function ChatConsole() {
                     border: 'none',
                     borderRight: agent === 'jarvis' ? '1px solid color-mix(in srgb, currentColor 12%, transparent)' : 'none',
                     cursor: busy ? 'not-allowed' : 'pointer',
-                    fontFamily: 'monospace',
+                    fontFamily: 'var(--pt-font-mono, "JetBrains Mono"), monospace',
                     fontSize: '10px',
                     letterSpacing: '0.16em',
                     textTransform: 'uppercase',
@@ -717,7 +719,7 @@ export default function ChatConsole() {
         </div>
 
         {/* ── THREAD PANE ── */}
-        <div className={`cc-threadpane ${hasActiveThread ? '' : 'is-empty'}`}>
+        <div className={`amsg-container cc-threadpane ${hasActiveThread ? '' : 'is-empty'}`}>
           {(threadRef || openId === '__intel__') && (
             <div className="cc-thread-head">
               <button className="cc-back" onClick={closeThread} aria-label="Back to conversations">⌃</button>
@@ -764,7 +766,7 @@ export default function ChatConsole() {
 
             {(() => {
               let prevDay = ''
-              return thread.map(m => {
+              return thread.map((m, i) => {
                 const day = new Date(m.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
                 const showDiv = day !== prevDay
                 prevDay = day
@@ -774,7 +776,7 @@ export default function ChatConsole() {
                   <div key={m.id}>
                     {showDiv && (
                       <div style={{
-                        fontFamily: 'monospace',
+                        fontFamily: 'var(--pt-font-mono, "JetBrains Mono"), monospace',
                         fontSize: '9px',
                         letterSpacing: '0.24em',
                         textTransform: 'uppercase',
@@ -789,35 +791,25 @@ export default function ChatConsole() {
                         <span style={{ flex: 1, borderTop: '1px solid currentColor', opacity: 0.3 }} />
                       </div>
                     )}
-                    <div className={`cc-bubble is-${m.role}`}>
-                      <div className="cc-bubble-head">
-                        <span>{m.role === 'user' ? '▸ YOU' : m.role === 'assistant' ? '◂ AGENT' : m.role === 'tool' ? '⚙ TOOL' : '· NOTE'}</span>
-                        {m.role === 'tool' && m.ms != null && (
-                          <span style={{ opacity: 0.45, fontSize: '0.78em', fontFamily: 'monospace', marginLeft: '0.4em' }}>
-                            {(m.ms / 1000).toFixed(1)}s
-                          </span>
-                        )}
-                        <span style={{ marginLeft: 'auto' }}>{fmtStamp(m.timestamp)}</span>
-                        {isUserOrAssistant && <CopyButton text={m.content ?? ''} />}
-                      </div>
+                    <AsciiMsg who={messageSide(m.role, m.content) === 'system' ? 'SYS' : m.role === 'user' ? 'MICHAEL' : threadRef?.profile || newProfile || 'AGENT'} side={messageSide(m.role, m.content)} ts={fmtStamp(m.timestamp)} idx={i + 1} actions={isUserOrAssistant ? <CopyButton text={m.content ?? ''} /> : undefined}>
+                      {m.role === 'tool' && m.ms != null && <span>{(m.ms / 1000).toFixed(1)}s</span>}
                       <MessageBody m={m} />
-                    </div>
+                    </AsciiMsg>
                   </div>
                 )
               })
             })()}
             {busy && (
-              <div className="cc-bubble is-assistant">
-                <div className="cc-bubble-head"><span>◂ AGENT</span><span>…</span></div>
+              <AsciiMsg who={threadRef?.profile || newProfile || 'AGENT'} idx={thread.length + 1} ts="…">
                 <div className="cc-msg-body cc-thinking">
-                  thinking<span className="mc-boot-cursor" />
+                  thinking…
                   {elapsed > 0 && (
                     <span style={{ marginLeft: '0.5em', opacity: 0.6 }}>
                       {String(Math.floor(elapsed / 60)).padStart(2, '0')}:{String(elapsed % 60).padStart(2, '0')}
                     </span>
                   )}
                 </div>
-              </div>
+              </AsciiMsg>
             )}
             <div ref={threadBottomRef} />
           </div>
@@ -829,7 +821,8 @@ export default function ChatConsole() {
           )}
 
           {/* Composer */}
-          <form className="cc-composer" onSubmit={e => { e.preventDefault(); submit() }}>
+          <form className="cc-composer aprompt-line" onSubmit={e => { e.preventDefault(); submit() }}>
+            <AsciiPromptGutter empty={composer.length === 0} />
             <textarea
               ref={composerRef}
               value={composer}
@@ -850,8 +843,8 @@ export default function ChatConsole() {
               disabled={busy || !composable}
               aria-label="Message"
             />
-            <button type="submit" className="cc-send" disabled={busy || !canSend}>
-              {busy ? '…' : 'SEND ▸'}
+            <button type="submit" className="aprompt-send" disabled={busy || !canSend}>
+              {busy ? '[ … ]' : '[ SEND ]'}
             </button>
           </form>
         </div>

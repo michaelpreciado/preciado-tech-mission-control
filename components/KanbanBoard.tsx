@@ -1,5 +1,7 @@
 'use client'
 
+import { AsciiMsg } from '@/components/ascii-msg'
+
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type {
   HermesKanbanSnapshot,
@@ -228,7 +230,7 @@ function DetailDrawer({ id, onClose, onChanged, token = '' }: { id: string; onCl
         {error && <div className="mc-pipe-error">⚠ {error}</div>}
         {!detail && !error && <SkeletonPanel label="loading task" />}
         {detail && (
-          <div className="mc-drawer-body">
+          <AsciiMsg who="TASK" className="amsg-task">
             <div className="mc-drawer-meta">
               <span className={`mc-hk-status ${STATUS_TONE[detail.status] ?? ''}`}>{detail.status}</span>
               {detail.assignee && <span>assignee · {detail.assignee}</span>}
@@ -355,7 +357,7 @@ function DetailDrawer({ id, onClose, onChanged, token = '' }: { id: string; onCl
                 </div>
               ))}
             </div>
-          </div>
+          </AsciiMsg>
         )}
       </div>
     </div>

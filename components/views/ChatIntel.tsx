@@ -1,5 +1,7 @@
 'use client'
 
+import { AsciiMsg } from '@/components/ascii-msg'
+
 /**
  * CHAT INTEL — what fills the thread pane before you pick a conversation.
  *
@@ -107,13 +109,9 @@ function BarList({ rows, unit }: {
 
 function Panel({ title, meta, children }: { title: string; meta?: string; children: React.ReactNode }) {
   return (
-    <div className="ci-panel">
-      <div className="ci-panel-head">
-        <span>{title}</span>
-        {meta && <span className="ci-panel-meta">{meta}</span>}
-      </div>
+    <AsciiMsg who={title} ts={meta} compact className="amsg-panel">
       {children}
-    </div>
+    </AsciiMsg>
   )
 }
 
@@ -124,7 +122,7 @@ export function ChatIntel({ stats, onOpen }: {
   onOpen?: (id: string, profile: string, device: string) => void
 }) {
   return (
-    <div className="ci">
+    <div className="ci amsg-surface">
       <div className="ci-hero">
         <div className="ci-stat">
           <span className="ci-stat-val">{fmtNum(stats.totalConversations)}</span>

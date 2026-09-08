@@ -1,5 +1,7 @@
 'use client'
 
+import { AsciiMsg, AsciiPromptGutter } from '@/components/ascii-msg'
+
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { Markdown } from './Markdown'
@@ -7,7 +9,7 @@ import { Icon } from './icons'
 import { SectionRule } from './ui'
 import styles from './HomeWorkspace.module.css'
 
-type Message = { role: 'user' | 'assistant'; content: string }
+type Message = { role: 'user' | 'assistant'; content: string; timestamp?: number }
 const STORAGE = 'mc-home-chat-v1'
 // getRandomValues also works on the phone's plain-HTTP LAN connection.
 const createSession = () => `home-${Array.from(crypto.getRandomValues(new Uint8Array(16)), byte => byte.toString(16).padStart(2, '0')).join('')}`
@@ -55,7 +57,7 @@ export function HomeChat() {
     if (!message || lock.current || !ready || available === false) return
     lock.current = true
     setBusy(true); setError(''); setDraft(''); following.current = true
-    setMessages(previous => [...previous, { role: 'user', content: message }])
+    setMessages(previous => [...previous, { role: 'user', content: message, timestamp: Date.now() }])
     const controller = new AbortController()
     abort.current = controller
     try {
@@ -65,7 +67,7 @@ export function HomeChat() {
       })
       const result = await response.json()
       if (!response.ok || typeof result.reply !== 'string') throw new Error(result.error || 'The agent could not reply. Please try again.')
-      setMessages(previous => [...previous, { role: 'assistant', content: result.reply }])
+      setMessages(previous => [...previous, { role: 'assistant', content: result.reply, timestamp: Date.now() }])
     } catch (e) {
       if (controller.signal.aborted) return
       setError(e instanceof Error ? e.message : 'Unable to send your message.')
@@ -84,19 +86,20 @@ export function HomeChat() {
 
   const composerForm = (
     <form className={styles.composer} onSubmit={event => { event.preventDefault(); void send() }}>
-      {error && <p className={styles.error} role="alert">{error}</p>}
-      {available === false && <p className={styles.error}>The configured agent is unavailable. <Link href="/setup">Open Setup</Link></p>}
-      <div className={styles.inputBox}>
+      {error && <AsciiMsg who="SYS" side="system" compact><p role="alert">{error}</p></AsciiMsg>}
+      {available === false && <AsciiMsg who="SYS" side="system" compact>The configured agent is unavailable. <Link href="/setup">Open Setup</Link></AsciiMsg>}
+      <div className="aprompt-line">
+        <AsciiPromptGutter empty={draft.length === 0} />
         <textarea ref={input} value={draft} onChange={e => setDraft(e.target.value)} aria-label="Message your agent" placeholder="Message your agent…" rows={2} maxLength={4000} disabled={busy || !ready || available === false} onKeyDown={e => {
           if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void send() }
         }} />
-        <button type="submit" className={styles.send} aria-label="Send message" disabled={busy || !ready || !draft.trim() || available === false}>↑</button>
+        <button type="submit" className="aprompt-send" aria-label="Send message" disabled={busy || !ready || !draft.trim() || available === false}>[ SEND ]</button>
       </div>
       <div className={styles.composerHint}><span>Connected to your configured agent</span><span>{draft.length}/4000</span></div>
     </form>
   )
 
-  return <section className={styles.chat} data-empty={messages.length === 0} aria-label="Mission Control chat">
+  return <section className={`${styles.chat} amsg-surface amsg-container`} data-empty={messages.length === 0} aria-label="Mission Control chat">
     <header className={`${styles.chatHeader} srule-home-header`}>
       <SectionRule label="MISSION CONTROL" index={1} />
       <div><span className={styles.connection}><span className={styles.connectionDot} data-status={available === false ? 'unavailable' : available ? 'connected' : 'connecting'} aria-hidden="true" />{available === false ? 'Agent unavailable' : available ? 'Agent connected' : 'Connecting…'}</span></div>
@@ -114,8 +117,9 @@ export function HomeChat() {
         {composerForm}
         <div className={styles.suggestions}>{['Help me prioritize my tasks', 'Check on my system', 'Let’s plan something new'].map(text => <button key={text} onClick={() => { setDraft(text); input.current?.focus() }}>{text}<span aria-hidden="true">↗</span></button>)}</div>
       </div>}
-      {messages.map((message, i) => <article key={i} className={`${styles.message} ${message.role === 'user' ? styles.user : styles.assistant}`}><span className={styles.speaker}>{message.role === 'user' ? 'You' : 'Assistant'}</span><Markdown text={message.content} /></article>)}
-      {busy && <p className={styles.thinking} role="status">Working on your message…</p>}
+      {messages.map((message, i) => <AsciiMsg key={i} compact who={message.role === 'user' ? 'MICHAEL' : 'AGENT'} side={message.role === 'user' ? 'user' : 'agent'} idx={i + 1} ts={message.timestamp ? new Date(message.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : undefined}><Markdown text={message.content} /></AsciiMsg>)}
+      {busy && <AsciiMsg who="SYS" side="system" compact><p role="status">Working on your message…</p></AsciiMsg>}
+
     </div>
     {messages.length > 0 && composerForm}
   </section>
