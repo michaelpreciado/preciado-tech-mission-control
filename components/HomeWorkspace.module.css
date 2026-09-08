@@ -15,16 +15,20 @@
 .chatHeader { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 18px 24px; border-bottom: 1px solid #89c6ff0e; }
 .chatHeader > div:first-child { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 .kicker { font-size: 9px; letter-spacing: .16em; color: #7e9fbc; }
-.connection { font-size: 10px; color: #8197ab; }
-.chatActions { display: flex; align-items: center; gap: 8px; }
-.chatActions a, .chatActions button { display: grid; place-items: center; min-height: 44px; padding: 6px 10px; border-radius: 8px; border: 1px solid #87bfff25; background: #0f1b29; color: #b6cddd; font: inherit; font-size: 11px; text-decoration: none; white-space: nowrap; cursor: pointer; }
+.chatHeader .kicker { font-size: 10px; letter-spacing: .18em; color: #9fc3e4; font-weight: 500; }
+.connection { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #b7d3ea; }
+.connectionDot { width: 6px; height: 6px; flex-shrink: 0; border-radius: 50%; background: #e7b77a; }
+.connectionDot[data-status='connected'] { background: var(--pt-ok, #4ade80); }
+.connectionDot[data-status='unavailable'] { background: #ef7d7d; }
+.chatActions { display: flex; align-items: center; gap: 10px; }
+.chatActions a, .chatActions button { display: grid; place-items: center; min-height: 40px; padding: 6px 10px; border-radius: 8px; border: 1px solid #87bfff25; background: #0f1b29; color: #b6cddd; font: inherit; font-size: 12px; text-decoration: none; white-space: nowrap; cursor: pointer; }
 .messages { min-height: 0; flex: 1; overflow-y: auto; overflow-x: hidden; padding: 24px max(24px, calc((100% - 760px) / 2)); overscroll-behavior: contain; scroll-padding-block: 20px; }
 .welcome { min-height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 24px 0 40px; }
 .orb { display: grid; place-items: center; width: 66px; height: 66px; margin-bottom: 22px; font-size: 33px; color: #a8dcff; border: 1px solid #75caff40; border-radius: 50%; background: radial-gradient(circle, #286aa947, #08182c); box-shadow: 0 0 36px #3486dc15, inset 0 0 16px #76beff18; }
-.welcome h1 { font-size: clamp(23px, 3vw, 35px); line-height: 1.25; font-weight: 500; letter-spacing: -.05em; margin: 12px 0; color: #d5e7f6; }
-.welcome p { max-width: 360px; margin: 0; font-size: 12px; line-height: 1.7; color: #829bb1; }
+.welcome h1 { font-size: clamp(20px, 5.2vw, 30px); line-height: 1.25; font-weight: 500; letter-spacing: -.02em; margin: 12px 0; color: #d5e7f6; }
+.welcome p { max-width: 420px; margin: 0; font-size: 13px; line-height: 1.7; color: #8fa9c0; }
 .suggestions { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 28px; }
-.suggestions button { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 44px; padding: 10px 14px; font: inherit; font-size: 10px; border: 1px solid #8abcdf26; border-radius: 10px; background: #0b1726; color: #b1c8dc; cursor: pointer; }
+.suggestions button { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 44px; padding: 12px 16px; font: inherit; font-size: 12px; border: 1px solid #8abcdf26; border-radius: 10px; background: #0b1726; color: #b1c8dc; cursor: pointer; }
 .suggestions button:hover, .chatActions button:hover, .chatActions a:hover { background: #142a40; border-color: #8abcdf60; }
 .message { max-width: 100%; margin: 0 0 24px; padding: 14px 18px; font-size: 13px; line-height: 1.75; overflow-wrap: anywhere; }
 .message pre { max-width: 100%; overflow-x: auto; }
@@ -74,15 +78,13 @@
 @media (max-width: 600px) {
   .home :global(.mc-urgent-preview) { display: none; }
   .chatHeader { gap: 8px; }
-  .chatActions { gap: 4px; }
-  .chatActions a, .chatActions button { font-size: 10px; padding-inline: 8px; }
+  .chatActions a, .chatActions button { min-height: 38px; padding-inline: 12px; }
   .welcome { padding-block: 10px 24px; }
   .welcome h1 { max-width: 280px; }
-  .suggestions { display: grid; width: min(100%, 290px); margin-top: 22px; }
+  .suggestions { display: grid; width: min(100%, 290px); margin-top: 20px; }
   .tasks { grid-template-columns: minmax(0, 1fr); }
   .sectionHeader h2 { font-size: 18px; }
   .dials { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 10px; }
-  .composerHint { font-size: 8px; }
 }
 @media (max-height: 600px) { .chat { height: calc(100dvh - 84px); min-height: 330px; } .welcome { padding-block: 8px; } .orb { display: none; } .suggestions { margin-top: 12px; } }
 
@@ -98,4 +100,5 @@
 @media (max-width: 600px) {
   .chat[data-empty='true'] .messages { padding: 16px; }
   .welcome .composer { padding-top: 20px; }
+  .welcome .suggestions { margin-top: 20px; }
 }
