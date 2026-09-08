@@ -1,0 +1,48 @@
+.overview { padding: 24px; color: var(--pt-text); }
+.heading { display: flex; justify-content: space-between; gap: 24px; align-items: center; margin-bottom: 28px; }
+.eyebrow { font-size: 10px; letter-spacing: .16em; color: var(--pt-neon-bright); }
+.heading h2 { font-size: 24px; margin: 8px 0; }
+.heading p { font-size: 12px; margin: 0; opacity: .65; }
+.metrics { display: flex; gap: 28px; font-size: 11px; }
+.metrics strong { display: block; font-size: 26px; font-weight: 500; color: var(--pt-text-high); }
+.network { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 40px; align-items: center; margin-bottom: 32px; }
+.overview button { font: inherit; color: inherit; cursor: pointer; }
+.hub, .agent { border: 1px solid #778ba440; border-radius: 12px; background: #718ab509; text-align: left; }
+.hub { padding: 22px 18px; position: relative; display: grid; gap: 12px; }
+.hub > strong { font-size: 19px; }
+.hub > span:last-child { font-size: 10px; opacity: .7; }
+.hub::after { content: ''; position: absolute; left: 100%; top: 50%; width: 41px; height: 1px; background: #778ba470; }
+.agents { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; border-left: 1px solid #778ba470; padding-left: 22px; }
+.agent { padding: 18px; position: relative; min-width: 0; }
+.agent::before { content: ''; position: absolute; right: 100%; top: 50%; width: 23px; height: 1px; background: #778ba470; }
+.overview button:hover { border-color: var(--pt-neon-bright); background-color: #718ab518; }
+.overview button:focus-visible { outline: 2px solid var(--pt-neon-bright); outline-offset: 3px; }
+.overview button[aria-pressed=true] { border-color: var(--pt-neon-bright); background: #718ab51c; }
+.agentTitle { display: flex; align-items: center; gap: 10px; }
+.agentTitle strong { overflow-wrap: anywhere; font-size: 13px; }
+.avatar { display: grid; place-items: center; flex-shrink: 0; width: 32px; height: 32px; border-radius: 8px; background: #718ab522; font-size: 11px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: #7f8a9b; margin-left: auto; flex-shrink: 0; }
+.dot[data-running=true] { background: #9cdd72; box-shadow: 0 0 10px #9cdd7240; }
+.workload, .agentFoot { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; margin-top: 18px; }
+.workload > span { color: #9cdd72; }
+.track { height: 3px; background: #778ba425; display: block; margin-top: 10px; overflow: hidden; }
+.track > span { height: 100%; display: block; background: #9cdd72; }
+.agentFoot { font-size: 9px; opacity: .7; }
+.jobsHeading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.jobsHeading h3 { font-size: 13px; margin: 0; }
+.jobsHeading h3 span { opacity: .5; margin-left: 8px; }
+.jobsHeading button { background: transparent; border: 1px solid #778ba440; padding: 6px 10px; border-radius: 6px; font-size: 11px; }
+.jobs { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.job { border: 1px solid #778ba430; border-radius: 10px; overflow: hidden; background: #718ab505; min-width: 0; }
+.openTask { border: 0; background: transparent; padding: 18px; display: flex; flex-direction: column; align-items: flex-start; width: 100%; height: auto; text-align: left; gap: 12px; }
+.openTask strong { font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+.status { font-size: 9px; text-transform: uppercase; letter-spacing: .08em; padding: 4px 7px; border-radius: 4px; background: #778ba420; }
+.status[data-tone=running] { color: #b8ed96; background: #9cdd7215; }
+.status[data-tone=attention] { color: #ffbe8b; background: #ffbe8b15; }
+.meta, .inspect { font-size: 10px; opacity: .65; overflow-wrap: anywhere; }
+.inspect { color: var(--pt-neon-bright); opacity: 1; }
+.parents { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 18px; border-top: 1px solid #778ba425; font-size: 10px; align-items: center; }
+.parents > span { opacity: .6; }
+.parents button { text-align: left; overflow-wrap: anywhere; background: #718ab512; border: 1px solid #778ba425; border-radius: 4px; padding: 4px 7px; max-width: 100%; }
+.empty { padding: 30px 0; opacity: .65; font-size: 12px; }
+@media (max-width: 820px) { .overview { padding: 16px; } .heading { align-items: flex-start; flex-direction: column; } .network { grid-template-columns: 1fr; gap: 16px; } .hub::after, .agent::before { display: none; } .agents { border: 0; padding: 0; } .jobs { grid-template-columns: 1fr; } .metrics { gap: 22px; } }

@@ -9,6 +9,7 @@ import type {
 } from '@/lib/types'
 import { Button, SkeletonPanel, fmtDate } from './ui'
 import { RelativeTime } from './RelativeTime'
+import { TaskOverview } from './TaskOverview'
 
 const POLL_MS = 15_000
 const SHOW_DONE_LS_KEY = 'mc-kanban:showDone'
@@ -686,6 +687,7 @@ type ColumnDef = { status: string; label: string; glyph: string; tone: string }
 /* ── Main board ────────────────────────────────────────────────── */
 
 export function KanbanBoard() {
+  const [view, setView] = useState<'overview' | 'board'>('overview')
   const [snap, setSnap] = useState<HermesKanbanSnapshot | null>(null)
   const [openId, setOpenId] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
@@ -891,6 +893,8 @@ export function KanbanBoard() {
             ))}
           </div>
           <div className="mc-kb-toolbar">
+            <Button variant="ghost" active={view === 'overview'} onClick={() => setView('overview')}>overview</Button>
+            <Button variant="ghost" active={view === 'board'} onClick={() => setView('board')}>board</Button>
             {hasDoneWork && (
               <Button variant="ghost" active={showDone} onClick={toggleShowDone}>
                 {showDone ? 'hide done' : `show ${doneCount} done · ${archivedCount} archived`}
@@ -911,7 +915,7 @@ export function KanbanBoard() {
           onFocusSearch={() => setFilter('all')}
         />
 
-        <div className="mc-kb-viewport">
+        {view === 'overview' ? <TaskOverview tasks={visible.filter(t => showDone || !UI_HIDDEN_STATUSES.has(t.status))} byId={byId} onOpen={setOpenId} /> : <div className="mc-kb-viewport">
           <div className="mc-kb-board v4-group">
             {cols.length === 0 && leftoverStatuses.length === 0 && (
               <div className="mc-pipe-empty">— no tasks match —</div>
@@ -925,7 +929,7 @@ export function KanbanBoard() {
                 dnd={isDesktop} drag={drag} onCardDragStart={setDrag} onCardDragEnd={() => setDrag(null)} onDropToStatus={moveTask} />
             ))}
           </div>
-        </div>
+        </div>}
       </div>
       {openId && <DetailDrawer key={openId} id={openId} onClose={() => setOpenId(null)} onChanged={refresh} />}
       {showCreate && <CreateModal sources={sources} onClose={() => setShowCreate(false)} onCreated={onCreated} />}
