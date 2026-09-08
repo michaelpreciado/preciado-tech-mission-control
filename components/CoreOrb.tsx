@@ -4,6 +4,7 @@ import { Component, useCallback, useEffect, useMemo, useRef, useState, type Erro
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { Icon } from './icons'
+import { createReactorGeometry, createReactorMaterial } from './threed/reactor-core'
 import { useOrbActivity } from './LiveDataProvider'
 import { useUiSettings } from './ui-settings'
 import OrbitalKanbanRing from './OrbitalKanbanRing'
@@ -94,32 +95,6 @@ function particleGeometry(): THREE.BufferGeometry {
   return geometry
 }
 
-const vertexShader = /* glsl */ `
-  varying vec3 vNormal;
-  varying vec3 vView;
-  void main() {
-    vec4 mv = modelViewMatrix * vec4(position, 1.0);
-    vNormal = normalize(normalMatrix * normal);
-    vView = normalize(-mv.xyz);
-    gl_Position = projectionMatrix * mv;
-  }
-`
-
-const fragmentShader = /* glsl */ `
-  uniform vec3 uColor;
-  uniform float uIntensity;
-  uniform float uTime;
-  uniform float uFlicker;
-  varying vec3 vNormal;
-  varying vec3 vView;
-  void main() {
-    float rim = pow(1.0 - max(dot(vNormal, vView), 0.0), 2.2);
-    float facet = 0.92 + 0.08 * sin((vNormal.x + vNormal.y * 1.7) * 18.0 + uTime * uFlicker);
-    float energy = (0.24 + rim * 1.15) * uIntensity * facet;
-    gl_FragColor = vec4(uColor * energy, min(0.98, 0.38 + rim * 0.58));
-  }
-`
-
 function OrbScene({ visual, staticMotion }: { visual: VisualState; staticMotion: boolean }) {
   const ring = useRef<THREE.Mesh>(null)
   const particles = useRef<THREE.Points>(null)
@@ -138,14 +113,10 @@ function OrbScene({ visual, staticMotion }: { visual: VisualState; staticMotion:
     uTime: { value: 0 },
     uFlicker: { value: 0 },
   }), [blue])
-  const coreMaterial = useMemo(() => new THREE.ShaderMaterial({
-    uniforms,
-    vertexShader,
-    fragmentShader,
-    transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-  }), [uniforms])
+  const coreGeometry = useMemo(createReactorGeometry, [])
+  const coreMaterial = useMemo(() => createReactorMaterial(uniforms), [uniforms])
+
+  useEffect(() => () => coreGeometry.dispose(), [coreGeometry])
 
   useEffect(() => () => geometry.dispose(), [geometry])
   useEffect(() => () => coreMaterial.dispose(), [coreMaterial])
@@ -186,7 +157,7 @@ function OrbScene({ visual, staticMotion }: { visual: VisualState; staticMotion:
   return (
     <>
       <mesh scale={0.82}>
-        <sphereGeometry args={[1, 16, 12]} />
+        <primitive object={coreGeometry} attach="geometry" />
         <primitive object={coreMaterial} attach="material" />
       </mesh>
       <mesh ref={ring} rotation={[1.18, 0.28, 0]} scale={1.1}>
@@ -324,6 +295,10 @@ function OrbRuntime({ placement }: { placement: Placement }) {
             {showOrbit && <PipelineOrbit staticMotion={staticMotion} visible={visible} />}
           </Canvas>
         </WebGLErrorBoundary>
+      )}
+      {(!webglAvailable || webglFailed) && (
+        <img src="/visuals/reactor-core-poster.svg" alt="" draggable={false}
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} />
       )}
       <span className="mc-core-orb-mark"><Icon name="brand" size={placement === 'desktop' ? 15 : 11} /></span>
     </div>
