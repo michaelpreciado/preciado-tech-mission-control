@@ -117,13 +117,15 @@ function cardTone(status: string): string {
   return ''
 }
 
-function DetailDrawer({ id, onClose, onChanged }: { id: string; onClose: () => void; onChanged: () => void }) {
+function DetailDrawer({ id, onClose, onChanged, token = '' }: { id: string; onClose: () => void; onChanged: () => void; token?: string }) {
   const [detail, setDetail] = useState<HermesTaskDetail | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [msg, setMsg] = useState('')
   const [actErr, setActErr] = useState<string | null>(null)
   const [dispatchInfo, setDispatchInfo] = useState<string | null>(null)
+  const [agentKind, setAgentKind] = useState('codex')
+  const [agentModel, setAgentModel] = useState('')
 
   const load = useCallback(async () => {
     try {
@@ -164,11 +166,15 @@ function DetailDrawer({ id, onClose, onChanged }: { id: string; onClose: () => v
     try {
       const res = await fetch(`/api/kanban/${encodeURIComponent(id)}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ action, ...payload }),
       })
       const j = await res.json()
       if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`)
+      if (action === 'dispatch-agent') {
+        setDispatchInfo(`Herdr ${agentKind} · pane ${j.target}${j.warning ? ` · ${j.warning}` : ''}`)
+        window.dispatchEvent(new Event('mc-herdr-refresh'))
+      }
       setMsg('')
       await load()
       onChanged()
@@ -177,7 +183,7 @@ function DetailDrawer({ id, onClose, onChanged }: { id: string; onClose: () => v
     } finally {
       setBusy(null)
     }
-  }, [id, load, onChanged])
+  }, [id, load, onChanged, token, agentKind])
 
   const moveTargets = detail ? (MOVE_TARGETS[detail.status] ?? []) : []
 
@@ -188,7 +194,7 @@ function DetailDrawer({ id, onClose, onChanged }: { id: string; onClose: () => v
     try {
       const res = await fetch(`/api/kanban/${encodeURIComponent(id)}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ action: 'dispatch-claude' }),
       })
       const j = await res.json()
@@ -203,7 +209,7 @@ function DetailDrawer({ id, onClose, onChanged }: { id: string; onClose: () => v
     } finally {
       setBusy(null)
     }
-  }, [id, load, onChanged])
+  }, [id, load, onChanged, token])
 
   return (
     <div className="mc-drawer-overlay" onClick={onClose}>
@@ -265,6 +271,14 @@ function DetailDrawer({ id, onClose, onChanged }: { id: string; onClose: () => v
                 )}
               </div>
               {dispatchInfo && <div className="mc-hk-run-summary" role="status">✦ {dispatchInfo}</div>}
+              {DISPATCH_STATUSES.has(detail.status) && <div className="mc-herdr-dispatch">
+                <label>Run in<select value={agentKind} onChange={e => { setAgentKind(e.target.value); setAgentModel('') }} disabled={!!busy}>
+                  <option value="codex">Codex</option><option value="claude">Claude</option><option value="opencode">OpenCode</option>
+                </select></label>
+                <label>Model (optional)<input value={agentModel} onChange={e => setAgentModel(e.target.value)} placeholder={agentKind === 'codex' ? 'gpt-6-astra' : 'Agent default'} disabled={!!busy} maxLength={160} /></label>
+                <Button variant="primary" disabled={!!busy || !detail.workspacePath} loading={busy === 'dispatch-agent'} onClick={() => void act('dispatch-agent', { kind: agentKind, model: agentModel || undefined })}>Run task in Herdr</Button>
+                {!detail.workspacePath && <span>Assign a task workspace before starting an agent.</span>}
+              </div>}
               {actErr && <div className="mc-kb-acterr" role="alert">⚠ {actErr}</div>}
             </div>
 
@@ -405,10 +419,11 @@ const PRIORITY_OPTIONS = [
   { value: '20', label: '20 · urgent' },
 ]
 
-function CreateModal({ sources, onClose, onCreated }: {
+function CreateModal({ sources, onClose, onCreated, token = '' }: {
   sources: KanSource[]
   onClose: () => void
   onCreated: (id?: string) => void | Promise<void>
+  token?: string
 }) {
   const [form, setForm] = useState({ title: '', body: '', assignee: '', assigneeOther: '', origin: '', priority: '0' })
   const [busy, setBusy] = useState(false)
@@ -431,7 +446,7 @@ function CreateModal({ sources, onClose, onCreated }: {
     try {
       const res = await fetch('/api/kanban', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({
           title: form.title.trim(),
           body: form.body.trim() || undefined,
@@ -449,7 +464,7 @@ function CreateModal({ sources, onClose, onCreated }: {
     } finally {
       setBusy(false)
     }
-  }, [form, onClose, onCreated])
+  }, [form, onClose, onCreated, token])
 
   return (
     <div className="mc-kb-modal-overlay" onClick={onClose}>
@@ -686,7 +701,7 @@ type ColumnDef = { status: string; label: string; glyph: string; tone: string }
 
 /* ── Main board ────────────────────────────────────────────────── */
 
-export function KanbanBoard() {
+export function KanbanBoard({ token = '' }: { token?: string }) {
   const [view, setView] = useState<'overview' | 'board'>('overview')
   const [snap, setSnap] = useState<HermesKanbanSnapshot | null>(null)
   const [openId, setOpenId] = useState<string | null>(null)
@@ -817,7 +832,7 @@ export function KanbanBoard() {
           : { action: 'set-status', status: to }
       const res = await fetch(`/api/kanban/${encodeURIComponent(info.id)}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify(body),
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -826,7 +841,7 @@ export function KanbanBoard() {
     } finally {
       await refresh()
     }
-  }, [drag, refresh])
+  }, [drag, refresh, token])
 
   if (!snap) return <SkeletonPanel label="reading kanban boards" />
 
@@ -862,6 +877,7 @@ export function KanbanBoard() {
   const cols = COLUMNS
     .filter(c => presentStatuses.has(c.status))
     .filter(c => showDone || !UI_HIDDEN_STATUSES.has(c.status))
+    .sort((a, b) => Number(ATTENTION_STATUSES.has(b.status)) - Number(ATTENTION_STATUSES.has(a.status)))
   const leftoverStatuses = [...presentStatuses].filter(s => !columnFor(s) && !UI_HIDDEN_STATUSES.has(s))
   const doneCount = byStatus.get('done')?.length ?? 0
   const archivedCount = byStatus.get('archived')?.length ?? 0
@@ -931,8 +947,8 @@ export function KanbanBoard() {
           </div>
         </div>}
       </div>
-      {openId && <DetailDrawer key={openId} id={openId} onClose={() => setOpenId(null)} onChanged={refresh} />}
-      {showCreate && <CreateModal sources={sources} onClose={() => setShowCreate(false)} onCreated={onCreated} />}
+      {openId && <DetailDrawer key={openId} id={openId} token={token} onClose={() => setOpenId(null)} onChanged={refresh} />}
+      {showCreate && <CreateModal sources={sources} token={token} onClose={() => setShowCreate(false)} onCreated={onCreated} />}
     </>
   )
 }

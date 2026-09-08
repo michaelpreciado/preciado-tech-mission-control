@@ -1,0 +1,12 @@
+.mc-command-deck { display: grid; gap: 16px; align-items: start; min-width: 0; }
+.mc-command-tasks { min-width: 0; overflow: hidden; }
+.mc-command-tasks .mc-kb-meta { flex-wrap: wrap; }
+.mc-command-tasks .mc-kb-toolbar { flex-wrap: wrap; flex-shrink: 1; min-width: 0; }
+.mc-command-tasks .mc-kb-src { white-space: normal; flex-wrap: wrap; }
+.mc-herdr-dispatch { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; margin-top: 16px; }
+.mc-herdr-dispatch label { display: grid; gap: 6px; font-size: 11px; min-width: 0; }
+.mc-herdr-dispatch input, .mc-herdr-dispatch select { min-height: 44px; background: var(--pt-bg); color: var(--pt-text); border: 1px solid var(--pt-border); border-radius: 6px; padding: 8px; max-width: 100%; }
+.mc-herdr-dispatch > span { font-size: 11px; color: var(--pt-text-mute); }
+@media (min-width: 1000px) { .mc-command-deck { grid-template-columns: minmax(280px, 1fr) minmax(0, 2fr); } }
+@media (max-width: 999px) { .mc-command-tasks .mc-kb-viewport { scroll-snap-type: x proximity; } .mc-command-tasks .mc-kb-col { scroll-snap-align: start; } .mc-command-tasks .mc-kb-toolbar button, .mc-command-tasks .mc-kb-actions button { min-height: 44px; } }
+@media (max-width: 820px) { .mc-command-tasks .mc-kb-board { display: flex; flex-direction: row; flex-wrap: nowrap; overflow-x: auto; scroll-snap-type: x proximity; } .mc-command-tasks .mc-kb-col { flex: 0 0 min(76vw, 280px); width: auto; } }

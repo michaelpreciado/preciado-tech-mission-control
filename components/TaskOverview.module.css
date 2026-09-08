@@ -1,4 +1,4 @@
-.overview { padding: 24px; color: var(--pt-text); }
+.overview { padding: 24px; color: var(--pt-text); container-type: inline-size; }
 .heading { display: flex; justify-content: space-between; gap: 24px; align-items: center; margin-bottom: 28px; }
 .eyebrow { font-size: 10px; letter-spacing: .16em; color: var(--pt-neon-bright); }
 .heading h2 { font-size: 24px; margin: 8px 0; }
@@ -46,3 +46,4 @@
 .parents button { text-align: left; overflow-wrap: anywhere; background: #718ab512; border: 1px solid #778ba425; border-radius: 4px; padding: 4px 7px; max-width: 100%; }
 .empty { padding: 30px 0; opacity: .65; font-size: 12px; }
 @media (max-width: 820px) { .overview { padding: 16px; } .heading { align-items: flex-start; flex-direction: column; } .network { grid-template-columns: 1fr; gap: 16px; } .hub::after, .agent::before { display: none; } .agents { border: 0; padding: 0; } .jobs { grid-template-columns: 1fr; } .metrics { gap: 22px; } }
+@container (max-width: 640px) { .heading { align-items: flex-start; flex-direction: column; } .network { grid-template-columns: 1fr; gap: 16px; } .hub::after, .agent::before { display: none; } .agents { border: 0; padding: 0; } .jobs { grid-template-columns: 1fr; } .metrics { flex-wrap: wrap; gap: 20px; } }

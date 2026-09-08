@@ -3,6 +3,10 @@ import { assertSameOrigin, getClientIpFromHeaders, isTrustedIp, trustedRangesFro
 import { getTaskDetail } from '@/lib/hermes-kanban'
 import { completeTask, commentTask, unblockTask, setStatusTask } from '@/lib/kanban-actions'
 import { dispatchClaude } from '@/lib/kanban-dispatch'
+import { dispatchAgent } from '@/lib/herdr-dispatch'
+import { HerdrError } from '@/lib/herdr-bridge'
+import { herdrGate } from '@/lib/herdr-auth'
+import { readHerdrRequest } from '@/lib/herdr-request'
 import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -37,8 +41,14 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     const detail = getTaskDetail(id)
     const origin = detail?.origin
 
-    const b = await req.json()
+    const b = await readHerdrRequest(req)
     const action = String(b?.action ?? '')
+
+    if (action === 'dispatch-agent') {
+      const denied = herdrGate(req, true)
+      if (denied) return NextResponse.json({ error: denied.error }, { status: denied.status })
+      return NextResponse.json(await dispatchAgent(id, detail, b), { headers: { 'Cache-Control': 'no-store' } })
+    }
 
     // Dispatch a headless Claude Code worker into the task's own workspace.
     // Returns immediately with the worker pid + log path.
@@ -71,6 +81,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     if (!out.ok) return NextResponse.json({ error: out.error }, { status: 500 })
     return NextResponse.json({ ok: true, result: out.result }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (err) {
+    if (err instanceof HerdrError) return NextResponse.json({ error: err.message, target: err.target }, { status: err.status, headers: { 'Cache-Control': 'no-store' } })
     logger.error('kanban/action', err)
     return NextResponse.json({ error: 'action failed' }, { status: 500 })
   }
