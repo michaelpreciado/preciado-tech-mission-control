@@ -1,35 +1,17 @@
 'use client'
 
-import { AsciiConsole, AsciiHorizon } from './vf/Ascii'
-
-
+import { AsciiHorizon } from './vf/Ascii'
 import { useEffect } from 'react'
+import { FaultConsole } from '@/components/boot/FaultConsole'
 
-export default function Error({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string }
-  reset: () => void
-}) {
-  useEffect(() => {
-    console.error('Route error:', error)
-  }, [error])
-
+export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  useEffect(() => { console.error('Route error:', error) }, [error])
   return (
-    <div className="pt-fault-screen">
-      <div className="pt-fault-panel">
-        <AsciiConsole state="FAULT" />
-        <AsciiHorizon />
-        <h2 className="pt-fault-title">System Fault Detected</h2>
-        <p className="pt-fault-copy">
-          A panel failed to render. This may be a transient issue.
-        </p>
-        {error.digest && <p className="pt-fault-ref">ref: {error.digest}</p>}
-        <button onClick={reset} className="pt-fault-btn">
-          Retry Connection
-        </button>
-      </div>
-    </div>
+    <FaultConsole kind="error">
+      <AsciiHorizon />
+      <p>A panel failed to render. Reconnect to retry.</p>
+      {error.digest && <p className="boot-reference">ref: {error.digest}</p>}
+      <button onClick={reset} className="boot-action">[ RETRY CONNECTION → ]</button>
+    </FaultConsole>
   )
 }
