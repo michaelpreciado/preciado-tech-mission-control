@@ -105,6 +105,33 @@ export function SectionHead({ label, pre, post }: { label: string; pre?: React.R
   )
 }
 
+/** Adds inert corner marks to a DOM surface or Window without a layout wrapper. */
+export function TFrame({ children }: {
+  children: React.ReactElement<{ className?: string; children?: React.ReactNode; frameCorners?: React.ReactNode }>
+}) {
+  const className = [children.props.className, 'tframe-surface'].filter(Boolean).join(' ')
+  const corners = ['tl', 'tr', 'bl', 'br'].map(corner => (
+    <span key={`tframe-${corner}`} className={`tframe-tick tframe-${corner}`} aria-hidden="true" />
+  ))
+  // Window keeps decorations outside its scroll body when floated into a portal.
+  if (children.type === Window) return React.cloneElement(children, { className, frameCorners: corners })
+  return React.cloneElement(children, { className }, children.props.children, ...corners)
+}
+
+export function SectionRule({ label, index = 1, post, id }: {
+  label: string; index?: number; post?: React.ReactNode; id?: string
+}) {
+  return <div className="srule-section">
+    <div className="srule-line">
+      <span className="srule-stroke srule-lead" aria-hidden="true">{'─'.repeat(8)}</span>
+      <h2 className="srule-label" id={id}>{label}</h2>
+      <span className="srule-stroke" aria-hidden="true">{'─'.repeat(256)}</span>
+      <span className="srule-index" aria-hidden="true">[{String(index).padStart(2, '0')}]</span>
+    </div>
+    {post && <div className="srule-meta">{post}</div>}
+  </div>
+}
+
 /* ── Floating window support ──────────────────────────────
    Every panel can pop out into a draggable, resizable window layered over
    the deck (desktop only). Floats portal to <body> because the themed
@@ -128,12 +155,14 @@ function useDrag(onMove: (dx: number, dy: number) => void) {
   return { onPointerDown, onPointerMove, onPointerUp }
 }
 
-export function Window({ tag, title, meta, children, style }: {
+export function Window({ tag, title, meta, children, style, className = '', frameCorners }: {
   tag?: string
   title: string
   meta?: React.ReactNode
   children: React.ReactNode
   style?: React.CSSProperties
+  className?: string
+  frameCorners?: React.ReactNode
 }) {
   const [float, setFloat] = useState<FloatRect | null>(null)
   const [z, setZ] = useState(0)
@@ -217,10 +246,11 @@ export function Window({ tag, title, meta, children, style }: {
         </div>
         {createPortal(
           <div
-            className="mc-window is-floating"
+            className={`mc-window is-floating ${className}`}
             style={{ left: float.x, top: float.y, width: float.w, height: float.h, zIndex: z }}
             onPointerDown={() => setZ(++topZ)}
           >
+            {frameCorners}
             {head(true)}
             <div className="mc-window-float-body">{children}</div>
             <AsciiPanelTrim />
@@ -233,7 +263,8 @@ export function Window({ tag, title, meta, children, style }: {
   }
 
   return (
-    <div className="mc-window" style={style}>
+    <div className={`mc-window ${className}`} style={style}>
+      {frameCorners}
       {head(false)}
       {children}
       <AsciiPanelTrim />

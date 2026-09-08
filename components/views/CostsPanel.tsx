@@ -4,7 +4,7 @@ import { AsciiDivider } from '@/app/vf/Ascii'
 
 import { useMemo, useState, type ReactNode } from 'react'
 import { useLiveData } from '../LiveDataProvider'
-import { SectionHead, Window, EmptyTerminal, SkeletonPanel } from '../ui'
+import { TFrame, SectionRule, Window, EmptyTerminal, SkeletonPanel } from '../ui'
 import dynamic from 'next/dynamic'
 import { Heatmap } from '../Viz'
 import { AsciiSpark, AsciiHeat } from '../ascii-viz'
@@ -94,7 +94,7 @@ function Stat({ value, label, sub, color = 'var(--pt-text-high)', size = 'md', g
 }) {
   const fs = size === 'hero' ? 36 : size === 'lg' ? 23 : size === 'sm' ? 14 : 17
   return (
-    <div className="cp-stat">
+    <TFrame><div className="cp-stat">
       <div style={{
         fontSize: fs, fontWeight: 700, lineHeight: 1.05,
         fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums',
@@ -103,7 +103,7 @@ function Stat({ value, label, sub, color = 'var(--pt-text-high)', size = 'md', g
       }}>{value}</div>
       <div style={{ fontSize: 7, color: 'var(--pt-text-mute)', letterSpacing: '0.18em', marginTop: 5, whiteSpace: 'nowrap' }}>{label}</div>
       {sub != null && <div style={{ fontSize: 8.5, color: 'var(--pt-text-dim)', marginTop: 3, fontFamily: 'var(--font-mono)' }}>{sub}</div>}
-    </div>
+    </div></TFrame>
   )
 }
 
@@ -700,7 +700,7 @@ function LocalAI({ costs }: { costs: CostDashboard }) {
   return (
     <>
       <AsciiDivider />
-      <SectionHead label="LOCAL AI · OLLAMA" />
+      <SectionRule index={7} label="LOCAL AI · OLLAMA" />
       <Window tag="◆" title="LOCAL INFERENCE · WHAT THE RIG DID" meta={`${lc.totalRequests.toLocaleString()} requests all-time`}>
         <div style={{ padding: '14px 16px 12px', display: 'flex', gap: 28, flexWrap: 'wrap' }}>
           <Stat value={tok(lc.totalTokens)} label="TOKENS ALL-TIME" size="hero" color={CATEGORICAL[2]}
@@ -770,7 +770,7 @@ function MonthlyBilling({ costs }: { costs: CostDashboard }) {
   return (
     <>
       <AsciiDivider />
-      <SectionHead label="BILLING HISTORY" />
+      <SectionRule index={2} label="BILLING HISTORY" />
       <div className="mc-viz-grid" style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))' }}>
         {billing.map(b => {
           const real = b.planAmount + (b.openRouterUsd ?? 0)
@@ -844,7 +844,7 @@ function SubscriptionTools({ costs }: { costs: CostDashboard }) {
   return (
     <>
       <AsciiDivider />
-      <SectionHead label="SUBSCRIPTION TOOLS — USE & KEEP" />
+      <SectionRule index={3} label="SUBSCRIPTION TOOLS — USE & KEEP" />
       <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))' }}>
         {usage.map(tool => {
           const hasUsage = !!tool.data?.models?.length || tool.windowTokens > 0
@@ -901,7 +901,7 @@ function FairUseGuard({ costs }: { costs: CostDashboard }) {
   return (
     <>
       <AsciiDivider />
-      <SectionHead label="FAIR-USE GUARD" />
+      <SectionRule index={4} label="FAIR-USE GUARD" />
       <div className="cp-fairuse" title={billing.fairUse.note}>
         <div className="cp-fairuse-main">
           <div className="cp-plan-band-head">
@@ -1015,7 +1015,7 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
   return (
     <div className="cp-panel v4-group">
       <AsciiDivider />
-      <SectionHead label="WHAT IT COST" />
+      <SectionRule index={1} label="WHAT IT COST" />
       <ActualSpend costs={costs} />
       <MeteredSpend costs={costs} />
       <MonthlyBilling costs={costs} />
@@ -1023,14 +1023,14 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
       <FairUseGuard costs={costs} />
 
       <AsciiDivider />
-      <SectionHead label="WHAT IT DID" />
+      <SectionRule index={5} label="WHAT IT DID" />
       <Activity costs={costs} modeOf={view.modeOf} />
       <ModeBreakdown costs={costs} />
       <SourceSplit costs={costs} />
       <CodexUsage costs={costs} />
 
       <AsciiDivider />
-      <SectionHead label="MODELS · RANKED ON BILLABLE TOKENS" />
+      <SectionRule index={6} label="MODELS · RANKED ON BILLABLE TOKENS" />
       {view.metered.length > 0 && (
         <ModelTable tag="◆" title="METERED · PAID PER TOKEN" rows={view.metered} windowDays={view.windowDays} showCost
           meta={`${money(costs.meteredCostUsd)} logged`}
@@ -1061,7 +1061,7 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
       <LocalAI costs={costs} />
 
       <AsciiDivider />
-      <SectionHead label="BURN LANDSCAPE · LAST 14 DAYS" />
+      <SectionRule index={8} label="BURN LANDSCAPE · LAST 14 DAYS" />
       <Window tag="▦" title="DAILY BURN · BY BILLING MODE" meta="tokens processed per day">
         <BurnLandscape costs={costs} />
         <Note>

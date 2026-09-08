@@ -8194,3 +8194,43 @@ body:has([role="dialog"], dialog[open]) .boot-overlay { visibility: hidden; }
 .asciiviz-inset { margin: 10px 16px; overflow-x: auto; }
 .asciiviz-repo { margin-top: 5px; white-space: nowrap; }
 .asciiviz-repo-name { display: inline-block; width: 24ch; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
+/* W2-K: additive terminal ticks; the host retains its glass border/layout. */
+.tframe-surface { position: relative; }
+.tframe-surface.cp-stat { padding: 12px; }
+.tframe-surface > .tframe-tick {
+  position: absolute;
+  box-sizing: border-box;
+  width: 6px;
+  height: 6px;
+  border: 0 solid #9db4ec;
+  opacity: .55;
+  pointer-events: none;
+  user-select: none;
+  z-index: 2;
+  transition: opacity 150ms ease;
+}
+.tframe-surface > .tframe-tl { top: 6px; left: 6px; border-top-width: 1px; border-left-width: 1px; }
+.tframe-surface > .tframe-tr { top: 6px; right: 6px; border-top-width: 1px; border-right-width: 1px; }
+.tframe-surface > .tframe-bl { bottom: 6px; left: 6px; border-bottom-width: 1px; border-left-width: 1px; }
+.tframe-surface > .tframe-br { bottom: 6px; right: 6px; border-bottom-width: 1px; border-right-width: 1px; }
+.tframe-surface:hover > .tframe-tick,
+.tframe-surface:focus-within > .tframe-tick { opacity: .85; }
+.tframe-surface > .cyber-panel-trim { color: rgb(157 180 236 / .30); opacity: 1; }
+
+.srule-section { width: 100%; min-width: 0; margin-block: 16px 12px; }
+.srule-line { display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0; font-family: var(--pt-font-mono, monospace); }
+.srule-stroke { flex: 1 1 0; min-width: 0; overflow: hidden; white-space: nowrap; color: rgb(157 180 236 / .30); font-size: 11px; letter-spacing: 0; }
+.srule-lead { flex: 0 1 24px; }
+.srule-label { flex: 0 1 auto; min-width: 0; margin: 0; padding: 3px 6px; background: var(--pt-surface); color: rgb(157 180 236 / .55); font: 500 10px/1.5 var(--pt-font-mono, monospace); letter-spacing: .12em; text-transform: uppercase; overflow-wrap: anywhere; }
+.srule-index { flex: 0 0 auto; margin-left: auto; color: rgb(157 180 236 / .55); font-size: 10px; }
+.srule-meta { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 6px; font: 11px/1.5 var(--pt-font-mono, monospace); color: var(--pt-text-dim); }
+.srule-home-header { flex-wrap: wrap; border-bottom: 0; }
+.srule-home-header > .srule-section:first-child { display: block; flex-basis: 100%; margin: 0; }
+/* Override legacy motion-gated visibility only on these static separators. */
+.srule-divider .v4-divider { align-items: center; gap: 12px; margin-block: 16px 8px; font: 400 11px/1 var(--pt-font-mono, monospace); display: flex !important; color: rgb(157 180 236 / .30) !important; opacity: 1 !important; animation: none !important; }
+.srule-divider .v4-divider > span { color: rgb(157 180 236 / .30) !important; }
+.srule-divider .v4-divider::before,
+.srule-divider .v4-divider::after { content: ""; height: 1px; flex: 1; background: rgb(157 180 236 / .30) !important; }
+@media (prefers-reduced-motion: reduce) {
+  .tframe-surface > .tframe-tick { transition: none; }
+}
