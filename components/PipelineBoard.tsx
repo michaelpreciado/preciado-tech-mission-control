@@ -205,6 +205,7 @@ export function PipelineBoard() {
   return (
     <>
       {error && <div className="mc-pipe-error">⚠ pipeline store unreachable — {error}</div>}
+      <div className="mc-kb-sync" role="status">{data ? `${data.leadsTotal} leads · updated ${fmtDate(data.generatedAt)}` : 'No snapshot'}{error ? ' · STALE' : ''}</div>
       <div className="mc-pipeline v4-group">
         {COLUMNS.map(col => {
           const items = leads.filter(l => l.stage === col.stage)

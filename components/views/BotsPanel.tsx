@@ -750,7 +750,7 @@ export function BotsPanel() {
           </span>
         }
       />
-      <div
+      <div className="w2l-bot-actions"
         style={{
           display: 'flex',
           justifyContent: 'flex-end',

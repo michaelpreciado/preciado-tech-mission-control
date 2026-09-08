@@ -113,7 +113,7 @@ export function GithubPanel() {
       {heatData.length > 0 && (
         <Window tag="▦" title="GITHUB · CONTRIBUTIONS"
           meta={<>
-            <span className="mc-gh-live"><span className="mc-led green" /> LIVE{gh.syncedAt ? ` · synced ${fmtDate(gh.syncedAt)}` : ''}</span>
+            <span className="mc-gh-live"><span className={`mc-led ${ghSyncStale ? 'amber' : gh.syncedAt ? 'green' : ''}`} /> {gh.syncedAt ? ghSyncStale ? 'STALE' : 'SYNCED' : 'SYNC UNKNOWN'}{gh.syncedAt ? ` · synced ${fmtDate(gh.syncedAt)}` : ''}</span>
             {gh.syncedAt && (
               <span
                 className={`mc-gh-sync${ghSyncStale ? ' is-stale' : ''}`}
@@ -151,6 +151,7 @@ export function GithubPanel() {
       )}
 
       <AsciiDivider />
+      <div className="w2l-github-columns"><section aria-label="Repositories">
       <SectionHead label={`GITHUB / REPOSITORIES · ${repos.length} MOST RECENT`} />
       {repos.length === 0 ? (
         <div className="mc-empty is-compact">
@@ -184,6 +185,7 @@ export function GithubPanel() {
       </div>
       )}
 
+      </section><section aria-label="Recent activity">
       <AsciiDivider />
       <SectionHead label="GITHUB / RECENT ACTIVITY" />
       <Window tag="◉" title="RECENT EVENTS" meta={`${(gh.recentEvents ?? []).length} events`}>
@@ -216,6 +218,7 @@ export function GithubPanel() {
         </div>
         )}
       </Window>
+      </section></div>
     </>
   )
 }

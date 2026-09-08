@@ -242,6 +242,11 @@ export function MemoryGraphView() {
               ))}
             </div>
           )}
+          <div className="w2l-memory-results" aria-label="Select a matching note">
+            {baseNodes.filter(n => n.kind === 'note' && matches(n)).map(n => (
+              <button type="button" className="mc-mem-recent-item" key={n.id} aria-pressed={selectedId === n.id} onClick={() => setSelectedId(n.id)}>{n.title}</button>
+            ))}
+          </div>
           <div className="mc-mem-body">
             <div className="mc-mem-svg-wrap">
               <svg ref={svgRef} viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="mc-mem-svg" role="img" aria-label="Vault note graph">
