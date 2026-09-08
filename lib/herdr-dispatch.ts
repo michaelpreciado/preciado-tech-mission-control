@@ -6,8 +6,10 @@ import { claimTask, commentTask, reclaimTask, unblockTask, reopenReviewTask } fr
 import { getConfig } from './config'
 import type { HermesTaskDetail } from './types'
 
-const pending = new Set<string>()
-export async function dispatchAgent(id: string, detail: HermesTaskDetail | null, input: Record<string, unknown>) {
+const defaults = { herdr, claimTask, commentTask, reclaimTask, unblockTask, reopenReviewTask }
+export function createHerdrDispatcher(deps = defaults) {
+ const pending = new Set<string>()
+ return async function dispatchAgent(id: string, detail: HermesTaskDetail | null, input: Record<string, unknown>) {
   if (!isValidTaskId(id) || !detail) throw new HerdrError('Task not found', 404)
   if (pending.has(id)) throw new HerdrError('This task is already being dispatched', 409)
   if (!DISPATCHABLE_STATUSES.has(detail.status)) throw new HerdrError('Task is not dispatchable in its current status', 409)
@@ -30,31 +32,33 @@ export async function dispatchAgent(id: string, detail: HermesTaskDetail | null,
     `When verified complete, run: hermes kanban complete ${id} --result "<summary and verification>"`,
     `If blocked, leave a comment with: hermes kanban comment ${id} "<reason>"`,
   ].join('\n') })
-  if (!(await herdr.snapshot()).available) throw new HerdrError('Herdr is unavailable; task was not claimed')
+  if (!(await deps.herdr.snapshot()).available) throw new HerdrError('Herdr is unavailable; task was not claimed')
   pending.add(id)
   let claimed = false
   try {
     if (detail.status === 'blocked' || detail.status === 'failed') {
-      const r = unblockTask(id, 'dispatch-agent: preparing interactive worker', detail.origin)
+      const r = deps.unblockTask(id, 'dispatch-agent: preparing interactive worker', detail.origin)
       if (!r.ok) throw new HerdrError('Could not unblock task', 409)
     } else if (detail.status === 'review') {
-      const r = reopenReviewTask(id, 'dispatch-agent: preparing interactive worker', detail.origin)
+      const r = deps.reopenReviewTask(id, 'dispatch-agent: preparing interactive worker', detail.origin)
       if (!r.ok) throw new HerdrError('Could not reopen task', 409)
     }
-    const claim = claimTask(id, 1800, detail.origin)
+    const claim = deps.claimTask(id, 1800, detail.origin)
     if (!claim.ok) throw new HerdrError('Could not claim task; another worker may own it', 409)
     claimed = true
-    const result = await herdr.spawn(spawn)
-    const linked = commentTask(id, `Herdr ${spawn.kind} agent ${result.name}; pane ${result.target}. Open /kanban?agent=${encodeURIComponent(result.target)} to inspect this run.${result.warning ? ` ${result.warning}` : ''}`, 'mission-control', detail.origin)
+    const result = await deps.herdr.spawn(spawn)
+    const linked = deps.commentTask(id, `Herdr ${spawn.kind} agent ${result.name}; pane ${result.target}. Open /kanban?agent=${encodeURIComponent(result.target)} to inspect this run.${result.warning ? ` ${result.warning}` : ''}`, 'mission-control', detail.origin)
     return { ...result, warning: [result.warning, linked.ok ? '' : 'Agent started, but the task link comment could not be saved.'].filter(Boolean).join(' ') || undefined }
   } catch (e) {
     if (claimed) {
       if (e instanceof HerdrError && e.target) {
-        commentTask(id, `Herdr startup uncertain in pane ${e.target}. Inspect /kanban?agent=${encodeURIComponent(e.target)} before retrying. Claim retained to prevent duplicate work.`, 'mission-control', detail.origin)
+        deps.commentTask(id, `Herdr startup uncertain in pane ${e.target}. Inspect /kanban?agent=${encodeURIComponent(e.target)} before retrying. Claim retained to prevent duplicate work.`, 'mission-control', detail.origin)
       } else {
-        reclaimTask(id, 'dispatch-agent failed before confirmed agent startup', detail.origin)
+        deps.reclaimTask(id, 'dispatch-agent failed before confirmed agent startup', detail.origin)
       }
     }
     throw e
   } finally { pending.delete(id) }
+ }
 }
+export const dispatchAgent = createHerdrDispatcher()

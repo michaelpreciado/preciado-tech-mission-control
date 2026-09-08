@@ -30,7 +30,7 @@ export const runHerdr: HerdrRunner = async (args, timeout = 10_000) => {
     const { stdout } = await exec(bin, args, { timeout, maxBuffer: 2 * 1024 * 1024, encoding: 'utf8' })
     // Unlike control commands, `agent read --format text` prints terminal text
     // directly (including an empty screen), not the JSON socket envelope.
-    if (args[0] === 'agent' && args[1] === 'read') return { text: stdout }
+    if (['agent', 'pane'].includes(args[0]) && args[1] === 'read') return { text: stdout }
     const response = row(JSON.parse(stdout))
     if (response.error) throw new Error('Herdr rejected the operation')
     if (!response.result || typeof response.result !== 'object') throw new Error('Invalid Herdr response')
@@ -127,7 +127,8 @@ export function createHerdrBridge(run: HerdrRunner = runHerdr) {
       if (tails.size >= 64) throw new HerdrError('Too many open terminal tails', 429)
     }
     const revision = generation
-    const request = run(['agent', 'read', target, '--lines', String(lines), '--format', 'text']).then(result => {
+    // Read the pane itself so its terminal history remains available after exit.
+    const request = run(['pane', 'read', target, '--lines', String(lines), '--format', 'text']).then(result => {
       // Runner normalizes CLI text; accept wrapped socket fixtures as well.
       const output = row(result.output ?? result.read)
       const raw = typeof result.text === 'string' ? result.text : output.text
