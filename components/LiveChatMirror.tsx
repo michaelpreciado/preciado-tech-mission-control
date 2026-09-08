@@ -1,5 +1,7 @@
 'use client'
 
+import { AsciiMsg, messageSide } from '@/components/ascii-msg'
+
 /**
  * LIVE CHAT MIRROR — ongoing desktop chats streaming into Mission Control in
  * real time.
@@ -209,7 +211,7 @@ export default function LiveChatMirror({ localDevice, onOpen }: {
   const open = openKey ? sessions.find(s => keyOf(s) === openKey) : null
 
   return (
-    <div className="mcl">
+    <div className="mcl amsg-surface">
       <div className="mcl-head">
         <span className="mcl-dot" aria-hidden />
         <span className="mcl-title">LIVE · DESKTOP CHATS</span>
@@ -244,14 +246,10 @@ export default function LiveChatMirror({ localDevice, onOpen }: {
             </button>
             {openKey === keyOf(s) && (
               <div className="mcl-thread">
-                {thread.map(m => (
-                  <div key={m.id} className={`cc-bubble is-${m.role}`}>
-                    <div className="cc-bubble-head">
-                      <span>{m.role === 'user' ? '▸ YOU' : m.role === 'assistant' ? '◂ AGENT' : m.role === 'tool' ? '⚙ TOOL' : '· NOTE'}</span>
-                      <span style={{ marginLeft: 'auto' }}>{fmtStamp(m.timestamp)}</span>
-                    </div>
+                {thread.map((m, i) => (
+                  <AsciiMsg key={m.id} compact who={messageSide(m.role, m.content) === 'system' ? 'SYS' : m.role === 'user' ? 'MICHAEL' : s.profile} side={messageSide(m.role, m.content)} ts={fmtStamp(m.timestamp)} idx={i + 1}>
                     <MessageBody m={m} />
-                  </div>
+                  </AsciiMsg>
                 ))}
                 <div ref={bottomRef} />
               </div>

@@ -1,4 +1,6 @@
-'use client';
+'use client'
+
+import { AsciiMsg } from '@/components/ascii-msg';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { HerdrAgent, HerdrKind, HerdrSnapshot } from '@/lib/herdr-types';
@@ -148,7 +150,7 @@ export default function AgentDeck({ onCredentialChange }: { onCredentialChange?:
         </fieldset>
       </form>}
       {current && <><p>{current.kind} · {current.status} · {current.cwd}</p>
-        {tailError && <p role="alert">{tailError}</p>}<pre className={styles.tail} aria-label="Live terminal output" tabIndex={0}>{tail || 'Loading output…'}</pre>
+        {tailError && <p role="alert">{tailError}</p>}<AsciiMsg who="AGENT" className="amsg-output"><pre className={`${styles.tail} amsg-tail`} aria-label="Live terminal output" tabIndex={0}>{tail || 'Loading output…'}</pre></AsciiMsg>
         <fieldset disabled={busy} className={styles.fields}>
           <form onSubmit={async event => { event.preventDefault(); if (await act({ op: 'prompt', target: current.id, text: prompt }, 'Prompt sent.')) setPrompt(''); }}>
             <label>Prompt<textarea rows={3} required value={prompt} onChange={e => setPrompt(e.target.value)} /></label><div className={styles.actions}><button disabled={!prompt.trim()} type="submit">Send prompt</button><button type="button" disabled={!prompt.trim()} onClick={async () => { if (await act({ op: 'prompt', target: current.id, text: prompt, wait: true }, 'Prompt sent; wait finished.')) setPrompt(''); }}>Send and wait</button></div>
