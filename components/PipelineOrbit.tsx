@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
+import { createPipelineProbeGeometry, PIPELINE_PROBE_ATLAS } from '@/components/threed/pipeline-probe'
 import type { PipelineData } from '@/lib/types'
 import { layoutPipelineOrbit, ORBIT_LIMIT, type OrbitLayout, type OrbitNode, type OrbitPlanet } from '@/lib/pipeline-orbit-layout'
 
@@ -60,6 +61,10 @@ function usePipelineSnapshot(): PipelineData | null {
 
 const vertexShader = /* glsl */ `
   attribute vec2 nodeEnergy;
+  #ifdef PIPELINE_PROBE
+    attribute float probePart;
+    attribute vec2 probeShape;
+  #endif
   uniform float uTime;
   uniform float uMotion;
   varying vec3 vColor;
@@ -70,7 +75,12 @@ const vertexShader = /* glsl */ `
     vEnergy = nodeEnergy.y;
     vFacet = 0.65 + 0.35 * abs(normal.z);
     float pulse = 1.0 + nodeEnergy.x * uMotion * 0.05 * sin(uTime * 1.4);
-    gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position * pulse, 1.0);
+    vec3 localPosition = position;
+    #ifdef PIPELINE_PROBE
+      localPosition.x *= probePart == 1.0 ? probeShape.x : 1.0;
+      localPosition.y *= probePart == 2.0 ? probeShape.y : 1.0;
+    #endif
+    gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(localPosition * pulse, 1.0);
   }
 `
 const fragmentShader = /* glsl */ `
@@ -98,14 +108,17 @@ function OrbitInstances({ nodes, capacity, planet, staticMotion, visible }: {
   const settled = useRef(false)
   const scratch = useMemo(() => ({ transform: new THREE.Object3D(), color: new THREE.Color() }), [])
   const geometry = useMemo(() => {
-    const result = new THREE.IcosahedronGeometry(1, 0)
+    const result = planet ? createPipelineProbeGeometry() : new THREE.IcosahedronGeometry(1, 0)
+    if (planet) result.setAttribute('probeShape', new THREE.InstancedBufferAttribute(new Float32Array(capacity * 2), 2))
     result.setAttribute('nodeEnergy', new THREE.InstancedBufferAttribute(new Float32Array(capacity * 2), 2))
     return result
-  }, [capacity])
+  }, [capacity, planet])
   const material = useMemo(() => new THREE.ShaderMaterial({
-    uniforms: { uTime: { value: 0 }, uMotion: { value: 1 } }, vertexShader, fragmentShader,
+    uniforms: { uTime: { value: 0 }, uMotion: { value: 1 } },
+    defines: planet ? { PIPELINE_PROBE: 1 } : {},
+    vertexShader, fragmentShader,
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false,
-  }), [])
+  }), [planet])
   useEffect(() => () => { geometry.dispose(); material.dispose() }, [geometry, material])
 
   useLayoutEffect(() => {
@@ -125,6 +138,7 @@ function OrbitInstances({ nodes, capacity, planet, staticMotion, visible }: {
     instance.count = capacity
     instance.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
     const energy = geometry.getAttribute('nodeEnergy') as THREE.InstancedBufferAttribute
+    const shape = geometry.getAttribute('probeShape') as THREE.InstancedBufferAttribute | undefined
     for (let i = 0; i < capacity; i++) {
       const node = slots[i].node
       const angle = node ? node.angle + offsets[node.ring] : 0
@@ -134,8 +148,13 @@ function OrbitInstances({ nodes, capacity, planet, staticMotion, visible }: {
       instance.setMatrixAt(i, scratch.transform.matrix)
       instance.setColorAt(i, scratch.color.set(node?.color ?? 0))
       energy.setXY(i, planet ? 1 : 0, planet ? 1.8 : 1)
+      if (shape) {
+        const variant = PIPELINE_PROBE_ATLAS[node?.ring ?? 0]
+        shape.setXY(i, variant[0], variant[1])
+      }
     }
     energy.needsUpdate = true
+    if (shape) shape.needsUpdate = true
     instance.instanceMatrix.needsUpdate = true
     if (instance.instanceColor) instance.instanceColor.needsUpdate = true
     settled.current = false
@@ -166,6 +185,12 @@ function OrbitInstances({ nodes, capacity, planet, staticMotion, visible }: {
         if (slot.node) {
           instance.setColorAt(i, scratch.color.setHex(slot.node.colorValue))
           colorsChanged = true
+          const shape = geometry.getAttribute('probeShape') as THREE.InstancedBufferAttribute | undefined
+          if (shape) {
+            const variant = PIPELINE_PROBE_ATLAS[slot.node.ring]
+            shape.setXY(i, variant[0], variant[1])
+            shape.needsUpdate = true
+          }
         }
       }
       const node = slot.node
