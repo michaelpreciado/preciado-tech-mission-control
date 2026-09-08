@@ -43,25 +43,27 @@
 .error { font-size: 12px; line-height: 1.7; color: #e7b77a; overflow-wrap: anywhere; }
 .section { margin-top: 32px; padding: 24px; border: 1px solid #83bfff24; border-radius: 16px; background: #07111dea; }
 .sectionHeader { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 18px; }
-.sectionHeader h2 { font-size: 20px; font-weight: 500; letter-spacing: -.04em; margin: 6px 0 0; }
-.sectionHeader h2 span { font-size: 14px; color: #7293ae; margin-left: 6px; }
-.sectionHeader > a { font-size: 11px; color: #95c9ef; text-decoration: none; min-height: 44px; display: flex; align-items: center; }
-.tasks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.task { min-width: 0; display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid #83bfff1e; border-radius: 10px; background: #0d1a2a; text-decoration: none; color: #bfd0df; }
+.sectionHeader h2 { font-size: 16px; font-weight: 500; letter-spacing: -.02em; margin: 6px 0 0; }
+.sectionHeader h2 span { font-size: 12px; color: #7293ae; margin-left: 6px; }
+.sectionHeader > a { font-size: 12px; color: #95c9ef; text-decoration: none; min-height: 44px; display: flex; align-items: center; }
+.tasks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.task { min-width: 0; display: flex; align-items: center; gap: 12px; padding: 14px; border: 1px solid #83bfff1e; border-radius: 10px; background: #0d1a2a; text-decoration: none; color: #bfd0df; }
 .task > div { flex: 1; min-width: 0; }
-.task strong { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; font-size: 12px; line-height: 1.65; font-weight: 500; }
-.task div span { display: block; margin-top: 6px; font-size: 10px; color: #839bb0; }
-.taskDot { flex: 0 0 5px; height: 5px; background: #86c8ef; border-radius: 50%; }
+.task strong { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; font-size: 13px; line-height: 1.55; font-weight: 500; }
+.task div span { display: block; margin-top: 6px; font-size: 11px; color: #92aabf; }
+.taskDot { flex: 0 0 6px; height: 6px; background: #86c8ef; border-radius: 50%; }
 .taskDot[data-attention='true'] { background: #e8b16e; }
-.moreTasks { display: inline-flex; min-height: 44px; align-items: center; margin-top: 10px; color: #8ec0e1; font-size: 11px; text-decoration: none; }
-.live { font-size: 10px; color: #89bdcf; text-align: right; }
+.moreTasks { display: inline-flex; min-height: 44px; align-items: center; margin-top: 10px; color: #8ec0e1; font-size: 12px; text-decoration: none; }
+.live { font-size: 11px; color: #89bdcf; text-align: right; }
 .live[data-stale='true'] { color: #e7b77a; }
-.machine { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 18px; color: #7f9bb2; font-size: 10px; }
+.machine { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 18px; color: #7f9bb2; font-size: 11px; line-height: 1.6; }
 .machine span { overflow-wrap: anywhere; }
 .dials { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.vitals { display: flex; flex-wrap: wrap; gap: 12px 24px; margin-top: 18px; padding-top: 16px; border-top: 1px solid #8fbadb20; font-size: 10px; color: #7d9bb3; }
-.vitals strong { font-weight: 500; color: #b8d2e6; }
-.empty { font-size: 11px; color: #8099ad; line-height: 1.7; }
+.dials :global(.mc-rig-dial-value) { font-size: 24px; }
+.dials :global(.mc-rig-dial-label) { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: #92aabf; }
+.vitals { display: flex; flex-wrap: wrap; gap: 12px 24px; margin-top: 18px; padding-top: 16px; border-top: 1px solid #8fbadb20; font-size: 11px; line-height: 1.7; color: #7d9bb3; }
+.vitals strong { font-weight: 500; color: #c4d8ea; }
+.empty { font-size: 12px; color: #8099ad; line-height: 1.7; }
 .home button:focus-visible, .home a:focus-visible, .home summary:focus-visible { outline: 2px solid #9bdaff; outline-offset: 3px; }
 @media (max-width: 820px) {
   .menuButton { display: block; }
@@ -70,6 +72,7 @@
   .messages { padding: 16px; }
   .composer { padding: 10px 14px 16px; }
   .section { padding: 18px; margin-top: 24px; }
+  .dials { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 600px) {
   .home :global(.mc-urgent-preview) { display: none; }
@@ -79,8 +82,8 @@
   .welcome { padding-block: 10px 24px; }
   .welcome h1 { max-width: 280px; }
   .suggestions { display: grid; width: min(100%, 290px); margin-top: 22px; }
-  .tasks { grid-template-columns: minmax(0, 1fr); }
-  .sectionHeader h2 { font-size: 18px; }
+  .tasks { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .sectionHeader h2 { font-size: 16px; }
   .dials { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 10px; }
   .composerHint { font-size: 8px; }
 }
