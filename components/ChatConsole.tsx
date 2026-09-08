@@ -591,6 +591,7 @@ export default function ChatConsole() {
             </button>
           </div>
 
+          <div className="w2l-chat-list-content">
           {/* Stage D: Pinned agent slots — always visible, outside filtered buckets */}
           <div style={{
             display: 'flex',
@@ -714,16 +715,17 @@ export default function ChatConsole() {
               </button>
             )}
           </div>
+          </div>
         </div>
 
         {/* ── THREAD PANE ── */}
         <div className={`cc-threadpane ${hasActiveThread ? '' : 'is-empty'}`}>
-          {(threadRef || openId === '__intel__') && (
+          {(threadRef || openId === '__intel__' || openId === '__new__') && (
             <div className="cc-thread-head">
               <button className="cc-back" onClick={closeThread} aria-label="Back to conversations">⌃</button>
               <div className="cc-thread-title">
                 <span className="cc-thread-name">
-                  {threadRef ? (cleanTitle(threadRef.title) ?? threadRef.source ?? 'conversation') : 'CHAT INTEL'}
+                  {threadRef ? (cleanTitle(threadRef.title) ?? threadRef.source ?? 'conversation') : openId === '__new__' ? 'NEW CONVERSATION' : 'CHAT INTEL'}
                 </span>
                 <span className="cc-thread-sub">
                   {threadRef ? (

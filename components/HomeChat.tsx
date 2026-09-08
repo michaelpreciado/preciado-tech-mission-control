@@ -96,7 +96,7 @@ export function HomeChat() {
     </form>
   )
 
-  return <section className={styles.chat} data-empty={messages.length === 0} aria-label="Mission Control chat">
+  return <section id="home-conversation" className={styles.chat} data-empty={messages.length === 0} aria-label="Mission Control chat">
     <header className={`${styles.chatHeader} srule-home-header`}>
       <SectionRule label="MISSION CONTROL" index={1} />
       <div><span className={styles.connection}><span className={styles.connectionDot} data-status={available === false ? 'unavailable' : available ? 'connected' : 'connecting'} aria-hidden="true" />{available === false ? 'Agent unavailable' : available ? 'Agent connected' : 'Connecting…'}</span></div>

@@ -255,7 +255,7 @@ export default function SetupPage() {
           </div>
         </div>
 
-        {flash && (
+        {flash && !cfg && (
           <div className={`mc-setup-flash ${flash.tone}`}>{flash.tone === 'ok' ? '✓' : '⚠'} {flash.text}</div>
         )}
 
@@ -299,7 +299,7 @@ export default function SetupPage() {
               </div>
             </div>
 
-            <div className="mc-setup-group">
+            <div className="mc-setup-group w2l-setup-ui">
               <AsciiDivider />
               <div className="mc-setup-group-head">UI CUSTOMIZATION <span>motion, density, nav, 3D elements · applies on next page load, no restart needed (like accent color)</span></div>
 
@@ -443,6 +443,8 @@ export default function SetupPage() {
             ))}
 
             <div className="mc-setup-actions sticky">
+              {flash && <div className={`mc-setup-flash ${flash.tone}`} role="status" style={{ flexBasis: '100%' }}>{flash.tone === 'ok' ? '✓' : '⚠'} {flash.text}</div>}
+              <span className="mc-kb-sync" role="status">{configured ? 'CONFIGURED' : 'NOT CONFIGURED'}</span>
               <Button variant="primary" loading={busy} onClick={save}>
                 {busy ? 'WORKING…' : '💾 SAVE CONFIG'}
               </Button>

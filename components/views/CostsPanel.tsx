@@ -150,7 +150,7 @@ function Table<T>({ cols, rows, empty }: { cols: Col<T>[]; rows: T[]; empty: str
         <tbody>
           {rows.map((r, i) => (
             <tr key={i}>{cols.map(c => (
-              <td key={c.key} style={{ textAlign: c.align ?? 'left' }}>{c.render(r)}</td>
+              <td key={c.key} data-label={c.head} style={{ textAlign: c.align ?? 'left' }}>{c.render(r)}</td>
             ))}</tr>
           ))}
         </tbody>
@@ -1014,10 +1014,16 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
 
   return (
     <div className="cp-panel v4-group">
+      <div className={`mc-kb-sync${(costs.freshness?.staleDays ?? 0) > 3 ? ' is-stale' : ''}`} role="status">
+        {(costs.freshness?.staleDays ?? 0) > 3 && 'STALE · '}
+        {costs.freshness?.lastLoggedAt ? `NEWEST LOG · ${costs.freshness.lastLoggedAt.slice(0, 16).replace('T', ' ')} UTC` : 'NEWEST LOG · unknown'}
+      </div>
       <AsciiDivider />
       <SectionRule index={1} label="WHAT IT COST" />
-      <ActualSpend costs={costs} />
-      <MeteredSpend costs={costs} />
+      <div className="w2l-pair">
+        <ActualSpend costs={costs} />
+        <MeteredSpend costs={costs} />
+      </div>
       <MonthlyBilling costs={costs} />
       <SubscriptionTools costs={costs} />
       <FairUseGuard costs={costs} />

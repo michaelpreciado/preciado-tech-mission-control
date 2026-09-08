@@ -24,6 +24,7 @@ export function ProjectGrid({ limit }: { limit?: number } = {}) {
 
   return (
     <div className="mc-tile-grid mc-tile-grid--tri v4-group">
+      <div className="mc-kb-sync" style={{ gridColumn: '1 / -1' }}>{projects.length} projects</div>
       {projects.map(p => {
         const todo = p.todo ?? []
         const openCount = todo.filter(t => t.status !== 'done').length

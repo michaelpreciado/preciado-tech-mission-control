@@ -242,6 +242,7 @@ function DetailDrawer({ id, onClose, onChanged, token = '' }: { id: string; onCl
                 {detail.lastFailureError ? ` — ${detail.lastFailureError.slice(0, 300)}` : ''}
               </div>
             )}
+            {moveTargets.length > 0 && <a className="mc-btn w2l-move-jump" href="#task-move-actions">MOVE TO… ↓</a>}
             {detail.body && <div className="mc-drawer-section"><div className="lbl">BRIEF</div><div className="mc-pipe-draft">{detail.body.slice(0, 1200)}</div></div>}
 
             {/* Actions */}
@@ -284,7 +285,7 @@ function DetailDrawer({ id, onClose, onChanged, token = '' }: { id: string; onCl
 
             {/* Move to… — column transitions (same API as desktop drag-and-drop) */}
             {moveTargets.length > 0 && (
-              <div className="mc-drawer-section">
+              <div className="mc-drawer-section w2l-move-actions" id="task-move-actions">
                 <div className="lbl">MOVE TO…</div>
                 <div className="mc-kb-actions">
                   {moveTargets.map(target => (
@@ -947,6 +948,7 @@ export function KanbanBoard({ token = '' }: { token?: string }) {
           </div>
         </div>}
       </div>
+      <div className="w2l-task-bar"><Button variant="primary" onClick={() => setShowCreate(true)}>+ new task</Button><Button variant="ghost" active={filter === 'attention'} onClick={() => setFilter(filter === 'attention' ? 'all' : 'attention')}>needs attention</Button></div>
       {openId && <DetailDrawer key={openId} id={openId} token={token} onClose={() => setOpenId(null)} onChanged={refresh} />}
       {showCreate && <CreateModal sources={sources} token={token} onClose={() => setShowCreate(false)} onCreated={onCreated} />}
     </>
