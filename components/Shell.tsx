@@ -340,7 +340,7 @@ function HomeNavDrawer() {
       if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) dialog.current.close()
     }
   }}>
-    <header><strong>MISSION CONTROL</strong><button aria-label="Close navigation tabs" onClick={() => dialog.current?.close()}>×</button></header>
+    <header><strong>NAVIGATION</strong><button aria-label="Close navigation tabs" onClick={() => dialog.current?.close()}>×</button></header>
     <nav aria-label="Home navigation tabs">{nav.map(section => <div key={section.section}><p>{section.section}</p>{section.items.map(item => <Link key={item.id} href={item.id} aria-current={pathname === item.id ? 'page' : undefined} onClick={() => dialog.current?.close()}><Icon name={item.icon} size={18} /><span>{item.label}</span></Link>)}</div>)}</nav>
   </dialog>
 }
