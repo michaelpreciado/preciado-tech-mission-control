@@ -30,7 +30,7 @@ export function NeuralUplink() {
 
   return (
     <section ref={root} className={styles.uplink} data-moving={moving} aria-label="Neural uplink">
-      <Image className={styles.art} src="/visuals/neural-reactor.webp" alt="" fill sizes="(max-width: 820px) 100vw, 1080px" priority />
+      <Image className={styles.art} src="/visuals/neural-reactor.webp" alt="" fill sizes="(max-width: 1180px) 100vw, 1180px" priority />
       <div className={styles.grid} aria-hidden="true" />
       <div className={styles.copy}>
         <div className={styles.eyebrow}><span className={styles.beacon} data-live={isLive} />NEURAL UPLINK</div>
