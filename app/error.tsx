@@ -1,6 +1,6 @@
 'use client'
 
-import { AsciiConsole } from './vf/Ascii'
+import { AsciiConsole, AsciiHorizon } from './vf/Ascii'
 
 
 import { useEffect } from 'react'
@@ -20,9 +20,7 @@ export default function Error({
     <div className="pt-fault-screen">
       <div className="pt-fault-panel">
         <AsciiConsole state="FAULT" />
-        <div className="v4-legacy-mark pt-fault-mark" aria-hidden="true">
-          &#x25A3;
-        </div>
+        <AsciiHorizon />
         <h2 className="pt-fault-title">System Fault Detected</h2>
         <p className="pt-fault-copy">
           A panel failed to render. This may be a transient issue.

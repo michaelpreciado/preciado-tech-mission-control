@@ -85,4 +85,83 @@ export const ROUTE_ART = {
 |    |   |   |    |
 +-----------------+
      [ BUILD ]     `,
+  roster: `+-----------------+
+|   +--+ +--+     |
+|   |++| |++|     |
+|   +--+-+--+     |
+|      | |        |
++-----------------+
+     [ ROSTER ]    `,
+  orbit: `+-----------------+
+|    /-----+      |
+|   /  +-+  \\     |
+|   +--|+|--+     |
+|    \\ +-+ /      |
++-----------------+
+     [ ORBIT ]     `,
+  ledger: `+-----------------+
+|   +--+-----+    |
+|   |++| --- |    |
+|   |--+-----|    |
+|   |++| === |    |
++-----------------+
+     [ LEDGER ]    `,
+  commits: `+-----------------+
+|    +---+        |
+|    |  /         |
+|    + +          |
+|    |/  +---+    |
++-----------------+
+    [ COMMITS ]    `,
+  grid: `+-----------------+
+|   +--+--+--+    |
+|   |  |++|  |    |
+|   +--+--+--+    |
+|   |++|  |  |    |
++-----------------+
+      [ GRID ]     `,
+  waveform: `+-----------------+
+|      +-+        |
+|   +  | |  +     |
+| --|--+ +--|--   |
+|   +       +     |
++-----------------+
+    [ WAVEFORM ]   `,
+  broadcast: `+-----------------+
+|   / / + \\ \\     |
+|  | |  |  | |    |
+|   \\ \\ | / /     |
+|      -+-        |
++-----------------+
+   [ BROADCAST ]   `,
+  schematic: `+-----------------+
+|   +---+  +      |
+| --| + |--|--    |
+|   +---+  +      |
+|     |   / \\     |
++-----------------+
+   [ SCHEMATIC ]   `,
 } as const
+
+/** Shared by route kickers and pathname-aware empty states. */
+export const ROUTE_EMBLEMS = {
+  HOME: 'core', KANBAN: 'network', BOTS: 'roster', PIPELINE: 'orbit',
+  PROJECTS: 'build', COSTS: 'ledger', GITHUB: 'commits', MEMORY: 'archive',
+  CALENDAR: 'grid', CHAT: 'waveform', CONTENT: 'broadcast', SETUP: 'schematic',
+} as const satisfies Record<string, keyof typeof ROUTE_ART>
+
+export function emblemFor(view: string): string {
+  const segment = view.trim().replace(/^\/+/, '').split('/')[0].toUpperCase()
+  const name = segment === 'CONTENT-CREATION' ? 'CONTENT' : segment || 'HOME'
+  return ROUTE_ART[ROUTE_EMBLEMS[name as keyof typeof ROUTE_EMBLEMS] ?? 'core']
+}
+
+/** Eight rows, exactly 58 columns, including the sector caption. */
+export const HORIZON = `                         +
+                        /|\\             /-------\\
+   +-----+    +---+       |             /  /---\\  \\
+   | + + |    |===|      /|\\            |  | + |  |
+   |-----|    |===|     / | \\    +---+  \\  \\---/  /
+   | + + |    |===|    +--+--+   |===|   \\-------/
++--+-----+----+---+----+-----+---+---+-------------------+
+                 [ PRECIADO // SECTOR 7 ]`.split('\n').map(row => row.padEnd(58)).join('\n')

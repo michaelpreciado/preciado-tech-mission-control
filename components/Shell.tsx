@@ -10,7 +10,7 @@ import { Button } from './ui'
 import { Icon, type IconName } from './icons'
 import { UiSettingsContext, DEFAULT_UI_SETTINGS, useUiSettings, type UiSettings } from './ui-settings'
 import { NAV, PINNED_TAB_IDS } from '@/lib/nav-tabs'
-import { AsciiSkyline, AsciiPanelTrim, AsciiCity } from '@/app/vf/Ascii'
+import { AsciiPanelTrim } from '@/app/vf/Ascii'
 
 const CommandPalette = dynamic(() => import('./CommandPalette').then(m => m.CommandPalette), { ssr: false })
 const CoreOrb = dynamic(() => import('./CoreOrb'), { ssr: false })
@@ -139,7 +139,6 @@ function Sidebar() {
       ))}
 
       <div className="mc-side-footer">
-        <AsciiSkyline />
         <div className="mc-side-foot-title">&gt; SYSTEM STATUS</div>
         <div>{data ? `${data.counts.openTasks} open · ${data.counts.enabledCronJobs} jobs live` : 'indexing...'}</div>
         <div style={{ marginTop: 6, color: 'var(--pt-text-dim)' }}>
@@ -365,7 +364,6 @@ export function Shell({ appName, appTagline, ui, children }: { appName: string; 
         <Sidebar />
         <main id="mc-main-content" className="mc-main">
           {children}
-          <AsciiCity />
         </main>
       </div>
       <MobileNav />
