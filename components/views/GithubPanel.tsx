@@ -5,6 +5,7 @@ import { AsciiDivider } from '@/app/vf/Ascii'
 import { useLiveData } from '../LiveDataProvider'
 import { SectionHead, Window, EmptyTerminal, SkeletonPanel, fmtDate } from '../ui'
 import { Heatmap } from '../Viz'
+import { AsciiBars } from '../ascii-viz'
 import { ConnectCard } from './shared'
 
 /* ── GitHub Panel ─────────────────────────────────────── */
@@ -73,6 +74,11 @@ export function GithubPanel() {
   const ghSyncAgo = pushedAgo(gh.syncedAt)
   const ghSyncStale = !!gh.syncedAt && Date.now() - new Date(gh.syncedAt).getTime() > 86_400_000
 
+  const activityCounts = new Map<string, number>()
+  for (const event of gh.recentEvents ?? []) {
+    activityCounts.set(event.repo, (activityCounts.get(event.repo) ?? 0) + 1)
+  }
+  const topActivity = [...activityCounts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 5)
   const repos = gh.repos ?? []
   const totalStars = repos.reduce((s, r) => s + r.stars, 0)
   const totalIssues = repos.reduce((s, r) => s + r.openIssues, 0)
@@ -181,6 +187,12 @@ export function GithubPanel() {
       <AsciiDivider />
       <SectionHead label="GITHUB / RECENT ACTIVITY" />
       <Window tag="◉" title="RECENT EVENTS" meta={`${(gh.recentEvents ?? []).length} events`}>
+        {topActivity.length > 0 && <div className="asciiviz-inset">
+          <div className="asciiviz-caption">TOP REPOS · EVENTS IN CURRENT FEED</div>
+          {topActivity.map(([repo, count]) => <div className="asciiviz-repo" key={repo}>
+            <span className="asciiviz-repo-name" title={repo}>{repo}</span>{' '}<AsciiBars values={[count]} max={topActivity[0][1]} />
+          </div>)}
+        </div>}
         {(gh.recentEvents ?? []).length === 0 ? (
           <div className="mc-empty is-compact">
             <div className="mc-empty-glyph">◉</div>

@@ -8113,3 +8113,32 @@ html[data-motion="off"] .mc-studio-cursor { animation: none; }
 @media (max-width: 820px) {
   .mc-shell.is-home .mc-main { padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); }
 }
+
+/* W2-J · text-only data visualization, periwinkle ink. */
+.asciiviz-spark, .asciiviz-meter, .asciiviz-heat, .asciiviz-bars,
+.asciiviz-caption, .asciiviz-repo {
+  font-family: var(--pt-font-mono, 'JetBrains Mono'), monospace;
+  font-size: 10px;
+  line-height: 1.1;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  text-shadow: none;
+  box-shadow: none;
+  color: rgba(157,180,236,.55);
+}
+.asciiviz-spark, .asciiviz-meter, .asciiviz-bars { display: inline-block; white-space: pre; }
+.asciiviz-heat { display: block; white-space: pre; }
+.asciiviz-bright, .asciiviz-value { color: rgba(157,180,236,.85); }
+.asciiviz-faint, .asciiviz-caption { color: rgba(157,180,236,.30); }
+.asciiviz-value, .asciiviz-caption { font-size: 9px; }
+.asciiviz-density-0, .asciiviz-density-1 { color: rgba(157,180,236,.30); }
+.asciiviz-density-2, .asciiviz-density-3 { color: rgba(157,180,236,.55); }
+.asciiviz-density-4, .asciiviz-density-5 { color: rgba(157,180,236,.85); }
+.asciiviz-telemetry { min-width: 0; text-align: center; }
+.asciiviz-telemetry .asciiviz-meter { margin-top: 6px; font-size: 9px; color: rgba(157,180,236,.30); }
+.asciiviz-telemetry .asciiviz-bright { color: rgba(157,180,236,.30); }
+.asciiviz-burn { display: inline-block; margin-left: 12px; }
+.asciiviz-inset { margin: 10px 16px; overflow-x: auto; }
+.asciiviz-repo { margin-top: 5px; white-space: nowrap; }
+.asciiviz-repo-name { display: inline-block; width: 24ch; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }

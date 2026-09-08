@@ -7,6 +7,7 @@ import { useLiveData } from '../LiveDataProvider'
 import { SectionHead, Window, EmptyTerminal, SkeletonPanel } from '../ui'
 import dynamic from 'next/dynamic'
 import { Heatmap } from '../Viz'
+import { AsciiSpark, AsciiHeat } from '../ascii-viz'
 import { CATEGORICAL, STATUS } from '@/lib/chart-colors'
 import type { CostDashboard, BillingMode } from '@/lib/types'
 import { billingMode } from '@/lib/collectors/costs-usage'
@@ -731,7 +732,7 @@ function LocalAI({ costs }: { costs: CostDashboard }) {
           <Window tag="▦" title="DAILY VOLUME" meta={`${weeks.length}w to today`}>
             <div className="mc-gh-heatmap-wrap">
               <div className="mc-gh-day-labels"><span /><span>Mon</span><span /><span>Wed</span><span /><span>Fri</span><span /></div>
-              <div className="mc-gh-heatmap-inner"><Heatmap data={weeks} /></div>
+              <div className="mc-gh-heatmap-inner"><Heatmap data={weeks} /><div className="asciiviz-inset" title="Daily volume · chronological quartile density"><AsciiHeat cells={weeks.flat()} /></div></div>
             </div>
             <div className="mc-heatmap-legend">
               <span>LESS</span>
@@ -887,6 +888,14 @@ function FairUseGuard({ costs }: { costs: CostDashboard }) {
   const tone = percent >= 90 ? 'var(--pt-error)' : percent >= 70 ? 'var(--pt-warn)' : CATEGORICAL[4]
   const verdict = percent >= 90 ? 'THROTTLE RISK' : percent >= 70 ? 'WATCH' : 'COMFORT'
   const daily = (costs.codexUsage?.daily ?? []).slice(-7)
+  const burnDays = [...(costs.codexUsage?.daily ?? [])].sort((a, b) => a.date.localeCompare(b.date))
+  const latestBurnDate = burnDays.at(-1)?.date
+  const burnByDate = new Map(burnDays.map(day => [day.date, day.tokens]))
+  const burn14 = latestBurnDate ? Array.from({ length: 14 }, (_, index) => {
+    const date = new Date(`${latestBurnDate}T00:00:00Z`)
+    date.setUTCDate(date.getUTCDate() - 13 + index)
+    return burnByDate.get(date.toISOString().slice(0, 10)) ?? 0
+  }) : []
   const maxDaily = Math.max(...daily.map(day => day.tokens), 1)
 
   return (
@@ -897,7 +906,7 @@ function FairUseGuard({ costs }: { costs: CostDashboard }) {
         <div className="cp-fairuse-main">
           <div className="cp-plan-band-head">
             <span>CODEX MONTHLY BURN</span>
-            <span>{tok(burnValue)} of {tok(ceilingValue)} estimate · {percent.toFixed(0)}%</span>
+            <span>{tok(burnValue)} of {tok(ceilingValue)} estimate · {percent.toFixed(0)}%{burn14.length > 0 && <span className="asciiviz-burn" title="Last 14 days through latest logged date · Codex tokens"><span className="asciiviz-caption">14D TOKENS </span><AsciiSpark data={burn14} width={14} /></span>}</span>
           </div>
           <div className="cp-plan-band-track" role="img" aria-label={`Codex burn is ${percent.toFixed(0)} percent of the estimated monthly ceiling`}>
             <span style={{ width: `${Math.min(100, ratio * 100)}%`, background: tone }} />
