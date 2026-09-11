@@ -9,6 +9,7 @@ export type ArtBuilder = () => ArtScene
 /** Local renderer only: no application providers, textures, or scene framework. */
 export function ArtCanvas({ build, label, style }: { build: ArtBuilder; label: string; style?: CSSProperties }) {
   const ref = useRef<HTMLCanvasElement>(null)
+  const hostRef = useRef<HTMLDivElement>(null)
   const [failed, setFailed] = useState(false)
   useEffect(() => {
     const canvas = ref.current!
@@ -20,18 +21,38 @@ export function ArtCanvas({ build, label, style }: { build: ArtBuilder; label: s
     renderer.outputColorSpace = THREE.SRGBColorSpace
     const { scene, camera, update } = build()
     const resize = () => {
-      const { width, height } = canvas.getBoundingClientRect()
+      const host = hostRef.current
+      const rect = (host ?? canvas).getBoundingClientRect()
+      let width = rect.width, height = rect.height
+      if (!width || !height) {
+        // The wrapper is 100% x 100%: a parent without a determinate height (unbounded
+        // flex/grid track) collapses the whole chain. Give the wrapper a sensible
+        // 16:9 size from its own width (or a 560px default) so the canvas always
+        // renders instead of a 1x1 sliver; explicit style props from the caller win.
+        width = rect.width || 560
+        if (!height) height = Math.round(width * 9 / 16)
+        if (host) host.style.height = `${height}px`
+      }
       renderer.setSize(Math.max(1, width), Math.max(1, height), false)
       camera.aspect = width / Math.max(1, height)
       camera.updateProjectionMatrix()
     }
     const observer = new ResizeObserver(resize)
-    observer.observe(canvas)
+    observer.observe(hostRef.current ?? canvas)
     resize()
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)')
+    // Safari quirk: rAF can be absent or frozen (old Safari, some private-browsing
+    // modes, background-tab resume hiccups). Guard once per mount and fall back to a
+    // setTimeout cadence so the loop never stalls silently.
+    const raf = (typeof window.requestAnimationFrame === 'function')
+      ? window.requestAnimationFrame.bind(window)
+      : (cb: FrameRequestCallback) => (window.setTimeout(() => cb(Date.now()), 16) as unknown as number)
+    const caf = (typeof window.cancelAnimationFrame === 'function')
+      ? window.cancelAnimationFrame.bind(window)
+      : (id: number) => window.clearTimeout(id)
     let frame = 0, previous = 0, elapsed = 0, lost = false
     const tick = (now: number) => {
-      frame = requestAnimationFrame(tick)
+      frame = raf(tick)
       const delta = previous ? Math.min((now - previous) / 1000, 0.05) : 0
       previous = now
       if (document.hidden || lost) return
@@ -44,9 +65,10 @@ export function ArtCanvas({ build, label, style }: { build: ArtBuilder; label: s
     const contextRestored = () => { lost = false; setFailed(false) }
     canvas.addEventListener('webglcontextlost', contextLost)
     canvas.addEventListener('webglcontextrestored', contextRestored)
-    frame = requestAnimationFrame(tick)
+    frame = raf(tick)
     return () => {
-      cancelAnimationFrame(frame)
+      caf(frame)
+      window.clearTimeout(frame)
       observer.disconnect()
       canvas.removeEventListener('webglcontextlost', contextLost)
       canvas.removeEventListener('webglcontextrestored', contextRestored)
