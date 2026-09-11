@@ -17,8 +17,8 @@ function isAuthorized(req: NextRequest): boolean {
   return req.headers.get('authorization') === `Bearer ${SECRET}`
 }
 
-export async function GET() {
-  const data = await collectPipeline()
+export async function GET(req: NextRequest) {
+  const data = await collectPipeline(req.nextUrl.searchParams.get('view') === 'revenue')
   return NextResponse.json(data, { headers: { 'Cache-Control': 'no-store' } })
 }
 

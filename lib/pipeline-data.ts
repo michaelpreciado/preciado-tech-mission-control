@@ -57,6 +57,8 @@ function normalizeLead(raw: any): PipelineLead | null {
     id: String(id),
     stage: raw.stage,
     businessName: String(businessName),
+    previewUrl: raw.preview_url ?? raw.previewUrl ?? undefined,
+    firstSeenAt: raw.first_seen_at ?? raw.firstSeenAt ?? undefined,
     location: raw.location ?? undefined,
     playStoreUrl: raw.play_store_url ?? raw.playStoreUrl ?? undefined,
     score: typeof raw.score === 'number' ? raw.score : undefined,
@@ -252,7 +254,7 @@ export async function upsertLead(input: UpsertLeadInput): Promise<UpsertLeadResu
 const LEADS_FOUND_CAP = 20
 const STAGE_CAP = 50
 
-export async function collectPipeline(): Promise<PipelineData> {
+export async function collectPipeline(revenue = false): Promise<PipelineData> {
   const [leads, events] = await Promise.all([readLeads(), readRecentEvents()])
   const counts = Object.fromEntries(PIPELINE_STAGES.map(s => [s, 0])) as Record<PipelineStage, number>
   for (const lead of leads) counts[lead.stage] += 1
@@ -272,7 +274,7 @@ export async function collectPipeline(): Promise<PipelineData> {
       display.push(...pool.slice(0, LEADS_FOUND_CAP))
     } else {
       pool.sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? ''))
-      display.push(...pool.slice(0, STAGE_CAP))
+      display.push(...pool.slice(0, revenue && (stage === 'awaiting_approval' || stage === 'in_development') ? undefined : STAGE_CAP))
     }
   }
 

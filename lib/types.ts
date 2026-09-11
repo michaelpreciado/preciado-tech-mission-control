@@ -437,6 +437,12 @@ export type PipelineStage =
   | 'in_development'
   | 'completed'
 
+export type PipelineLeadApproval = {
+  telegramSentAt?: string
+  status?: 'pending' | 'approved' | 'rejected'
+  decidedAt?: string
+}
+
 export type PipelineLead = {
   id: string
   stage: PipelineStage
@@ -451,17 +457,24 @@ export type PipelineLead = {
   reviewCount?: number
   qualified?: boolean
   socials?: { instagram?: string; facebook?: string; linkedin?: string }
-  extraData?: Record<string, string>
+  previewUrl?: string
+  firstSeenAt?: string
+  extraData?: {
+    [key: string]: unknown
+    preview_url?: string
+    previewUrl?: string
+    offer_estimate?: number
+    price_range?: string
+    next_action?: string | null
+    reviewed_at?: string
+    review?: 'approved' | 'held'
+  }
   concept?: {
     designDirection?: string
     inspirationSources?: string[]
     estimatedScope?: string
   }
-  approval?: {
-    telegramSentAt?: string
-    status?: 'pending' | 'approved' | 'rejected'
-    decidedAt?: string
-  }
+  approval?: PipelineLeadApproval
   development?: {
     taskId?: string
     status?: string
@@ -492,7 +505,8 @@ export type PipelineData = {
   generatedAt: string
   source: string
   // Display set — per-stage caps applied (leads_found: top 20 by score;
-  // other stages: newest 50). `counts` holds the TRUE per-stage totals.
+  // other stages: newest 50; revenue view uncaps active stages).
+  // `counts` holds the TRUE per-stage totals.
   leads: PipelineLead[]
   counts: Record<PipelineStage, number>
   leadsTotal: number
