@@ -26,7 +26,7 @@ export interface FridayPaths {
   projectWorkspaceDir: string
   /** A local code repository to surface in Projects ('' = disabled). */
   repoDir: string
-  /** Notes vault root, e.g. an Obsidian vault ('' = disabled). */
+  /** Notes vault root (MC_VAULT_DIR; legacy FRIDAY_VAULT_DIR also supported). */
   vaultDir: string
   /** Project sub-vault scanned for memory/projects ('' = disabled). */
   projectVaultDir: string
@@ -236,7 +236,7 @@ function buildConfig(): FridayConfig {
       workspaceDir: str(env.FRIDAY_WORKSPACE_DIR, str(p.workspaceDir, path.join(home, '.openclaw/workspace'))),
       projectWorkspaceDir: str(env.FRIDAY_PROJECT_WORKSPACE_DIR, str(p.projectWorkspaceDir, '')),
       repoDir: str(env.FRIDAY_REPO_DIR, str(p.repoDir, '')),
-      vaultDir: str(env.FRIDAY_VAULT_DIR, str(p.vaultDir, '')),
+      vaultDir: str(env.MC_VAULT_DIR, str(env.FRIDAY_VAULT_DIR, str(p.vaultDir, '/home/mp/Documents/Preciado Tech'))),
       projectVaultDir: str(env.FRIDAY_PROJECT_VAULT_DIR, str(p.projectVaultDir, '')),
       usageLogsDir: str(env.FRIDAY_USAGE_LOGS_DIR, str(p.usageLogsDir, '')),
       inboxDir: str(env.FRIDAY_INBOX_DIR, str(p.inboxDir, '')),

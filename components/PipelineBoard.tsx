@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { PipelineData, PipelineLead, PipelineStage } from '@/lib/types'
 import { SkeletonPanel, fmtDate } from './ui'
+import { ClientDocsLink } from './VaultDocuments'
 
 const POLL_MS = 12_000
 
@@ -137,6 +138,7 @@ function LeadCard({ lead, liveNote }: { lead: PipelineLead; liveNote?: string })
         }</div>
       ))}
       <div className="mc-pipe-when">{lead.updatedAt ? fmtDate(lead.updatedAt) : ''}</div>
+      <ClientDocsLink leadId={lead.id} />
     </div>
   )
 }
