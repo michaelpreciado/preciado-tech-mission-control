@@ -109,9 +109,30 @@ export interface FridayChatRemote {
   cacheMs?: number
 }
 
+export type AgentId = 'hermes' | 'pi' | 'codex'
+export interface FridayChatAgent { id: AgentId; command: string; enabled: boolean }
+
+/** Ignore malformed entries and duplicates; legacy Hermes is always retained. */
+export function resolveChatAgents(value: unknown, command: string): FridayChatAgent[] {
+  const agents: FridayChatAgent[] = [{ id: 'hermes', command, enabled: Boolean(command) }]
+  if (!Array.isArray(value)) return agents
+  const seen = new Set<string>()
+  for (const entry of value) {
+    if (!entry || !['hermes', 'pi', 'codex'].includes(entry.id) ||
+        typeof entry.command !== 'string' || !entry.command.trim() || entry.command.includes('\0') ||
+        typeof entry.enabled !== 'boolean' || seen.has(entry.id)) continue
+    seen.add(entry.id)
+    if (entry.id === 'hermes') agents[0] = { id: 'hermes', command: entry.command, enabled: entry.enabled }
+    else agents.push({ id: entry.id, command: entry.command, enabled: entry.enabled })
+  }
+  return agents
+}
+
 export interface FridayChat {
-  /** Agent CLI binary used by the chat ('' = chat disabled). Must support `-z <prompt>` one-shot mode and `--resume <id>` (Hermes-compatible). */
+  /** Agent CLI binary used by the chat ('' = chat disabled). Must support `-z <prompt>` one-shot mode and `--continue <id>` (Hermes-compatible). */
   command: string
+  /** Optional agent allowlist; absent means legacy Hermes only. */
+  agents?: FridayChatAgent[]
   /** Remote Hermes profiles whose conversations should be mirrored (default: []). */
   remotes: FridayChatRemote[]
   /** Optional explicit list of named local profiles to include ('' = auto-discover ~/.hermes/profiles/*). */
@@ -296,6 +317,8 @@ function buildConfig(): FridayConfig {
     },
     chat: {
       command: str(env.FRIDAY_CHAT_COMMAND, str(file.chat?.command, 'hermes')),
+      agents: resolveChatAgents(file.chat?.agents, str(file.chat?.command, 'hermes')).map(a =>
+        a.id === 'hermes' && env.FRIDAY_CHAT_COMMAND?.trim() ? { ...a, command: env.FRIDAY_CHAT_COMMAND } : a),
       remotes: Array.isArray(file.chat?.remotes)
         ? file.chat!.remotes!
           .filter(r => r && typeof r.name === 'string' && r.name && typeof r.host === 'string' && r.host && typeof r.user === 'string' && r.user)

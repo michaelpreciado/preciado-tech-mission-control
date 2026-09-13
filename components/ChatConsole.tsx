@@ -28,7 +28,11 @@ import '../app/vf/v3-lane.css'
 
 /* ── Types (mirror the API) ─────────────────────────────── */
 
+type AgentId = 'hermes' | 'pi' | 'codex'
+type AgentStatus = { id: AgentId; enabled: boolean; available: boolean }
+
 type Conversation = {
+  agent?: 'hermes' | 'pi'
   id: string
   title: string
   profile: string
@@ -43,6 +47,7 @@ type Conversation = {
 }
 
 type ChatMessage = {
+  agent?: AgentId
   id: number
   role: string
   content: string | null
@@ -250,6 +255,19 @@ export default function ChatConsole() {
   const [threadLoading, setThreadLoading] = useState(false)
   const [atBottom, setAtBottom] = useState(true)
 
+  const [agent, setAgent] = useState<AgentId>('hermes')
+  const [agentStatus, setAgentStatus] = useState<AgentStatus[]>([])
+  const [localSession, setLocalSession] = useState<string | null>(null)
+  useEffect(() => {
+    fetch('/api/chat').then(r => r.json()).then(j => {
+      setAgentStatus(j.agents ?? [])
+      try {
+        const saved = localStorage.getItem('mc.chat.agent')
+        if (!new URLSearchParams(window.location.search).has('session') && saved === 'pi' && j.agents?.some((a: AgentStatus) => a.id === 'pi' && a.enabled && a.available)) setAgent('pi')
+      } catch { /* storage unavailable */ }
+    }).catch(() => {})
+  }, [])
+
   const [composer, setComposer] = useState('')
   const [busy, setBusy] = useState(false)
   const [elapsed, setElapsed] = useState(0)
@@ -335,13 +353,15 @@ export default function ChatConsole() {
 
   /* Load a thread */
   const openThread = useCallback(async (c: Conversation) => {
+    setAgent(c.agent || 'hermes')
+    setLocalSession(c.id)
     setOpenId(c.id)
     setThreadRef(c)
     setShowNew(false)
     setThreadLoading(true)
     setThread([])
     try {
-      const params = new URLSearchParams({ profile: c.profile, device: c.device })
+      const params = new URLSearchParams({ profile: c.profile, device: c.device, agent: c.agent || 'hermes' })
       const res = await fetch(`/api/conversations/${encodeURIComponent(c.id)}?${params}`, { cache: 'no-store' })
       const j = await res.json()
       setThread(j.messages ?? [])
@@ -467,7 +487,7 @@ export default function ChatConsole() {
             if (!d.ok) {
               setThread(t => [...t, { id: Date.now() - 1, role: 'tool', content: `⚠ ${d.error || 'send failed'}`, timestamp: Date.now() }])
             } else {
-              setOpenId('__new__')
+              setLocalSession(null); setOpenId('__new__')
               setThread([{ id: Date.now(), role: 'user', content: text, timestamp: Date.now() },
                 { id: Date.now() - 1, role: 'assistant', content: d.reply ?? '', timestamp: Date.now() }])
               setThreadRef(null)
@@ -485,6 +505,34 @@ export default function ChatConsole() {
       setReloadToken(t => t + 1)
     }
   }, [composer, busy, newProfile, newDevice])
+
+  const sendLocal = async () => {
+    const text = composer.trim()
+    if (!text || busy || agent === 'codex') return
+    const session = localSession || crypto.randomUUID()
+    setLocalSession(session)
+    setComposer('')
+    setBusy(true)
+    const ctrl = new AbortController()
+    abortRef.current = ctrl
+    setThread(t => [...t, { id: Date.now(), role: 'user', content: text, timestamp: Date.now(), agent }])
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctrl.signal,
+        body: JSON.stringify({ agent, session, createSession: !threadRef, message: text, profile: agent === 'hermes' ? threadRef?.profile || newProfile : undefined }),
+      })
+      const j = await res.json()
+      if (!res.ok) throw new Error(j.error || 'send failed')
+      setLocalSession(j.session)
+      setThread(t => [...t, { id: Date.now(), role: 'assistant', content: j.reply, timestamp: Date.now(), agent: j.agent }])
+    } catch (err) {
+      if ((err as Error).name !== 'AbortError') setThread(t => [...t, { id: Date.now(), role: 'tool', content: `⚠ ${(err as Error).message}`, timestamp: Date.now(), agent }])
+    } finally {
+      abortRef.current = null
+      setBusy(false)
+      setReloadToken(t => t + 1)
+    }
+  }
 
   /* Every source present in the current result set, for the source filter. */
   const sources = useMemo(() => {
@@ -561,7 +609,8 @@ export default function ChatConsole() {
   /* Intel is a read-only view — it must not enable the composer. */
   const composable = Boolean(threadRef) || openId === '__new__'
   const canSend = openId === '__new__' ? Boolean(composer.trim()) : Boolean(threadRef && composer.trim())
-  const submit = () => void (openId === '__new__' ? startNew() : sendContinue())
+  const remote = agent === 'hermes' && (threadRef ? devices.some(d => d.name === threadRef.device && !d.isLocal) : Boolean(newDevice))
+  const submit = () => void (remote ? (openId === '__new__' ? startNew() : sendContinue()) : sendLocal())
   const activeFilters = Boolean(filterDevice || filterProfile || filterSource)
 
   return (
@@ -588,7 +637,7 @@ export default function ChatConsole() {
             <button className="cc-intelbtn" onClick={() => { setShowNew(false); setThread([]); setThreadRef(null); setOpenId('__intel__') }} title="Archive stats">
               ◈ <span>INTEL</span>
             </button>
-            <button className="cc-newbtn" onClick={() => { setShowNew(true); setThread([]); setThreadRef(null); setOpenId('__new__') }} disabled={busy}>
+            <button className="cc-newbtn" onClick={() => { setShowNew(true); setThread([]); setThreadRef(null); setLocalSession(null); setOpenId('__new__') }} disabled={busy}>
               <Icon name="ok" size={14} /> NEW
             </button>
           </div>
@@ -612,7 +661,7 @@ export default function ChatConsole() {
                     setShowNew(true)
                     setThread([])
                     setThreadRef(null)
-                    setOpenId('__new__')
+                    setLocalSession(null); setOpenId('__new__')
                   }}
                   disabled={busy}
                   style={{
@@ -745,7 +794,7 @@ export default function ChatConsole() {
             {showNew && openId === '__new__' && (
               <div className="cc-new-panel">
                 <div className="cc-new-title">◈ NEW CONVERSATION</div>
-                <div className="cc-new-fields">
+                <div className="cc-new-fields" style={agent !== 'hermes' ? { display: 'none' } : undefined}>
                   <select value={newProfile} onChange={e => setNewProfile(e.target.value)} aria-label="Agent / profile">
                     {profiles.map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
@@ -754,7 +803,7 @@ export default function ChatConsole() {
                     {devices.filter(d => !d.isLocal).map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
                   </select>
                 </div>
-                <div className="cc-new-hint">Type a first message below to open the conversation. It hits the real Hermes agent.</div>
+                <div className="cc-new-hint">Type a first message below to open the conversation. It hits the selected agent on this machine (or the selected Hermes device).</div>
               </div>
             )}
 
@@ -793,7 +842,7 @@ export default function ChatConsole() {
                         <span style={{ flex: 1, borderTop: '1px solid currentColor', opacity: 0.3 }} />
                       </div>
                     )}
-                    <AsciiMsg who={messageSide(m.role, m.content) === 'system' ? 'SYS' : m.role === 'user' ? 'MICHAEL' : threadRef?.profile || newProfile || 'AGENT'} side={messageSide(m.role, m.content)} ts={fmtStamp(m.timestamp)} idx={i + 1} actions={isUserOrAssistant ? <CopyButton text={m.content ?? ''} /> : undefined}>
+                    <AsciiMsg who={messageSide(m.role, m.content) === 'system' ? 'SYS' : m.role === 'user' ? 'MICHAEL' : m.agent || threadRef?.agent || 'hermes'} side={messageSide(m.role, m.content)} ts={fmtStamp(m.timestamp)} idx={i + 1} actions={isUserOrAssistant ? <CopyButton text={m.content ?? ''} /> : undefined}>
                       {m.role === 'tool' && m.ms != null && <span>{(m.ms / 1000).toFixed(1)}s</span>}
                       <MessageBody m={m} />
                     </AsciiMsg>
@@ -802,7 +851,7 @@ export default function ChatConsole() {
               })
             })()}
             {busy && (
-              <AsciiMsg who={threadRef?.profile || newProfile || 'AGENT'} idx={thread.length + 1} ts="…">
+              <AsciiMsg who={agent} idx={thread.length + 1} ts="…">
                 <div className="cc-msg-body cc-thinking">
                   thinking…
                   {elapsed > 0 && (
@@ -822,6 +871,27 @@ export default function ChatConsole() {
             </button>
           )}
 
+          {/* Agent changes start a separate native session. */}
+          <div className="cc-agent-controls" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '8px 12px', minWidth: 0 }}>
+            <select aria-label="Chat agent" value={agent} disabled={busy} style={{ minHeight: 44, maxWidth: '100%', background: 'var(--pt-bg)', color: 'var(--pt-text-high)', border: '1px solid var(--pt-border-dim)', borderRadius: 8, padding: '0 8px' }} onChange={e => {
+              const next = e.target.value as AgentId
+              setAgent(next); setThread([]); setThreadRef(null); setLocalSession(null)
+              setOpenId('__new__'); setShowNew(true); setNewDevice('')
+              try { localStorage.setItem('mc.chat.agent', next) } catch { /* storage unavailable */ }
+            }}>
+              <option value="hermes">Hermes</option>
+              <option value="pi" disabled={!agentStatus.some(a => a.id === 'pi' && a.enabled && a.available)}>Pi</option>
+              <option value="codex" disabled title="session continuity unsupported">Codex — session continuity unsupported</option>
+            </select>
+            <select aria-label="Resume session" disabled={busy} value={threadRef ? convoKey(threadRef) : ''} style={{ flex: '1 1 160px', minWidth: 0, maxWidth: '100%', minHeight: 44, background: 'var(--pt-bg)', color: 'var(--pt-text-high)', border: '1px solid var(--pt-border-dim)', borderRadius: 8, padding: '0 8px' }} onChange={e => {
+              const c = conversations.find(c => convoKey(c) === e.target.value)
+              if (c) void openThread(c)
+              else { setThreadRef(null); setThread([]); setLocalSession(null); setOpenId('__new__'); setShowNew(true) }
+            }}>
+              <option value="">New session</option>
+              {conversations.filter(c => (c.agent || 'hermes') === agent).map(c => <option key={convoKey(c)} value={convoKey(c)}>{c.profile} · {c.title}</option>)}
+            </select>
+          </div>
           {/* Composer */}
           <form className="cc-composer aprompt-line" onSubmit={e => { e.preventDefault(); submit() }}>
             <AsciiPromptGutter empty={composer.length === 0} />
@@ -841,7 +911,7 @@ export default function ChatConsole() {
                     : 'Select a conversation, or press NEW to start one'
               }
               rows={2}
-              maxLength={8000}
+              maxLength={remote ? 8000 : 4000}
               disabled={busy || !composable}
               aria-label="Message"
             />

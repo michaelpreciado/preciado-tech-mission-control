@@ -37,7 +37,7 @@ export async function GET(_req: NextRequest, ctx: RouteCtx) {
   if (!SESSION_RE.test(id)) {
     return NextResponse.json({ error: 'invalid conversation id' }, { status: 400 })
   }
-  const messages = getMessages({ profile, device, sessionId: id })
+  const messages = getMessages({ profile, device, sessionId: id, agent: sp.get('agent') === 'pi' ? 'pi' : 'hermes' })
   return NextResponse.json({ id, profile, device, messages }, { headers: { 'Cache-Control': 'no-store' } })
 }
 

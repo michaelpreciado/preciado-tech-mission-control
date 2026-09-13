@@ -20,6 +20,7 @@ import crypto from 'node:crypto'
 import { execFileSync } from 'node:child_process'
 import { DatabaseSync } from 'node:sqlite'
 import { getConfig } from './config'
+import { readPiSessions } from './pi-sessions'
 import { logger } from './logger'
 import type { FridayChatRemote } from './config'
 
@@ -37,6 +38,7 @@ export type ChatMessage = {
 }
 
 export type Conversation = {
+  agent?: 'hermes' | 'pi'
   id: string // Hermes session id
   title: string
   profile: string // owning profile (default | jarvis | friday | ...)
@@ -53,6 +55,7 @@ export type Conversation = {
 }
 
 export type ConversationRef = {
+  agent?: 'hermes' | 'pi'
   profile: string
   device: string
   sessionId: string
@@ -138,6 +141,7 @@ function readSessions(file: string, profile: string, device: string): Conversati
     return rows.map(r => {
       const lastActiveAt = toMs(r.last_ts) || toMs(r.started_at)
       return {
+        agent: 'hermes',
         id: r.id,
         title: r.title?.trim() || truncate(r.first_user || r.preview || '', 60) || '(untitled)',
         profile,
@@ -277,9 +281,13 @@ function collectAll(): Conversation[] {
     all.push(...fetchRemote(remote))
   }
 
+  if (getConfig().chat.agents?.some(a => a.id === 'pi' && a.enabled)) {
+    all.push(...readPiSessions().map(s => s.conversation))
+  }
+
   const seen = new Set<string>()
   const rows = all
-    .filter(c => { const k = `${c.device}::${c.profile}::${c.id}`; if (seen.has(k)) return false; seen.add(k); return true })
+    .filter(c => { const k = `${c.agent || "hermes"}::${c.device}::${c.profile}::${c.id}`; if (seen.has(k)) return false; seen.add(k); return true })
     .sort((a, b) => b.lastActiveAt - a.lastActiveAt)
 
   collectCache = { rows, at: now }
@@ -393,6 +401,7 @@ export function listConversations(opts?: { q?: string; profile?: string; device?
 
 /** Read the full message thread for one conversation. */
 export function getMessages(ref: ConversationRef): ChatMessage[] {
+  if (ref.agent === 'pi') return ref.device === localDevice() ? readPiSessions().find(s => s.conversation.id === ref.sessionId)?.messages ?? [] : []
   // Local or remote? device === local hostname → local.
   const isLocal = ref.device === localDevice()
   let file: string | null = null
