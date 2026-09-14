@@ -13,11 +13,20 @@ const ACTIVE_FRESH_MS = 15_000
 const IDLE_FRESH_MS = 10 * 60_000
 const IDLE_AFTER_MS = 60_000
 
-let cached: { data: MissionData; collectedAt: number } | null = null
-let inFlight: Promise<MissionData> | null = null
+type TruthfulMissionData = MissionData & {
+  collectorErrors: Record<string, string>
+  lastGoodAt: Record<string, string>
+}
+
+type CachedMissionData = TruthfulMissionData & {
+  servedFromCache: boolean
+}
+
+let cached: { data: TruthfulMissionData; collectedAt: number } | null = null
+let inFlight: Promise<TruthfulMissionData> | null = null
 let lastAccessAt = 0
 
-function refresh(): Promise<MissionData> {
+function refresh(): Promise<TruthfulMissionData> {
   if (!inFlight) {
     inFlight = getMissionData()
       .then((data) => {
@@ -29,7 +38,15 @@ function refresh(): Promise<MissionData> {
   return inFlight
 }
 
-export async function getCachedMissionData(): Promise<MissionData> {
+function withCacheMetadata(data: TruthfulMissionData, collectedAt: number, servedFromCache: boolean): CachedMissionData {
+  return {
+    ...data,
+    servedFromCache,
+    lastGoodAt: { ...data.lastGoodAt, cache: new Date(collectedAt).toISOString() },
+  }
+}
+
+export async function getCachedMissionData(): Promise<CachedMissionData> {
   const now = Date.now()
   // When no client has hit us for IDLE_AFTER_MS (a closed/throttled tab, overnight),
   // raise the freshness window so background re-walks (thousands of files) don't
@@ -43,7 +60,8 @@ export async function getCachedMissionData(): Promise<MissionData> {
       // Serve stale immediately; refresh in the background.
       refresh().catch((err) => logger.error('server-cache/revalidate', err))
     }
-    return cached.data
+    return withCacheMetadata(cached.data, cached.collectedAt, true)
   }
-  return refresh()
+  const data = await refresh()
+  return withCacheMetadata(data, Date.now(), false)
 }

@@ -185,10 +185,11 @@ function fetchRemote(remote: FridayKanbanRemote): DbRead {
     )
     read = fs.existsSync(tmp) ? readBoard(tmp, remote.name) : { counts: {}, tasks: [], available: false }
     read.available = read.available && fs.existsSync(tmp)
-    try { fs.unlinkSync(tmp) } catch { /* best effort */ }
   } catch (err) {
     logger.warn('hermes-kanban-remote', `${remote.name}: scp failed — ${(err as Error).message}`)
     read = { counts: {}, tasks: [], available: false }
+  } finally {
+    try { fs.unlinkSync(tmp) } catch { /* best effort */ }
   }
 
   remoteCache.set(remote.name, { read, fetchedAt: now })
@@ -236,7 +237,7 @@ export function getKanbanSnapshot(status?: string, limit = 100): KanbanMultiSnap
 
   return {
     generatedAt: new Date().toISOString(),
-    available: local.available,
+    available: local.available || remotes.some(r => r.available),
     counts,
     tasks: status ? all.filter(t => t.status === status) : all,
     sources,
@@ -277,10 +278,10 @@ function fetchRemoteDetail(remote: FridayKanbanRemote, id: string): HermesTaskDe
       ['-q', '-o', 'StrictHostKeyChecking=accept-new', '-o', 'ConnectTimeout=6', '-i', keyFile, target, tmp],
       { timeout: remote.timeoutMs ?? 8000, stdio: 'pipe' },
     )
-    const det = withDbFile(tmp, db => readDetailFromDb(db, id, remote.name))
-    try { fs.unlinkSync(tmp) } catch { /* best effort */ }
-    return det
+    return withDbFile(tmp, db => readDetailFromDb(db, id, remote.name))
   } catch {
     return null
+  } finally {
+    try { fs.unlinkSync(tmp) } catch { /* best effort */ }
   }
 }
