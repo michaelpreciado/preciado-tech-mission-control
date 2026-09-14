@@ -67,6 +67,25 @@ type ClaudeFileAggregate = {
   byDay: Map<string, { tokens: number; byModel: Record<string, number> }>
 }
 
+/** Add shares to the full model set, then keep only the leaderboard rows. */
+export function prepareCostModels(allModels: ModelUsage[]) {
+  const totalTokensAll = allModels.reduce((s, m) => s + m.totalTokens, 0)
+  const totalCostAll = allModels.reduce((s, m) => s + m.estimatedCostUsd, 0)
+  const ranked = allModels
+    .map(m => ({
+      ...m,
+      tokenShare: totalTokensAll ? m.totalTokens / totalTokensAll : 0,
+      costShare: totalCostAll ? m.estimatedCostUsd / totalCostAll : 0,
+    }))
+    .sort((a, b) => b.totalTokens - a.totalTokens)
+  return {
+    allModels: ranked,
+    displayModels: ranked.slice(0, 60),
+    totalTokensAll,
+    totalCostAll,
+  }
+}
+
 /** Same append-only mtime cache as the session logs — this tree is ~88MB. */
 const claudeFileCache = new Map<string, { stamp: string; agg: ClaudeFileAggregate }>()
 
@@ -203,26 +222,23 @@ export async function collectCosts(): Promise<CostDashboard> {
   // Hermes (gateway/telegram/cron/kanban dispatches) records usage in
   // per-profile SQLite `sessions` tables — merged into the same record set so
   // every downstream figure (modes, billing, local-vs-API, cost-avoided)
-  // includes it. Records are keyed `hermes:<session>` and dedup on re-read.
+  // includes it. Records carry a session-aware key so distinct sessions with
+  // identical timestamps, models and token counts remain distinct.
   for (const rec of collectHermesUsage()) {
-    records.set(`hermes:${rec.timestamp}:${rec.provider}::${rec.model}:${rec.input}:${rec.output}`, rec)
+    records.set(rec.sessionKey, rec)
   }
 
   const { byModel, byDay } = foldRecords(records)
   const throughputSamples = [...sampleMap.values()]
-  const allModels = [...byModel.values()].filter(isRealModelRow)
-  const totalTokensAll = allModels.reduce((s, m) => s + m.totalTokens, 0)
-  const totalCostAll = allModels.reduce((s, m) => s + m.estimatedCostUsd, 0)
-  const models = allModels
-    .map(m => ({ ...m, tokenShare: totalTokensAll ? m.totalTokens / totalTokensAll : 0, costShare: totalCostAll ? m.estimatedCostUsd / totalCostAll : 0 }))
-    .sort((a, b) => b.totalTokens - a.totalTokens)
-    .slice(0, 60)
+  const preparedModels = prepareCostModels([...byModel.values()].filter(isRealModelRow))
+  const allModels = preparedModels.allModels
+  const models = preparedModels.displayModels
   // Fetch live OpenRouter billing data
   const orUsage = await fetchOpenRouterUsage()
   const warnings: string[] = models.length ? [] : ['No model usage entries found in local session logs.']
   if (orUsage) {
     // Find if we already have any openrouter model entries from logs
-    const loggedOrCost = models.filter(m => m.mode === 'metered' && /openrouter/i.test(`${m.provider} ${m.model}`)).reduce((s, m) => s + m.estimatedCostUsd, 0)
+    const loggedOrCost = allModels.filter(m => m.mode === 'metered' && /openrouter/i.test(`${m.provider} ${m.model}`)).reduce((s, m) => s + m.estimatedCostUsd, 0)
     if (orUsage.limit != null) {
       const pct = Math.round((orUsage.usageUsd / orUsage.limit) * 100)
       warnings.push(`OpenRouter live: $${orUsage.usageUsd.toFixed(4)} used of $${orUsage.limit} limit (${pct}%)`)
@@ -239,9 +255,9 @@ export async function collectCosts(): Promise<CostDashboard> {
   // covers a different window than these logs, so folding it in here produced a
   // total that contradicted the "this month" figure rendered beside it. Lifetime
   // stays available on openRouterLive.usageLifetime for reference instead.
-  const allCostUsd = models.reduce((s, m) => s + m.estimatedCostUsd, 0)
+  const allCostUsd = preparedModels.totalCostAll
 
-  const baseModes = rollupModes(models)
+  const baseModes = rollupModes(allModels)
   const subscriptionExtras = [claudeUsage, codexUsage].filter(Boolean)
   const modes = baseModes.map(mode => mode.mode !== 'subscription' ? mode : {
     ...mode,
@@ -285,7 +301,7 @@ export async function collectCosts(): Promise<CostDashboard> {
   const DEFAULT_PLAN = billCfg.defaultPlan
   const nowD = new Date()
   const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-  const provOf = new Map(models.map(m => [m.model, m.provider]))
+  const provOf = new Map(allModels.map(m => [m.model, m.provider]))
   const tokOf = (v: unknown) => (v && typeof v === 'object' && typeof (v as { tokens?: number }).tokens === 'number' ? (v as { tokens: number }).tokens : 0)
   // Snapshot the current month's real OR billed $ so future months accumulate a
   // genuine per-month OpenRouter history (the key API exposes no history).
@@ -341,8 +357,8 @@ export async function collectCosts(): Promise<CostDashboard> {
   // once there's no paid usage left in the logs to blend a rate from.
   // `:cloud` models run on Ollama's hosted hardware — not this rig, and not
   // free. Counting them as local overstates both volume and cost avoided.
-  const localModels = models.filter(m => isLocalModel(m.provider, m.model))
-  const cloudRoutedModels = models.filter(m => m.provider === 'ollama' && isCloudRoutedModel(m.model))
+  const localModels = allModels.filter(m => isLocalModel(m.provider, m.model))
+  const cloudRoutedModels = allModels.filter(m => m.provider === 'ollama' && isCloudRoutedModel(m.model))
   const localDaily = [...byDay.values()]
     .filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d.date))
     .map(day => {
@@ -388,7 +404,7 @@ export async function collectCosts(): Promise<CostDashboard> {
   /* Only METERED usage can price local inference. A subscription's list-rate
      dollars were never billed, so blending them in values the rig's output
      against money nobody spent. */
-  const paidModels = models.filter(m => m.mode === 'metered' && m.estimatedCostUsd > 0)
+  const paidModels = allModels.filter(m => m.mode === 'metered' && m.estimatedCostUsd > 0)
   const paidCost = paidModels.reduce((s, m) => s + m.estimatedCostUsd, 0)
   const paidBillableTokens = paidModels.reduce((s, m) => s + m.billableTokens, 0)
   const blendedApiRatePerMTokens = paidBillableTokens > 0 ? (paidCost / paidBillableTokens) * 1_000_000 : null
@@ -426,13 +442,13 @@ export async function collectCosts(): Promise<CostDashboard> {
 
   return {
     source: `${rel(ROOTS.agentSessions)} session usage logs`,
-    totalRequests: models.reduce((s, m) => s + m.requests, 0),
-    totalTokens: models.reduce((s, m) => s + m.totalTokens, 0),
-    totalBillableTokens: models.reduce((s, m) => s + m.billableTokens, 0),
-    totalInputTokens: models.reduce((s, m) => s + m.inputTokens, 0),
-    totalOutputTokens: models.reduce((s, m) => s + m.outputTokens, 0),
-    totalCacheReadTokens: models.reduce((s, m) => s + m.cacheReadTokens, 0),
-    totalCacheWriteTokens: models.reduce((s, m) => s + m.cacheWriteTokens, 0),
+    totalRequests: allModels.reduce((s, m) => s + m.requests, 0),
+    totalTokens: allModels.reduce((s, m) => s + m.totalTokens, 0),
+    totalBillableTokens: allModels.reduce((s, m) => s + m.billableTokens, 0),
+    totalInputTokens: allModels.reduce((s, m) => s + m.inputTokens, 0),
+    totalOutputTokens: allModels.reduce((s, m) => s + m.outputTokens, 0),
+    totalCacheReadTokens: allModels.reduce((s, m) => s + m.cacheReadTokens, 0),
+    totalCacheWriteTokens: allModels.reduce((s, m) => s + m.cacheWriteTokens, 0),
     estimatedCostUsd: allCostUsd,
     openRouterLive: orUsage ?? undefined,
     claudeUsage: claudeUsage ?? undefined,
