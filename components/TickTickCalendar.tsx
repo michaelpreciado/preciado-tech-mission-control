@@ -17,6 +17,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button, SkeletonPanel } from './ui'
 import { EmptyState } from './EmptyState'
 import type { TickTickTask, TickTickWeekData } from '@/lib/types'
+import { apiFetch } from '@/lib/api-base'
 
 const POLL_MS = 60_000
 const DAY_NAMES = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
@@ -116,7 +117,7 @@ export function TickTickCalendar() {
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch('/api/ticktick', { cache: 'no-store' })
+      const res = await apiFetch('/api/ticktick', { cache: 'no-store' })
       return (await res.json()) as TickTickWeekData
     } catch {
       return { configured: true, tasks: [], error: 'could not reach /api/ticktick' } as TickTickWeekData

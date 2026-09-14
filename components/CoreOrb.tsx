@@ -11,6 +11,7 @@ import OrbitalKanbanRing from './OrbitalKanbanRing'
 import PipelineOrbit, { PipelineKanbanFit } from './PipelineOrbit'
 import { ACCENT_DEFAULT, SEMANTIC } from '@/lib/tokens'
 import type { HostMetrics, HostSample } from '@/lib/host-metrics'
+import { apiFetch } from '@/lib/api-base'
 import {
   deriveOrbState,
   isOrbBelowCoolThreshold,
@@ -226,7 +227,7 @@ function OrbRuntime({ placement }: { placement: Placement }) {
       const ctl = new AbortController()
       abort.current = ctl
       try {
-        const response = await fetch('/api/telemetry', { cache: 'no-store', signal: ctl.signal })
+        const response = await apiFetch('/api/telemetry', { cache: 'no-store', signal: ctl.signal })
         if (!response.ok) return
         const metrics = await response.json() as HostMetrics
         if (!alive) return

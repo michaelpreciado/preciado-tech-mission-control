@@ -8,6 +8,7 @@ import { Markdown } from './Markdown'
 import { Icon } from './icons'
 import { SectionRule } from './ui'
 import styles from './HomeWorkspace.module.css'
+import { apiFetch } from '@/lib/api-base'
 
 type Message = { role: 'user' | 'assistant'; content: string; timestamp?: number }
 const STORAGE = 'mc-home-chat-v1'
@@ -36,7 +37,7 @@ export function HomeChat() {
     if (typeof saved.draft === 'string') setDraft(saved.draft.slice(0, 4000))
     setReady(true)
     const controller = new AbortController()
-    void fetch('/api/chat', { cache: 'no-store', signal: controller.signal })
+    void apiFetch('/api/chat', { cache: 'no-store', signal: controller.signal })
       .then(async r => { if (!r.ok) throw new Error('Unable to check chat availability'); return r.json() })
       .then(data => setAvailable(Boolean(data.available)))
       .catch(e => { if (e.name !== 'AbortError') setError('Could not check the agent connection. You can still try sending a message.') })
@@ -61,7 +62,7 @@ export function HomeChat() {
     const controller = new AbortController()
     abort.current = controller
     try {
-      const response = await fetch('/api/chat', {
+      const response = await apiFetch('/api/chat', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message, session }), signal: controller.signal,
       })

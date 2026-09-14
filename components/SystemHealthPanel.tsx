@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { SystemHealthData } from '@/lib/types'
 import { SkeletonPanel } from './ui'
+import { apiFetch } from '@/lib/api-base'
 
 const POLL_MS = 20_000
 
@@ -24,7 +25,7 @@ export function SystemHealthPanel() {
 
   const refresh = useCallback(async () => {
     try {
-      const res = await fetch('/api/system', { cache: 'no-store' })
+      const res = await apiFetch('/api/system', { cache: 'no-store' })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       setData(await res.json())
       setError(null)

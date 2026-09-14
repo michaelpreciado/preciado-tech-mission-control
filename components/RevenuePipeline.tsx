@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { PipelineData } from '@/lib/types'
 import { deadlineChip, formatTimeInStage, revenueLeads, stageStartedAt } from '@/lib/revenue-pipeline'
 import { SkeletonPanel, SectionRule, fmtDate } from './ui'
+import { apiFetch } from '@/lib/api-base'
 
 const POLL_MS = 12_000
 const chipStyle = { border: '1px solid currentColor', borderRadius: 'var(--pt-r-sm)', padding: '2px 5px', fontSize: 10 }
@@ -16,7 +17,7 @@ export function RevenuePipeline() {
   const reviewBusy = useRef(false)
   const refresh = useCallback(async () => {
     const version = ++requestVersion.current
-    const response = await fetch('/api/pipeline?view=revenue', { cache: 'no-store' })
+    const response = await apiFetch('/api/pipeline?view=revenue', { cache: 'no-store' })
     if (!response.ok) throw new Error(`Unable to load revenue (HTTP ${response.status}).`)
     const result: PipelineData = await response.json()
     if (version === requestVersion.current) { setData(result); setError('') }
@@ -37,7 +38,7 @@ export function RevenuePipeline() {
     setPending(id)
     setError('')
     try {
-      const response = await fetch('/api/pipeline/review', {
+    const response = await apiFetch('/api/pipeline/review', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lead_id: id, review: decision }),
       })

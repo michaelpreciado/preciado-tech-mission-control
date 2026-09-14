@@ -18,6 +18,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useLiveData } from './LiveDataProvider'
 import { Icon, type IconName } from './icons'
+import { apiFetch } from '@/lib/api-base'
 
 type Item = { id: string; label: string; sub?: string; href: string; icon: IconName; group: string }
 
@@ -131,7 +132,7 @@ export function CommandPalette() {
     if (!convQuery) { setConvItems([]); return }
     const ctrl = new AbortController()
     const t = setTimeout(() => {
-      fetch(`/api/conversations?q=${encodeURIComponent(convQuery)}&limit=8`, { cache: 'no-store', signal: ctrl.signal })
+      apiFetch(`/api/conversations?q=${encodeURIComponent(convQuery)}&limit=8`, { cache: 'no-store', signal: ctrl.signal })
         .then(r => (r.ok ? r.json() : null))
         .then((j: { conversations?: Array<{ id: string; title: string; profile: string; device: string; source?: string }> } | null) => {
           if (!j) return

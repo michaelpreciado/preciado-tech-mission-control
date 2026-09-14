@@ -15,6 +15,7 @@ import { AsciiMsg, messageSide } from '@/components/ascii-msg'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Markdown } from '@/components/Markdown'
 import { cleanTitle, sourceGlyph } from '@/lib/conv-format'
+import { apiFetch } from '@/lib/api-base'
 
 type LiveMsg = {
   sessionId: string
@@ -144,7 +145,7 @@ export default function LiveChatMirror({ localDevice, onOpen }: {
     const tick = async () => {
       try {
         const since = lastSinceRef.current
-        const res = await fetch(`/api/chats/live?since=${since}`, { cache: 'no-store' })
+        const res = await apiFetch(`/api/chats/live?since=${since}`, { cache: 'no-store' })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const j = await res.json()
         if (!alive) return
@@ -184,7 +185,7 @@ export default function LiveChatMirror({ localDevice, onOpen }: {
     setOpenKey(prev => (prev === k ? null : k))
     setThread(s.messages)
     try {
-      const res = await fetch(`/api/chats/${encodeURIComponent(s.id)}?profile=${s.profile}`, { cache: 'no-store' })
+      const res = await apiFetch(`/api/chats/${encodeURIComponent(s.id)}?profile=${s.profile}`, { cache: 'no-store' })
       if (res.ok) {
         const j = await res.json()
         setThread(j.messages ?? [])

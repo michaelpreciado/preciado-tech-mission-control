@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { apiFetch } from '@/lib/api-base'
 
 type IdeaPreset = {
   id?: string
@@ -37,7 +38,7 @@ export function VideoPromptStudio() {
 
   useEffect(() => {
     let active = true
-    fetch('/api/ml-content', { cache: 'no-store' })
+    apiFetch('/api/ml-content', { cache: 'no-store' })
       .then(response => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
         return response.json()
@@ -75,7 +76,7 @@ export function VideoPromptStudio() {
         payoff,
         length: String(length),
       })
-      const response = await fetch(`/api/content-prompt?${params.toString()}`, { cache: 'no-store' })
+      const response = await apiFetch(`/api/content-prompt?${params.toString()}`, { cache: 'no-store' })
       const data = await response.json() as PromptResponse
       if (!response.ok || typeof data.prompt !== 'string') throw new Error(data.error || `HTTP ${response.status}`)
       setPrompt(data.prompt)

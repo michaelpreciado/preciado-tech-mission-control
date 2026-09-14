@@ -24,6 +24,7 @@ import { cleanTitle, dayBucket, isJunk, sourceGlyph, type DayBucket } from '@/li
 import { ChatIntel } from '@/components/views/ChatIntel'
 import LiveChatMirror from '@/components/LiveChatMirror'
 import type { ConversationStats } from '@/lib/conversations'
+import { apiFetch } from '@/lib/api-base'
 import '../app/vf/v3-lane.css'
 
 /* ── Types (mirror the API) ─────────────────────────────── */
@@ -314,7 +315,7 @@ export default function ChatConsole() {
         if (q) params.set('q', q)
         if (filterDevice) params.set('device', filterDevice)
         if (filterProfile) params.set('profile', filterProfile)
-        const res = await fetch(`/api/conversations?${params}`, { cache: 'no-store' })
+        const res = await apiFetch(`/api/conversations?${params}`, { cache: 'no-store' })
         const j = await res.json()
         if (!alive) return
         setConversations(j.conversations ?? [])
@@ -342,7 +343,7 @@ export default function ChatConsole() {
     setThread([])
     try {
       const params = new URLSearchParams({ profile: c.profile, device: c.device })
-      const res = await fetch(`/api/conversations/${encodeURIComponent(c.id)}?${params}`, { cache: 'no-store' })
+      const res = await apiFetch(`/api/conversations/${encodeURIComponent(c.id)}?${params}`, { cache: 'no-store' })
       const j = await res.json()
       setThread(j.messages ?? [])
     } finally {
@@ -418,7 +419,7 @@ export default function ChatConsole() {
     const ctrl = new AbortController()
     abortRef.current = ctrl
     try {
-      const res = await fetch(`/api/conversations/${encodeURIComponent(threadRef.id)}`, {
+      const res = await apiFetch(`/api/conversations/${encodeURIComponent(threadRef.id)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text, profile: threadRef.profile, device: threadRef.device }),
@@ -464,7 +465,7 @@ export default function ChatConsole() {
     const ctrl = new AbortController()
     abortRef.current = ctrl
     try {
-      const res = await fetch('/api/conversations/new', {
+      const res = await apiFetch('/api/conversations/new', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text, profile: newProfile, device: newDevice }),

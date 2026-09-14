@@ -15,6 +15,7 @@
 import { useEffect, useState } from 'react'
 import { SkeletonPanel } from './ui'
 import type { AgentActivity, AgentChannel, WorkKind } from '@/lib/types'
+import { apiFetch } from '@/lib/api-base'
 
 const POLL_MS = 15_000
 
@@ -83,7 +84,7 @@ export function AgentOffice() {
 
   useEffect(() => {
     let alive = true
-    const load = () => fetch('/api/agent-activity', { cache: 'no-store' })
+    const load = () => apiFetch('/api/agent-activity', { cache: 'no-store' })
       .then(r => r.json())
       .then((j: AgentActivity) => { if (alive) { setData(j); setErr(false) } })
       .catch(() => { if (alive) setErr(true) })

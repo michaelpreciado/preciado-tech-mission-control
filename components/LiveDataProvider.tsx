@@ -2,6 +2,7 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { MissionData } from '@/lib/types'
+import { apiFetch, apiUrl } from '@/lib/api-base'
 
 type LiveCtx = {
   data: MissionData | null
@@ -71,7 +72,7 @@ export function LiveDataProvider({ children }: { children: React.ReactNode }) {
     inFlight.current = controller
     setIsLoading(true)
 
-    const jsonPromise = fetch('/api/mission-control', {
+    const jsonPromise = apiFetch('/api/mission-control', {
       cache: 'no-store',
       signal: controller.signal,
       headers: { 'Accept': 'application/json' },
@@ -165,7 +166,7 @@ export function LiveDataProvider({ children }: { children: React.ReactNode }) {
       if (document.visibilityState === 'visible' && navigator.onLine) void refreshThrottled()
     }
     try {
-      es = new EventSource('/api/events')
+      es = new EventSource(apiUrl('/api/events'))
       es.onmessage = onBusEvent
       es.onerror = () => { /* EventSource reconnects on its own */ }
     } catch { /* noop */ }

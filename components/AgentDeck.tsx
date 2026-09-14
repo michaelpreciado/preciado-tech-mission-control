@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { HerdrAgent, HerdrKind, HerdrSnapshot } from '@/lib/herdr-types';
 import { TFrame } from './ui'
 import styles from './AgentDeck.module.css';
+import { apiFetch } from '@/lib/api-base';
 
 // Memory only: credentials are discarded when this component unmounts.
 export default function AgentDeck({ onCredentialChange }: { onCredentialChange?: (token: string) => void }) {
@@ -29,7 +30,7 @@ export default function AgentDeck({ onCredentialChange }: { onCredentialChange?:
   const [revision, setRevision] = useState(0);
   const dialog = useRef<HTMLDialogElement>(null);
   const request = useCallback(async (url: string, init: RequestInit = {}) => {
-    const response = await fetch(url, { ...init, cache: 'no-store', headers: {
+    const response = await apiFetch(url, { ...init, cache: 'no-store', headers: {
       'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...init.headers,
     } });
     const body = await response.json();

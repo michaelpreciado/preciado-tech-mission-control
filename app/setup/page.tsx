@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react'
 import { Button, SectionHead } from '@/components/ui'
 import { ACCENT_PRESETS, DEFAULT_ACCENT } from '@/lib/theme'
 import { NAV_TABS, PINNED_TAB_IDS } from '@/lib/nav-tabs'
+import { apiFetch } from '@/lib/api-base'
 import '../vf/v3-lane.css'
 
 type MotionSetting = 'full' | 'reduced' | 'off'
@@ -120,7 +121,7 @@ export default function SetupPage() {
   const [overTabId, setOverTabId] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/api/setup', { cache: 'no-store' })
+    apiFetch('/api/setup', { cache: 'no-store' })
       .then(r => r.json())
       .then(j => { setCfg(j.config); setConfigured(Boolean(j.configured)) })
       .catch(() => setFlash({ tone: 'err', text: 'Could not load current config.' }))
@@ -201,7 +202,7 @@ export default function SetupPage() {
     if (ticktickKey.trim()) keys.ticktickToken = ticktickKey.trim()
     if (Object.keys(keys).length) body.keys = keys
     try {
-      const res = await fetch('/api/setup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      const res = await apiFetch('/api/setup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const j = await res.json()
       if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`)
       setOpenrouterKey('')
@@ -223,11 +224,11 @@ export default function SetupPage() {
     setBusy(true)
     setFlash(null)
     try {
-      const res = await fetch(`/api/setup/demo${force ? '?force=1' : ''}`, { method: 'POST' })
+      const res = await apiFetch(`/api/setup/demo${force ? '?force=1' : ''}`, { method: 'POST' })
       const j = await res.json()
       if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`)
       setFlash({ tone: 'ok', text: 'Demo data seeded — open the Deck to see it live.' })
-      const fresh = await fetch('/api/setup', { cache: 'no-store' }).then(r => r.json())
+      const fresh = await apiFetch('/api/setup', { cache: 'no-store' }).then(r => r.json())
       setCfg(fresh.config)
       setConfigured(Boolean(fresh.configured))
     } catch (err) {

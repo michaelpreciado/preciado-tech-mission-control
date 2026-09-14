@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
 import { useLiveData } from './LiveDataProvider'
 import type { HermesTask, SystemHealthData } from '@/lib/types'
+import { apiFetch } from '@/lib/api-base'
 
 const POLL_MS = 15_000
 
@@ -28,8 +29,8 @@ export function ActionFeed({ compact = false }: { compact?: boolean }) {
 
   const refresh = useCallback(async () => {
     const [h, b] = await Promise.allSettled([
-      fetch('/api/system', { cache: 'no-store' }).then(r => r.ok ? r.json() : null),
-      fetch('/api/blocked-tasks', { cache: 'no-store' }).then(r => r.ok ? r.json() : null),
+      apiFetch('/api/system', { cache: 'no-store' }).then(r => r.ok ? r.json() : null),
+      apiFetch('/api/blocked-tasks', { cache: 'no-store' }).then(r => r.ok ? r.json() : null),
     ])
     if (h.status === 'fulfilled' && h.value) setHealth(h.value)
     if (b.status === 'fulfilled' && b.value?.tasks) setBlockedTasks(b.value.tasks)

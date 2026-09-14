@@ -12,6 +12,7 @@ import type {
 import { TFrame, Button, SkeletonPanel, fmtDate } from './ui'
 import { RelativeTime } from './RelativeTime'
 import { TaskOverview } from './TaskOverview'
+import { apiFetch, apiUrl } from '@/lib/api-base'
 
 const POLL_MS = 15_000
 const SHOW_DONE_LS_KEY = 'mc-kanban:showDone'
@@ -131,7 +132,7 @@ function DetailDrawer({ id, onClose, onChanged, token = '' }: { id: string; onCl
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch(`/api/kanban/${encodeURIComponent(id)}`, { cache: 'no-store' })
+      const res = await apiFetch(`/api/kanban/${encodeURIComponent(id)}`, { cache: 'no-store' })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       setDetail(await res.json())
       setError(null)
@@ -149,7 +150,7 @@ function DetailDrawer({ id, onClose, onChanged, token = '' }: { id: string; onCl
   }, [onClose])
 
   useEffect(() => {
-    const es = new EventSource('/api/events')
+    const es = new EventSource(apiUrl('/api/events'))
     const onAny = (ev: MessageEvent) => {
       try {
         const evt = JSON.parse(ev.data) as { task_id?: string }
@@ -166,7 +167,7 @@ function DetailDrawer({ id, onClose, onChanged, token = '' }: { id: string; onCl
     setBusy(action)
     setActErr(null)
     try {
-      const res = await fetch(`/api/kanban/${encodeURIComponent(id)}`, {
+      const res = await apiFetch(`/api/kanban/${encodeURIComponent(id)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ action, ...payload }),
@@ -194,7 +195,7 @@ function DetailDrawer({ id, onClose, onChanged, token = '' }: { id: string; onCl
     setBusy('dispatch')
     setActErr(null)
     try {
-      const res = await fetch(`/api/kanban/${encodeURIComponent(id)}`, {
+      const res = await apiFetch(`/api/kanban/${encodeURIComponent(id)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ action: 'dispatch-claude' }),
@@ -447,7 +448,7 @@ function CreateModal({ sources, onClose, onCreated, token = '' }: {
     setErr(null)
     const assignee = form.assignee === 'other' ? form.assigneeOther.trim() : form.assignee
     try {
-      const res = await fetch('/api/kanban', {
+      const res = await apiFetch('/api/kanban', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({
@@ -760,7 +761,7 @@ export function KanbanBoard({ token = '' }: { token?: string }) {
 
   const refresh = useCallback(async () => {
     try {
-      const res = await fetch('/api/kanban', { cache: 'no-store' })
+      const res = await apiFetch('/api/kanban', { cache: 'no-store' })
       if (res.ok) setSnap(await res.json())
     } catch { /* offline */ }
   }, [])
@@ -774,7 +775,7 @@ export function KanbanBoard({ token = '' }: { token?: string }) {
   }, [refresh])
 
   useEffect(() => {
-    const es = new EventSource('/api/events')
+    const es = new EventSource(apiUrl('/api/events'))
     const onAny = () => {
       const now = Date.now()
       if (now - lastEventRef.current > 3000) {
@@ -833,7 +834,7 @@ export function KanbanBoard({ token = '' }: { token?: string }) {
         : action === 'unblock'
           ? { action: 'unblock', reason: 'unblocked from Mission Control' }
           : { action: 'set-status', status: to }
-      const res = await fetch(`/api/kanban/${encodeURIComponent(info.id)}`, {
+      const res = await apiFetch(`/api/kanban/${encodeURIComponent(info.id)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify(body),

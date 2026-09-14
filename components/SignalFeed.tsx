@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { SkeletonPanel } from '@/components/ui'
+import { apiFetch } from '@/lib/api-base'
 
 type Signal = {
   id: string
@@ -34,7 +35,7 @@ export function SignalFeed() {
 
   useEffect(() => {
     let active = true
-    fetch('/api/content-signals')
+    apiFetch('/api/content-signals')
       .then(response => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
         return response.json()
