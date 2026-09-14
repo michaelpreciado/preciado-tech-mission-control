@@ -4,6 +4,11 @@ import { continuityStore, type ChatContinuity } from './chat-continuity'
 import { withAgentFlight } from './agent-adapters'
 
 // Both normal MC sends and pane turns share the Hermes flight lock.
+/** herdr agent names must be 1-32 chars of [a-z0-9_-] and start with a lowercase letter. */
+export function herdrPaneName(mcConversationId: string) {
+  const slug = mcConversationId.toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 8) || 'session'
+  return `mc-chat-${slug}`.slice(0, 32)
+}
 export async function continueInHerdr(record: ChatContinuity, text: string, run: HerdrRunner = runHerdr, file?: string) {
   const result = await withAgentFlight('hermes', async () => {
     const store = continuityStore(file)
@@ -12,7 +17,7 @@ export async function continueInHerdr(record: ChatContinuity, text: string, run:
       if (!record.herdrPane) {
         const created = await run(['workspace', 'create', '--cwd', process.cwd(), '--label', 'MC chat', '--no-focus'])
         const pane = created.pane_id || (created.pane as { pane_id?: string })?.pane_id || (created.root_pane as { pane_id?: string })?.pane_id
-        record = store.save({ ...record, herdrPane: validateTarget(pane), paneName: `mc-chat-${record.mcConversationId}` })
+        record = store.save({ ...record, herdrPane: validateTarget(pane), paneName: herdrPaneName(record.mcConversationId) })
         try {
           await run(['agent', 'start', record.paneName!, '--kind', 'hermes', '--pane', record.herdrPane!, '--timeout', '8000', '--',
             ...(record.profile !== 'default' ? ['--profile', record.profile] : []), 'chat',

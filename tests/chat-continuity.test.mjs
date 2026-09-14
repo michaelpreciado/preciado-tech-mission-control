@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { mkdtempSync, rmSync } from 'node:fs'
 import path from 'node:path'
 import { continuityStore } from '../lib/chat-continuity.ts'
-import { continueInHerdr } from '../lib/chat-herdr.ts'
+import { continueInHerdr, herdrPaneName } from '../lib/chat-herdr.ts'
 
 const record = { mcConversationId: 'mc-test', hermesSession: 'native-id', sessionName: 'mc-named', profile: 'jarvis', selector: 'name' }
 function fixture() {
@@ -41,6 +41,12 @@ test('continuation spawns once, preserves profile/name argv, returns terminal te
     assert.equal(calls.filter(a => a[0] === 'workspace').length, 1)
     assert.equal(calls.find(a => a[1] === 'prompt')[3], 'literal $(text)')
   } finally { f.close() }
+})
+test('herdr pane names satisfy the herdr agent naming rules', () => {
+  for (const id of ['mc-test', '8b30055b-3b48-4f7d-b667-db7419e74add', 'A'.repeat(64), '!!!', '']) {
+    const name = herdrPaneName(id)
+    assert.match(name, /^[a-z][a-z0-9_-]{0,31}$/, `invalid herdr name for ${id}: ${name}`)
+  }
 })
 test('uncertain startup retains pane and refuses mismatched pane on retry', async () => {
   const f = fixture()
