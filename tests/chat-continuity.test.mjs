@@ -4,6 +4,7 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import path from 'node:path'
 import { continuityStore } from '../lib/chat-continuity.ts'
 import { continueInHerdr, herdrPaneName } from '../lib/chat-herdr.ts'
+import { HerdrError } from '../lib/herdr-bridge.ts'
 
 const record = { mcConversationId: 'mc-test', hermesSession: 'native-id', sessionName: 'mc-named', profile: 'jarvis', selector: 'name' }
 function fixture() {
@@ -60,5 +61,84 @@ test('uncertain startup retains pane and refuses mismatched pane on retry', asyn
     await assert.rejects(continueInHerdr(record, 'hello', async args => {
       assert.equal(args[1], 'list'); return { agents: [] }
     }, f.file), /missing or has changed/)
+  } finally { f.close() }
+})
+
+for (const failure of [
+  new HerdrError('agent target pane w3:pA is not an available shell', 503, undefined, 'agent_pane_busy'),
+  new HerdrError('timed out waiting for agent startup', 503, undefined, 'agent_start_failed'),
+]) {
+  test(`startup retries warming pane: ${failure.message}`, async () => {
+    const f = fixture(), calls = []
+    let starts = 0
+    try {
+      const result = await continueInHerdr(record, 'hello', async args => {
+        calls.push(args)
+        if (args[0] === 'workspace') return { pane_id: 'w3:pA' }
+        if (args[1] === 'start' && ++starts === 1) throw failure
+        if (args[1] === 'list') return { agents: [{ pane_id: 'w3:pA', name: 'mc-chat-mc-test', agent: 'hermes', agent_status: 'idle' }] }
+        if (args[1] === 'read') return { text: 'reply' }
+        return {}
+      }, f.file)
+      assert.equal(starts, 2)
+      assert.equal(calls.filter(args => args[0] === 'workspace').length, 1)
+      assert.equal(calls.filter(args => args[1] === 'prompt').length, 1)
+      assert.equal(result.terminalText, 'reply')
+    } finally { f.close() }
+  })
+}
+
+for (const code of ['invalid_argument', 'agent_name_collision']) {
+  test(`startup does not retry ${code}, even when diagnostic read fails`, async () => {
+    const f = fixture(), calls = []
+    try {
+      await assert.rejects(continueInHerdr(record, 'hello', async args => {
+        calls.push(args)
+        if (args[0] === 'workspace') return { pane_id: 'w3:pA' }
+        if (args[1] === 'start') throw new HerdrError('start rejected', 503, undefined, code)
+        throw new Error('read unavailable')
+      }, f.file), /startup is unconfirmed/)
+      assert.equal(calls.filter(args => args[1] === 'start').length, 1)
+      assert.deepEqual(calls.at(-1), ['pane', 'read', 'w3:pA', '--lines', '40', '--format', 'text'])
+    } finally { f.close() }
+  })
+}
+
+test('startup surfaces live owner terminal error and stops retrying', async () => {
+  const f = fixture(), calls = []
+  try {
+    await assert.rejects(continueInHerdr(record, 'hello', async args => {
+      calls.push(args)
+      if (args[0] === 'workspace') return { pane_id: 'w3:pA' }
+      if (args[1] === 'start') throw new HerdrError('timed out waiting for agent startup')
+      if (args[1] === 'read') return { text: 'banner\n\u001b[31mSession native-id already has a live owner\u001b[0m\nother text' }
+      throw new Error('unexpected command')
+    }, f.file), error => {
+      assert.equal(error.message, 'Session native-id already has a live owner')
+      assert.equal(error.target, 'w3:pA')
+      assert.equal(error.status, 502)
+      return true
+    })
+    assert.equal(calls.filter(args => args[1] === 'start').length, 1)
+    assert.deepEqual(calls.at(-1), ['pane', 'read', 'w3:pA', '--lines', '40', '--format', 'text'])
+  } finally { f.close() }
+})
+
+test('warming pane retries are bounded and never deliver a prompt after exhaustion', async () => {
+  const f = fixture(), calls = []
+  try {
+    await assert.rejects(continueInHerdr(record, 'hello', async (args, timeout) => {
+      calls.push(args)
+      if (args[0] === 'workspace') return { pane_id: 'w3:pA' }
+      if (args[1] === 'start') {
+        assert.ok(timeout > 0 && timeout <= 10_000)
+        throw new HerdrError('pane warming', 503, undefined, 'agent_pane_busy')
+      }
+      if (args[1] === 'read') return { text: '' }
+      throw new Error('unexpected command')
+    }, f.file), /startup is unconfirmed/)
+    const starts = calls.filter(args => args[1] === 'start').length
+    assert.ok(starts > 1 && starts <= 12)
+    assert.equal(calls.filter(args => args[1] === 'prompt').length, 0)
   } finally { f.close() }
 })

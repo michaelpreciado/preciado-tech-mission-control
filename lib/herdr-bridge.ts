@@ -17,11 +17,21 @@ export type HerdrRunner = (args: string[], timeout?: number) => Promise<Row>
 export class HerdrError extends Error {
   status: number
   target?: string
-  constructor(message: string, status = 503, target?: string) {
+  code?: string
+  constructor(message: string, status = 503, target?: string, code?: string) {
     super(message)
     this.status = status
     this.target = target
+    this.code = code
   }
+}
+
+const HERDR_FAILURE = 'Herdr did not complete the operation. Check the local server and agent readiness.'
+function envelopeError(value: unknown): HerdrError | undefined {
+  const error = row(row(value).error)
+  const message = str(error.message)
+  const code = str(error.code) || undefined
+  if (message || code) return new HerdrError(message || HERDR_FAILURE, 503, undefined, code)
 }
 
 export const runHerdr: HerdrRunner = async (args, timeout = 10_000) => {
@@ -32,12 +42,20 @@ export const runHerdr: HerdrRunner = async (args, timeout = 10_000) => {
     // directly (including an empty screen), not the JSON socket envelope.
     if (['agent', 'pane'].includes(args[0]) && args[1] === 'read') return { text: stdout }
     const response = row(JSON.parse(stdout))
-    if (response.error) throw new Error('Herdr rejected the operation')
+    if (response.error) throw envelopeError(response) || new Error('Herdr rejected the operation')
     if (!response.result || typeof response.result !== 'object') throw new Error('Invalid Herdr response')
     return row(response.result)
-  } catch {
-    // CLI stderr may contain prompt text, environment details, or terminal contents.
-    throw new HerdrError('Herdr did not complete the operation. Check the local server and agent readiness.')
+  } catch (error) {
+    if (error instanceof HerdrError) throw error
+    // Nonzero exits reject execFile, but may still carry a JSON error envelope.
+    // Never expose raw stdout/stderr: either can contain terminal contents.
+    for (const output of [row(error).stdout, row(error).stderr]) {
+      let parsed: unknown
+      try { parsed = JSON.parse(str(output)) } catch { continue }
+      const failure = envelopeError(parsed)
+      if (failure) throw failure
+    }
+    throw new HerdrError(HERDR_FAILURE)
   }
 }
 

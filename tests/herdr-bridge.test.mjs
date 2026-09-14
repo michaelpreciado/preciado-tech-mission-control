@@ -2,6 +2,43 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createHerdrBridge, normalizeSnapshot, validateSpawn } from '../lib/herdr-bridge.ts'
 
+test('runner preserves JSON error envelopes on success and nonzero exits, but never raw terminal text', async () => {
+  const childProcess = (await import('node:child_process')).default
+  const { promisify } = await import('node:util')
+  const { syncBuiltinESMExports } = await import('node:module')
+  const original = childProcess.execFile
+  let response, failure
+  const fake = () => { throw new Error('expected promisified invocation') }
+  fake[promisify.custom] = async (bin, args, options) => {
+    assert.deepEqual(args, ['agent', 'start', 'test'])
+    assert.equal(options.shell, undefined)
+    if (failure) throw failure
+    return response
+  }
+  try {
+    childProcess.execFile = fake
+    syncBuiltinESMExports()
+    const { runHerdr } = await import('../lib/herdr-bridge.ts?runner-envelope-test')
+    const envelope = JSON.stringify({ error: { code: 'agent_pane_busy', message: 'pane is not an available shell' } })
+    for (const stream of ['success', 'stdout', 'stderr']) {
+      response = { stdout: envelope }
+      failure = stream === 'success' ? undefined : Object.assign(new Error('exit 1'), { [stream]: envelope })
+      await assert.rejects(runHerdr(['agent', 'start', 'test']), {
+        code: 'agent_pane_busy', message: 'pane is not an available shell', status: 503,
+      })
+    }
+    for (const output of ['terminal text', 'prefix {"error":{"message":"terminal text"}}', '{"unrelated":"terminal text"}']) {
+      failure = Object.assign(new Error('exit 1'), { stderr: output })
+      await assert.rejects(runHerdr(['agent', 'start', 'test']), {
+        message: 'Herdr did not complete the operation. Check the local server and agent readiness.', code: undefined,
+      })
+    }
+  } finally {
+    childProcess.execFile = original
+    syncBuiltinESMExports()
+  }
+})
+
 test('normalization uses global focus and pane cwd fallback', () => {
   const result = normalizeSnapshot({ focused_pane_id: 'w1:p2', panes: [{ pane_id: 'w1:p2', workspace_id: 'w1', cwd: '/tmp' }], workspaces: [{ workspace_id: 'w1', label: 'Work' }] }, { agents: [{ pane_id: 'w1:p2', name: 'A', agent: 'codex', agent_status: 'working' }, { pane_id: '--bad' }] })
   assert.equal(result.agents.length, 1)
