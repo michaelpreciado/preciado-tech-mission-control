@@ -87,10 +87,22 @@ Herdr shutdown, CLI failure, or process kill. This change adds no daemon.
   #050506/#0A0A0B, #00E5FF primary, #38BDF8 secondary,
   rgba(10,12,14,0.72), blur(18px), JetBrains Mono. The existing two-zone chat
   layout is preserved; controls specify 44px minimum targets and wrap long IDs.
-- Live throwaway round-trip: **UNVERIFIED**. `herdr agent list` failed with
-  `PermissionDenied: Operation not permitted`; no pane was created.
-- HTTP/412px/unfolded rendering: **UNVERIFIED**.
-  `./node_modules/.bin/next dev -H 127.0.0.1 -p 4189` failed with
-  `listen EPERM: operation not permitted 127.0.0.1:4189`.
-  `curl --max-time 5 -sS -i http://127.0.0.1:4189/api/chat` failed with curl (7).
-  No physical Fold touch verification was performed.
+- Live throwaway round-trip (verified by Hermes, 2026-09-14, dev server on
+  127.0.0.1:4187): an MC chat send registered the session, **Continue in
+  herdr** created pane `w9:p1` (agent `mc-chat-54bb23cf`), the pane's Hermes
+  agent answered `PANE-FINAL-OK`, and the footer payload returned
+  `{herdrPane: w9:p1, hermesSession: 20260914_091203_50491a,
+  mcConversationId: 54bb23cf-…}`. End to end: 70s.
+- Fresh-pane startup: `herdr agent start` is rejected with `agent_pane_busy`
+  until the new pane's shell is ready (measured ~2s). The server retries only
+  that case and the startup timeout, for up to ~10s total; every other failure
+  aborts immediately. Herdr agent names must be 1–32 chars of `[a-z0-9_-]`.
+- A Hermes session held open elsewhere refuses a second attach; the server
+  surfaces that pane line ("already has a live owner") instead of the generic
+  startup message.
+- Rendering (verified by Hermes on the same dev server, CDP viewport
+  overrides): 412x915 folded and 900x1000 / 1280x900 unfolded all show no
+  horizontal overflow (`scrollWidth == viewport`), the footer and composer fit,
+  and the `Continue in herdr` and SEND targets measure 44px. The two-zone
+  layout (list + thread) is preserved at desktop width. No physical Fold touch
+  verification was performed.
