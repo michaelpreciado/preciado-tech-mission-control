@@ -17,8 +17,9 @@ import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { randomUUID } from 'node:crypto'
 import { adapters, configuredAgents, selectAgent, isAgentBusy, withAgentFlight, sendAgent } from '@/lib/agent-adapters'
-import { invalidateConversationCache } from '@/lib/conversations'
+import { invalidateConversationCache, listConversations, listDevices } from '@/lib/conversations'
 import {getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv, checkRateLimit, assertSameOrigin } from '@/lib/mission-api'
+import { chatContinuity, continuityStore } from '@/lib/chat-continuity'
 import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -50,7 +51,15 @@ async function checkAvailable(command: string): Promise<boolean> {
   return availability.get(command)!
 }
 
-export async function GET() {
+export async function GET(req?: NextRequest) {
+  const session = req ? new URL(req.url).searchParams.get('session') : null
+  if (session) {
+    if (!req || !isAuthorized(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+    const profile = new URL(req.url).searchParams.get('profile') || 'default'
+    const store = continuityStore()
+    try { return NextResponse.json({ continuity: store.get(profile, session) ?? null }, { headers: { 'Cache-Control': 'no-store' } }) }
+    finally { store.close() }
+  }
   const agents = await Promise.all(configuredAgents().map(async a => ({
     id: a.id, enabled: a.enabled, available: a.enabled && await checkAvailable(a.command),
     continuity: adapters[a.id].continuity, busy: isAgentBusy(a.id),
@@ -101,12 +110,26 @@ export async function POST(req: NextRequest) {
   if (!config?.enabled || !command || !(await checkAvailable(command))) {
     return NextResponse.json({ error: `agent CLI "${command || '(unset)'}" is not available on this machine` }, { status: 503 })
   }
+  let continuity = agent === 'hermes' ? chatContinuity(profile || 'default', session, body.createSession === false ? 'id' : 'name') : undefined
+  if (continuity?.herdrPane) return NextResponse.json({ error: 'Session lives in Herdr. Use Continue in herdr to send to its pane.', continuity }, { status: 409 })
   const started = Date.now()
   try {
-    const result = await withAgentFlight(agent, () => sendAgent(agent, command, { message, session, profile, createSession: body.createSession === true }, RUN_TIMEOUT_MS))
+    const result = await withAgentFlight(agent, () => sendAgent(agent, command, { message, session: continuity?.sessionName || session, profile, createSession: body.createSession === true, resumeById: continuity?.selector === 'id' }, RUN_TIMEOUT_MS))
     if (result.status === 409) return NextResponse.json({ error: result.error }, { status: 409 })
     invalidateConversationCache()
-    return NextResponse.json({ reply: result.value, elapsedMs: Date.now() - started, session: agent === 'codex' ? undefined : session, agent })
+    if (continuity) {
+      const local = listDevices().find(d => d.isLocal)?.name
+      const actual = listConversations({ profile: continuity.profile }).find(c => c.agent !== 'pi' && c.device === local &&
+        (continuity!.selector === 'id' ? c.id === session : c.title === session))
+      if (actual) {
+        const store = continuityStore()
+        try {
+          continuity = store.save({ ...continuity, hermesSession: actual.id, sessionName: continuity.selector === 'name' ? session : undefined })
+          store.alias(continuity.profile, session, continuity)
+        } finally { store.close() }
+      }
+    }
+    return NextResponse.json({ reply: result.value, continuity, elapsedMs: Date.now() - started, session: agent === 'codex' ? undefined : session, agent })
   } catch (err) {
     logger.error('chat/run', err)
     const timedOut = (err as { killed?: boolean }).killed

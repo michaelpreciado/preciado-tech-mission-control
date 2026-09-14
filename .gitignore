@@ -93,3 +93,5 @@ tsconfig.tsbuildinfo
 
 # Temporary Codex handoff briefs
 .mc-handoff-*/
+
+/data/chat-continuity.sqlite*

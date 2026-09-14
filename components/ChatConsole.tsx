@@ -1,5 +1,7 @@
 'use client'
 
+import { ChatContinuityFooter } from '@/components/ChatContinuityFooter'
+import './chat-continuity.css'
 import { HandoffCard, type HandoffMessage } from '@/components/HandoffCard'
 import { AsciiMsg, AsciiPromptGutter, messageSide } from '@/components/ascii-msg'
 
@@ -296,6 +298,8 @@ export default function ChatConsole() {
 
   const [composer, setComposer] = useState('')
   const [busy, setBusy] = useState(false)
+  const busyRef = useRef(false)
+  busyRef.current = busy
   const [elapsed, setElapsed] = useState(0)
   const abortRef = useRef<AbortController | null>(null)
 
@@ -379,6 +383,7 @@ export default function ChatConsole() {
 
   /* Load a thread */
   const openThread = useCallback(async (c: Conversation) => {
+    if (busyRef.current) return
     setAgent(c.agent || 'hermes')
     setLocalSession(c.id)
     setOpenId(c.id)
@@ -397,6 +402,7 @@ export default function ChatConsole() {
   }, [])
 
   const closeThread = useCallback(() => {
+    if (busyRef.current) return
     setOpenId(null)
     setThreadRef(null)
     setThread([])
@@ -642,7 +648,7 @@ export default function ChatConsole() {
 
   return (
     <>
-      <SectionHead label="CHAT / ALL CONVERSATIONS" />
+      <SectionHead label="~/chat / all conversations" />
       <div className="v1-kicker v4-legacy-kicker">
         <span className="jp" lang="ja">通信</span>
         <span>Comms channel</span>
@@ -661,10 +667,10 @@ export default function ChatConsole() {
               />
               {q && <button className="cc-clear-q" onClick={() => setQ('')} aria-label="Clear search">✕</button>}
             </div>
-            <button className="cc-intelbtn" onClick={() => { setShowNew(false); setThread([]); setThreadRef(null); setOpenId('__intel__') }} title="Archive stats">
+            <button className="cc-intelbtn" onClick={() => { if (busyRef.current) return; setShowNew(false); setThread([]); setThreadRef(null); setOpenId('__intel__') }} title="Archive stats">
               ◈ <span>INTEL</span>
             </button>
-            <button className="cc-newbtn" onClick={() => { setShowNew(true); setThread([]); setThreadRef(null); setLocalSession(null); setOpenId('__new__') }} disabled={busy}>
+            <button className="cc-newbtn" onClick={() => { if (busyRef.current) return; setShowNew(true); setThread([]); setThreadRef(null); setLocalSession(null); setOpenId('__new__') }} disabled={busy}>
               <Icon name="ok" size={14} /> NEW
             </button>
           </div>
@@ -683,7 +689,7 @@ export default function ChatConsole() {
               return (
                 <button
                   key={agent}
-                  onClick={() => {
+                  onClick={() => { if (busyRef.current) return;
                     setNewProfile(id)
                     setShowNew(true)
                     setThread([])
@@ -750,7 +756,7 @@ export default function ChatConsole() {
               {sources.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
             {activeFilters && (
-              <button className="cc-clear" onClick={() => { setFilterDevice(''); setFilterProfile(''); setFilterSource('') }} aria-label="Clear filters">✕</button>
+              <button className="cc-clear" onClick={() => { if (busyRef.current) return; setFilterDevice(''); setFilterProfile(''); setFilterSource('') }} aria-label="Clear filters">✕</button>
             )}
           </div>
 
@@ -931,6 +937,11 @@ export default function ChatConsole() {
               {conversations.filter(c => (c.agent || 'hermes') === agent).map(c => <option key={convoKey(c)} value={convoKey(c)}>{c.profile} · {c.title}{c.agent === 'pi' ? ` · ${c.id}` : ''}</option>)}
             </select>
           </div>
+          {agent === 'hermes' && localSession && !remote && hasActiveThread && <ChatContinuityFooter
+            key={`${threadRef?.profile || newProfile}:${localSession}:${reloadToken}`}
+            session={localSession} profile={threadRef?.profile || newProfile} busy={busy} onBusy={setBusy}
+            onOutput={text => setThread(t => [...t, { id: Date.now(), role: 'tool', content: text, timestamp: Date.now() }])}
+          />}
           {/* Composer */}
           <form className="cc-composer aprompt-line" onSubmit={e => { e.preventDefault(); submit() }}>
             <AsciiPromptGutter empty={composer.length === 0} />

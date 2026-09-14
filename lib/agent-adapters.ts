@@ -12,16 +12,16 @@ export function configuredAgents() {
   const chat = getConfig().chat
   return resolveChatAgents(chat.agents, chat.command)
 }
-export type SendInput = { message: string; session: string; profile?: string; createSession?: boolean }
+export type SendInput = { message: string; session: string; profile?: string; createSession?: boolean; resumeById?: boolean }
 const textReply = (stdout: string, stderr: string) => stdout.trim() || stderr.trim() || '(no output)'
 export const adapters = {
   hermes: {
     continuity: true,
-    args: ({ message, session, profile, createSession }: SendInput) => [
+    args: ({ message, session, profile, createSession, resumeById }: SendInput) => [
       ...(profile && profile !== 'default' ? ['--profile', profile] : []),
       ...(createSession
         ? ['chat', '--continue', session, '--create-if-missing', '-q', message, '--oneshot', '--cli', '-Q']
-        : ['--continue', session, '-z', message, '--cli']),
+        : [resumeById ? '--resume' : '--continue', session, '-z', message, '--cli']),
     ],
     parseReply: textReply,
     listSessions: async () => (await import('./conversations')).listConversations().filter(c => c.agent !== 'pi'),
