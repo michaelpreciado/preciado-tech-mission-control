@@ -5,7 +5,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { adapters, selectAgent, withAgentFlight, isAgentBusy } from '../lib/agent-adapters.ts'
 import { resolveChatAgents } from '../lib/config.ts'
-import { readPiSessions } from '../lib/pi-sessions.ts'
+import { piSessionDir, readPiSessions } from '../lib/pi-sessions.ts'
 
 test('adapter selection defaults only missing agent to Hermes and rejects unknown values', () => {
   assert.equal(selectAgent(undefined), 'hermes')
@@ -14,10 +14,25 @@ test('adapter selection defaults only missing agent to Hermes and rejects unknow
   const input = { message: '$(touch /tmp/nope); --help', session: 'native-id' }
   assert.deepEqual(adapters.hermes.args(input), ['--continue', 'native-id', '-z', input.message, '--cli'])
   assert.deepEqual(adapters.hermes.args({ ...input, profile: 'jarvis', createSession: true }), ['--profile', 'jarvis', 'chat', '--continue', 'native-id', '--create-if-missing', '-q', input.message, '--oneshot', '--cli', '-Q'])
-  assert.deepEqual(adapters.pi.args(input), ['--session-id', 'native-id', '-p', '--', input.message])
+  assert.deepEqual(adapters.pi.args(input), ['--session-dir', piSessionDir(), '--session-id', 'native-id', '-p', '--', input.message])
   assert.deepEqual(adapters.codex.args(input), ['exec', '--', input.message])
   assert.equal(adapters.codex.continuity, false)
   assert.equal(adapters.pi.parseReply(' OK\n', 'warnings'), 'OK')
+  assert.throws(() => adapters.pi.parseReply('', 'startup warning'), /Pi returned no reply/)
+})
+
+test('Pi sender and reader share an absolute custom session directory', () => {
+  const previous = process.env.PI_CODING_AGENT_SESSION_DIR
+  process.env.PI_CODING_AGENT_SESSION_DIR = 'data/pi sessions'
+  try {
+    assert.equal(piSessionDir(), path.resolve('data/pi sessions'))
+    const args = adapters.pi.args({ message: '--help; $(echo unsafe)', session: 'native-id' })
+    assert.equal(args[1], piSessionDir())
+    assert.deepEqual(args.slice(-2), ['--', '--help; $(echo unsafe)'])
+  } finally {
+    if (previous === undefined) delete process.env.PI_CODING_AGENT_SESSION_DIR
+    else process.env.PI_CODING_AGENT_SESSION_DIR = previous
+  }
 })
 
 test('agent config is backward compatible and rejects malformed or duplicate entries', () => {
@@ -50,8 +65,10 @@ test('Pi native sessions expose IDs and text messages, tolerating partial writes
   try {
     fs.writeFileSync(path.join(dir, 'session.jsonl'), [
       { type: 'session', id: 'test-id', timestamp: '2026-09-13T00:00:00Z' },
+      null,
+      42,
       { type: 'message', message: { role: 'user', content: [{ type: 'text', text: 'Remember blue' }], timestamp: 10 } },
-      { type: 'message', message: { role: 'assistant', content: [{ type: 'thinking', thinking: 'private' }, { type: 'text', text: 'OK' }], timestamp: 20 } },
+      { type: 'message', message: { role: 'assistant', content: [null, { type: 'thinking', thinking: 'private' }, { type: 'text', text: 'OK' }], timestamp: 20 } },
     ].map(JSON.stringify).join('\n') + '\n{"unfinished":')
     const [session] = readPiSessions(dir)
     assert.equal(session.conversation.agent, 'pi')

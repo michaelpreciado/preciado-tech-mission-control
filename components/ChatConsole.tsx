@@ -227,6 +227,7 @@ function ConvoRow({ c, active, cursor, onOpen }: {
           </span>
           <span className="cc-chip cc-chip-dev">{c.device}</span>
           <span className="cc-chip cc-chip-agent">{c.profile}</span>
+          {c.agent === 'pi' && <span className="cc-row-model" style={{ maxWidth: '100%' }} title={`Pi session: ${c.id}`}>{c.id}</span>}
           {c.model && <span className="cc-row-model">{c.model.split('/').pop()}</span>}
           {c.messageCount > 0 && <span className="cc-row-count">{c.messageCount} msgs</span>}
         </span>
@@ -610,6 +611,7 @@ export default function ChatConsole() {
   const composable = Boolean(threadRef) || openId === '__new__'
   const canSend = openId === '__new__' ? Boolean(composer.trim()) : Boolean(threadRef && composer.trim())
   const remote = agent === 'hermes' && (threadRef ? devices.some(d => d.name === threadRef.device && !d.isLocal) : Boolean(newDevice))
+  const resumeConversation = threadRef || conversations.find(c => (c.agent || 'hermes') === agent && c.id === localSession)
   const submit = () => void (remote ? (openId === '__new__' ? startNew() : sendContinue()) : sendLocal())
   const activeFilters = Boolean(filterDevice || filterProfile || filterSource)
 
@@ -883,13 +885,13 @@ export default function ChatConsole() {
               <option value="pi" disabled={!agentStatus.some(a => a.id === 'pi' && a.enabled && a.available)}>Pi</option>
               <option value="codex" disabled title="session continuity unsupported">Codex — session continuity unsupported</option>
             </select>
-            <select aria-label="Resume session" disabled={busy} value={threadRef ? convoKey(threadRef) : ''} style={{ flex: '1 1 160px', minWidth: 0, maxWidth: '100%', minHeight: 44, background: 'var(--pt-bg)', color: 'var(--pt-text-high)', border: '1px solid var(--pt-border-dim)', borderRadius: 8, padding: '0 8px' }} onChange={e => {
+            <select aria-label="Resume session" disabled={busy} value={resumeConversation ? convoKey(resumeConversation) : ''} style={{ flex: '1 1 160px', minWidth: 0, maxWidth: '100%', minHeight: 44, background: 'var(--pt-bg)', color: 'var(--pt-text-high)', border: '1px solid var(--pt-border-dim)', borderRadius: 8, padding: '0 8px' }} onChange={e => {
               const c = conversations.find(c => convoKey(c) === e.target.value)
               if (c) void openThread(c)
               else { setThreadRef(null); setThread([]); setLocalSession(null); setOpenId('__new__'); setShowNew(true) }
             }}>
               <option value="">New session</option>
-              {conversations.filter(c => (c.agent || 'hermes') === agent).map(c => <option key={convoKey(c)} value={convoKey(c)}>{c.profile} · {c.title}</option>)}
+              {conversations.filter(c => (c.agent || 'hermes') === agent).map(c => <option key={convoKey(c)} value={convoKey(c)}>{c.profile} · {c.title}{c.agent === 'pi' ? ` · ${c.id}` : ''}</option>)}
             </select>
           </div>
           {/* Composer */}

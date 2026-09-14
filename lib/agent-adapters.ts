@@ -2,7 +2,7 @@
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { getConfig, resolveChatAgents, type AgentId } from './config'
-import { readPiSessions } from './pi-sessions'
+import { piSessionDir, readPiSessions } from './pi-sessions'
 
 const execFileAsync = promisify(execFile)
 export function selectAgent(value: unknown): AgentId | null {
@@ -28,8 +28,12 @@ export const adapters = {
   },
   pi: {
     continuity: true,
-    args: ({ message, session }: SendInput) => ['--session-id', session, '-p', '--', message],
-    parseReply: textReply,
+    args: ({ message, session }: SendInput) => ['--session-dir', piSessionDir(), '--session-id', session, '-p', '--', message],
+    parseReply: (stdout: string, _stderr: string) => {
+      const reply = stdout.trim()
+      if (!reply) throw new Error('Pi returned no reply')
+      return reply
+    },
     listSessions: async () => readPiSessions().map(s => s.conversation),
   },
   codex: {

@@ -6,7 +6,7 @@ import type { ChatMessage, Conversation } from './conversations'
 
 export function piSessionDir(): string {
   const root = process.env.PI_CODING_AGENT_DIR || path.join(os.homedir(), '.pi/agent')
-  return process.env.PI_CODING_AGENT_SESSION_DIR || path.join(root, 'sessions', `--${process.cwd().replace(/^[/\\]/, '').replace(/[/\\:]/g, '-')}--`)
+  return path.resolve(process.env.PI_CODING_AGENT_SESSION_DIR || path.join(root, 'sessions', `--${process.cwd().replace(/^[/\\]/, '').replace(/[/\\:]/g, '-')}--`))
 }
 
 export function readPiSessions(dir = piSessionDir()): { conversation: Conversation; messages: ChatMessage[] }[] {
@@ -15,7 +15,10 @@ export function readPiSessions(dir = piSessionDir()): { conversation: Conversati
   return files.flatMap(file => {
     try {
       const rows = fs.readFileSync(path.join(dir, file), 'utf8').split('\n').flatMap(line => {
-        try { return [JSON.parse(line)] } catch { return [] } // tolerate an unfinished append
+        try {
+          const row = JSON.parse(line)
+          return row && typeof row === 'object' && !Array.isArray(row) ? [row] : []
+        } catch { return [] } // tolerate an unfinished append
       })
       const header = rows.find(r => r.type === 'session')
       if (!header || typeof header.id !== 'string') return []
@@ -23,7 +26,7 @@ export function readPiSessions(dir = piSessionDir()): { conversation: Conversati
         id: i + 1,
         role: r.message.role === 'toolResult' ? 'tool' : r.message.role,
         content: typeof r.message.content === 'string' ? r.message.content :
-          (Array.isArray(r.message.content) ? r.message.content.filter((c: { type: string }) => c.type === 'text').map((c: { text: string }) => c.text).join('\n') : ''),
+          (Array.isArray(r.message.content) ? r.message.content.filter((c: { type?: string; text?: string } | null) => c?.type === 'text' && typeof c.text === 'string').map((c: { text: string }) => c.text).join('\n') : ''),
         toolName: r.message.toolName,
         timestamp: Number(r.message.timestamp) || Date.parse(r.timestamp) || 0,
       }))
