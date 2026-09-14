@@ -25,7 +25,7 @@ function isAuthorized(req: NextRequest): boolean {
   const secret = process.env.INTERNAL_API_SECRET
   if (secret) return req.headers.get('authorization') === `Bearer ${secret}`
   const ip = getClientIpFromHeaders(req.headers)
-  return isTrustedIp(ip === 'unknown' ? '127.0.0.1' : ip, trustedRangesFromEnv())
+  return isTrustedIp(ip, trustedRangesFromEnv())
 }
 
 export async function GET() {
@@ -148,6 +148,13 @@ function validate(body: unknown): { ok: true; patch: ConfigFile } | { ok: false;
       if (!fields.includes(k)) continue // unknown keys ignored
       const cleaned = cleanString(v, `${section}.${k}`)
       if (typeof cleaned !== 'string') return { ok: false, error: cleaned.error }
+      if (section === 'services') {
+        try {
+          new URL(cleaned)
+        } catch {
+          return { ok: false, error: `${section}.${k} must be a valid URL` }
+        }
+      }
       out[k] = cleaned
     }
     if (Object.keys(out).length) patch[section] = out

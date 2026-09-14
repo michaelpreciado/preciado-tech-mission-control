@@ -53,10 +53,25 @@ export function streamPayload(data: MissionData, stream: string | null | undefin
 }
 
 export function getClientIpFromHeaders(headers: Headers): string {
+  // Next.js supplies x-forwarded-for with the socket peer when there is no
+  // proxy, which is how direct LAN/Tailscale access reaches the app. A proxy
+  // must append its own address; only accept the original client address when
+  // that final hop is in the explicitly trusted proxy list.
   const forwarded = headers.get('x-forwarded-for')
-  const firstForwarded = forwarded?.split(',')[0]?.trim()
+  const forwardedIps = forwarded?.split(',').map(value => value.trim()).filter(Boolean) ?? []
+  const trustedProxies = parseTrustedIps(process.env.MC_TRUSTED_PROXIES)
+  if (forwardedIps.length > 1) {
+    const proxyIp = forwardedIps[forwardedIps.length - 1]
+    if (isIpInRanges(proxyIp, trustedProxies)) return forwardedIps[0]
+    return 'unknown'
+  }
+  if (forwardedIps.length === 1) return forwardedIps[0]
+
+  // x-real-ip is also proxy-controlled, so honor it only when the request
+  // declares a trusted proxy hop via MC_TRUSTED_PROXIES.
   const realIp = headers.get('x-real-ip')?.trim()
-  return firstForwarded || realIp || 'unknown'
+  if (realIp && isIpInRanges(realIp, trustedProxies)) return realIp
+  return 'unknown'
 }
 
 export function isLoopbackIp(ip: string): boolean {
@@ -71,10 +86,9 @@ export function isLoopbackIp(ip: string): boolean {
    never loopback even though nothing is proxying. FRIDAY_TRUSTED_IPS lets the
    operator opt specific ranges in, e.g. "100.64.0.0/10" for a tailnet.
 
-   Note: x-forwarded-for is client-supplied and therefore spoofable by anyone
-   who can reach the port. This is a convenience boundary for a private
-   network, NOT an authentication mechanism — set INTERNAL_API_SECRET if the
-   port is exposed anywhere untrusted. */
+   Forwarded chains are accepted only when their final hop is listed in
+   MC_TRUSTED_PROXIES. A single forwarded address is treated as Next.js'
+   socket peer, preserving direct LAN/Tailscale access. */
 
 export type TrustedRange = { base: number; bits: number }
 
@@ -117,6 +131,10 @@ export function parseTrustedIps(spec: string | undefined | null): TrustedRange[]
 /** True if `ip` is loopback or falls inside one of the allowed ranges. */
 export function isTrustedIp(ip: string, ranges: TrustedRange[]): boolean {
   if (isLoopbackIp(ip)) return true
+  return isIpInRanges(ip, ranges)
+}
+
+function isIpInRanges(ip: string, ranges: TrustedRange[]): boolean {
   const value = ipv4ToInt(ip)
   if (value === null) return false
   return ranges.some(({ base, bits }) => {
@@ -125,9 +143,15 @@ export function isTrustedIp(ip: string, ranges: TrustedRange[]): boolean {
   })
 }
 
-/** Allowlist from FRIDAY_TRUSTED_IPS. Re-read per call so .env edits apply on restart only. */
+/** Default private/overlay ranges plus any operator-configured ranges. */
 export function trustedRangesFromEnv(): TrustedRange[] {
-  return parseTrustedIps(process.env.FRIDAY_TRUSTED_IPS)
+  return parseTrustedIps([
+    '10.0.0.0/8',
+    '172.16.0.0/12',
+    '192.168.0.0/16',
+    '100.64.0.0/10',
+    process.env.FRIDAY_TRUSTED_IPS ?? '',
+  ].join(','))
 }
 
 /**

@@ -32,7 +32,7 @@ export async function middleware(req: NextRequest) {
 
   // Trusted IPs bypass the login (loopback + FRIDAY_TRUSTED_IPS CIDRs).
   const ip = getClientIpFromHeaders(req.headers)
-  if (isTrustedIp(ip === 'unknown' ? '127.0.0.1' : ip, trustedRangesFromEnv())) return NextResponse.next()
+  if (isTrustedIp(ip, trustedRangesFromEnv())) return NextResponse.next()
 
   // API-to-API relay: the cloud instance authenticates with the service bearer
   // (server-side), which the home instance accepts regardless of client IP.
