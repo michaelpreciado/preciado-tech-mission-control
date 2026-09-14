@@ -1,5 +1,6 @@
 'use client'
 
+import { HandoffCard, type HandoffMessage } from '@/components/HandoffCard'
 import { AsciiMsg, AsciiPromptGutter, messageSide } from '@/components/ascii-msg'
 
 /**
@@ -253,6 +254,30 @@ export default function ChatConsole() {
   const [openId, setOpenId] = useState<string | null>(null)
   const [thread, setThread] = useState<ChatMessage[]>([])
   const [threadRef, setThreadRef] = useState<Conversation | null>(null)
+  // System messages belong to their originating conversation even if the user
+  // switches threads while the independent Codex request is running.
+  const [handoffs, setHandoffs] = useState<Record<string, HandoffMessage[]>>({})
+  const [handoffTask, setHandoffTask] = useState('')
+  const handoffBusy = Object.values(handoffs).some(items => items.some(m => m.state === 'running'))
+  async function handoffToCodex() {
+    if (!threadRef || handoffBusy || !handoffTask.trim()) return
+    const key = convoKey(threadRef)
+    const message: HandoffMessage = { id: Date.now(), role: 'system', state: 'running', task: handoffTask.trim() }
+    setHandoffs(all => ({ ...all, [key]: [...(all[key] || []), message] }))
+    setHandoffTask('')
+    try {
+      const response = await fetch('/api/handoff', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: threadRef.id, agent: 'codex', task: message.task,
+          sourceAgent: threadRef.agent || 'hermes', profile: threadRef.profile, device: threadRef.device }),
+      })
+      const report = await response.json()
+      if (!response.ok) throw new Error(report.error || `Handoff failed (${response.status})`)
+      setHandoffs(all => ({ ...all, [key]: all[key].map(m => m.id === message.id ? { ...m, state: report.ok ? 'done' : 'failed', report } : m) }))
+    } catch (error) {
+      setHandoffs(all => ({ ...all, [key]: all[key].map(m => m.id === message.id ? { ...m, state: 'failed', error: (error as Error).message } : m) }))
+    }
+  }
   const [threadLoading, setThreadLoading] = useState(false)
   const [atBottom, setAtBottom] = useState(true)
 
@@ -776,6 +801,17 @@ export default function ChatConsole() {
           {(threadRef || openId === '__intel__' || openId === '__new__') && (
             <div className="cc-thread-head">
               <button className="cc-back" onClick={closeThread} aria-label="Back to conversations">⌃</button>
+              {threadRef && <details>
+                <summary aria-label="Conversation actions">Actions</summary>
+                <div style={{ padding: 8, maxWidth: 320 }}>
+                  <label>Codex task<textarea aria-label="Codex handoff task" maxLength={4000} value={handoffTask}
+                    onChange={e => setHandoffTask(e.target.value)} style={{ width: '100%' }} /></label>
+                  <p>Starts a new Codex context in this server’s repository. Temporary outputs under /tmp require an explicit path in the task.</p>
+                  <button disabled={handoffBusy || !handoffTask.trim()} onClick={() => void handoffToCodex()}>
+                    {handoffBusy ? 'Codex running…' : 'Hand off to Codex'}
+                  </button>
+                </div>
+              </details>}
               <div className="cc-thread-title">
                 <span className="cc-thread-name">
                   {threadRef ? (cleanTitle(threadRef.title) ?? threadRef.source ?? 'conversation') : openId === '__new__' ? 'NEW CONVERSATION' : 'CHAT INTEL'}
@@ -852,6 +888,7 @@ export default function ChatConsole() {
                 )
               })
             })()}
+            {threadRef && (handoffs[convoKey(threadRef)] || []).map(message => <HandoffCard key={message.id} message={message} />)}
             {busy && (
               <AsciiMsg who={agent} idx={thread.length + 1} ts="…">
                 <div className="cc-msg-body cc-thinking">

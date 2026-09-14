@@ -44,7 +44,9 @@ export const adapters = {
   },
 }
 
-const busy = new Set<AgentId>()
+// Shared across Next route bundles and development module reloads in this process.
+const flightState = globalThis as typeof globalThis & { __mcAgentFlights?: Set<AgentId> }
+const busy = flightState.__mcAgentFlights ??= new Set<AgentId>()
 export function isAgentBusy(agent: AgentId): boolean { return busy.has(agent) }
 export async function withAgentFlight<T>(agent: AgentId, run: () => Promise<T>): Promise<{ status: 409; error: string } | { status: 200; value: T }> {
   if (busy.has(agent)) return { status: 409, error: 'agent is already handling a message — wait for it to finish' }
