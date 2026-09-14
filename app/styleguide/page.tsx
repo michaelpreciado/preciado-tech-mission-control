@@ -1,6 +1,6 @@
 'use client'
 
-import { AsciiKicker, AsciiDivider } from '../vf/Ascii'
+import { AsciiKicker } from '../vf/Ascii'
 
 /**
  * STYLEGUIDE — renders every design token and component variant from the
@@ -42,7 +42,6 @@ function Section({ id, label, children }: { id: string; label: string; children:
   return (
     <>
       <div id={id} className="sg-anchor" />
-      <AsciiDivider />
       <SectionHead label={label} />
       {children}
     </>
@@ -169,10 +168,6 @@ export default function StyleGuide() {
         <Section id="sg-ascii-kicker" label="ASCII / ROUTE KICKER">
           <p className="sg-desc">Inert text in the existing mono voice. Full route/state line above 820px; a separate short line below. No client measurement. Maximum 48 characters at 12px; the longest mobile label is 22 characters at 11px.</p>
           <AsciiKicker view="PIPELINE" detail="FUNNEL-STATE" />
-        </Section>
-        <Section id="sg-ascii-divider" label="ASCII / SECTION DIVIDER">
-          <p className="sg-desc">One shared hairline and a small glyph break. Decorative text is aria-hidden; the following heading carries the meaning.</p>
-          <AsciiDivider />
         </Section>
         <Section id="sg-ascii-corners" label="ASCII / HERO CORNERS">
           <p className="sg-desc">Two static pseudo-element brackets using the accent token. Reserved for the dashboard rig core and the pipeline funnel header. Mobile uses a single accent.</p>

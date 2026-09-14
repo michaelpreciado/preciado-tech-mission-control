@@ -63,6 +63,10 @@ export type Bot = {
   messages: number
   /** Max message timestamp across the bot's sessions, epoch ms. */
   lastActiveAt: number | null
+  /** Hermes' canonical forever-chat session, if the profile has one. */
+  canonicalSessionId: string | null
+  /** Max message timestamp in the canonical Bot Chat, epoch ms. */
+  canonicalLastActiveAt: number | null
   /** The bot's Telegram connection token (full value) from its profile
    *  `.env`, or null when the profile has none on file. Displayed masked;
    *  copied in full so Michael can re-wire a bot from the roster. */
@@ -141,10 +145,24 @@ const toMs = (epoch: unknown): number | null => {
   return n > 1e12 ? n : n * 1000
 }
 
-type BotDbStats = { model: string | null; sessions: number; messages: number; lastActiveAt: number | null }
+type BotDbStats = {
+  model: string | null
+  sessions: number
+  messages: number
+  lastActiveAt: number | null
+  canonicalSessionId: string | null
+  canonicalLastActiveAt: number | null
+}
 
-function readBotDb(dbPath: string): BotDbStats {
-  const fallback: BotDbStats = { model: null, sessions: 0, messages: 0, lastActiveAt: null }
+export function readBotDb(dbPath: string): BotDbStats {
+  const fallback: BotDbStats = {
+    model: null,
+    sessions: 0,
+    messages: 0,
+    lastActiveAt: null,
+    canonicalSessionId: null,
+    canonicalLastActiveAt: null,
+  }
   if (!fs.existsSync(dbPath)) return fallback
   let db: DatabaseSync | null = null
   try {
@@ -159,11 +177,18 @@ function readBotDb(dbPath: string): BotDbStats {
          ORDER BY started_at DESC LIMIT 1`,
     ).get() as { model: string | null } | undefined
     const tsRow = db.prepare(`SELECT MAX(timestamp) AS ts FROM messages`).get() as { ts: number | null } | undefined
+    const canonicalRow = db.prepare(
+      `SELECT id,
+         (SELECT MAX(timestamp) FROM messages WHERE session_id = sessions.id) AS last_ts
+         FROM sessions WHERE title = 'Bot Chat' AND archived = 0 LIMIT 1`,
+    ).get() as { id: string; last_ts: number | null } | undefined
     return {
       model: modelRow?.model ?? null,
       sessions: Number(agg?.sessions ?? 0),
       messages: Number(agg?.messages ?? 0),
       lastActiveAt: toMs(tsRow?.ts ?? null),
+      canonicalSessionId: canonicalRow?.id ?? null,
+      canonicalLastActiveAt: toMs(canonicalRow?.last_ts ?? null),
     }
   } catch (err) {
     logger.error('bots/readDb', err)
@@ -302,6 +327,8 @@ async function collectBotsFresh(): Promise<BotsSnapshot> {
       sessions: db.sessions,
       messages: db.messages,
       lastActiveAt: db.lastActiveAt,
+      canonicalSessionId: db.canonicalSessionId,
+      canonicalLastActiveAt: db.canonicalLastActiveAt,
       telegramToken: readTelegramToken(entry),
       routineCount: routines.length,
       routines,

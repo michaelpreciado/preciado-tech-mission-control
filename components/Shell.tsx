@@ -10,7 +10,6 @@ import { Button } from './ui'
 import { Icon, type IconName } from './icons'
 import { UiSettingsContext, DEFAULT_UI_SETTINGS, useUiSettings, type UiSettings } from './ui-settings'
 import { NAV, PINNED_TAB_IDS } from '@/lib/nav-tabs'
-import { AsciiPanelTrim } from '@/app/vf/Ascii'
 
 const CommandPalette = dynamic(() => import('./CommandPalette').then(m => m.CommandPalette), { ssr: false })
 const CoreOrb = dynamic(() => import('./CoreOrb'), { ssr: false })
@@ -193,7 +192,6 @@ function MoreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
     <div className="mc-more-layer" role="dialog" aria-modal="true" aria-label="More destinations">
       <div className="mc-more-backdrop" onClick={onClose} />
       <div className="mc-more-sheet" ref={sheetRef} onClick={e => e.stopPropagation()}>
-        <AsciiPanelTrim />
         <div className="mc-more-handle" />
         <div className="mc-more-heading">
           <div className="mc-more-title">More destinations</div>

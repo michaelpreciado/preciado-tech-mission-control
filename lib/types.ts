@@ -249,6 +249,18 @@ export type CostDashboard = {
     planType: string | null
     sessionsCount: number
     lastActivityAt: string | null
+    /** Latest provider snapshot from local Codex token_count events. */
+    rateLimits?: {
+      planType: string | null
+      weeklyUsedPercent: number | null
+      weeklyRemainingPercent: number | null
+      weeklyWindowMinutes: number | null
+      weeklyResetsAt: string | null
+      capturedAt: string | null
+      secondaryUsedPercent?: number | null
+      secondaryResetsAt?: string | null
+      secondaryWindowMinutes?: number | null
+    } | null
   }
   daily: { date: string; requests: number; tokens: number; billableTokens: number; cost: number; byModel: Record<string, { tokens: number; billable: number; cost: number; requests: number }>; agent_id?: AgentId }[]
   /** Local (Ollama) inference analytics — token volume, tok/s throughput, and

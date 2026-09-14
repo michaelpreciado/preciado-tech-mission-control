@@ -331,7 +331,11 @@ function BotCard({
   const [remState, setRemState] = useState<RemoveState>({ step: 'idle' })
   const [typed, setTyped] = useState('')
 
-  const engage = () => router.push(`/chat?profile=${encodeURIComponent(bot.name)}`)
+  const engage = () => {
+    const p = new URLSearchParams({ profile: bot.name })
+    if (bot.canonicalSessionId) p.set('session', bot.canonicalSessionId)
+    router.push(`/chat?${p}`)
+  }
 
   const confirmRemove = async () => {
     if (typed !== bot.name) return
@@ -453,7 +457,7 @@ function BotCard({
             borderTop: '1px solid var(--pt-rule)',
           }}
         >
-          <button className="mc-btn mc-btn-primary" onClick={engage} title={`Open a chat console against ${bot.name}`}>
+          <button className="mc-btn mc-btn-primary" onClick={engage} title={`Open ${bot.name}'s canonical Bot Chat`}>
             ◈ ENGAGE
           </button>
 

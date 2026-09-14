@@ -1292,16 +1292,6 @@ body {
 .mc-window-dot--red { background: var(--pt-tl-red); }
 .mc-window-dot--amber { background: var(--pt-tl-yellow); }
 .mc-window-dot--green { background: var(--pt-tl-green); }
-.mc-prompt-user {
-  color: var(--pt-neon);
-  opacity: 0.68;
-  font-family: var(--pt-font-mono);
-  font-size: 9px;
-  font-weight: 400;
-  letter-spacing: 0.02em;
-  text-transform: none;
-  white-space: nowrap;
-}
 .mc-window-title {
   font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
   color: var(--pt-text); flex: 1;
@@ -4295,6 +4285,9 @@ html[data-motion="reduced"] .mc-hud-progress-fill, html[data-motion="off"] .mc-h
   /* inherit the shared page-enter motion so the costs page animates in too */
   animation: mc-rise-in 320ms var(--pt-ease) both;
 }
+/* Dense financial readouts need a quiet field; the binary rain competes with
+   numbers here, while remaining available on the more atmospheric views. */
+body:has(.mc-costs-page) .mc-rain { display: none !important; }
 .mc-viz-grid {
   display: grid; gap: 16px;
 }
@@ -4351,6 +4344,63 @@ html[data-motion="reduced"] .mc-hud-progress-fill, html[data-motion="off"] .mc-h
 .cp-bar > span {
   display: block; height: 100%; border-radius: 0 3px 3px 0;
   transition: width 480ms var(--pt-ease);
+}
+
+/* Compact model-burn chart. Rows stay comparable on one shared scale, while
+   the viewport caps the page height when a provider contributes many models. */
+.cp-model-chart { padding: 0 16px 4px; }
+.cp-model-chart-legend {
+  display: flex; flex-wrap: wrap; gap: 8px 18px;
+  padding: 10px 0 9px;
+  color: var(--pt-text-mute); font-size: 8px; letter-spacing: 0.12em;
+  border-bottom: 1px solid var(--pt-border-dim);
+}
+.cp-model-chart-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.cp-model-chart-scroll {
+  max-height: 540px; overflow-y: auto; overscroll-behavior: contain;
+  padding-right: 8px; scrollbar-color: var(--pt-border) transparent;
+}
+.cp-model-chart-group + .cp-model-chart-group { border-top: 1px solid var(--pt-border); }
+.cp-model-chart-group-head {
+  display: flex; justify-content: space-between; gap: 16px;
+  padding: 13px 0 7px;
+  color: var(--pt-text-mute); font-size: 8px; letter-spacing: 0.14em;
+}
+.cp-model-chart-group-head span:last-child { text-align: right; color: var(--pt-text-dim); }
+.cp-model-chart-row {
+  display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(190px, 1fr);
+  gap: 16px; align-items: center;
+  padding: 9px 0 10px;
+  border-bottom: 1px dashed var(--pt-border-dim);
+}
+.cp-model-chart-row:last-child { border-bottom: 0; }
+.cp-model-chart-main { min-width: 0; }
+.cp-model-chart-name {
+  display: flex; align-items: baseline; gap: 7px; min-width: 0;
+  font-size: 10px; line-height: 1.4;
+}
+.cp-model-chart-model { min-width: 0; color: var(--pt-text-high); overflow-wrap: anywhere; }
+.cp-model-chart-name .cp-cellprov { flex-shrink: 0; }
+.cp-model-chart-barline { display: flex; align-items: center; gap: 9px; margin-top: 7px; }
+.cp-model-chart-track {
+  flex: 1; min-width: 40px; height: 6px; overflow: hidden;
+  background: rgba(3, 8, 20, 0.85); border: 1px solid var(--pt-border-dim);
+}
+.cp-model-chart-track span { display: block; height: 100%; min-width: 2px; transition: width 480ms var(--pt-ease); }
+.cp-model-chart-barline strong {
+  min-width: 48px; color: var(--pt-text); font-size: 10px; font-weight: 600; text-align: right;
+}
+.cp-model-chart-stats {
+  display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px 12px;
+  color: var(--pt-text-mute); font-size: 8px; line-height: 1.4; letter-spacing: 0.04em;
+}
+
+@media (max-width: 600px) {
+  .cp-model-chart { padding: 0 12px 3px; }
+  .cp-model-chart-scroll { max-height: 460px; padding-right: 4px; }
+  .cp-model-chart-row { grid-template-columns: 1fr; gap: 5px; padding: 10px 0 11px; }
+  .cp-model-chart-stats { justify-content: flex-start; padding-left: 14px; }
+  .cp-model-chart-group-head { gap: 8px; font-size: 7.5px; }
 }
 
 .cp-stat { min-width: 0; }
@@ -7563,8 +7613,6 @@ html[data-motion="off"] .mc-home-tile:not(.tone-err):hover::after {
 }
 
 /* ── Content command: production studio + signal feed ───── */
-.mc-section-gap { height: 48px; }
-
 .mc-studio,
 .mc-signal-feed {
   font-family: var(--pt-font-mono);
@@ -7817,7 +7865,6 @@ html[data-motion="off"] .mc-home-tile:not(.tone-err):hover::after {
   .mc-studio { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 560px) {
-  .mc-section-gap { height: 38px; }
   .mc-studio-inputs { padding: 12px; }
   .mc-studio-output-head { padding: 0 10px; }
   .mc-studio-charcount { display: none; }
@@ -8056,13 +8103,10 @@ html[data-motion="off"] .mc-studio-cursor { animation: none; }
 .mc-more-heading .mc-more-title { margin: 0; }
 .mc-more-sheet { overscroll-behavior: contain; }
 @media (max-width: 560px) {
-  .mc-window-head .mc-prompt-user,
-  .mc-tcol-head .mc-prompt-user { display: none; }
   .mc-window-title { min-width: 0; overflow-wrap: anywhere; letter-spacing: .1em; }
   .mc-setup-actions.sticky { position: static; }
 }
 /* Compact project cards need their full title width on desktop too. */
-.mc-proj-tilt .mc-prompt-user { display: none; }
 .mc-proj-tilt .mc-window-title { min-width: 0; overflow-wrap: anywhere; }
 .mc-home-tile-label:not(.is-flowing) .mc-tile-label-track > span:last-child { display: none; }
 @media (min-width: 821px) {
@@ -8076,7 +8120,6 @@ html[data-motion="off"] .mc-studio-cursor { animation: none; }
 }
 /* Pipeline stage names and counts must remain visible within each lane. */
 .mc-pipeline { grid-auto-columns: minmax(280px, 1fr); }
-.mc-pipe-col .mc-prompt-user { display: none; }
 .mc-pipe-col .mc-tcol-head > span:not([class]) { min-width: 0; overflow-wrap: anywhere; }
 .mc-pipe-col .mc-tcol-count { flex-shrink: 0; white-space: nowrap; }
 
@@ -8215,22 +8258,15 @@ body:has([role="dialog"], dialog[open]) .boot-overlay { visibility: hidden; }
 .tframe-surface > .tframe-br { bottom: 6px; right: 6px; border-bottom-width: 1px; border-right-width: 1px; }
 .tframe-surface:hover > .tframe-tick,
 .tframe-surface:focus-within > .tframe-tick { opacity: .85; }
-.tframe-surface > .cyber-panel-trim { color: rgb(157 180 236 / .30); opacity: 1; }
-
 .srule-section { width: 100%; min-width: 0; margin-block: 16px 12px; }
 .srule-line { display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0; font-family: var(--pt-font-mono, monospace); }
-.srule-stroke { flex: 1 1 0; min-width: 0; overflow: hidden; white-space: nowrap; color: rgb(157 180 236 / .30); font-size: 11px; letter-spacing: 0; }
+.srule-stroke { flex: 1 1 0; min-width: 0; height: 1px; background: rgb(157 180 236 / .30); }
 .srule-lead { flex: 0 1 24px; }
 .srule-label { flex: 0 1 auto; min-width: 0; margin: 0; padding: 3px 6px; background: var(--pt-surface); color: rgb(157 180 236 / .55); font: 500 10px/1.5 var(--pt-font-mono, monospace); letter-spacing: .12em; text-transform: uppercase; overflow-wrap: anywhere; }
 .srule-index { flex: 0 0 auto; margin-left: auto; color: rgb(157 180 236 / .55); font-size: 10px; }
 .srule-meta { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 6px; font: 11px/1.5 var(--pt-font-mono, monospace); color: var(--pt-text-dim); }
 .srule-home-header { flex-wrap: wrap; border-bottom: 0; }
 .srule-home-header > .srule-section:first-child { display: block; flex-basis: 100%; margin: 0; }
-/* Override legacy motion-gated visibility only on these static separators. */
-.srule-divider .v4-divider { align-items: center; gap: 12px; margin-block: 16px 8px; font: 400 11px/1 var(--pt-font-mono, monospace); display: flex !important; color: rgb(157 180 236 / .30) !important; opacity: 1 !important; animation: none !important; }
-.srule-divider .v4-divider > span { color: rgb(157 180 236 / .30) !important; }
-.srule-divider .v4-divider::before,
-.srule-divider .v4-divider::after { content: ""; height: 1px; flex: 1; background: rgb(157 180 236 / .30) !important; }
 @media (prefers-reduced-motion: reduce) {
   .tframe-surface > .tframe-tick { transition: none; }
 }

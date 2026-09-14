@@ -27,9 +27,6 @@ html .mc-main .cyber-route:not(.v4-corners)::after { display: none; }
   white-space: pre;
 }
 .cyber-route-copy { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
-.cyber-route-eyebrow { font-size: 8px; letter-spacing: .2em; color: var(--pt-ascii-mid); }
-.cyber-route-code { margin-left: auto; color: var(--pt-ascii-mid); white-space: pre; font-size: 10px; line-height: 1.15; letter-spacing: 0; opacity: 1; }
-.mc-main .v4-divider > span { color: var(--pt-ascii-faint); font-size: 9px; letter-spacing: .1em; }
 .mc-main .mc-window-head,
 .mc-main .mc-tcol-head {
   background-image: linear-gradient(100deg, rgba(0, 173, 255, .07), transparent 60%, rgba(240, 120, 198, .04));
@@ -41,19 +38,11 @@ html .mc-main .cyber-route:not(.v4-corners)::after { display: none; }
 @media (max-width: 560px) {
   html .mc-main .v4-kicker.cyber-route { min-height: 66px; padding: 9px 10px; gap: 12px; margin-bottom: 14px; }
   .cyber-route-art { font-size: 9px; }
-  .cyber-route-eyebrow { font-size: 7px; letter-spacing: .1em; }
   .cyber-route-copy { gap: 7px; }
-  .cyber-route-code { display: none; }
   html .mc-main .cyber-route .v4-ascii-short { font-size: 10px; white-space: normal; overflow-wrap: anywhere; }
 }
 
 /* Shared surfaces: includes portaled windows, dialogs and command menus. */
-.cyber-panel-trim {
-  display: flex; justify-content: space-between; align-items: center;
-  gap: 12px; padding: 5px 12px; margin-top: auto; flex: 0 0 auto;
-  font: 9px/1 var(--pt-font-mono), monospace; letter-spacing: .08em;
-  color: var(--pt-ascii-faint); opacity: 1; pointer-events: none;
-}
 .cyber-terminal-art {
   margin: 0 0 12px; font: 11px/1.25 var(--pt-font-mono), monospace;
   color: var(--pt-ascii-mid); letter-spacing: 0; white-space: pre;
@@ -61,7 +50,6 @@ html .mc-main .cyber-route:not(.v4-corners)::after { display: none; }
 }
 .cyber-terminal-art.is-compact { margin-bottom: 5px; font-size: 10px; }
 .mc-empty .cyber-terminal-art + .mc-empty-glyph { display: none; }
-.cyber-loading-mark { color: var(--pt-ascii-mid); white-space: nowrap; }
 .mc-window.is-floating { border-top: 2px solid var(--cyber-pink); }
 .mc-window.is-floating .mc-window-head { background: linear-gradient(100deg, rgba(0,173,255,.09), rgba(240,120,198,.06)); }
 .mc-main :is(.mc-task, .mc-kb-card, .mc-pipe-card, .mc-repo, .mc-cal-card, .mc-setup-group, .mc-studio, .mc-signal-card),
@@ -87,23 +75,19 @@ html .mc-main .cyber-route:not(.v4-corners)::after { display: none; }
 .cc-bubble.is-user { border-left: 2px solid var(--cyber-pink); }
 .cc-composer { border-top-color: color-mix(in srgb, var(--cyber-pink) 45%, transparent); }
 .cyber-agent-deck { border-radius: 6px; }
-.cyber-agent-deck > .cyber-panel-trim { margin: -5px -4px 14px; }
-.mc-more-sheet > .cyber-panel-trim { margin: 0 0 8px; }
 .mc-setup-group-head { color: var(--cyber-pink); }
 .mc-week-dayhead { border-bottom-color: color-mix(in srgb, var(--cyber-pink) 35%, transparent); }
 .mc-mobile-nav { border-top-color: color-mix(in srgb, var(--cyber-pink) 60%, transparent); }
 @media (max-width: 560px) {
-  .cyber-panel-trim { font-size: 8px; padding: 4px 10px; }
   .cyber-terminal-art { font-size: 9px; }
 }
 @media (forced-colors: active) {
-  .cyber-panel-trim, .cyber-terminal-art, .cyber-loading-mark { color: var(--pt-ascii-mid); }
+  .cyber-terminal-art { color: var(--pt-ascii-mid); }
 }
 
 /* Brand artwork and compact route monoliths. */
 html .mc-main .v4-kicker.cyber-route { min-height: 134px; gap: 24px; }
 .cyber-route-art { font-size: 11px; line-height: 1.15; color: var(--pt-ascii-mid); text-shadow: none; }
-.cyber-panel-trim { opacity: 1; padding-block: 7px; color: var(--pt-ascii-faint); }
 .cyber-wordmark {
   display: flex; align-items: center; gap: 28px;
   margin: 8px 0 18px; padding: 18px 22px;
@@ -141,7 +125,6 @@ html .mc-main .v4-kicker.cyber-route { min-height: 134px; gap: 24px; }
 @media (max-width: 560px) {
   html .mc-main .v4-kicker.cyber-route { min-height: 112px; padding: 10px 8px; gap: 10px; }
   .cyber-route-art { font-size: 9px; }
-  .cyber-route-eyebrow { letter-spacing: 0; }
   .cyber-route-copy { flex: 1; }
 }
 
@@ -152,9 +135,8 @@ html .mc-main .v4-kicker.cyber-route { min-height: 134px; gap: 24px; }
   --pt-ascii-mid: rgba(157,180,236,.55);
   --pt-ascii-faint: rgba(157,180,236,.30);
 }
-html body :is(.cyber-route, .cyber-route-art, .cyber-route-eyebrow,
-  .cyber-route-code, .cyber-terminal-art, .cyber-horizon, .v4-console,
-  .cyber-loading-mark, .cyber-panel-trim, .v4-divider) {
+html body :is(.cyber-route, .cyber-route-art,
+  .cyber-terminal-art, .cyber-horizon, .v4-console) {
   font-family: var(--pt-font-mono), 'JetBrains Mono', monospace;
   line-height: 1.15;
   color: var(--pt-ascii-mid);
@@ -174,12 +156,6 @@ html body :is(.cyber-route-art, .cyber-terminal-art) {
   letter-spacing: 0;
   white-space: pre;
 }
-html body :is(.v4-divider, .v4-divider > span, .cyber-panel-trim) {
-  color: var(--pt-ascii-faint);
-  font-size: 10px;
-  line-height: 1.15;
-  text-shadow: none;
-}
 html body .mc-main .v4-console.v4-console, html body .v4-console { font-size: 10px; line-height: 1.15; color: var(--pt-ascii-mid); }
 html body .cyber-wordmark :is(span, small) { color: var(--pt-ascii-mid); line-height: 1.15; }
 .cyber-empty-emblem { margin: 0 0 12px; }
@@ -198,12 +174,9 @@ html body .cyber-wordmark :is(span, small) { color: var(--pt-ascii-mid); line-he
 }
 /* Static artwork remains visible when motion is disabled. */
 html body .mc-main .v4-console.v4-console { display: block; }
-html body .mc-main .v4-divider.v4-divider { display: flex; font-size: 10px; line-height: 1.15; color: var(--pt-ascii-faint); }
 @media (forced-colors: active) {
   :root { --pt-ascii-bright: CanvasText; --pt-ascii-mid: CanvasText; --pt-ascii-faint: CanvasText; }
   .cyber-portrait { color: CanvasText; }
-  html body :is(.cyber-route, .cyber-route-art, .cyber-route-eyebrow,
-    .cyber-route-code, .cyber-terminal-art, .cyber-horizon, .v4-console,
-    .cyber-loading-mark, .cyber-panel-trim, .v4-divider, .v4-divider > span),
+  html body :is(.cyber-route, .cyber-route-art, .cyber-terminal-art, .cyber-horizon, .v4-console),
   html body .cyber-wordmark :is(pre, span, small) { color: CanvasText; text-shadow: none; }
 }

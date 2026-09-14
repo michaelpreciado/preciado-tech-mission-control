@@ -1,6 +1,6 @@
 'use client'
 
-import { AsciiKicker, AsciiDivider } from '../vf/Ascii'
+import { AsciiKicker } from '../vf/Ascii'
 
 import dynamic from 'next/dynamic'
 import { SectionHead, SkeletonPanel } from '@/components/ui'
@@ -26,11 +26,9 @@ export default function ContentCreationPage() {
         <a className="mc-btn" href="#ideas">Ideas</a><a className="mc-btn" href="#studio">Studio</a><a className="mc-btn" href="#signals">Signals</a>
       </nav>
       <section id="ideas" aria-label="Idea queue"><ContentCreationBoard /></section>
-      <div className="mc-section-gap"><AsciiDivider /></div>
       <SectionHead label="CONTENT CREATION / PRODUCTION STUDIO" />
       <div className="v3-kicker v4-legacy-kicker"><span className="jp">制作</span> production studio</div>
       <section id="studio" aria-label="Production studio"><VideoPromptStudio /></section>
-      <div className="mc-section-gap"><AsciiDivider /></div>
       <SectionHead label="CONTENT CREATION / SIGNAL FEED" />
       <div className="v3-kicker v4-legacy-kicker"><span className="jp">信号</span> interest-matched signal feed</div>
       <section id="signals" aria-label="Signal feed"><SignalFeed /></section>

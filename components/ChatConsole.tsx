@@ -264,7 +264,7 @@ export default function ChatConsole() {
      /chat?session=<id>[&device=<name>] (from the command palette) additionally
      opens that thread once the list resolves. Read once on mount; afterwards
      the user's own filter choices win. */
-  const deepLinkRef = useRef<{ session: string; device: string } | null>(null)
+  const deepLinkRef = useRef<{ session: string; device: string; profile: string } | null>(null)
   const deepLinkDoneRef = useRef(false)
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search)
@@ -274,7 +274,7 @@ export default function ChatConsole() {
       setNewProfile(preset)
     }
     const session = sp.get('session')
-    if (session) deepLinkRef.current = { session, device: sp.get('device') ?? '' }
+    if (session) deepLinkRef.current = { session, device: sp.get('device') ?? '', profile: preset ?? '' }
   }, [])
 
   const [cursor, setCursor] = useState(-1)
@@ -359,8 +359,9 @@ export default function ChatConsole() {
 
   /* Honour a /chat?session=<id> deep-link once the conversation index has
      resolved: open the matching thread (device-scoped if ?device= was given,
-     else first id match). If the id isn't in the result set we give up quietly
-     and leave the ?profile= pre-filter in place — never crash, never blank. */
+     else first id match). If the id isn't in the result set but a profile was
+     supplied, open a minimal stub so the thread endpoint can resolve it from
+     the real database — never crash, never blank. */
   useEffect(() => {
     if (deepLinkDoneRef.current || !loaded) return
     const dl = deepLinkRef.current
@@ -372,6 +373,23 @@ export default function ChatConsole() {
       deepLinkDoneRef.current = true
       deepLinkRef.current = null
       void openThread(match)
+    } else if (dl.profile) {
+      const stub: Conversation = {
+        id: dl.session,
+        title: '(canonical chat)',
+        profile: dl.profile || filterProfile,
+        device: dl.device,
+        source: 'desktop',
+        model: null,
+        startedAt: Date.now(),
+        lastActiveAt: Date.now(),
+        messageCount: 0,
+        preview: '',
+        active: false,
+      }
+      deepLinkDoneRef.current = true
+      deepLinkRef.current = null
+      void openThread(stub)
     } else if (conversations.length > 0) {
       // Index resolved without the target — stop retrying on later reloads.
       deepLinkDoneRef.current = true

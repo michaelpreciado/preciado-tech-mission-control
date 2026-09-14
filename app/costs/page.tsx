@@ -1,7 +1,5 @@
 'use client'
 
-import { AsciiKicker } from '../vf/Ascii'
-
 import dynamic from 'next/dynamic'
 import { SectionHead, SkeletonPanel } from '@/components/ui'
 import '../vf/v2-lane.css'
@@ -11,11 +9,10 @@ const CostsPanel = dynamic(() => import('@/components/views/CostsPanel').then(m 
 
 export default function CostsPage() {
   return (
-    <>
+    <div className="mc-costs-page">
       <CommandHeader />
-      <AsciiKicker view="COSTS" detail="BURN-STATE" />
       <SectionHead pre={<span className="v2-jp">費用</span>} label="COSTS / MODEL USAGE" />
       <CostsPanel />
-    </>
+    </div>
   )
 }

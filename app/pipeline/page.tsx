@@ -1,6 +1,6 @@
 'use client'
 
-import { AsciiKicker, AsciiDivider } from '../vf/Ascii'
+import { AsciiKicker } from '../vf/Ascii'
 
 import dynamic from 'next/dynamic'
 import { SectionHead } from '@/components/ui'
@@ -16,7 +16,6 @@ export default function PipelinePage() {
       <CommandHeader />
       <AsciiKicker view="PIPELINE" detail="FUNNEL-STATE" framed />
       <SectionHead pre={<span className="v2-jp">開発</span>} label="WEB DEV PIPELINE / SCRAPE → SCAFFOLD → ENHANCE → DEPLOY" />
-      <div className="srule-divider"><AsciiDivider /></div>
       <VaultDocumentsProvider>
         <PipelineBoard />
         <VaultDocuments />

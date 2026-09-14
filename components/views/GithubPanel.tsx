@@ -1,7 +1,5 @@
 'use client'
 
-import { AsciiDivider } from '@/app/vf/Ascii'
-
 import { useLiveData } from '../LiveDataProvider'
 import { TFrame, SectionHead, Window, EmptyTerminal, SkeletonPanel, fmtDate } from '../ui'
 import { Heatmap } from '../Viz'
@@ -150,7 +148,6 @@ export function GithubPanel() {
         </Window>
       )}
 
-      <AsciiDivider />
       <div className="w2l-github-columns"><section aria-label="Repositories">
       <SectionHead label={`GITHUB / REPOSITORIES · ${repos.length} MOST RECENT`} />
       {repos.length === 0 ? (
@@ -186,7 +183,6 @@ export function GithubPanel() {
       )}
 
       </section><section aria-label="Recent activity">
-      <AsciiDivider />
       <SectionHead label="GITHUB / RECENT ACTIVITY" />
       <Window tag="◉" title="RECENT EVENTS" meta={`${(gh.recentEvents ?? []).length} events`}>
         {topActivity.length > 0 && <div className="asciiviz-inset">

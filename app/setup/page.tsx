@@ -1,6 +1,6 @@
 'use client'
 
-import { AsciiKicker, AsciiDivider } from '../vf/Ascii'
+import { AsciiKicker } from '../vf/Ascii'
 
 /**
  * F.R.I.D.A.Y. setup — configure the harness from the browser.
@@ -264,7 +264,6 @@ export default function SetupPage() {
         ) : (
           <>
             <div className="mc-setup-group">
-              <AsciiDivider />
               <div className="mc-setup-group-head">IDENTITY</div>
               <label className="mc-setup-field">
                 <span>App name (brand)</span>
@@ -300,7 +299,6 @@ export default function SetupPage() {
             </div>
 
             <div className="mc-setup-group w2l-setup-ui">
-              <AsciiDivider />
               <div className="mc-setup-group-head">UI CUSTOMIZATION <span>motion, density, nav, 3D elements · applies on next page load, no restart needed (like accent color)</span></div>
 
               <div className="mc-setup-field">
@@ -399,7 +397,6 @@ export default function SetupPage() {
             </div>
 
             <div className="mc-setup-group">
-              <AsciiDivider />
               <div className="mc-setup-group-head">API KEYS</div>
               <label className="mc-setup-field">
                 <span>OpenRouter API key {cfg.keysSet.openrouterApiKey && <b className="is-set">· configured ✓</b>}</span>
@@ -427,7 +424,6 @@ export default function SetupPage() {
 
             {FIELD_GROUPS.map(group => (
               <div className="mc-setup-group" key={group.title}>
-                <AsciiDivider />
               <div className="mc-setup-group-head">{group.title} <span>{group.sub}</span></div>
                 {group.fields.map(f => {
                   const branch = cfg[f.section] as Record<string, string>

@@ -130,6 +130,22 @@ export function trustedRangesFromEnv(): TrustedRange[] {
   return parseTrustedIps(process.env.FRIDAY_TRUSTED_IPS)
 }
 
+/**
+ * Whether the API is bound to an external interface (i.e. reachable by other
+ * machines). `MC_BIND_HOST` is the single source of truth for the bind
+ * address (`dev`/`start` both force `-H 0.0.0.0`). Unset or loopback → local
+ * app, no extra cross-origin gate.
+ */
+export function isExternalBind(value: string | undefined | null = process.env.MC_BIND_HOST): boolean {
+  return !!(
+    value &&
+    value.trim() &&
+    value.trim() !== 'localhost' &&
+    value.trim() !== '127.0.0.1' &&
+    value.trim() !== '::1'
+  )
+}
+
 type RateLimitRecord = { count: number; resetAt: number }
 
 const MAX_BUCKET_SIZE = 10_000

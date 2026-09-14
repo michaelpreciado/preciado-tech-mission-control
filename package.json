@@ -33,6 +33,7 @@
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "agent-browser": "^0.37.1",
     "typescript": "^5.9.3"
   },
   "description": "F.R.I.D.A.Y. — Framework for Running Intelligent Deployed Agents. Local-first mission-control dashboard for your AI agents.",
