@@ -373,12 +373,13 @@ export function conversationStats(): ConversationStats {
 }
 
 /** All conversations across local profiles + configured remotes, newest first. */
-export function listConversations(opts?: { q?: string; profile?: string; device?: string; limit?: number }): Conversation[] {
+export function listConversations(opts?: { q?: string; profile?: string; device?: string; agent?: string; limit?: number }): Conversation[] {
   const all = collectAll()
 
   const q = opts?.q?.trim().toLowerCase()
   const prof = opts?.profile
   const dev = opts?.device
+  const agent = opts?.agent
   // Was 200 with no way for the route to override it, which silently hid
   // every conversation past the newest 200. The list uses content-visibility,
   // so the extra rows cost DOM but not paint.
@@ -394,6 +395,7 @@ export function listConversations(opts?: { q?: string; profile?: string; device?
   }
   if (prof) results = results.filter(c => c.profile === prof)
   if (dev) results = results.filter(c => c.device === dev)
+  if (agent) results = results.filter(c => (c.agent || 'hermes') === agent)
 
   // collectAll() already de-duped and sorted; only the page slice is left.
   return results.slice(0, limit)

@@ -25,6 +25,7 @@ export async function GET(req: NextRequest) {
     q: sp.get('q') ?? undefined,
     profile: sp.get('profile') ?? undefined,
     device: sp.get('device') ?? undefined,
+    agent: sp.get('agent') ?? undefined,
     limit: Number.isFinite(limitRaw) && limitRaw > 0 ? limitRaw : undefined,
   })
   return NextResponse.json({

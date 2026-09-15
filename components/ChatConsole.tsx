@@ -251,6 +251,7 @@ export default function ChatConsole() {
   const [q, setQ] = useState('')
   const [filterDevice, setFilterDevice] = useState('')
   const [filterProfile, setFilterProfile] = useState('')
+  const [filterAgent, setFilterAgent] = useState('')
   const [filterSource, setFilterSource] = useState('')
   const [showJunk, setShowJunk] = useState(false)
 
@@ -363,6 +364,7 @@ export default function ChatConsole() {
         if (q) params.set('q', q)
         if (filterDevice) params.set('device', filterDevice)
         if (filterProfile) params.set('profile', filterProfile)
+        if (filterAgent) params.set('agent', filterAgent)
         const res = await apiFetch(`/api/conversations?${params}`, { cache: 'no-store' })
         const j = await res.json()
         if (!alive) return
@@ -378,9 +380,9 @@ export default function ChatConsole() {
     }
     const t = setTimeout(run, q ? 250 : 0)
     return () => { alive = false; clearTimeout(t) }
-  }, [q, filterDevice, filterProfile, reloadToken])
+  }, [q, filterDevice, filterProfile, filterAgent, reloadToken])
 
-  useEffect(() => { setLimit(PAGE_SIZE); setCursor(-1) }, [q, filterDevice, filterProfile, filterSource, showJunk])
+  useEffect(() => { setLimit(PAGE_SIZE); setCursor(-1) }, [q, filterDevice, filterProfile, filterAgent, filterSource, showJunk])
 
   /* Load a thread */
   const openThread = useCallback(async (c: Conversation) => {
@@ -663,7 +665,7 @@ export default function ChatConsole() {
   const remote = agent === 'hermes' && (threadRef ? devices.some(d => d.name === threadRef.device && !d.isLocal) : Boolean(newDevice))
   const resumeConversation = threadRef || conversations.find(c => (c.agent || 'hermes') === agent && c.id === localSession)
   const submit = () => void (remote ? (openId === '__new__' ? startNew() : sendContinue()) : sendLocal())
-  const activeFilters = Boolean(filterDevice || filterProfile || filterSource)
+  const activeFilters = Boolean(filterDevice || filterProfile || filterAgent || filterSource)
 
   return (
     <>
@@ -762,8 +764,14 @@ export default function ChatConsole() {
               already being set, which made them unreachable: the only controls
               that could set one were inside the block that needed one. */}
           <div className="cc-filters">
-            <select value={filterProfile} onChange={e => setFilterProfile(e.target.value)} aria-label="Filter by agent">
+            <select value={filterAgent} onChange={e => setFilterAgent(e.target.value)} aria-label="Filter by agent">
               <option value="">agent: all</option>
+              <option value="hermes">hermes</option>
+              <option value="pi">pi</option>
+              <option value="codex">codex</option>
+            </select>
+            <select value={filterProfile} onChange={e => setFilterProfile(e.target.value)} aria-label="Filter by profile">
+              <option value="">profile: all</option>
               {profiles.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
             <select value={filterDevice} onChange={e => setFilterDevice(e.target.value)} aria-label="Filter by device">
@@ -775,7 +783,7 @@ export default function ChatConsole() {
               {sources.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
             {activeFilters && (
-              <button className="cc-clear" onClick={() => { if (busyRef.current) return; setFilterDevice(''); setFilterProfile(''); setFilterSource('') }} aria-label="Clear filters">✕</button>
+              <button className="cc-clear" onClick={() => { if (busyRef.current) return; setFilterDevice(''); setFilterProfile(''); setFilterAgent(''); setFilterSource('') }} aria-label="Clear filters">✕</button>
             )}
           </div>
 
