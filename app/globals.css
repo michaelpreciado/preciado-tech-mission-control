@@ -8148,6 +8148,11 @@ html[data-motion="off"] .mc-studio-cursor { animation: none; }
 .mc-urgent-strip .mc-urgent-label { display: grid; gap: 3px; min-width: 0; flex-shrink: 1; }
 .mc-urgent-strip .mc-urgent-eyebrow { font-size: 9px; letter-spacing: .14em; color: #7e93a8; }
 .mc-urgent-strip summary strong { font-size: 12px; color: #efc582; font-weight: 500; }
+.mc-urgent-row { display: grid; grid-template-columns: minmax(0, 1fr) 28px; align-items: center; gap: 8px; }
+.mc-urgent-row > a { min-width: 0; }
+.mc-urgent-dismiss { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 1px solid transparent; border-radius: 999px; background: transparent; color: var(--pt-text-dim); font: inherit; font-size: 18px; line-height: 1; cursor: pointer; }
+.mc-urgent-dismiss:hover, .mc-urgent-dismiss:focus-visible { background: color-mix(in srgb, currentColor 10%, transparent); border-color: var(--pt-border-dim); }
+.mc-urgent-dismiss:focus-visible { outline: 2px solid var(--pt-text-dim); outline-offset: 2px; }
 .mc-home-nav-drawer { position: fixed; inset: auto auto 0 0; width: min(300px, calc(100vw - 36px)); max-width: none; height: auto; max-height: 85dvh; margin: 0; padding: 18px max(16px, env(safe-area-inset-left)) max(20px, env(safe-area-inset-bottom)); border: 1px solid var(--pt-border-dim); border-radius: 16px 16px 0 0; background: #07111dfa; color: var(--pt-text-high); overflow-y: auto; overscroll-behavior: contain; }
 .mc-home-nav-drawer::backdrop { background: #02060ca0; }
 .mc-home-nav-drawer header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }

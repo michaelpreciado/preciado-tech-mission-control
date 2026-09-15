@@ -70,14 +70,22 @@ async function httpProbe(p: HttpProbe): Promise<TruthfulServiceHealth> {
     const ctl = new AbortController()
     const timer = setTimeout(() => ctl.abort(), PROBE_TIMEOUT_MS)
     const res = await fetch(p.url, { cache: 'no-store', signal: ctl.signal })
-    clearTimeout(timer)
+    let noModelLoaded = false
+    try {
+      if (p.id === 'llmster' && res.status === 200) {
+        const body: unknown = await res.json()
+        noModelLoaded = !!body && typeof body === 'object' && 'data' in body
+          && Array.isArray(body.data) && body.data.length === 0
+      }
+    } catch { /* Model metadata must not change a successful liveness probe. */ }
+    finally { clearTimeout(timer) }
     const latencyMs = Date.now() - started
     const status = res.status >= 200 && res.status < 300
       ? 'up'
       : res.status === 401 || res.status === 403
         ? 'auth-fail'
         : 'degraded'
-    return { id: p.id, name: p.name, status, statusCode: res.status, detail: `HTTP ${res.status} · ${latencyMs}ms`, latencyMs }
+    return { id: p.id, name: p.name, status, statusCode: res.status, detail: noModelLoaded ? 'no model loaded' : `HTTP ${res.status} · ${latencyMs}ms`, latencyMs }
   } catch {
     return { id: p.id, name: p.name, status: 'down', detail: 'no response (connection refused or timeout)' }
   }
