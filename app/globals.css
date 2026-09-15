@@ -8375,41 +8375,106 @@ body:has([role="dialog"], dialog[open]) .boot-overlay { visibility: hidden; }
   --ob-glow: 0 0 18px rgba(0, 229, 255, .18);
 }
 
-/* Shared button language. `.mc-btn` remains on the shared Button primitive
-   for compatibility; `.ob-btn` is the canonical OmniBridge surface. */
+/* Shared button language — v2 "ignition keys". `.mc-btn` remains on the
+   shared Button primitive for compatibility; `.ob-btn` is the canonical
+   OmniBridge surface: gradient glass depth, sheen sweep, glow hierarchy. */
 .ob-btn {
+  --btn-h: 38px;
+  position: relative;
+  overflow: hidden;
   display: inline-flex;
-  min-height: 36px;
   box-sizing: border-box;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 8px 14px;
-  border: 1px solid var(--ob-border);
+  gap: 9px;
+  min-height: var(--btn-h);
+  padding: 0 18px;
+  border: 1px solid rgba(157, 180, 236, .28);
   border-radius: var(--ob-radius-control);
-  background: rgba(0, 229, 255, .035);
-  color: var(--ob-text-2);
-  font: 500 10px/1 var(--pt-font-mono), monospace;
-  letter-spacing: .12em;
+  background:
+    linear-gradient(180deg, rgba(157, 180, 236, .10), rgba(7, 8, 11, .28) 55%, rgba(0, 229, 255, .045)),
+    rgba(10, 14, 22, .72);
+  color: #d7e3f8;
+  font: 600 11px/1 var(--pt-font-mono), monospace;
+  letter-spacing: .14em;
   text-transform: uppercase;
   text-decoration: none;
   cursor: pointer;
-  transition: transform var(--ob-dur-fast) var(--ob-ease), background var(--ob-dur) var(--ob-ease), border-color var(--ob-dur) var(--ob-ease), box-shadow var(--ob-dur) var(--ob-ease), color var(--ob-dur) var(--ob-ease);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, .06) inset,
+    0 -8px 18px rgba(0, 229, 255, .05) inset,
+    0 4px 14px rgba(0, 0, 0, .45);
+  transition: transform .16s cubic-bezier(.34, 1.56, .64, 1), box-shadow .22s ease, border-color .22s ease, filter .22s ease, color .22s ease;
 }
-.ob-btn:hover { border-color: var(--ob-border-strong); color: var(--ob-peak); background: rgba(0, 229, 255, .09); box-shadow: var(--ob-glow); }
-.ob-btn:active { transform: scale(.98); }
-.ob-btn:focus-visible { outline: 2px solid var(--ob-cyan); outline-offset: 2px; }
-.ob-btn:disabled, .ob-btn[aria-disabled='true'] { cursor: not-allowed; opacity: .42; pointer-events: none; }
-.ob-btn-primary { border-color: var(--ob-cyan); background: var(--ob-cyan); color: var(--ob-bg-0); box-shadow: 0 0 16px rgba(0, 229, 255, .2); }
-.ob-btn-primary:hover { border-color: var(--ob-peak); background: var(--ob-peak); color: var(--ob-bg-0); box-shadow: 0 0 22px rgba(0, 229, 255, .38); }
-.ob-btn-ghost { background: transparent; border-color: var(--ob-cyan); color: var(--ob-cyan); }
-.ob-btn-ghost:hover { background: rgba(0, 229, 255, .1); }
-.ob-btn-danger { border-color: rgba(248, 113, 113, .62); background: rgba(248, 113, 113, .06); color: var(--ob-danger); }
-.ob-btn-danger:hover { border-color: var(--ob-danger); background: rgba(248, 113, 113, .12); color: #ffd2d2; box-shadow: 0 0 18px rgba(248, 113, 113, .18); }
-.ob-btn-confirm { border-color: rgba(110, 231, 183, .52); color: var(--ob-success); }
-.ob-btn-confirm:hover { border-color: var(--ob-success); background: rgba(110, 231, 183, .1); }
-.ob-btn-sm { min-height: 30px; padding: 6px 10px; font-size: 9px; }
-.ob-btn-lg { min-height: 44px; padding: 11px 18px; font-size: 11px; }
+.ob-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, .14) 48%, transparent 62%);
+  transform: translateX(-130%);
+  transition: transform .5s cubic-bezier(.22, .61, .36, 1);
+  pointer-events: none;
+}
+.ob-btn:hover::before { transform: translateX(130%); }
+.ob-btn:hover {
+  border-color: rgba(0, 229, 255, .55);
+  color: #eaf6ff;
+  box-shadow:
+    0 0 0 1px rgba(0, 229, 255, .18),
+    0 0 18px rgba(0, 229, 255, .14),
+    0 1px 0 rgba(255, 255, 255, .08) inset,
+    0 4px 14px rgba(0, 0, 0, .45);
+}
+.ob-btn:active { transform: translateY(1px) scale(.98); }
+.ob-btn:focus-visible { outline: 2px solid rgba(0, 229, 255, .65); outline-offset: 2px; }
+.ob-btn:disabled, .ob-btn[aria-disabled='true'] { cursor: not-allowed; opacity: .38; filter: grayscale(.4); pointer-events: none; }
+.ob-btn-primary {
+  border-color: rgba(0, 229, 255, .75);
+  color: #021014;
+  background: linear-gradient(180deg, #8ff4ff, #22d3ee 46%, #0e9fb6 100%);
+  box-shadow:
+    0 0 22px rgba(0, 229, 255, .35),
+    0 1px 0 rgba(255, 255, 255, .55) inset,
+    0 -10px 16px rgba(0, 60, 72, .35) inset,
+    0 4px 16px rgba(0, 0, 0, .4);
+}
+.ob-btn-primary::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #052027;
+  box-shadow: 0 0 6px rgba(2, 32, 39, .9);
+  margin-right: -2px;
+}
+.ob-btn-primary:hover {
+  filter: brightness(1.08);
+  box-shadow:
+    0 0 30px rgba(0, 229, 255, .5),
+    0 1px 0 rgba(255, 255, 255, .6) inset,
+    0 4px 16px rgba(0, 0, 0, .4);
+}
+.ob-btn-ghost {
+  background: rgba(0, 229, 255, .03);
+  border-color: rgba(0, 229, 255, .45);
+  color: #9ff2ff;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .05) inset, 0 4px 14px rgba(0, 0, 0, .4);
+}
+.ob-btn-ghost:hover { background: rgba(0, 229, 255, .1); box-shadow: 0 0 16px rgba(0, 229, 255, .18), 0 4px 14px rgba(0, 0, 0, .4); }
+.ob-btn-danger {
+  border-color: rgba(248, 113, 113, .5);
+  color: #ffb4b4;
+  background: linear-gradient(180deg, rgba(248, 113, 113, .14), rgba(24, 8, 8, .6));
+}
+.ob-btn-danger:hover { border-color: rgba(248, 113, 113, .9); color: #ffd9d9; box-shadow: 0 0 18px rgba(248, 113, 113, .28); }
+.ob-btn-confirm {
+  border-color: rgba(110, 231, 183, .5);
+  color: #b8f5db;
+  background: linear-gradient(180deg, rgba(110, 231, 183, .12), rgba(6, 16, 12, .6));
+}
+.ob-btn-confirm:hover { border-color: rgba(110, 231, 183, .85); box-shadow: 0 0 18px rgba(110, 231, 183, .25); }
+.ob-btn-sm { --btn-h: 30px; padding: 0 12px; font-size: 10px; border-radius: 8px; }
+.ob-btn-lg { --btn-h: 46px; padding: 0 24px; font-size: 12px; border-radius: 12px; }
 
 /* Shared glass surfaces and the standard route header. */
 .ob-card {
@@ -8500,15 +8565,15 @@ body:has(.ob-home) .ob-matrix-rain { opacity: .55; }
    with the lane stylesheets. Keep the compatibility class and guarantee that
    the new primitive still owns its radius and semantic colors in the content
    pane. */
-html[data-theme='friday'] .mc-btn.ob-btn { border-radius: var(--ob-radius-control); border-color: var(--ob-border); background: rgba(0, 229, 255, .035); color: var(--ob-text-2); font-weight: 500; }
-html[data-theme='friday'] .mc-btn.ob-btn:hover { border-color: var(--ob-border-strong); background: rgba(0, 229, 255, .09); color: var(--ob-peak); box-shadow: var(--ob-glow); }
-html[data-theme='friday'] .mc-btn.ob-btn-primary { border-color: var(--ob-cyan); background: var(--ob-cyan); color: var(--ob-bg-0); box-shadow: 0 0 16px rgba(0, 229, 255, .2); }
-html[data-theme='friday'] .mc-btn.ob-btn-primary:hover { border-color: var(--ob-peak); background: var(--ob-peak); color: var(--ob-bg-0); box-shadow: 0 0 22px rgba(0, 229, 255, .38); }
-html[data-theme='friday'] .mc-btn.ob-btn-ghost { border-color: var(--ob-cyan); background: transparent; color: var(--ob-cyan); }
-html[data-theme='friday'] .mc-btn.ob-btn-ghost:hover { background: rgba(0, 229, 255, .1); color: var(--ob-peak); }
-html[data-theme='friday'] .mc-btn.ob-btn-danger { border-color: rgba(248, 113, 113, .62); background: rgba(248, 113, 113, .06); color: var(--ob-danger); }
-html[data-theme='friday'] .mc-btn.ob-btn-danger:hover { border-color: var(--ob-danger); background: rgba(248, 113, 113, .12); color: #ffd2d2; box-shadow: 0 0 18px rgba(248, 113, 113, .18); }
-html[data-theme='friday'] .mc-btn.ob-btn-confirm { border-color: rgba(110, 231, 183, .52); background: rgba(110, 231, 183, .04); color: var(--ob-success); }
+html[data-theme='friday'] .mc-btn.ob-btn { border-radius: var(--ob-radius-control); border-color: rgba(157, 180, 236, .28); background: linear-gradient(180deg, rgba(157, 180, 236, .10), rgba(7, 8, 11, .28) 55%, rgba(0, 229, 255, .045)), rgba(10, 14, 22, .72); color: #d7e3f8; font-weight: 600; letter-spacing: .14em; }
+html[data-theme='friday'] .mc-btn.ob-btn:hover { border-color: rgba(0, 229, 255, .55); background: rgba(0, 229, 255, .09); color: #eaf6ff; box-shadow: 0 0 0 1px rgba(0, 229, 255, .18), 0 0 18px rgba(0, 229, 255, .14), 0 4px 14px rgba(0, 0, 0, .45); }
+html[data-theme='friday'] .mc-btn.ob-btn-primary { border-color: rgba(0, 229, 255, .75); background: linear-gradient(180deg, #8ff4ff, #22d3ee 46%, #0e9fb6 100%); color: #021014; box-shadow: 0 0 22px rgba(0, 229, 255, .35), 0 1px 0 rgba(255, 255, 255, .55) inset, 0 -10px 16px rgba(0, 60, 72, .35) inset, 0 4px 16px rgba(0, 0, 0, .4); }
+html[data-theme='friday'] .mc-btn.ob-btn-primary:hover { border-color: rgba(0, 229, 255, .9); background: linear-gradient(180deg, #a8f7ff, #33d9f2 46%, #12aabe 100%); color: #021014; box-shadow: 0 0 30px rgba(0, 229, 255, .5), 0 1px 0 rgba(255, 255, 255, .6) inset, 0 4px 16px rgba(0, 0, 0, .4); }
+html[data-theme='friday'] .mc-btn.ob-btn-ghost { border-color: rgba(0, 229, 255, .45); background: rgba(0, 229, 255, .03); color: #9ff2ff; }
+html[data-theme='friday'] .mc-btn.ob-btn-ghost:hover { background: rgba(0, 229, 255, .1); color: #eaf6ff; box-shadow: 0 0 16px rgba(0, 229, 255, .18), 0 4px 14px rgba(0, 0, 0, .4); }
+html[data-theme='friday'] .mc-btn.ob-btn-danger { border-color: rgba(248, 113, 113, .5); background: linear-gradient(180deg, rgba(248, 113, 113, .14), rgba(24, 8, 8, .6)); color: #ffb4b4; }
+html[data-theme='friday'] .mc-btn.ob-btn-danger:hover { border-color: rgba(248, 113, 113, .9); background: rgba(248, 113, 113, .12); color: #ffd9d9; box-shadow: 0 0 18px rgba(248, 113, 113, .28); }
+html[data-theme='friday'] .mc-btn.ob-btn-confirm { border-color: rgba(110, 231, 183, .5); background: linear-gradient(180deg, rgba(110, 231, 183, .12), rgba(6, 16, 12, .6)); color: #b8f5db; }
 
 /* ══════════════════════════════════════════════════════════════════════════
    H2 · MOBILE + FOLD NAVIGATION
