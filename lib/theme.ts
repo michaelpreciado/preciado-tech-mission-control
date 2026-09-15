@@ -13,7 +13,7 @@ export const ACCENT_PRESETS = [
   { name: 'Dodger blue', hex: '#1e90ff' },
   { name: 'Matrix green', hex: '#39ff14' },
   { name: 'Amber CRT', hex: '#ffb000' },
-  { name: 'Ice cyan', hex: '#00e5ff' },
+  { name: 'Dodger', hex: '#1e90ff' },
   { name: 'Blood orange', hex: '#ff4d00' },
 ] as const
 

@@ -45,10 +45,10 @@ const MINE_ASSIGNEES = new Set(['jarvis', 'friday'])
 type FilterId = 'all' | 'mine' | 'active' | 'attention'
 
 const FILTER_CHIPS: { id: FilterId; label: string }[] = [
-  { id: 'all', label: 'all' },
-  { id: 'mine', label: 'mine' },
-  { id: 'active', label: 'active' },
-  { id: 'attention', label: 'needs attention' },
+  { id: 'all', label: 'All' },
+  { id: 'mine', label: 'Mine' },
+  { id: 'active', label: 'Active' },
+  { id: 'attention', label: 'Needs attention' },
 ]
 
 /** Any status not explicitly defined falls into a catch-all column. */
@@ -397,7 +397,7 @@ function FilterBar({ filter, onFilter, query, onQuery, searchRef, onFocusSearch 
           ref={searchRef}
           className="mc-kb-input mc-kb-search-input"
           type="search"
-          placeholder="search title…  ( / )"
+          placeholder="Search tasks…  ( / )"
           aria-label="Search tasks by title"
           value={query}
           onChange={e => onQuery(e.target.value)}
@@ -480,7 +480,7 @@ function CreateModal({ sources, onClose, onCreated, token = '' }: {
         onClick={e => e.stopPropagation()}
       >
         <div className="mc-drawer-head">
-          <span className="mc-drawer-title">NEW TASK</span>
+          <span className="mc-drawer-title">New Task</span>
           <button className="mc-drawer-close" onClick={onClose} aria-label="Close">✕</button>
         </div>
         <div className="mc-drawer-body">
@@ -913,15 +913,15 @@ export function KanbanBoard({ token = '' }: { token?: string }) {
             ))}
           </div>
           <div className="mc-kb-toolbar">
-            <Button variant="ghost" active={view === 'overview'} onClick={() => setView('overview')}>overview</Button>
-            <Button variant="ghost" active={view === 'board'} onClick={() => setView('board')}>board</Button>
+            <Button variant="ghost" active={view === 'overview'} onClick={() => setView('overview')}>Overview</Button>
+            <Button variant="ghost" active={view === 'board'} onClick={() => setView('board')}>Board</Button>
             {hasDoneWork && (
               <Button variant="ghost" active={showDone} onClick={toggleShowDone}>
-                {showDone ? 'hide done' : `show ${doneCount} done · ${archivedCount} archived`}
+                {showDone ? 'Hide done' : `Show ${doneCount} done · ${archivedCount} archived`}
               </Button>
             )}
             <Button variant="ghost" active={showCreate} onClick={() => setShowCreate(v => !v)}>
-              {showCreate ? '✕ close' : '+ new task'}
+              {showCreate ? 'Close' : '+ New task'}
             </Button>
           </div>
         </div>

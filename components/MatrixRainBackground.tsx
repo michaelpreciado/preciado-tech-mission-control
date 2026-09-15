@@ -63,11 +63,11 @@ export function MatrixRainBackground() {
         const drop = columns[index]
         if (!reduced) drop.y += drop.speed * speed * delta * 0.045
         const y = (drop.y % (height / FONT_SIZE)) * FONT_SIZE
-        context.fillStyle = 'rgba(207,248,255,0.55)'
+        context.fillStyle = 'rgba(190,220,255,0.55)'
         context.fillText(glyph(drop.seed, elapsed), index * FONT_SIZE, y)
         for (let trail = 1; trail <= 7; trail += 1) {
           const trailY = y - trail * FONT_SIZE
-          context.fillStyle = `rgba(0,229,255,${(0.18 * (1 - trail / 8)).toFixed(3)})`
+          context.fillStyle = `rgba(30,144,255,${(0.18 * (1 - trail / 8)).toFixed(3)})`
           context.fillText(glyph(drop.seed + trail * 7, elapsed), index * FONT_SIZE, trailY)
         }
       }

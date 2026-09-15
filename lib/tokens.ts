@@ -32,7 +32,7 @@ export const SEMANTIC = {
   ok:    { hex: '#28c840', ink: '#2be36b' },   // green
   warn:  { hex: '#febc2e', ink: '#ffc857' },   // amber
   error: { hex: '#ff5f57', ink: '#ff8a83' },   // red — semantic ONLY
-  info:  { hex: '#00d4ff', ink: '#7fe9ff' },   // cyan
+  info:  { hex: '#1E90FF', ink: '#9BC8FF' },   // dodger
 } as const
 
 /* Categorical chart palette — fixed, never cycled, validated against the dark
@@ -46,8 +46,8 @@ export const CATEGORICAL = {
 } as const
 
 /* Accent RGB triplets (for rgba() use). Keep in sync with ACCENT_DEFAULT. */
-export const ACCENT_RGB = '157,180,236'
-export const ACCENT_BRIGHT_RGB = '188,208,255'
+export const ACCENT_RGB = '30,144,255'
+export const ACCENT_BRIGHT_RGB = '125,190,255'
 
 /* ── Type roles ───────────────────────────────────────────────────── */
 export const FONT = {

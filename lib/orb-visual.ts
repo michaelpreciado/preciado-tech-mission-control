@@ -22,11 +22,11 @@ export type OrbOverlayVisualParams = {
 }
 
 const PALETTES = {
-  cyan: { rgb: [0, 0.898, 1] as const, hex: '#00E5FF', label: 'cyan' },
-  working: { rgb: [0.35, 0.85, 1] as const, hex: '#7DEFFF', label: 'working' },
+  cyan: { rgb: [0.118, 0.565, 1] as const, hex: '#1E90FF', label: 'cyan' },
+  working: { rgb: [0.42, 0.72, 1] as const, hex: '#6BA8FF', label: 'working' },
   alert: { rgb: [1, 0.42, 0.42] as const, hex: '#F87171', label: 'alert' },
   success: { rgb: [0.302, 0.949, 0.722] as const, hex: '#4DF2B8', label: 'success' },
-  sync: { rgb: [0.561, 0.949, 1] as const, hex: '#8FF2FF', label: 'sync' },
+  sync: { rgb: [0.58, 0.76, 1] as const, hex: '#94BEFF', label: 'sync' },
 } as const
 
 /**
