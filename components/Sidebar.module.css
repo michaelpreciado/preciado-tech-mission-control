@@ -1,0 +1,104 @@
+.sidebar {
+  --sidebar-width: 236px;
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 20;
+  display: flex;
+  width: var(--sidebar-width);
+  height: 100vh;
+  min-height: 100vh;
+  box-sizing: border-box;
+  flex-direction: column;
+  gap: 24px;
+  padding: 22px 14px 14px;
+  overflow: hidden auto;
+  border-right: 1px solid var(--ob-border);
+  background: linear-gradient(180deg, rgba(2, 9, 15, .96), rgba(1, 4, 7, .91));
+  box-shadow: 10px 0 34px rgba(0, 0, 0, .24), inset -1px 0 rgba(125, 239, 255, .04);
+  transition: width var(--ob-dur, 250ms) var(--ob-ease, ease-out), padding var(--ob-dur, 250ms) var(--ob-ease, ease-out);
+}
+
+@supports (height: 100dvh) {
+  .sidebar { height: 100dvh; min-height: 100dvh; }
+}
+
+.sidebar::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 140px;
+  pointer-events: none;
+  content: '';
+  background: radial-gradient(ellipse at 30% 0%, rgba(0, 229, 255, .1), transparent 70%);
+}
+
+.collapsed { width: 64px; padding-inline: 10px; }
+
+.brandBlock,
+.userBlock,
+.navItem,
+.crewItem,
+.quickGo,
+.collapseToggle { position: relative; z-index: 1; }
+
+.brandBlock { display: flex; align-items: center; gap: 10px; min-height: 38px; }
+.brandMark { display: grid; width: 32px; height: 32px; flex: 0 0 32px; place-items: center; border: 1px solid var(--ob-border); border-radius: 8px; color: var(--ob-cyan); background: rgba(0, 229, 255, .06); box-shadow: 0 0 18px rgba(0, 229, 255, .12); }
+.brandCopy { min-width: 0; overflow: hidden; transition: opacity var(--ob-dur-fast, 150ms) ease, transform var(--ob-dur-fast, 150ms) ease; }
+.wordmark { color: var(--ob-text); font-size: 11px; font-weight: 700; letter-spacing: .14em; white-space: nowrap; }
+.wordmark span { color: var(--ob-cyan); }
+.buildTag, .sectionLabel { color: var(--ob-text-4); font-size: 8px; letter-spacing: .18em; text-transform: uppercase; white-space: nowrap; }
+.buildTag { margin-top: 5px; }
+
+.section { display: grid; gap: 8px; }
+.sectionLabel { padding: 0 10px; color: var(--ob-text-4); }
+.section nav { display: grid; gap: 3px; }
+.navItem { display: flex; min-height: 38px; align-items: center; gap: 11px; padding: 0 11px; overflow: hidden; border: 1px solid transparent; border-radius: 10px; color: var(--ob-text-3); text-decoration: none; transition: color var(--ob-dur-fast, 150ms) ease, background var(--ob-dur-fast, 150ms) ease, border-color var(--ob-dur-fast, 150ms) ease, box-shadow var(--ob-dur-fast, 150ms) ease; }
+.navItem:hover { color: var(--ob-peak); border-color: rgba(0, 229, 255, .18); background: rgba(0, 229, 255, .055); }
+.navItem:focus-visible, .collapseToggle:focus-visible, .quickGo:focus-visible { outline: 2px solid var(--ob-cyan); outline-offset: 2px; }
+.navItem.active { color: var(--ob-peak); border-color: rgba(0, 229, 255, .42); background: linear-gradient(90deg, rgba(0, 229, 255, .17), rgba(0, 229, 255, .045)); box-shadow: 0 0 18px rgba(0, 229, 255, .1), inset 2px 0 var(--ob-cyan); }
+.navIcon { display: grid; width: 18px; height: 18px; flex: 0 0 18px; place-items: center; color: var(--ob-sky); }
+.active .navIcon { color: var(--ob-cyan); filter: drop-shadow(0 0 5px rgba(0, 229, 255, .62)); }
+.navLabel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: opacity var(--ob-dur-fast, 150ms) ease, transform var(--ob-dur-fast, 150ms) ease; }
+
+.crewSection { gap: 9px; }
+.crewList { display: grid; gap: 5px; }
+.crewItem { display: flex; min-height: 28px; align-items: center; gap: 8px; padding: 0 11px; color: var(--ob-text-2); font-size: 10px; }
+.crewName { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.crewStatus { margin-left: auto; color: var(--ob-text-4); font-size: 8px; text-transform: uppercase; }
+.statusDot { width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; background: var(--ob-text-4); }
+.status_active { background: var(--ob-success); box-shadow: 0 0 8px rgba(110, 231, 183, .72); }
+.status_standby { background: var(--ob-cyan); box-shadow: 0 0 7px rgba(0, 229, 255, .48); }
+.status_attention { background: var(--ob-warn); box-shadow: 0 0 7px rgba(252, 211, 77, .56); }
+.status_offline, .statusUnknown { background: var(--ob-text-4); }
+.spacer { flex: 1 1 auto; min-height: 16px; }
+
+.footer { display: grid; position: relative; z-index: 1; gap: 10px; padding-bottom: 30px; }
+.userBlock { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border: 1px solid rgba(0, 229, 255, .12); border-radius: 10px; background: rgba(0, 229, 255, .025); }
+.userAvatar { display: grid; width: 24px; height: 24px; place-items: center; border: 1px solid rgba(0, 229, 255, .42); border-radius: 50%; color: var(--ob-cyan); font-size: 12px; }
+.userCopy { display: grid; gap: 2px; min-width: 0; }
+.userCopy strong { color: var(--ob-text-2); font-size: 10px; font-weight: 500; }
+.userCopy small { color: var(--ob-text-4); font-size: 8px; letter-spacing: .16em; }
+.quickGo { width: 100%; min-height: 36px; }
+.quickGo kbd { margin-left: auto; padding: 2px 5px; border: 1px solid rgba(0, 0, 2, .28); border-radius: 4px; font: inherit; font-size: 8px; }
+.collapseToggle { position: absolute; right: 0; bottom: 0; display: grid; width: 24px; height: 24px; place-items: center; padding: 0; border: 1px solid var(--ob-border); border-radius: 6px; color: var(--ob-cyan); background: var(--ob-bg-1); cursor: pointer; }
+
+.collapsed .brandCopy,
+.collapsed .sectionLabel,
+.collapsed .navLabel,
+.collapsed .crewName,
+.collapsed .crewStatus,
+.collapsed .userCopy,
+.collapsed .quickGoLabel,
+.collapsed .quickGo kbd { opacity: 0; pointer-events: none; transform: translateX(-5px); }
+.collapsed .navItem { justify-content: center; padding-inline: 0; }
+.collapsed .crewItem { justify-content: center; padding-inline: 0; }
+.collapsed .userBlock { justify-content: center; padding-inline: 0; }
+.collapsed .quickGo { justify-content: center; gap: 0; padding-inline: 0; }
+.collapsed .collapseToggle { right: 10px; }
+
+@media (max-width: 820px) {
+  .sidebar { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar, .brandCopy, .navItem, .navLabel { transition: none; }
+}

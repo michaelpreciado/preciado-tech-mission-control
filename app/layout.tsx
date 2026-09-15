@@ -112,7 +112,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         </Shell>
         <BootOverlay />
         <Script src="/v4-scroll.js" strategy="afterInteractive" />
-        <Script src="/rain.js" strategy="lazyOnload" />
         <ServiceWorkerRegister />
       </body>
     </html>

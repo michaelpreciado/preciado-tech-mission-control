@@ -50,9 +50,12 @@ export type ButtonProps = ButtonOwnProps &
 
 export const Button = React.forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
   function Button({ variant = 'ghost', active, loading = false, href, className = '', children, disabled, type = 'button', ...rest }, ref) {
+    const obVariant = variant === 'confirm' ? 'ob-btn-confirm' : `ob-btn-${variant}`
     const cls = [
       'mc-btn',
       `mc-btn-${variant}`,
+      'ob-btn',
+      obVariant,
       active ? 'is-on' : '',
       loading ? 'is-loading' : '',
       className,

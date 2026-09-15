@@ -11,7 +11,6 @@ import { RevenuePipeline } from './RevenuePipeline'
 import { HomeTasks } from './HomeTasks'
 import { HomeSystem } from './HomeSystem'
 import { GithubPanel } from './views/GithubPanel'
-import { MatrixRainBackground } from './MatrixRainBackground'
 import styles from './HomeWorkspace.module.css'
 
 const HomeCoreOrb = dynamic(() => import('./CoreOrb'), { ssr: false })
@@ -105,7 +104,6 @@ export function HomeDeck() {
   const githubWeeks = data?.github?.weeks?.length
   const githubMeta = data?.github?.syncedAt ? 'SYNCED' : data ? 'SYNC UNKNOWN' : 'SYNCING'
   return <div className={`${styles.home} mc-home-workspace ob-home`}>
-    <MatrixRainBackground />
     <nav className={styles.obJumps} aria-label="Home sections">
       <a href="#home-mission-feed">Feed ↓</a><a href="#home-open-tasks">Tasks ↓</a><a href="#home-conversation">Console ↓</a>
     </nav>

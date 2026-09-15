@@ -11,6 +11,7 @@ import { AsciiKicker } from '../vf/Ascii'
  * renders identically for every visitor.
  */
 import { Button, SectionHead } from '@/components/ui'
+import { PageHeader } from '@/components/PageHeader'
 import {
   designTokens, SEMANTIC, CATEGORICAL, FONT, TYPE_SCALE, SPACING,
   RADIUS, GLOW, MOTION, DENSITY, ACCENT_DEFAULT,
@@ -160,8 +161,7 @@ function ElevationSpecimens() {
 export default function StyleGuide() {
   return (
     <div className="sg">
-      <AsciiKicker view="STYLEGUIDE" detail="DECK-VOCABULARY" />
-      <SectionHead label="DESIGN SYSTEM / STYLEGUIDE" post={<span className="sg-count">source: lib/tokens.ts</span>} />
+      <PageHeader eyebrow="~/styleguide · DECK-VOCABULARY" title="STYLEGUIDE" subtitle="OmniBridge tokens and shared component vocabulary" actions={<Button variant="ghost" href="#sg-components">Components</Button>} />
       <div className="v3-kicker v4-legacy-kicker"><span className="jp">設計</span> matrix-glass-blue · source of truth</div>
 
       <div className="v4-reference">

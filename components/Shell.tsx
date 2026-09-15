@@ -2,12 +2,13 @@
 
 import { createContext, useContext, useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import { usePathname } from 'next/navigation'
-import { LiveDataProvider, useLiveData } from './LiveDataProvider'
+import { LiveDataProvider } from './LiveDataProvider'
 import { Button } from './ui'
 import { Icon, type IconName } from './icons'
+import { Sidebar as OmniBridgeSidebar } from './Sidebar'
+import { MatrixRainBackground } from './MatrixRainBackground'
 import { UiSettingsContext, DEFAULT_UI_SETTINGS, useUiSettings, type UiSettings } from './ui-settings'
 import { NAV, PINNED_TAB_IDS } from '@/lib/nav-tabs'
 
@@ -77,76 +78,6 @@ function HomeControl({ placement }: { placement: 'desktop' | 'mobile' }) {
       </span>
       {mobile && <span className="mc-mobile-label">Home</span>}
     </Link>
-  )
-}
-
-function Sidebar() {
-  const pathname = usePathname()
-  const { data, isLive } = useLiveData()
-  const { appName } = useBrand()
-  const nav = useVisibleNav()
-  const sidebarNav = useMemo(
-    () => nav.map(sec => ({ ...sec, items: sec.items.filter(item => item.id !== '/') })).filter(sec => sec.items.length > 0),
-    [nav],
-  )
-
-  const isActive = (href: string) => href === '/' ? pathname === '/' : pathname.startsWith(href)
-
-  return (
-    <aside className="mc-side" aria-label="Main navigation">
-      <HomeControl placement="desktop" />
-      <div className="mc-brand">
-        <div className="mc-brand-mark"><Image src="/brand/preciado-tech-logo.jpg" alt="Preciado Tech" width={28} height={28} style={{ borderRadius: 2 }} /></div>
-        <div className="mc-brand-text">
-          <div className="mc-brand-name">
-            {appName.split(' ').map(word => <span key={word} style={{ display: 'block' }}>{word}</span>)}
-          </div>
-        </div>
-      </div>
-      <Button
-        variant="ghost"
-        className="mc-cmdp-trigger"
-        aria-label="Open command palette (Ctrl+K)"
-        title="Jump anywhere — Ctrl/⌘+K  or  /"
-        onClick={() => window.dispatchEvent(new Event('mc:open-cmdp'))}
-      >
-        <span className="mc-cmdp-trigger-ic"><Icon name="chat" size={13} /></span>
-        <span className="mc-cmdp-trigger-label">Jump to…</span>
-        <kbd className="mc-cmdp-trigger-kbd">⌘K</kbd>
-      </Button>
-      <div className="mc-status-pill" style={{ display: 'none' }}>
-        <span className={`mc-led ${isLive ? 'green' : ''}`} />
-        <span>MISSION CTRL {isLive ? 'ONLINE' : 'OFFLINE'}</span>
-      </div>
-      {sidebarNav.map((sec) => (
-        <div key={sec.section} className="mc-side-section">
-          <div className="mc-side-label">&gt; {sec.section}</div>
-          {sec.items.map((it, idx) => (
-            <Link
-              key={it.id}
-              href={it.id}
-              title={it.label}
-              aria-current={isActive(it.id) ? 'page' : undefined}
-              className={`mc-nav-item ${isActive(it.id) ? 'is-active' : ''}`}
-              style={{ '--i': idx } as React.CSSProperties}
-            >
-              <span className="mc-nav-rail" />
-              <span className="mc-nav-ic"><Icon name={it.icon} size={16} /></span>
-              <span className="mc-nav-label">{it.label}</span>
-              <span className="mc-nav-scan" />
-            </Link>
-          ))}
-        </div>
-      ))}
-
-      <div className="mc-side-footer">
-        <div className="mc-side-foot-title">&gt; SYSTEM STATUS</div>
-        <div>{data ? `${data.counts.openTasks} open · ${data.counts.enabledCronJobs} jobs live` : 'indexing...'}</div>
-        <div style={{ marginTop: 6, color: 'var(--pt-text-dim)' }}>
-          {data?.warnings.length ? `${data.warnings.length} warning(s)` : 'All nominal'}
-        </div>
-      </div>
-    </aside>
   )
 }
 
@@ -347,6 +278,7 @@ function HomeNavDrawer() {
 
 export function Shell({ appName, appTagline, ui, children }: { appName: string; appTagline: string; ui?: UiSettings; children: React.ReactNode }) {
   const pathname = usePathname()
+  if (pathname === '/login') return <>{children}</>
   return (
     <UiSettingsContext.Provider value={ui ?? DEFAULT_UI_SETTINGS}>
     <BrandContext.Provider value={{ appName, appTagline }}>
@@ -356,12 +288,12 @@ export function Shell({ appName, appTagline, ui, children }: { appName: string; 
         Skip to main content
       </a>
       <div className="mc-bg" />
-      <canvas id="mc-rain-canvas" className="mc-rain" aria-hidden="true" />
+      <MatrixRainBackground />
       <div className="mc-scanlines" aria-hidden="true" />
       <div className="mc-vignette" aria-hidden="true" />
 
       <div className={`mc-shell${pathname === '/' ? ' is-home' : ''}`}>
-        <Sidebar />
+        <OmniBridgeSidebar />
         <main id="mc-main-content" className="mc-main">
           {children}
         </main>

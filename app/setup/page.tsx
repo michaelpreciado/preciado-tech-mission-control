@@ -1,6 +1,6 @@
 'use client'
 
-import { AsciiKicker } from '../vf/Ascii'
+import { PageHeader } from '@/components/PageHeader'
 
 /**
  * F.R.I.D.A.Y. setup — configure the harness from the browser.
@@ -8,7 +8,7 @@ import { AsciiKicker } from '../vf/Ascii'
  * Bring-your-own keys: nothing here ever leaves this machine.
  */
 import { useEffect, useState } from 'react'
-import { Button, SectionHead } from '@/components/ui'
+import { Button } from '@/components/ui'
 import { ACCENT_PRESETS, DEFAULT_ACCENT } from '@/lib/theme'
 import { NAV_TABS, PINNED_TAB_IDS } from '@/lib/nav-tabs'
 import { apiFetch } from '@/lib/api-base'
@@ -240,8 +240,7 @@ export default function SetupPage() {
 
   return (
     <>
-      <AsciiKicker view="SETUP" detail="CONFIG-STATE" />
-      <SectionHead label="SETUP / CONFIGURE F.R.I.D.A.Y." />
+      <PageHeader eyebrow="~/setup · CONFIG-STATE" title="SETUP" subtitle="Configure identity, integrations, and interface behavior" />
       <div className="v3-kicker v4-legacy-kicker"><span className="jp">設定</span> configure</div>
       <div className="mc-setup">
         <div className="mc-setup-intro">

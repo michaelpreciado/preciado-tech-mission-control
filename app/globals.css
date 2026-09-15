@@ -8358,3 +8358,154 @@ body:has([role="dialog"], dialog[open]) .boot-overlay { visibility: hidden; }
   .ob-wordmark-banner .ob-wordmark-art { font-size: 5px; }
   .ob-wordmark-subtitle { font-size: 7px; letter-spacing: .22em; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   OMNIBRIDGE v5 · SHARED APPLICATION SYSTEM
+   The home deck is the visual anchor. These additive primitives extend its
+   glass, cyan-emissive language to route chrome without removing the legacy
+   mc-* vocabulary still used by feature panels.
+   ══════════════════════════════════════════════════════════════════════════ */
+:root {
+  --ob-ease: cubic-bezier(.2, .75, .25, 1);
+  --ob-dur-fast: 150ms;
+  --ob-dur: 250ms;
+  --ob-radius-control: 10px;
+  --ob-radius-card: 12px;
+  --ob-border-strong: rgba(0, 229, 255, .52);
+  --ob-glow: 0 0 18px rgba(0, 229, 255, .18);
+}
+
+/* Shared button language. `.mc-btn` remains on the shared Button primitive
+   for compatibility; `.ob-btn` is the canonical OmniBridge surface. */
+.ob-btn {
+  display: inline-flex;
+  min-height: 36px;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--ob-border);
+  border-radius: var(--ob-radius-control);
+  background: rgba(0, 229, 255, .035);
+  color: var(--ob-text-2);
+  font: 500 10px/1 var(--pt-font-mono), monospace;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform var(--ob-dur-fast) var(--ob-ease), background var(--ob-dur) var(--ob-ease), border-color var(--ob-dur) var(--ob-ease), box-shadow var(--ob-dur) var(--ob-ease), color var(--ob-dur) var(--ob-ease);
+}
+.ob-btn:hover { border-color: var(--ob-border-strong); color: var(--ob-peak); background: rgba(0, 229, 255, .09); box-shadow: var(--ob-glow); }
+.ob-btn:active { transform: scale(.98); }
+.ob-btn:focus-visible { outline: 2px solid var(--ob-cyan); outline-offset: 2px; }
+.ob-btn:disabled, .ob-btn[aria-disabled='true'] { cursor: not-allowed; opacity: .42; pointer-events: none; }
+.ob-btn-primary { border-color: var(--ob-cyan); background: var(--ob-cyan); color: var(--ob-bg-0); box-shadow: 0 0 16px rgba(0, 229, 255, .2); }
+.ob-btn-primary:hover { border-color: var(--ob-peak); background: var(--ob-peak); color: var(--ob-bg-0); box-shadow: 0 0 22px rgba(0, 229, 255, .38); }
+.ob-btn-ghost { background: transparent; border-color: var(--ob-cyan); color: var(--ob-cyan); }
+.ob-btn-ghost:hover { background: rgba(0, 229, 255, .1); }
+.ob-btn-danger { border-color: rgba(248, 113, 113, .62); background: rgba(248, 113, 113, .06); color: var(--ob-danger); }
+.ob-btn-danger:hover { border-color: var(--ob-danger); background: rgba(248, 113, 113, .12); color: #ffd2d2; box-shadow: 0 0 18px rgba(248, 113, 113, .18); }
+.ob-btn-confirm { border-color: rgba(110, 231, 183, .52); color: var(--ob-success); }
+.ob-btn-confirm:hover { border-color: var(--ob-success); background: rgba(110, 231, 183, .1); }
+.ob-btn-sm { min-height: 30px; padding: 6px 10px; font-size: 9px; }
+.ob-btn-lg { min-height: 44px; padding: 11px 18px; font-size: 11px; }
+
+/* Shared glass surfaces and the standard route header. */
+.ob-card {
+  position: relative;
+  border: 1px solid var(--ob-border);
+  border-radius: var(--ob-radius-card);
+  background: var(--ob-glass);
+  box-shadow: inset 0 1px rgba(207, 248, 255, .035), 0 10px 28px rgba(0, 0, 0, .14);
+  -webkit-backdrop-filter: blur(16px) saturate(125%);
+  backdrop-filter: blur(16px) saturate(125%);
+  transition: border-color var(--ob-dur) var(--ob-ease), box-shadow var(--ob-dur) var(--ob-ease), transform var(--ob-dur) var(--ob-ease);
+}
+.ob-card::before, .ob-card::after { position: absolute; width: 9px; height: 9px; pointer-events: none; content: ''; border-color: var(--ob-cyan); border-style: solid; opacity: .72; }
+.ob-card::before { top: -1px; left: -1px; border-width: 1px 0 0 1px; border-radius: var(--ob-radius-card) 0 0 0; }
+.ob-card::after { right: -1px; bottom: -1px; border-width: 0 1px 1px 0; border-radius: 0 0 var(--ob-radius-card) 0; }
+.ob-card:hover { border-color: rgba(0, 229, 255, .38); box-shadow: var(--ob-glow), inset 0 1px rgba(207, 248, 255, .06); }
+.ob-card-pad { padding: 16px; }
+.ob-pagehead { display: flex; min-height: 56px; align-items: flex-end; justify-content: space-between; gap: 24px; margin: 0 0 20px; padding: 4px 0 16px; border-bottom: 1px solid var(--ob-border); }
+.ob-pagehead-copy { min-width: 0; }
+.ob-pagehead h1 { margin: 0; color: var(--ob-peak); font-size: clamp(1.25rem, 2.5vw, 1.8rem); letter-spacing: .08em; text-shadow: 0 0 14px rgba(0, 229, 255, .24); }
+.ob-pagehead p { margin: 7px 0 0; color: var(--ob-text-3); font-size: 10px; letter-spacing: .04em; }
+.ob-pagehead-eyebrow { margin-bottom: 7px; color: var(--ob-cyan); font-size: 9px; letter-spacing: .18em; text-transform: uppercase; }
+.ob-pagehead-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 8px; }
+
+/* Dark glass form controls. Keep `.ob-checkbox` separate so native checkbox
+   geometry is not destroyed by the text-control reset. */
+.ob-input, .ob-select, .ob-pagehead input, .ob-pagehead select {
+  min-height: 36px;
+  box-sizing: border-box;
+  border: 1px solid var(--ob-border);
+  border-radius: var(--ob-radius-control);
+  background: rgba(1, 4, 7, .82);
+  color: var(--ob-text);
+  font: 400 11px/1.35 var(--pt-font-mono), monospace;
+  transition: border-color var(--ob-dur-fast) var(--ob-ease), box-shadow var(--ob-dur-fast) var(--ob-ease), background var(--ob-dur-fast) var(--ob-ease);
+}
+.ob-input { width: 100%; padding: 8px 10px; }
+.ob-select { padding: 8px 30px 8px 10px; }
+.ob-input::placeholder { color: var(--ob-text-4); }
+.ob-input:focus, .ob-select:focus { outline: none; border-color: var(--ob-cyan); background: rgba(0, 229, 255, .045); box-shadow: 0 0 0 2px rgba(0, 229, 255, .14); }
+.ob-input:disabled, .ob-select:disabled { cursor: not-allowed; opacity: .46; }
+.ob-checkbox { width: 16px; height: 16px; accent-color: var(--ob-cyan); }
+.ob-checkbox:focus-visible { outline: 2px solid var(--ob-cyan); outline-offset: 2px; }
+
+/* Status vocabulary. */
+.ob-pill { display: inline-flex; min-height: 22px; box-sizing: border-box; align-items: center; gap: 6px; padding: 4px 9px; border: 1px solid var(--ob-border); border-radius: 999px; background: rgba(0, 229, 255, .055); color: var(--ob-text-2); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; }
+.ob-pill-success { border-color: rgba(110, 231, 183, .48); color: var(--ob-success); background: rgba(110, 231, 183, .08); }
+.ob-pill-warn { border-color: rgba(252, 211, 77, .52); color: var(--ob-warn); background: rgba(252, 211, 77, .08); }
+.ob-pill-danger { border-color: rgba(248, 113, 113, .52); color: var(--ob-danger); background: rgba(248, 113, 113, .08); }
+.ob-pill-info { border-color: rgba(56, 189, 248, .5); color: var(--ob-sky); background: rgba(56, 189, 248, .08); }
+.ob-dot { display: inline-block; width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: var(--ob-text-4); }
+.ob-dot-success { background: var(--ob-success); box-shadow: 0 0 8px rgba(110, 231, 183, .65); }
+.ob-dot-warn { background: var(--ob-warn); box-shadow: 0 0 8px rgba(252, 211, 77, .6); }
+.ob-dot-danger { background: var(--ob-danger); box-shadow: 0 0 8px rgba(248, 113, 113, .6); }
+.ob-dot-info { background: var(--ob-cyan); box-shadow: 0 0 8px rgba(0, 229, 255, .6); }
+
+/* One thin, dark cyan scrollbar language across native scroll surfaces. */
+html { scrollbar-width: thin; scrollbar-color: rgba(0, 229, 255, .3) rgba(1, 4, 7, .76); }
+*::-webkit-scrollbar { width: 7px; height: 7px; }
+*::-webkit-scrollbar-track { background: rgba(1, 4, 7, .76); }
+*::-webkit-scrollbar-thumb { border: 2px solid rgba(1, 4, 7, .76); border-radius: 999px; background: rgba(0, 229, 255, .3); }
+*::-webkit-scrollbar-thumb:hover { background: rgba(0, 229, 255, .52); }
+
+/* Keep route chrome calm for users who opt out of motion. */
+@media (prefers-reduced-motion: reduce) {
+  .ob-btn, .ob-card, .ob-input, .ob-select { transition: none; }
+  .ob-card:hover { transform: none; }
+}
+
+/* The new desktop rail is fixed; the content pane reserves its width without
+   changing the existing home deck's internal layout or its mobile fallback. */
+@media (min-width: 821px) {
+  .mc-shell { display: block; }
+  .mc-main { width: calc(100% - 236px); margin-left: 236px; box-sizing: border-box; }
+  .mc-shell:has(.ob-sidebar--collapsed) .mc-main { width: calc(100% - 64px); margin-left: 64px; }
+}
+@media (max-width: 820px) {
+  .mc-main { width: 100%; margin-left: 0; }
+}
+
+/* MatrixRainBackground now mounts once in Shell, so it belongs to the shared
+   ambient layer above the static wash and below shell content. Home keeps the
+   anchor deck's restrained rain intensity. */
+.ob-matrix-rain { z-index: 1; opacity: .28; }
+body:has(.ob-home) .ob-matrix-rain { opacity: .55; }
+
+/* The Friday skin has intentionally-specific `.mc-btn` theme rules loaded
+   with the lane stylesheets. Keep the compatibility class and guarantee that
+   the new primitive still owns its radius and semantic colors in the content
+   pane. */
+html[data-theme='friday'] .mc-btn.ob-btn { border-radius: var(--ob-radius-control); border-color: var(--ob-border); background: rgba(0, 229, 255, .035); color: var(--ob-text-2); font-weight: 500; }
+html[data-theme='friday'] .mc-btn.ob-btn:hover { border-color: var(--ob-border-strong); background: rgba(0, 229, 255, .09); color: var(--ob-peak); box-shadow: var(--ob-glow); }
+html[data-theme='friday'] .mc-btn.ob-btn-primary { border-color: var(--ob-cyan); background: var(--ob-cyan); color: var(--ob-bg-0); box-shadow: 0 0 16px rgba(0, 229, 255, .2); }
+html[data-theme='friday'] .mc-btn.ob-btn-primary:hover { border-color: var(--ob-peak); background: var(--ob-peak); color: var(--ob-bg-0); box-shadow: 0 0 22px rgba(0, 229, 255, .38); }
+html[data-theme='friday'] .mc-btn.ob-btn-ghost { border-color: var(--ob-cyan); background: transparent; color: var(--ob-cyan); }
+html[data-theme='friday'] .mc-btn.ob-btn-ghost:hover { background: rgba(0, 229, 255, .1); color: var(--ob-peak); }
+html[data-theme='friday'] .mc-btn.ob-btn-danger { border-color: rgba(248, 113, 113, .62); background: rgba(248, 113, 113, .06); color: var(--ob-danger); }
+html[data-theme='friday'] .mc-btn.ob-btn-danger:hover { border-color: var(--ob-danger); background: rgba(248, 113, 113, .12); color: #ffd2d2; box-shadow: 0 0 18px rgba(248, 113, 113, .18); }
+html[data-theme='friday'] .mc-btn.ob-btn-confirm { border-color: rgba(110, 231, 183, .52); background: rgba(110, 231, 183, .04); color: var(--ob-success); }
