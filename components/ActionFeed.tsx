@@ -87,9 +87,9 @@ export function ActionFeed({ compact = false }: { compact?: boolean }) {
   return (
     <div className={`mc-feed ${urgentCount ? 'has-urgent' : ''}`}>
       <div className="mc-feed-head">
-        <span className="mc-feed-title">&gt; NEEDS YOU</span>
+        <span className="mc-feed-title">{compact ? '> NEEDS YOU' : '> MISSION FEED'}</span>
         <span className={`mc-feed-count ${urgentCount ? 'hot' : ''}`}>
-          {urgentCount ? `${urgentCount} URGENT` : 'ALL CLEAR'}
+          {compact ? (urgentCount ? `${urgentCount} URGENT` : 'ALL CLEAR') : 'STREAMING'}
         </span>
       </div>
       {shown.length > 0 && (

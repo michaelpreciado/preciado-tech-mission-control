@@ -120,3 +120,143 @@
   .overview .dials { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 900px) { .chatActions a, .chatActions button { min-height: 44px; } }
+
+/* ── OmniBridge v5 Neural home shell ─────────────────────────────────── */
+.home.ob-home { position: relative; z-index: 6; width: 100%; max-width: none; margin: 0; padding: 18px 24px 54px; color: var(--ob-text); }
+.obJumps { display: none; }
+.obHeader { position: relative; z-index: 2; display: flex; align-items: center; gap: 18px; min-height: 64px; padding: 0 14px; border: 1px solid var(--ob-border); border-radius: 12px; background: rgba(1,4,7,.9); backdrop-filter: blur(18px) saturate(120%); box-shadow: 0 0 18px rgba(0,229,255,.06); }
+.obHeaderBrand { display: flex; align-items: center; gap: 14px; min-width: 0; white-space: nowrap; }
+.obHeaderBrand b { color: var(--ob-text); font-size: 15px; letter-spacing: .3em; font-weight: 600; }
+.obHeaderBrand b span { color: var(--ob-peak); }
+.obHeaderBrand small { color: var(--ob-text-4); font-size: 11px; }
+.obHeaderBrand small i { color: var(--ob-text-3); font-style: normal; }
+.obHeaderDots { color: var(--ob-text-4); font-size: 10px; letter-spacing: .22em; }
+.obHeaderStatus { display: flex; align-items: center; gap: 14px; margin-left: auto; color: var(--ob-text-4); font-size: 10px; white-space: nowrap; }
+.obHeaderStatus > span:first-child { color: var(--ob-success); }
+.obHeaderStatus button { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 7px 12px; border: 1px solid rgba(0,229,255,.35); border-radius: 8px; background: rgba(0,229,255,.06); color: var(--ob-text); font: inherit; cursor: pointer; }
+.obHeaderStatus button:hover { background: rgba(0,229,255,.14); }
+.obHeaderStatus kbd { color: var(--ob-cyan); font: inherit; }
+.obLed { display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: var(--ob-cyan); box-shadow: 0 0 8px var(--ob-cyan); }
+.obGrid { display: grid; grid-template-columns: minmax(210px, 270px) minmax(0, 1fr) minmax(250px, 320px); gap: 15px; min-height: calc(100dvh - 124px); margin-top: 15px; }
+.obRail, .obCenter { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.obCard { position: relative; min-width: 0; overflow: hidden; border: 1px solid var(--ob-border); border-radius: 12px; background: var(--ob-glass); backdrop-filter: blur(18px) saturate(120%); box-shadow: 0 0 18px rgba(0,229,255,.06), inset 0 1px 0 rgba(190,240,255,.06); }
+.obCard::before, .obCard::after { position: absolute; z-index: 3; width: 14px; height: 14px; content: ''; pointer-events: none; }
+.obCard::before { top: -1px; left: -1px; border-top: 1px solid rgba(0,229,255,.62); border-left: 1px solid rgba(0,229,255,.62); }
+.obCard::after { right: -1px; bottom: -1px; border-right: 1px solid rgba(0,229,255,.62); border-bottom: 1px solid rgba(0,229,255,.62); }
+.obCardHeader { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 10px 14px; border-bottom: 1px solid rgba(0,229,255,.1); color: var(--ob-text-3); font-size: 10px; letter-spacing: .16em; }
+.obCardHeader strong { color: var(--ob-text); font-weight: 500; letter-spacing: .18em; }
+.obCardHeader span { margin-left: auto; color: var(--ob-text-4); font-size: 9px; letter-spacing: .08em; }
+.obCardHeader a { color: var(--ob-cyan); text-decoration: none; }
+.obCardHeader a:focus-visible, .obHeaderStatus button:focus-visible, .obJumps a:focus-visible, .obChatDisclosure summary:focus-visible { outline: 2px solid var(--ob-peak); outline-offset: 3px; }
+.obCardBody { display: flex; flex-direction: column; gap: 10px; padding: 14px; }
+.obListRow { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 10px; }
+.obListMain { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 2px; }
+.obListMain b { color: var(--ob-hierarchy); font-weight: 500; letter-spacing: .1em; }
+.obListMain small { overflow: hidden; color: var(--ob-text-3); text-overflow: ellipsis; white-space: nowrap; }
+.obListRow em { color: var(--ob-success); font-size: 9px; font-style: normal; letter-spacing: .1em; }
+.obListRow em[data-state='attention'], .obListRow em[data-state='offline'] { color: var(--ob-warn); }
+.obNode { width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; background: var(--ob-success); box-shadow: 0 0 7px var(--ob-success); }
+.obNode[data-state='attention'] { background: var(--ob-warn); box-shadow: 0 0 7px var(--ob-warn); }
+.obNode[data-state='offline'], .obNode[data-state='sleeping'] { background: var(--ob-text-4); box-shadow: none; }
+.obMuted { color: var(--ob-text-4); font-size: 11px; }
+.obRail > .obCard :global(.section) { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
+.obRail > .obCard :global(.section) :global(.mc-ascii-head), .obRail > .obCard :global(.section) :global(.sectionHeader), .obRail > .obCard :global(.section) :global(.srule-section) { display: none; }
+.obRail > .obCard :global(.section) :global(.empty), .obRail > .obCard :global(.section) :global(.error) { padding: 14px; }
+.obRail > .obCard :global(.section) :global(.tasks) { display: flex; flex-direction: column; gap: 0; }
+.obRail > .obCard :global(.section) :global(.task) { border: 0; border-bottom: 1px solid rgba(0,229,255,.08); border-radius: 0; background: transparent; }
+.obRail > .obCard :global(.section) :global(.moreTasks) { padding: 0 14px 10px; }
+.obUplink { overflow: hidden; border: 1px solid var(--ob-border); border-radius: 12px; background: var(--ob-glass); }
+.obUplink :global(.uplink) { height: 220px; margin: 0; grid-template-columns: 1fr 100px; padding: 14px; border: 0; border-radius: 0; background: transparent; }
+.obUplink :global(.copy h2) { font-size: 18px; }
+.obUplink :global(.copy p) { font-size: 9px; }
+.obUplink :global(.metrics) { margin-top: 10px; gap: 5px; }
+.obUplink :global(.metrics a) { min-height: 34px; padding: 5px 7px; }
+.obUplink :global(.metrics strong) { font-size: 15px; }
+.obUplink :global(.metrics span) { font-size: 8px; }
+.obOrbDock { display: flex; flex: 1; min-height: 260px; flex-direction: column; align-items: center; justify-content: end; gap: 8px; padding: 10px 0 2px; }
+.obOrbStage { position: relative; width: min(100%, 280px); aspect-ratio: 1; }
+.obOrbStage :global(.mc-core-orb) { width: 100%; height: 100%; }
+.obOrbLabel { color: var(--ob-text-3); font-size: 9px; letter-spacing: .2em; }
+.obCenter { min-height: 0; }
+.obMissionCard { display: flex; min-height: 280px; flex-direction: column; }
+.obMissionCard :global(.mc-feed) { display: flex; min-height: 0; flex: 1; flex-direction: column; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.obMissionCard :global(.mc-feed-head) { display: none; }
+.obMissionCard :global(.mc-feed-body) { overflow: auto; }
+.obMissionCard :global(.mc-feed-row) { min-height: 31px; padding: 7px 16px; border-bottom: 1px solid rgba(0,229,255,.08); font-size: 10px; }
+.obMissionCard :global(.mc-feed-row:hover) { background: rgba(0,229,255,.05); }
+.obMissionCard :global(.mc-feed-glyph), .obMissionCard :global(.mc-feed-arrow) { color: var(--ob-cyan); }
+.obMissionCard :global(.mc-feed-text) { color: var(--ob-text-2); }
+.obMissionCard :global(.mc-feed-row.urgent) :global(.mc-feed-text) { color: var(--ob-danger); }
+.obMissionCard :global(.mc-feed-row.warn) :global(.mc-feed-text) { color: var(--ob-warn); }
+.obMetricRow { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.obTelemetryBody { display: flex; gap: 12px; min-height: 135px; padding: 14px; }
+.obAscii { min-width: 0; margin: 0; overflow: hidden; color: rgba(0,229,255,.58); font: 7px/1.55 var(--pt-font-mono); white-space: pre; }
+.obReadouts { display: grid; align-content: center; gap: 8px; min-width: 0; color: var(--ob-text-4); font-size: 9px; letter-spacing: .11em; }
+.obReadouts b { color: var(--ob-hierarchy); font-weight: 500; }
+.obFinanceBody { display: flex; min-height: 135px; flex-direction: column; justify-content: center; gap: 8px; padding: 14px; }
+.obFinanceBody > strong { color: var(--ob-text); font-size: 27px; font-weight: 500; text-shadow: 0 0 10px rgba(0,229,255,.22); }
+.obFinanceBody > span, .obFinanceBody > small { color: var(--ob-text-3); font-size: 9px; }
+.obFinanceBody a { color: var(--ob-cyan); text-decoration: none; }
+.obPipelineCard > :global(section) { border: 0 !important; background: transparent !important; }
+.obPipelineCard > :global(section) :global(.mc-ascii-head) { display: none; }
+.obPipelineCard > :global(section) > div:last-child { max-height: 240px; overflow: auto; }
+.obPipelineCard > :global(section) > div:last-child > div { background: transparent !important; border-bottom-color: rgba(0,229,255,.1) !important; font-size: 10px !important; }
+.obGithubCard { max-height: 330px; }
+.obGithubCard > :global(aside), .obGithubCard > :global(section) { min-width: 0; }
+.obGithubCard :global(.mc-gh-stats) { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 12px; }
+.obGithubCard :global(.mc-gh-stat) { min-width: 0; }
+.obGithubCard :global(.mc-gh-stat .val) { color: var(--ob-hierarchy); font-size: 17px; }
+.obGithubCard :global(.mc-gh-stat .lbl) { overflow: hidden; color: var(--ob-text-4); font-size: 7px; text-overflow: ellipsis; white-space: nowrap; }
+.obGithubCard :global(.mc-gh-profile), .obGithubCard :global(.w2l-github-columns) { display: none; }
+.obGithubCard :global(.mc-window) { border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.obGithubCard :global(.mc-window-head) { display: none; }
+.obGithubCard :global(.mc-gh-heatmap-wrap) { padding: 0 12px 12px; overflow: hidden; }
+.obGithubCard :global(.mc-gh-day-labels), .obGithubCard :global(.mc-gh-month-labels), .obGithubCard :global(.mc-heatmap-legend) { display: none; }
+.obGithubCard :global(.mc-gh-heatmap-inner) { min-width: 0; }
+.obGithubCard :global(.mc-gh-heatmap) { width: 100%; }
+.obDatastream { flex: 1; min-height: 150px; }
+.obDatastream > :global(pre) { flex: 1; margin: 0; padding: 14px; color: rgba(0,229,255,.52); font: 8px/1.7 var(--pt-font-mono); }
+.obChatDisclosure { margin-top: 15px; border: 1px solid var(--ob-border); border-radius: 12px; background: var(--ob-glass); }
+.obChatDisclosure summary { padding: 12px 16px; color: var(--ob-text); cursor: pointer; font-size: 11px; letter-spacing: .16em; list-style: none; }
+.obChatDisclosure summary::-webkit-details-marker { display: none; }
+.obChatDisclosure summary span { margin-left: 12px; color: var(--ob-text-4); font-size: 9px; letter-spacing: .06em; }
+.obChatDisclosure > div { padding: 0 14px 14px; }
+.obChatDisclosure :global(.chat) { height: 540px; max-height: none; min-height: 0; }
+
+@media (max-width: 1180px) {
+  .home.ob-home { padding-inline: 14px; }
+  .obGrid { grid-template-columns: minmax(190px, 230px) minmax(0, 1fr) minmax(220px, 260px); }
+  .obHeaderBrand small { display: none; }
+}
+@media (max-width: 900px) {
+  .home.ob-home { padding: 12px 12px 76px; }
+  .obHeader { flex-wrap: wrap; gap: 10px; padding-block: 10px; }
+  .obHeaderStatus { order: 3; width: 100%; justify-content: space-between; margin-left: 0; }
+  .obHeader :global(.mc-urgent-strip) { flex: 1; }
+  .obGrid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: 0; }
+  .obCenter { grid-column: 1 / -1; grid-row: 1; }
+  .obRail:first-child { grid-column: 1; grid-row: 2; }
+  .obRail:last-child { grid-column: 2; grid-row: 2; }
+  .obOrbDock { min-height: 230px; }
+}
+@media (max-width: 620px) {
+  .home.ob-home { padding-inline: 8px; }
+  .obHeaderBrand b { font-size: 12px; letter-spacing: .2em; }
+  .obHeaderDots { display: none; }
+  .obHeaderStatus { font-size: 8px; }
+  .obHeaderStatus > span:nth-child(2) { display: none; }
+  .obGrid { display: flex; flex-direction: column; }
+  .obCenter { order: 1; }
+  .obRail:first-child { order: 2; }
+  .obRail:last-child { order: 3; }
+  .obMetricRow { grid-template-columns: minmax(0, 1fr); }
+  .obMissionCard { min-height: 250px; }
+  .obOrbDock { min-height: 260px; }
+  .obUplink { display: none; }
+  .obJumps { display: flex; gap: 6px; margin: 0 0 8px; }
+  .obJumps a { padding: 7px 9px; border: 1px solid var(--ob-border); border-radius: 6px; color: var(--ob-text-3); font-size: 9px; text-decoration: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .obCard, .obHeader { backdrop-filter: blur(8px); }
+  .obHeaderStatus button, .obCardHeader a { transition: none; }
+}

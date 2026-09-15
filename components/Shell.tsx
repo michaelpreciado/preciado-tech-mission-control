@@ -71,7 +71,9 @@ function HomeControl({ placement }: { placement: 'desktop' | 'mobile' }) {
     >
       <span className="mc-home-control-visual">
         <span className="mc-home-control-fallback" aria-hidden="true"><Icon name="brand" size={mobile ? 20 : 24} /></span>
-        <CoreOrb placement={placement} />
+        {/* Home docks the desktop orb in its left rail; keep the shell orb on
+            every other route and preserve the mobile home orb fallback. */}
+        {(!active || mobile) && <CoreOrb placement={placement} />}
       </span>
       {mobile && <span className="mc-mobile-label">Home</span>}
     </Link>

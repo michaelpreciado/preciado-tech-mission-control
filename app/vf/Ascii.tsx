@@ -26,10 +26,14 @@ export function AsciiEmblem({ view }: { view: string }) {
 }
 
 export function AsciiWordmark() {
-  return <div className="cyber-wordmark" aria-hidden="true">
-    <pre className="cyber-wordmark-shadow">{WORDMARK}</pre>
-    <pre className="cyber-wordmark-slant">{WORDMARK_SLANT}</pre>
-    <div><small>{`[ HUMAN + MACHINE ]`}</small></div>
+  return <div className="cyber-wordmark ob-wordmark-banner" aria-hidden="true">
+    <pre className="ob-wordmark-art">{`██████╗ ██████╗ ███████╗ ██████╗██╗ █████╗ ██████╗  ██████╗
+██╔══██╗██╔══██╗██╔════╝██╔════╝██║██╔══██╗██╔══██╗██╔═══██╗
+██████╔╝██████╔╝█████╗  ██║     ██║███████║██║  ██║██║   ██║
+██╔═══╝ ██╔══██╗██╔══╝  ██║     ██║██╔══██║██║  ██║██║   ██║
+██║     ██║  ██║███████╗╚██████╗██║██║  ██║██████╔╝╚██████╔╝
+╚═╝     ╚═╝  ╚═╝╚══════╝ ╚═════╝╚═╝╚═╝  ╚═╝╚═════╝  ╚═════╝`}</pre>
+    <div className="ob-wordmark-subtitle">T E C H · M I S S I O N  C O N T R O L</div>
   </div>
 }
 
