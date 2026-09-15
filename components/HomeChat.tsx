@@ -5,7 +5,6 @@ import { AsciiMsg, AsciiPromptGutter } from '@/components/ascii-msg'
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { Markdown } from './Markdown'
-import { Icon } from './icons'
 import { SectionRule } from './ui'
 import styles from './HomeWorkspace.module.css'
 import { apiFetch } from '@/lib/api-base'
@@ -112,20 +111,22 @@ export function HomeChat() {
   )
 
   return <section className={`${styles.chat} amsg-surface amsg-container`} data-empty={messages.length === 0} aria-label="Mission Control chat">
-    <header className={`${styles.chatHeader} srule-home-header`}>
+    {messages.length > 0 && <header className={`${styles.chatHeader} srule-home-header`}>
       <SectionRule label="MISSION CONTROL" index={1} />
       <div><span className={styles.connection}><span className={styles.connectionDot} data-status={available === false ? 'unavailable' : available ? 'connected' : 'connecting'} aria-hidden="true" />{available === false ? 'Agent unavailable' : available ? 'Agent connected' : 'Connecting…'}</span></div>
       <div className={styles.chatActions}><Link href="/chat" aria-label="Open chat history">History</Link><button onClick={newChat} disabled={busy || !ready} aria-label="Start a new chat">＋ New chat</button></div>
-    </header>
+    </header>}
     <div className={styles.messages} ref={log} role="log" aria-label="Conversation" onScroll={() => {
       const el = log.current
       if (el) following.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80
     }}>
       {messages.length === 0 && <div className={styles.welcome}>
-        <div className={styles.orb} aria-hidden="true"><Icon name="brand" size={30} /></div>
         <span className={styles.kicker}>PRECIADO TECH · MISSION CONTROL</span>
+        <div className={styles.greetingGlow}>
+          <div className={styles.halo} aria-hidden="true" />
+          <h1>{greeting}, Michael</h1>
+        </div>
         <p className={styles.dateLine}>{dateLine}</p>
-        <h1>{greeting}, Michael</h1>
         <p>Everything is synced. Ask, dispatch, or drill in — the bridge is listening.</p>
         {composerForm}
         <div className={styles.suggestions} aria-label="Quick prompts">{QUICK_PROMPTS.map(text => <button type="button" key={text} disabled={busy || !ready || available === false} onClick={() => void send(text)}>{text}</button>)}</div>
