@@ -8193,19 +8193,14 @@ html[data-motion="off"] .mc-studio-cursor { animation: none; }
 .mc-home-nav-drawer nav a[aria-current='page'], .mc-home-nav-drawer nav a:hover { background: #14304b; }
 .mc-home-nav-drawer nav a:active { background: #142a40; }
 @media (max-width: 820px) {
-  .mc-shell.is-home ~ .mc-mobile-nav { display: none; }
-  .mc-shell.is-home .mc-main { padding-top: 12px; padding-inline: 12px; }
+  /* Home keeps the dock visible; must clear its height like every page
+     (specificity beats the generic .mc-main 92px rule below). */
+  .mc-shell.is-home .mc-main { padding-top: 12px; padding-inline: 12px; padding-bottom: max(92px, calc(92px + env(safe-area-inset-bottom, 0px))); }
 }
-/* An unfolded Home has room for the compact left tab rail. */
-@media (min-width: 701px) and (max-width: 820px) {
-  .mc-shell.is-home { grid-template-columns: 64px minmax(0, 1fr); }
-  .mc-shell.is-home .mc-side { display: flex; gap: 10px; padding: 12px 8px; }
-  .mc-shell.is-home .mc-side .mc-brand { display: none; }
-  .mc-shell.is-home .mc-home-control { display: grid; width: 44px; height: 44px; flex-basis: 44px; margin-bottom: 0; }
-  .mc-shell.is-home .mc-cmdp-trigger { min-height: 44px; padding: 0; margin: 0; justify-content: center; }
-  .mc-shell.is-home .mc-cmdp-trigger-label,
-  .mc-shell.is-home .mc-cmdp-trigger-kbd { display: none; }
-}
+/* The legacy 701–820px home tab-rail block was removed: its targets
+   (.mc-side, desktop HomeControl) no longer render anywhere post-H1;
+   grep-verified 0 usages in components/*.tsx. Home now uses the same
+   mobile chrome as every page. */
 @media (max-width: 820px) {
   .mc-shell.is-home .mc-main { padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); }
 }
