@@ -121,6 +121,11 @@ export function HomeChat() {
       if (el) following.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80
     }}>
       {messages.length === 0 && <div className={styles.welcome}>
+        <pre className={styles.heroArt} aria-hidden="true">{`███   ███  ██████
+████ ████ ██
+██ ███ ██ ██
+██  █  ██ ██
+██     ██  ██████`}</pre>
         <span className={styles.kicker}>PRECIADO TECH · MISSION CONTROL</span>
         <div className={styles.greetingGlow}>
           <div className={styles.halo} aria-hidden="true" />

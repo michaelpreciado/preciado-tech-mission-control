@@ -184,14 +184,14 @@ function CopyButton({ text }: { text: string }) {
         alignItems: 'center',
         justifyContent: 'center',
         fontSize: '11px',
-        fontFamily: 'var(--pt-font-mono, "JetBrains Mono"), monospace',
+        fontFamily: 'var(--pt-font-sans)',
         letterSpacing: '0.08em',
         opacity: copied ? 1 : 0.4,
         color: copied ? 'var(--mc-neon)' : 'inherit',
         flexShrink: 0,
       }}
     >
-      {copied ? 'COPIED' : '⎘'}
+      {copied ? 'Copied' : '⎘'}
     </button>
   )
 }
@@ -645,10 +645,10 @@ export default function ChatConsole() {
                     border: 'none',
                     borderRight: agent === 'jarvis' ? '1px solid color-mix(in srgb, currentColor 12%, transparent)' : 'none',
                     cursor: busy ? 'not-allowed' : 'pointer',
-                    fontFamily: 'var(--pt-font-mono, "JetBrains Mono"), monospace',
+                    fontFamily: 'var(--pt-font-sans)',
                     fontSize: '10px',
                     letterSpacing: '0.16em',
-                    textTransform: 'uppercase',
+                    textTransform: 'none',
                     color: 'inherit',
                     opacity: busy ? 0.4 : 1,
                   }}
@@ -797,10 +797,10 @@ export default function ChatConsole() {
                   <div key={m.id}>
                     {showDiv && (
                       <div style={{
-                        fontFamily: 'var(--pt-font-mono, "JetBrains Mono"), monospace',
+                        fontFamily: 'var(--pt-font-sans)',
                         fontSize: '9px',
                         letterSpacing: '0.24em',
-                        textTransform: 'uppercase',
+                        textTransform: 'none',
                         opacity: 0.5,
                         padding: '10px 12px 6px',
                         display: 'flex',

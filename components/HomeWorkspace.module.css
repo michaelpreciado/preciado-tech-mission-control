@@ -10,7 +10,7 @@
 .home :global(.mc-urgent-toggle) { margin-left: auto; }
 .home :global(.mc-urgent-details) { border-top: 1px solid #d4a24c25; padding: 4px 12px; max-height: 220px; overflow-y: auto; }
 .home :global(.mc-urgent-details a) { min-height: 44px; display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 8px 0; color: #dec39a; overflow-wrap: anywhere; text-decoration: none; }
-.chat { display: flex; flex-direction: column; height: calc(100svh - 100px); min-height: 480px; max-height: 1000px; overflow: hidden; border: 1px solid #78b3df2d; border-radius: 18px; background: linear-gradient(160deg, #09131ff5, #050b14fa 65%); box-shadow: inset 0 1px #b7e4ff08; }
+.chat { display: flex; flex-direction: column; height: calc(100svh - 100px); min-height: 480px; max-height: 1000px; overflow: hidden; border: 1px solid var(--ob-border); border-radius: var(--ob-radius-card); background: var(--ob-glass); box-shadow: var(--ob-surface-highlight); backdrop-filter: blur(12px); }
 .chatHeader { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 18px 24px; border-bottom: 1px solid #89c6ff0e; }
 .chatHeader > div:first-child { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 .kicker { font-size: 9px; letter-spacing: .16em; color: #7e9fbc; }
@@ -20,7 +20,7 @@
 .connectionDot[data-status='connected'] { background: var(--pt-ok, #4ade80); }
 .connectionDot[data-status='unavailable'] { background: #ef7d7d; }
 .chatActions { display: flex; align-items: center; gap: 10px; }
-.chatActions a, .chatActions button { display: grid; place-items: center; min-height: 40px; padding: 6px 10px; border-radius: 8px; border: 1px solid #87bfff25; background: #0f1b29; color: #b6cddd; font: inherit; font-size: 12px; text-decoration: none; white-space: nowrap; cursor: pointer; }
+.chatActions a, .chatActions button { display: grid; place-items: center; min-height: 40px; padding: 6px 10px; border-radius: 999px; border: 1px solid transparent; background: rgba(118,118,128,.24); color: #b6cddd; font: inherit; font-size: 12px; text-decoration: none; white-space: nowrap; cursor: pointer; box-shadow: none; font-family: var(--pt-font-sans); text-transform: none; letter-spacing: 0; }
 .messages { min-height: 0; flex: 1; overflow-y: auto; overflow-x: hidden; padding: 24px max(24px, calc((100% - 760px) / 2)); overscroll-behavior: contain; scroll-padding-block: 20px; }
 .welcome { min-height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 24px 0 40px; }
 .greetingGlow { position: relative; isolation: isolate; max-width: 100%; }
@@ -30,11 +30,11 @@
 .welcome h1 { font-size: clamp(20px, 5.2vw, 30px); line-height: 1.25; font-weight: 500; letter-spacing: -.02em; margin: 12px 0; color: #d5e7f6; }
 .welcome p { max-width: 420px; margin: 0; font-size: 13px; line-height: 1.7; color: #8fa9c0; }
 .suggestions { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 28px; }
-.suggestions button { display: inline-flex; align-items: center; min-height: 38px; padding: 9px 14px; border: 0; border-radius: 999px; background: rgba(118,118,128,.24); color: #d8d8dd; font: 13px -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif; cursor: pointer; transition: background-color .16s ease, opacity .16s ease; }
+.suggestions button { display: inline-flex; align-items: center; min-height: 38px; padding: 9px 14px; border: 0; border-radius: 999px; background: rgba(118,118,128,.24); color: #d8d8dd; font: 13px var(--pt-font-sans); cursor: pointer; transition: background-color .16s ease, opacity .16s ease; }
 .suggestions button:hover:not(:disabled) { background: rgba(118,118,128,.36); }
 .suggestions button:disabled { opacity: .42; cursor: default; }
 .suggestions button:focus-visible { outline: 2px solid #1E90FF; outline-offset: 3px; }
-.chatActions button:hover, .chatActions a:hover { background: #142a40; border-color: #8abcdf60; }
+.chatActions button:hover, .chatActions a:hover { background: rgba(118,118,128,.36); border-color: transparent; }
 .message { max-width: 100%; margin: 0 0 24px; padding: 14px 18px; font-size: 13px; line-height: 1.75; overflow-wrap: anywhere; }
 .message pre { max-width: 100%; overflow-x: auto; }
 .user { width: fit-content; max-width: 88%; margin-left: auto; border: 1px solid #80bdef22; border-radius: 18px 18px 4px 18px; background: #12253a; }
@@ -46,17 +46,17 @@
 .inputBox:focus-within { border-color: #8bc7f190; }
 .inputBox textarea { width: 100%; min-width: 0; min-height: 56px; max-height: 140px; resize: vertical; padding: 7px; border: 0; outline: none; background: transparent; font: inherit; font-size: 16px; color: #dceaf5; line-height: 1.5; }
 .inputBox textarea::placeholder { color: #7991a8; }
-.send { flex: 0 0 44px; min-height: 44px; border: 0; border-radius: 12px; color: #06111b; background: #b6ddf7; font-size: 25px; cursor: pointer; }
+.send { flex: 0 0 44px; min-height: 44px; border: 1px solid transparent; border-radius: 999px; color: #fff; background: #1E90FF; font-size: 25px; cursor: pointer; box-shadow: none; font-family: var(--pt-font-sans); text-transform: none; letter-spacing: 0; }
 .send:disabled, .chatActions button:disabled { opacity: .35; cursor: default; }
 .composerHint { display: flex; justify-content: space-between; gap: 10px; font-size: 9px; line-height: 1.6; color: #748a9d; margin-top: 10px; }
 .error { font-size: 12px; line-height: 1.7; color: #e7b77a; overflow-wrap: anywhere; }
-.section { margin-top: 32px; padding: 24px; border: 1px solid #83bfff24; border-radius: 16px; background: #07111dea; }
+.section { margin-top: 32px; padding: 24px; border: 1px solid var(--ob-border); border-radius: var(--ob-radius-card); background: var(--ob-glass); box-shadow: var(--ob-surface-highlight); backdrop-filter: blur(12px); }
 .sectionHeader { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 18px; }
 .sectionHeader h2 { font-size: 16px; font-weight: 500; letter-spacing: -.02em; margin: 6px 0 0; }
 .sectionHeader h2 span { font-size: 12px; color: #7293ae; margin-left: 6px; }
 .sectionHeader > a { font-size: 12px; color: #95c9ef; text-decoration: none; min-height: 44px; display: flex; align-items: center; }
 .tasks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.task { min-width: 0; display: flex; align-items: center; gap: 12px; padding: 14px; border: 1px solid #83bfff1e; border-radius: 10px; background: #0d1a2a; text-decoration: none; color: #bfd0df; }
+.task { min-width: 0; display: flex; align-items: center; gap: 12px; padding: 14px; border: 1px solid var(--ob-border); border-radius: var(--ob-radius-card); background: var(--ob-glass); text-decoration: none; color: #bfd0df; box-shadow: var(--ob-surface-highlight); backdrop-filter: blur(12px); }
 .task > div { flex: 1; min-width: 0; }
 .task strong { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; font-size: 13px; line-height: 1.55; font-weight: 500; }
 .task div span { display: block; margin-top: 6px; font-size: 11px; color: #92aabf; overflow-wrap: anywhere; }
@@ -81,7 +81,7 @@
 .empty { font-size: 12px; color: #8099ad; line-height: 1.7; }
 .home button:focus-visible, .home a:focus-visible, .home summary:focus-visible { outline: 2px solid #9bdaff; outline-offset: 3px; }
 @media (max-width: 820px) {
-  .chat { height: calc(100svh - 84px); max-height: none; min-height: 460px; border-radius: 14px; }
+  .chat { height: calc(100svh - 84px); max-height: none; min-height: 460px; border-radius: var(--ob-radius-card); }
   .chatHeader { padding: 12px 16px; }
   .messages { padding: 16px; }
   .composer { padding: 10px 14px 16px; }
@@ -91,7 +91,7 @@
 @media (max-width: 600px) {
   .home :global(.mc-urgent-preview) { display: none; }
   .chatHeader { gap: 8px; }
-  .chatActions a, .chatActions button { min-height: 38px; padding-inline: 12px; }
+  .chatActions a, .chatActions button { min-height: 38px; padding-inline: 12px; border: 1px solid transparent; border-radius: 999px; background: rgba(118,118,128,.24); box-shadow: none; font-family: var(--pt-font-sans); text-transform: none; letter-spacing: 0; }
   .welcome { padding-block: 10px 24px; }
   .welcome h1 { max-width: 280px; }
   .suggestions { display: grid; width: min(100%, 290px); margin-top: 22px; }
@@ -104,17 +104,17 @@
 
 /* New chats greet with the composer directly under the prompt. The whole
    landing hero fills the first screen; scrolling continues into Home. */
-.chat[data-empty='true'] { height: auto; min-height: calc(100svh - 72px); max-height: none; border: 0; background: transparent; box-shadow: none; border-radius: 0; }
+.chat[data-empty='true'] { height: auto; min-height: calc(100svh - 72px); max-height: none; border: 0; background: transparent; box-shadow: none; border-radius: 0; backdrop-filter: none; }
 .chat[data-empty='true'] .messages { display: flex; flex-direction: column; justify-content: center; overflow: visible; overscroll-behavior: auto; }
 .chat[data-empty='true'] .welcome { width: 100%; min-height: 0; padding-block: 24px; }
 .welcome .greeting { margin: 0 0 2px; color: #1E90FF; font-size: 14px; font-weight: 500; }
 .welcome .dateLine { margin: 0; color: #8a9099; font-size: 12px; }
 .welcome .composer { width: 100%; max-width: 720px; padding: 22px 0 0; text-align: left; }
-.welcome .composer :global(.aprompt-line) { border-color: rgba(30,144,255,.28); border-radius: 18px; background: rgba(118,118,128,.14); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif; }
+.welcome .composer :global(.aprompt-line) { border-color: rgba(30,144,255,.28); border-radius: 18px; background: rgba(118,118,128,.14); font-family: var(--pt-font-sans); }
 .welcome .composer :global(.aprompt-line):focus-within { border-color: #1E90FF; box-shadow: 0 0 0 3px rgba(30,144,255,.18); }
-.welcome .composer :global(.aprompt-line) textarea { min-height: 64px; color: #f2f4f7; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif; }
+.welcome .composer :global(.aprompt-line) textarea { min-height: 64px; color: #f2f4f7; font-family: var(--pt-font-sans); }
 .welcome .composer :global(.aprompt-line) textarea::placeholder { color: #8d929a; }
-.welcome .composer :global(.aprompt-line) :global(.aprompt-send) { color: #1E90FF; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif; }
+.welcome .composer :global(.aprompt-line) :global(.aprompt-send) { color: #1E90FF; font-family: var(--pt-font-sans); }
 .welcome .suggestions { margin-top: 18px; }
 @media (max-width: 600px) {
   .chat[data-empty='true'] .messages { padding: 16px; }
@@ -128,12 +128,12 @@
   .overview .tasks { grid-template-columns: minmax(0, 1fr); }
   .overview .dials { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-@media (max-width: 900px) { .chatActions a, .chatActions button { min-height: 44px; } }
+@media (max-width: 900px) { .chatActions a, .chatActions button { min-height: 44px; border: 1px solid transparent; border-radius: 999px; background: rgba(118,118,128,.24); box-shadow: none; font-family: var(--pt-font-sans); text-transform: none; letter-spacing: 0; } }
 
 /* ── OmniBridge v5 Neural home shell ─────────────────────────────────── */
 .home.ob-home { position: relative; z-index: 6; width: 100%; max-width: none; margin: 0; padding: 18px 24px 54px; color: var(--ob-text); }
 .obJumps { display: none; }
-.obHeader { position: relative; z-index: 2; display: flex; align-items: center; gap: 18px; min-height: 64px; padding: 0 14px; border: 1px solid var(--ob-border); border-radius: 12px; background: rgba(1,4,7,.9); backdrop-filter: blur(18px) saturate(120%); box-shadow: 0 0 18px rgba(0,229,255,.06); }
+.obHeader { position: relative; z-index: 2; display: flex; align-items: center; gap: 18px; min-height: 64px; padding: 0 14px; border: 1px solid var(--ob-border); border-radius: var(--ob-radius-card); background: var(--ob-glass); backdrop-filter: blur(12px); box-shadow: var(--ob-surface-highlight); }
 .obHeaderBrand { display: flex; align-items: center; gap: 14px; min-width: 0; white-space: nowrap; }
 .obHeaderBrand b { color: var(--ob-text); font-size: 15px; letter-spacing: .3em; font-weight: 600; }
 .obHeaderBrand b span { color: var(--ob-peak); }
@@ -142,14 +142,14 @@
 .obHeaderDots { color: var(--ob-text-4); font-size: 10px; letter-spacing: .22em; }
 .obHeaderStatus { display: flex; align-items: center; gap: 14px; margin-left: auto; color: var(--ob-text-4); font-size: 10px; white-space: nowrap; }
 .obHeaderStatus > span:first-child { color: var(--ob-success); }
-.obHeaderStatus button { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 7px 12px; border: 1px solid rgba(0,229,255,.35); border-radius: 8px; background: rgba(0,229,255,.06); color: var(--ob-text); font: inherit; cursor: pointer; }
+.obHeaderStatus button { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 7px 12px; border: 1px solid transparent; border-radius: 999px; background: rgba(118,118,128,.24); color: var(--ob-text); font: inherit; cursor: pointer; box-shadow: none; font-family: var(--pt-font-sans); text-transform: none; letter-spacing: 0; }
 .obHeaderStatus button:hover { background: rgba(0,229,255,.14); }
 .obHeaderStatus kbd { color: var(--ob-cyan); font: inherit; }
 .obLed { display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: var(--ob-cyan); box-shadow: 0 0 8px var(--ob-cyan); }
 .ob-home > .chat[data-empty='true'] { min-height: clamp(520px, calc(100svh - 170px), 760px); margin-top: 18px; }
 .obGrid { display: grid; grid-template-columns: minmax(210px, 270px) minmax(0, 1fr) minmax(250px, 320px); gap: 15px; min-height: calc(100dvh - 124px); margin-top: 15px; }
 .obRail, .obCenter { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-.obCard { position: relative; min-width: 0; overflow: hidden; border: 1px solid var(--ob-border); border-radius: 12px; background: var(--ob-glass); backdrop-filter: blur(18px) saturate(120%); box-shadow: 0 0 18px rgba(0,229,255,.06), inset 0 1px 0 rgba(190,240,255,.06); }
+.obCard { position: relative; min-width: 0; overflow: hidden; border: 1px solid var(--ob-border); border-radius: var(--ob-radius-card); background: var(--ob-glass); backdrop-filter: blur(12px); box-shadow: var(--ob-surface-highlight); }
 .obCard::before, .obCard::after { position: absolute; z-index: 3; width: 14px; height: 14px; content: ''; pointer-events: none; }
 .obCard::before { top: -1px; left: -1px; border-top: 1px solid rgba(0,229,255,.62); border-left: 1px solid rgba(0,229,255,.62); }
 .obCard::after { right: -1px; bottom: -1px; border-right: 1px solid rgba(0,229,255,.62); border-bottom: 1px solid rgba(0,229,255,.62); }
@@ -175,7 +175,7 @@
 .obRail > .obCard :global(.section) :global(.tasks) { display: flex; flex-direction: column; gap: 0; }
 .obRail > .obCard :global(.section) :global(.task) { border: 0; border-bottom: 1px solid rgba(0,229,255,.08); border-radius: 0; background: transparent; }
 .obRail > .obCard :global(.section) :global(.moreTasks) { padding: 0 14px 10px; }
-.obUplink { overflow: hidden; border: 1px solid var(--ob-border); border-radius: 12px; background: var(--ob-glass); }
+.obUplink { overflow: hidden; border: 1px solid var(--ob-border); border-radius: var(--ob-radius-card); background: var(--ob-glass); box-shadow: var(--ob-surface-highlight); backdrop-filter: blur(12px); }
 .obUplink :global(.uplink) { height: 220px; margin: 0; grid-template-columns: 1fr 100px; padding: 14px; border: 0; border-radius: 0; background: transparent; }
 .obUplink :global(.copy h2) { font-size: 18px; }
 .obUplink :global(.copy p) { font-size: 9px; }
@@ -327,4 +327,15 @@
 @media (prefers-reduced-motion: reduce) {
   .obUplink::after { animation: none; display: none; }
   .suggestions button { transition: none; }
+}
+
+/* K4: quiet MC signature, centered by the existing welcome flex stack. */
+.heroArt { flex-shrink: 0; max-width: 100%; overflow: hidden; margin: 0 0 16px; color: rgba(30,144,255,.5); font: 11px/1.15 var(--pt-font-mono); letter-spacing: 0; white-space: pre; text-align: left; }
+.obCard::before, .obCard::after { content: none; }
+@media (max-width: 600px) {
+  .heroArt { font-size: 9px; margin-bottom: 14px; }
+  .home.ob-home { padding-inline: 14px; }
+  .section, .chatHeader { padding: 14px; }
+  .obGrid { gap: 12px; }
+  .chatActions { flex-wrap: wrap; }
 }

@@ -31,7 +31,7 @@ html .mc-main .cyber-route:not(.v4-corners)::after { display: none; }
 .mc-main .mc-tcol-head {
   background-image: linear-gradient(100deg, rgba(0, 173, 255, .07), transparent 60%, rgba(240, 120, 198, .04));
 }
-.mc-main .mc-window { border-top-color: color-mix(in srgb, var(--pt-neon) 65%, transparent); }
+.mc-main .mc-window { border-color: var(--ob-border); }
 .mc-side .mc-side-label { color: var(--cyber-pink); opacity: .85; }
 .mc-side .mc-nav-item.is-active { box-shadow: inset -3px 0 var(--cyber-pink), 0 0 12px rgba(30, 144, 255, .2); }
 .mc-main .mc-ascii-head .label { border-right: 3px solid var(--cyber-pink); }
@@ -50,14 +50,15 @@ html .mc-main .cyber-route:not(.v4-corners)::after { display: none; }
 }
 .cyber-terminal-art.is-compact { margin-bottom: 5px; font-size: 10px; }
 .mc-empty .cyber-terminal-art + .mc-empty-glyph { display: none; }
-.mc-window.is-floating { border-top: 2px solid var(--cyber-pink); }
+.mc-window.is-floating { border: 1px solid var(--ob-border); }
 .mc-window.is-floating .mc-window-head { background: linear-gradient(100deg, rgba(0,173,255,.09), rgba(240,120,198,.06)); }
 .mc-main :is(.mc-task, .mc-kb-card, .mc-pipe-card, .mc-repo, .mc-cal-card, .mc-setup-group, .mc-studio, .mc-signal-card),
 .cyber-agent-deck,
 :is(.cc-listpane, .cc-threadpane, .mc-drawer, .mc-more-sheet, .mc-login-card) {
-  border-top-color: var(--pt-neon);
-  border-bottom-color: color-mix(in srgb, var(--cyber-pink) 38%, transparent);
-  background-image: linear-gradient(135deg, rgba(0,173,255,.035), transparent 45%, rgba(240,120,198,.025));
+  border-color: var(--ob-border);
+  border-radius: var(--ob-radius-card);
+  background: var(--ob-glass);
+  box-shadow: var(--ob-surface-highlight);
 }
 .mc-main :is(input:not([type="checkbox"]):not([type="radio"]):not([type="color"]), textarea, select),
 .mc-drawer :is(input, textarea, select), .mc-login-card input {
@@ -68,8 +69,8 @@ html .mc-main .cyber-route:not(.v4-corners)::after { display: none; }
 .mc-drawer :is(input, textarea, select):focus-visible {
   outline: 2px solid var(--pt-neon-bright); outline-offset: 2px;
 }
-.mc-main .mc-btn, .mc-more-sheet .mc-btn { border-radius: 3px; }
-.mc-main .mc-btn-primary { box-shadow: inset -2px 0 var(--cyber-pink); }
+.mc-main .mc-btn, .mc-more-sheet .mc-btn { border-radius: 999px; }
+.mc-main .mc-btn-primary { box-shadow: none; }
 .mc-main :is(.mc-task-tag, .mc-agent-chip, .mc-week-mode button), .cc-pill { border-radius: 3px; }
 .cc-bubble.is-assistant { border-left: 2px solid var(--pt-neon); }
 .cc-bubble.is-user { border-left: 2px solid var(--cyber-pink); }
@@ -137,7 +138,7 @@ html .mc-main .v4-kicker.cyber-route { min-height: 134px; gap: 24px; }
 }
 html body :is(.cyber-route, .cyber-route-art,
   .cyber-terminal-art, .cyber-horizon, .v4-console) {
-  font-family: var(--pt-font-mono), 'JetBrains Mono', monospace;
+  font-family: var(--pt-font-mono);
   line-height: 1.15;
   color: var(--pt-ascii-mid);
   text-shadow: none;

@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next'
-import { JetBrains_Mono, Noto_Sans_JP } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
 import './vf/v4-lane.css'
@@ -18,37 +17,6 @@ const config = getConfig()
 // 3D toggles) apply on the next page load without a full rebuild — most of
 // this app's data is fetched client-side regardless of route classification.
 export const dynamic = 'force-dynamic'
-
-const mono = JetBrains_Mono({
-  variable: '--pt-font-mono',
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  display: 'swap',
-  preload: true,
-  fallback: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
-})
-
-/* Keep the UI font variable wired through Next/font, but resolve it to the
-   same mono face as the terminal role per the Blue Matrix Glass theme spec. */
-const inter = JetBrains_Mono({
-  variable: '--pt-font-ui',
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  display: 'swap',
-  preload: true,
-  fallback: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
-})
-
-/* Japanese accent font (DESIGN-SPEC §4) — cyberpunk flavor only: brand
-   kicker, section eyebrows, hero accent lines. Never body prose. */
-const notoSansJp = Noto_Sans_JP({
-  variable: '--mc-font-jp',
-  subsets: ['latin'],
-  weight: ['400', '700'],
-  display: 'swap',
-  preload: false,
-  fallback: ['sans-serif'],
-})
 
 export const metadata: Metadata = {
   title: `${config.appName} · Mission Control`,
@@ -101,7 +69,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <style id="design-tokens">{buildTokenCss() + buildFridayThemeCss() + buildDensityCss()}</style>
         {accentCss && <style id="friday-accent">{accentCss}</style>}
       </head>
-      <body className={`${mono.variable} ${inter.variable} ${notoSansJp.variable}`}>
+      <body>
         <Shell
           appName={config.appName}
           appTagline={config.appTagline}

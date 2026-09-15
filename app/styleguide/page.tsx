@@ -210,9 +210,10 @@ export default function StyleGuide() {
         </div>
         <div className="sg-subhead">families</div>
         <div className="sg-rows">
-          <TokenRow k="--pt-font-sans (prose)" v="Inter (loaded via next/font)" />
-          <TokenRow k="--pt-font-mono / display" v={FONT.mono} />
-          <TokenRow k="--mc-font-jp (accent)" v="Noto Sans JP 400/700 (loaded via next/font) — eyebrow kickers only" />
+          <TokenRow k="--pt-font-sans (prose)" v="SF system stack (no webfont download)" />
+          <TokenRow k="--pt-font-mono (terminal / telemetry)" v={FONT.mono} />
+          <TokenRow k="--pt-font-display" v={FONT.display} />
+          <TokenRow k="--mc-font-jp (accent)" v="System sans fallback" />
         </div>
       </Section>
 
