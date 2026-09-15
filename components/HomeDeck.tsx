@@ -26,7 +26,7 @@ function CardHeader({ label, meta, href }: { label: string; meta?: string; href?
 function CrewCard() {
   const { data, isLive } = useLiveData()
   const crew = data?.crew ?? []
-  return <section className={styles.obCard} aria-labelledby="ob-crew-title">
+  return <section className={`${styles.obCard} ${styles.obCrewCard}`} aria-labelledby="ob-crew-title">
     <CardHeader label="CREW STATUS" meta={isLive ? `${crew.length}/LINKED` : 'SYNCING'} />
     <div className={styles.obCardBody}>
       {crew.length === 0 && <span className={styles.obMuted}>Awaiting crew signal…</span>}
@@ -50,7 +50,7 @@ function TelemetryCard() {
     `cores ${cpu?.cores ?? '—'} online`,
     `mem   ${memoryPct == null ? '—' : `${memoryPct}% used`}`,
   ] : ['uplink awaiting mission data…']
-  return <section className={styles.obCard} aria-labelledby="ob-telemetry-title">
+  return <section id="home-telemetry" className={`${styles.obCard} ${styles.obTelemetryCard}`} aria-labelledby="ob-telemetry-title">
     <CardHeader label="UPLINK TELEMETRY" meta="ASCII BUS" />
     <div className={styles.obTelemetryBody}>
       <pre className={styles.obAscii} aria-hidden="true">{lines.join('\n')}</pre>
@@ -68,7 +68,7 @@ function FinanceCard() {
   const { data } = useLiveData()
   const costs = data?.costs
   const amount = costs?.meteredCostUsd ?? costs?.estimatedCostUsd
-  return <section className={styles.obCard} aria-labelledby="ob-finance-title">
+  return <section className={`${styles.obCard} ${styles.obFinanceCard}`} aria-labelledby="ob-finance-title">
     <CardHeader label="FINANCE" meta={costs ? `${costs.dailyWindowDays}D WINDOW` : 'SYNCING'} href="/costs" />
     <div className={styles.obFinanceBody}>
       <strong>{amount == null ? '—' : `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</strong>
@@ -105,20 +105,21 @@ export function HomeDeck() {
   const githubMeta = data?.github?.syncedAt ? 'SYNCED' : data ? 'SYNC UNKNOWN' : 'SYNCING'
   return <div className={`${styles.home} mc-home-workspace ob-home`}>
     <nav className={styles.obJumps} aria-label="Home sections">
-      <a href="#home-mission-feed">Feed ↓</a><a href="#home-open-tasks">Tasks ↓</a><a href="#home-conversation">Console ↓</a>
+      <a href="#home-mission-feed">Feed ↓</a><a href="#home-open-tasks">Tasks ↓</a><a href="#home-telemetry">Telemetry ↓</a>
     </nav>
     <header className={styles.obHeader}>
-      <button className={styles.menuButton} aria-label="Open navigation tabs" onClick={() => window.dispatchEvent(new Event('mc:open-home-nav'))}>☰</button>
       <div className={styles.obHeaderBrand}><span className={styles.obHeaderDots}>● ● ●</span><b>PRECIADO<span>TECH</span></b><small>michael@preciado-tech:~<i>/mission-control</i></small></div>
       <div className={styles.obHeaderStatus}><span><i className={styles.obLed} /> {systemLabel}</span><span>{syncLabel}</span><button onClick={() => window.dispatchEvent(new Event('mc:open-cmdp'))}>QUICK GO <kbd>⌘K</kbd></button></div>
       <ActionFeed compact />
     </header>
 
+    <HomeChat />
+
     <div className={styles.obGrid}>
       <aside className={styles.obRail} aria-label="Mission overview">
         <CrewCard />
-        <div className={styles.obCard}><HomeSystem /></div>
-        <div className={styles.obCard}><HomeTasks /></div>
+        <div className={`${styles.obCard} ${styles.obSystemCard}`}><HomeSystem /></div>
+        <div className={`${styles.obCard} ${styles.obTasksCard}`}><HomeTasks /></div>
         <div className={styles.obUplink}><NeuralUplink portraitArt={<AsciiPortrait />} /></div>
         <div className={styles.obOrbDock}>
           <div className={styles.obOrbStage}><HomeCoreOrb placement="desktop" /></div>
@@ -141,9 +142,5 @@ export function HomeDeck() {
       </aside>
     </div>
 
-    <details className={styles.obChatDisclosure}>
-      <summary id="home-conversation">&gt; OPEN COMMAND CONSOLE <span>chat + live assistant stream</span></summary>
-      <div><HomeChat /></div>
-    </details>
   </div>
 }
