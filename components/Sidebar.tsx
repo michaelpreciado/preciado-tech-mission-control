@@ -32,6 +32,8 @@ const CREW_NAV = [
 ] as const
 
 const SIDEBAR_STORAGE_KEY = 'omniBridge.sidebar.collapsed'
+/** Inner Fold heuristic: wide enough to be tablet-like, but not a short cover landscape window. */
+export const FOLD_INNER_MEDIA_QUERY = '(min-width: 601px) and (max-width: 1000px) and (min-height: 500px) and (pointer: coarse)'
 
 function isRouteActive(pathname: string, href: string) {
   return href === '/' ? pathname === '/' : pathname.startsWith(href)
@@ -49,7 +51,16 @@ export function Sidebar() {
   const pathname = usePathname()
   const { data } = useLiveData()
   const [collapsed, setCollapsed] = useState(false)
+  const [foldInner, setFoldInner] = useState(false)
   const [storageReady, setStorageReady] = useState(false)
+
+  useEffect(() => {
+    const media = window.matchMedia(FOLD_INNER_MEDIA_QUERY)
+    const update = () => setFoldInner(media.matches)
+    update()
+    media.addEventListener('change', update)
+    return () => media.removeEventListener('change', update)
+  }, [])
 
   useEffect(() => {
     try {
@@ -70,9 +81,10 @@ export function Sidebar() {
   const crewMember = (id: string) => liveCrew.find(member =>
     member.id.toLowerCase() === id || member.name.toLowerCase().replace(/[^a-z]/g, '').includes(id),
   )
+  const visuallyCollapsed = collapsed || foldInner
 
   return (
-    <aside className={`ob-sidebar ${styles.sidebar} ${collapsed ? `ob-sidebar--collapsed ${styles.collapsed}` : ''}`} aria-label="Main navigation">
+    <aside className={`ob-sidebar ${styles.sidebar} ${visuallyCollapsed ? `ob-sidebar--collapsed ${styles.collapsed}` : ''}`} aria-label="Main navigation">
       <div className={styles.brandBlock}>
         <div className={styles.brandMark} aria-hidden="true"><Icon name="brand" size={18} /></div>
         <div className={styles.brandCopy}>
@@ -139,12 +151,12 @@ export function Sidebar() {
         <button
           type="button"
           className={styles.collapseToggle}
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          aria-expanded={!collapsed}
+          aria-label={visuallyCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-expanded={!visuallyCollapsed}
           onClick={() => setCollapsed(value => !value)}
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          title={visuallyCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
-          <span aria-hidden="true">{collapsed ? '›' : '‹'}</span>
+          <span aria-hidden="true">{visuallyCollapsed ? '›' : '‹'}</span>
         </button>
       </div>
     </aside>

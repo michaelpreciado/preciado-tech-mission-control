@@ -99,6 +99,50 @@
   .sidebar { display: none; }
 }
 
+/* Fold inner display: keep the H1 rail, but make it an always-collapsed
+   64px icon rail while the CSS viewport is tablet-shaped. The structural
+   selectors avoid a first-paint label flash before Sidebar's matchMedia
+   listener has synchronized its persisted collapsed preference. */
+@media (min-width: 601px) and (max-width: 1000px) and (min-height: 500px) and (pointer: coarse) {
+  .sidebar {
+    display: flex;
+    width: 64px;
+    padding-inline: 10px;
+  }
+  .sidebar:not(.collapsed) .brandCopy,
+  .sidebar:not(.collapsed) .sectionLabel,
+  .sidebar:not(.collapsed) .navLabel,
+  .sidebar:not(.collapsed) .crewName,
+  .sidebar:not(.collapsed) .crewStatus,
+  .sidebar:not(.collapsed) .userCopy,
+  .sidebar:not(.collapsed) .quickGoLabel,
+  .sidebar:not(.collapsed) .quickGo kbd {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-5px);
+  }
+  .sidebar:not(.collapsed) .navItem,
+  .sidebar:not(.collapsed) .crewItem,
+  .sidebar:not(.collapsed) .userBlock {
+    justify-content: center;
+    padding-inline: 0;
+  }
+  .sidebar:not(.collapsed) .quickGo {
+    justify-content: center;
+    gap: 0;
+    padding-inline: 0;
+  }
+  .sidebar .navItem,
+  .sidebar .quickGo {
+    min-height: 44px;
+  }
+  .sidebar .collapseToggle {
+    width: 44px;
+    height: 44px;
+  }
+  .sidebar:not(.collapsed) .collapseToggle { right: 10px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .sidebar, .brandCopy, .navItem, .navLabel { transition: none; }
 }

@@ -8509,3 +8509,172 @@ html[data-theme='friday'] .mc-btn.ob-btn-ghost:hover { background: rgba(0, 229, 
 html[data-theme='friday'] .mc-btn.ob-btn-danger { border-color: rgba(248, 113, 113, .62); background: rgba(248, 113, 113, .06); color: var(--ob-danger); }
 html[data-theme='friday'] .mc-btn.ob-btn-danger:hover { border-color: var(--ob-danger); background: rgba(248, 113, 113, .12); color: #ffd2d2; box-shadow: 0 0 18px rgba(248, 113, 113, .18); }
 html[data-theme='friday'] .mc-btn.ob-btn-confirm { border-color: rgba(110, 231, 183, .52); background: rgba(110, 231, 183, .04); color: var(--ob-success); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   H2 · MOBILE + FOLD NAVIGATION
+   Cover: <=600px gets the floating five-tab dock.
+   Inner Fold: 601–1000px, tablet-height, coarse-pointer windows get the
+   64px icon rail and no dock. Fine-pointer desktop layouts remain H1-owned.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* The dock is one stable five-slot row: no horizontal page scroll, no tiny
+   target slivers, and enough bottom breathing room for gesture navigation. */
+@media (max-width: 600px) {
+  .mc-mobile-nav {
+    display: block;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 0 max(10px, env(safe-area-inset-left, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-right, 0px));
+  }
+  .mc-mobile-nav-inner {
+    height: 64px;
+    max-height: none;
+    min-height: 64px;
+    padding: 4px;
+    box-sizing: border-box;
+    border: 1px solid rgba(125, 239, 255, .2);
+    border-radius: 24px;
+    background:
+      linear-gradient(135deg, rgba(125, 239, 255, .12), rgba(255, 255, 255, .035) 48%, rgba(1, 4, 7, .52)),
+      rgba(4, 13, 20, .86);
+    box-shadow:
+      0 12px 38px rgba(0, 0, 0, .56),
+      0 0 26px rgba(0, 229, 255, .1),
+      inset 0 1px rgba(255, 255, 255, .1);
+    backdrop-filter: blur(22px) saturate(1.7);
+    -webkit-backdrop-filter: blur(22px) saturate(1.7);
+  }
+  .mc-mobile-item,
+  .mc-more-btn {
+    flex: 1 1 0;
+    min-width: 48px;
+    min-height: 48px;
+    height: 56px;
+    max-height: none;
+    padding: 6px 3px;
+    border-radius: 18px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    transition: color var(--ob-dur-fast) var(--ob-ease), transform var(--ob-dur-fast) var(--ob-ease), filter var(--ob-dur-fast) var(--ob-ease);
+  }
+  .mc-mobile-item::before {
+    inset: 2px;
+    border-radius: 18px;
+    transition: background var(--ob-dur) var(--ob-ease), box-shadow var(--ob-dur) var(--ob-ease);
+  }
+  .mc-mobile-item.is-active::before {
+    background: linear-gradient(145deg, rgba(0, 229, 255, .24), rgba(0, 229, 255, .06));
+    box-shadow: 0 0 18px rgba(0, 229, 255, .2), inset 0 1px rgba(255, 255, 255, .12);
+  }
+  .mc-mobile-item:active { transform: scale(.94); filter: brightness(1.16); }
+  .mc-mobile-glyph { font-size: 20px; }
+  .mc-mobile-item.is-active .mc-mobile-glyph { filter: drop-shadow(0 0 7px rgba(0, 229, 255, .7)); }
+  .mc-mobile-label { font-size: 10px; line-height: 1.1; }
+  .mc-mobile-pill {
+    top: 4px;
+    bottom: 4px;
+    border-radius: 18px;
+    background: rgba(0, 229, 255, .11);
+    box-shadow: 0 0 20px rgba(0, 229, 255, .18), inset 0 0 0 1px rgba(125, 239, 255, .1);
+  }
+  .mc-main {
+    width: 100%;
+    margin-left: 0;
+    padding-bottom: max(92px, calc(92px + env(safe-area-inset-bottom, 0px)));
+  }
+  .mc-more-layer { padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px); }
+  .mc-more-sheet {
+    left: max(8px, env(safe-area-inset-left, 0px));
+    right: max(8px, env(safe-area-inset-right, 0px));
+    bottom: calc(82px + env(safe-area-inset-bottom, 0px));
+    max-height: min(72dvh, calc(100dvh - 112px));
+    padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    border: 1px solid rgba(125, 239, 255, .2);
+    border-radius: 26px;
+    background:
+      linear-gradient(155deg, rgba(125, 239, 255, .13), rgba(255, 255, 255, .035) 42%, rgba(1, 4, 7, .84)),
+      rgba(3, 11, 17, .94);
+    box-shadow: 0 18px 60px rgba(0, 0, 0, .66), 0 0 24px rgba(0, 229, 255, .1), inset 0 1px rgba(255, 255, 255, .1);
+    transform: translateY(var(--mc-sheet-drag, 0px));
+    transition: transform var(--ob-dur) var(--ob-ease);
+  }
+  @supports (height: 1svh) {
+    .mc-more-sheet { max-height: min(72svh, calc(100dvh - 112px)); }
+  }
+  .mc-more-backdrop {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: rgba(0, 4, 8, .68);
+    cursor: default;
+  }
+  .mc-more-handle {
+    width: 44px;
+    height: 5px;
+    margin: 3px auto 14px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(125, 239, 255, .35), rgba(255, 255, 255, .65), rgba(125, 239, 255, .35));
+    box-shadow: 0 0 9px rgba(0, 229, 255, .24);
+  }
+  .mc-more-heading { min-height: 44px; margin-bottom: 10px; }
+  .mc-more-title { color: var(--ob-peak); font-size: 11px; letter-spacing: .16em; }
+  .mc-sheet-close { min-width: 72px; min-height: 44px; font-size: 10px; }
+  .mc-mobile-sheet-quick-actions { display: flex; gap: 8px; margin-bottom: 14px; }
+  .mc-more-search { min-height: 48px; margin: 0; padding: 11px 13px; border-color: rgba(125, 239, 255, .2); border-radius: 14px; background: rgba(0, 229, 255, .06); color: var(--ob-text-2); font-size: 16px; }
+  .mc-more-search-ic { font-size: 18px; }
+  .mc-more-search-kbd { font-size: 10px; }
+  .mc-more-section { margin-bottom: 18px; }
+  .mc-more-seclabel { margin-bottom: 8px; color: var(--ob-cyan); font-size: 9px; letter-spacing: .18em; }
+  .mc-more-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .mc-more-cell { min-height: 56px; padding: 10px 6px; border: 1px solid transparent; border-radius: 14px; color: var(--ob-text-3); }
+  .mc-more-cell.is-active { border-color: rgba(0, 229, 255, .34); background: rgba(0, 229, 255, .13); color: var(--ob-peak); box-shadow: 0 0 18px rgba(0, 229, 255, .12); }
+  .mc-more-lbl { font-size: 11px; }
+}
+
+/* Inner display rail. The `coarse` qualifier keeps ordinary fine-pointer
+   desktop windows above 820px on the exact H1 sidebar behavior. */
+@media (min-width: 601px) and (max-width: 1000px) and (min-height: 500px) and (pointer: coarse) {
+  .mc-mobile-nav,
+  .mc-more-layer { display: none !important; }
+  .mc-shell { display: block; }
+  .mc-main {
+    width: calc(100% - 64px);
+    margin-left: 64px;
+    padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+  }
+  .mc-shell.is-home .mc-main { padding-inline: max(18px, env(safe-area-inset-left, 0px)) max(18px, env(safe-area-inset-right, 0px)); }
+}
+
+/* Page headers get a narrow-screen contract: copy can shrink, actions can
+   wrap below it, and nothing is allowed to widen the scroll container. */
+@media (max-width: 400px) {
+  .ob-pagehead { display: block; min-height: 0; margin-bottom: 14px; padding-bottom: 12px; }
+  .ob-pagehead-copy { max-width: 100%; }
+  .ob-pagehead h1 { max-width: 100%; font-size: clamp(1.15rem, 7vw, 1.45rem); line-height: 1.2; overflow-wrap: anywhere; }
+  .ob-pagehead p { max-width: 100%; line-height: 1.45; overflow-wrap: anywhere; }
+  .ob-pagehead-actions { display: flex; width: 100%; max-width: 100%; flex-wrap: wrap; margin-top: 12px; gap: 8px; }
+  .ob-pagehead-actions > * { max-width: 100%; min-height: 44px; }
+  .ob-pagehead-actions .ob-btn { flex: 1 1 auto; }
+}
+
+/* Inputs remain at the anti-zoom floor on coarse-pointer browsers; route
+   buttons/nav keep their compact terminal typography but retain 44px geometry. */
+@media (pointer: coarse) {
+  .ob-pagehead-actions button,
+  .ob-pagehead-actions a,
+  .ob-btn { min-height: 44px; }
+  input, select, textarea { font-size: max(16px, 1em); }
+  a, button, [role='button'] { -webkit-tap-highlight-color: rgba(0, 229, 255, .18); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mc-mobile-item,
+  .mc-mobile-item::before,
+  .mc-mobile-pill,
+  .mc-more-sheet { transition: none; }
+  .mc-more-sheet { transform: none; }
+}

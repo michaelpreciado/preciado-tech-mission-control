@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation'
 import { LiveDataProvider } from './LiveDataProvider'
 import { Button } from './ui'
 import { Icon, type IconName } from './icons'
-import { Sidebar as OmniBridgeSidebar } from './Sidebar'
+import { FOLD_INNER_MEDIA_QUERY, Sidebar as OmniBridgeSidebar } from './Sidebar'
 import { MatrixRainBackground } from './MatrixRainBackground'
 import { UiSettingsContext, DEFAULT_UI_SETTINGS, useUiSettings, type UiSettings } from './ui-settings'
 import { NAV, PINNED_TAB_IDS } from '@/lib/nav-tabs'
@@ -91,11 +91,23 @@ const PRIMARY: { id: string; label: string; icon: IconName }[] = [
 
 const PRIMARY_IDS = new Set(PRIMARY.map(p => p.id))
 
-function MoreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const pathname = usePathname()
-  const nav = useVisibleNav()
+function MobileNavSheet({
+  open,
+  onClose,
+  title,
+  ariaLabel,
+  children,
+}: {
+  open: boolean
+  onClose: () => void
+  title: string
+  ariaLabel: string
+  children: React.ReactNode
+}) {
   const sheetRef = useRef<HTMLDivElement>(null)
-  const isActive = (href: string) => href === '/' ? pathname === '/' : pathname.startsWith(href)
+  const swipeStart = useRef<number | null>(null)
+  const swipeDistance = useRef(0)
+
   useEffect(() => {
     if (!open) return
     const previousFocus = document.activeElement as HTMLElement | null
@@ -105,13 +117,14 @@ function MoreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
     const controls = () => Array.from(sheetRef.current?.querySelectorAll<HTMLElement>('button, a[href]') ?? [])
     controls()[0]?.focus()
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { e.preventDefault(); onClose() }
+      if (e.key === 'Escape') { e.preventDefault(); onClose(); return }
       if (e.key !== 'Tab') return
       const items = controls()
       const first = items[0]
       const last = items[items.length - 1]
-      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus() }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus() }
+      if (!first || !last) return
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
     }
     window.addEventListener('keydown', onKey)
     return () => {
@@ -120,29 +133,74 @@ function MoreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
       previousFocus?.focus({ preventScroll: true })
     }
   }, [open, onClose])
+
   if (!open) return null
+
+  const onTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    const sheet = sheetRef.current
+    if (!sheet || sheet.scrollTop > 0) return
+    swipeStart.current = e.touches[0]?.clientY ?? null
+    swipeDistance.current = 0
+  }
+  const onTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (swipeStart.current == null) return
+    const distance = (e.touches[0]?.clientY ?? swipeStart.current) - swipeStart.current
+    swipeDistance.current = Math.max(0, distance)
+    if (swipeDistance.current > 0 && sheetRef.current) {
+      sheetRef.current.style.setProperty('--mc-sheet-drag', `${Math.min(swipeDistance.current, 160)}px`)
+    }
+  }
+  const onTouchEnd = () => {
+    const distance = swipeDistance.current
+    swipeStart.current = null
+    swipeDistance.current = 0
+    sheetRef.current?.style.removeProperty('--mc-sheet-drag')
+    if (distance > 80) onClose()
+  }
+
   return (
-    <div className="mc-more-layer" role="dialog" aria-modal="true" aria-label="More destinations">
-      <div className="mc-more-backdrop" onClick={onClose} />
-      <div className="mc-more-sheet" ref={sheetRef} onClick={e => e.stopPropagation()}>
-        <div className="mc-more-handle" />
+    <div className="mc-more-layer" role="dialog" aria-modal="true" aria-label={ariaLabel}>
+      <button type="button" className="mc-more-backdrop" aria-label="Close navigation sheet" onClick={onClose} />
+      <div
+        className="mc-more-sheet"
+        ref={sheetRef}
+        onClick={e => e.stopPropagation()}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
+        <div className="mc-more-handle" aria-hidden="true" />
         <div className="mc-more-heading">
-          <div className="mc-more-title">More destinations</div>
-          <Button onClick={onClose} aria-label="Close more destinations">Close ×</Button>
+          <div className="mc-more-title">{title}</div>
+          <Button className="mc-sheet-close" onClick={onClose} aria-label={`Close ${title.toLowerCase()}`}>Close ×</Button>
         </div>
-        <button
-          type="button"
-          className="mc-more-search"
-          aria-label="Jump to a page, agent, or task"
-          onClick={() => {
-            onClose()
-            window.dispatchEvent(new CustomEvent('mc:open-cmdp', { detail: { focus: true } }))
-          }}
-        >
-          <span className="mc-more-search-ic" aria-hidden="true">⌕</span>
-          <span className="mc-more-search-ph">Jump to…</span>
-          <kbd className="mc-more-search-kbd">⌘K</kbd>
-        </button>
+        <div className="mc-mobile-sheet-quick-actions" aria-label="Quick actions">
+          <button
+            type="button"
+            className="mc-more-search"
+            aria-label="Open command palette"
+            onClick={() => {
+              onClose()
+              window.dispatchEvent(new CustomEvent('mc:open-cmdp', { detail: { focus: true } }))
+            }}
+          >
+            <span className="mc-more-search-ic" aria-hidden="true">⌕</span>
+            <span className="mc-more-search-ph">Jump to…</span>
+            <kbd className="mc-more-search-kbd">⌘K</kbd>
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function MoreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const pathname = usePathname()
+  const nav = useVisibleNav()
+  const isActive = (href: string) => href === '/' ? pathname === '/' : pathname.startsWith(href)
+  return (
+    <MobileNavSheet open={open} onClose={onClose} title="More destinations" ariaLabel="More destinations">
         {nav.map(sec => {
           const items = sec.items.filter(it => !PRIMARY_IDS.has(it.id))
           if (!items.length) return null
@@ -160,8 +218,7 @@ function MoreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
             </div>
           )
         })}
-      </div>
-    </div>
+    </MobileNavSheet>
   )
 }
 
@@ -186,10 +243,18 @@ function MobileNav() {
 
   // A sheet opened on the cover must not linger over the desktop shell.
   useEffect(() => {
-    const desktop = window.matchMedia('(min-width: 821px)')
-    const closeOnDesktop = () => { if (desktop.matches) setMoreOpen(false) }
-    desktop.addEventListener('change', closeOnDesktop)
-    return () => desktop.removeEventListener('change', closeOnDesktop)
+    const mobileChrome = window.matchMedia('(max-width: 820px)')
+    const foldInner = window.matchMedia(FOLD_INNER_MEDIA_QUERY)
+    const closeOnLayoutChange = () => {
+      if (!mobileChrome.matches || foldInner.matches) setMoreOpen(false)
+    }
+    closeOnLayoutChange()
+    mobileChrome.addEventListener('change', closeOnLayoutChange)
+    foldInner.addEventListener('change', closeOnLayoutChange)
+    return () => {
+      mobileChrome.removeEventListener('change', closeOnLayoutChange)
+      foldInner.removeEventListener('change', closeOnLayoutChange)
+    }
   }, [])
 
   // Slide the pill to whichever bottom tab is active (primary or the More toggle).
@@ -255,25 +320,41 @@ function MobileNav() {
 function HomeNavDrawer() {
   const nav = useVisibleNav()
   const pathname = usePathname()
-  const dialog = useRef<HTMLDialogElement>(null)
+  const [open, setOpen] = useState(false)
+  const close = useCallback(() => setOpen(false), [])
   useEffect(() => {
-    const open = () => dialog.current?.showModal()
-    const desktop = window.matchMedia('(min-width: 701px)')
-    const close = () => { if (desktop.matches) dialog.current?.close() }
-    window.addEventListener('mc:open-home-nav', open)
-    desktop.addEventListener('change', close)
-    return () => { window.removeEventListener('mc:open-home-nav', open); desktop.removeEventListener('change', close) }
-  }, [])
-  useEffect(() => { dialog.current?.close() }, [pathname])
-  return <dialog ref={dialog} className="mc-home-nav-drawer" aria-label="Navigation tabs" onClick={e => {
-    if (e.target === dialog.current) {
-      const rect = dialog.current.getBoundingClientRect()
-      if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) dialog.current.close()
+    const openDrawer = () => setOpen(true)
+    const foldInner = window.matchMedia(FOLD_INNER_MEDIA_QUERY)
+    const closeOnFold = () => { if (foldInner.matches) setOpen(false) }
+    window.addEventListener('mc:open-home-nav', openDrawer)
+    foldInner.addEventListener('change', closeOnFold)
+    closeOnFold()
+    return () => {
+      window.removeEventListener('mc:open-home-nav', openDrawer)
+      foldInner.removeEventListener('change', closeOnFold)
     }
-  }}>
-    <header><strong>NAVIGATION</strong><button aria-label="Close navigation tabs" onClick={() => dialog.current?.close()}>×</button></header>
-    <nav aria-label="Home navigation tabs">{nav.map(section => <div key={section.section}><p>{section.section}</p>{section.items.map(item => <Link key={item.id} href={item.id} aria-current={pathname === item.id ? 'page' : undefined} onClick={() => dialog.current?.close()}><Icon name={item.icon} size={18} /><span>{item.label}</span></Link>)}</div>)}</nav>
-  </dialog>
+  }, [])
+  useEffect(() => { setOpen(false) }, [pathname])
+  return (
+    <MobileNavSheet open={open} onClose={close} title="Navigation" ariaLabel="Navigation tabs">
+      <nav aria-label="Home navigation tabs">
+        {nav.map(section => (
+          <div key={section.section} className="mc-more-section">
+            <p className="mc-more-seclabel">{section.section}</p>
+            <div className="mc-more-grid">
+              {section.items.map(item => {
+                const active = item.id === '/' ? pathname === '/' : pathname.startsWith(item.id)
+                return <Link key={item.id} href={item.id} aria-current={active ? 'page' : undefined} className={`mc-more-cell ${active ? 'is-active' : ''}`} onClick={close}>
+                  <span className="mc-more-ic"><Icon name={item.icon} size={18} /></span>
+                  <span className="mc-more-lbl">{item.label}</span>
+                </Link>
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+    </MobileNavSheet>
+  )
 }
 
 export function Shell({ appName, appTagline, ui, children }: { appName: string; appTagline: string; ui?: UiSettings; children: React.ReactNode }) {
