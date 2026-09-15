@@ -2,12 +2,13 @@
 
 import { useEffect, useRef } from 'react'
 import type { OrbState } from '@/lib/orb-state'
-import { deriveOrbVisual } from '@/lib/orb-visual'
+import { deriveOrbOverlayVisual, deriveOrbVisual } from '@/lib/orb-visual'
+import type { OrbOverlay } from '@/lib/orb-overlay'
 
 type Node = { x: number; y: number; radius: number; shell: number; phase: number }
 type Edge = { from: number; to: number }
 type Pulse = { edge: Edge; progress: number; speed: number }
-type Shockwave = { progress: number; color: string }
+type Shockwave = { progress: number; color: string; speed?: number }
 
 const SIZE = 280
 const CENTER = SIZE / 2
@@ -64,19 +65,22 @@ function rgba(hex: string, alpha: number) {
   return `rgba(${red},${green},${blue},${alpha})`
 }
 
-export function NeuralOrbCanvas({ state, intensity, staticMotion, visible = true }: {
+export function NeuralOrbCanvas({ state, intensity, overlay, staticMotion, visible = true }: {
   state: OrbState
   intensity: number
+  overlay: OrbOverlay | null
   staticMotion: boolean
   visible?: boolean
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const stateRef = useRef(state)
   const intensityRef = useRef(intensity)
+  const overlayRef = useRef(overlay)
   const networkRef = useRef<{ nodes: Node[]; edges: Edge[] } | null>(null)
 
   useEffect(() => { stateRef.current = state }, [state])
   useEffect(() => { intensityRef.current = intensity }, [intensity])
+  useEffect(() => { overlayRef.current = overlay }, [overlay])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -95,6 +99,7 @@ export function NeuralOrbCanvas({ state, intensity, staticMotion, visible = true
     let pulses: Pulse[] = []
     let shockwaves: Shockwave[] = []
     let lastState = stateRef.current
+    let lastOverlayKey = ''
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect()
@@ -117,12 +122,23 @@ export function NeuralOrbCanvas({ state, intensity, staticMotion, visible = true
       previous = now
       elapsed += delta / 1000
       const currentState = stateRef.current
+      const currentOverlay = overlayRef.current
       const visual = deriveOrbVisual(currentState)
-      const color = visual.palette.hex
+      const overlayVisual = currentOverlay ? deriveOrbOverlayVisual(currentOverlay.kind) : null
+      const color = overlayVisual?.palette.hex ?? visual.palette.hex
       if (currentState !== lastState) {
         shockwaves.push({ progress: 0, color: currentState === 'hot' ? '#F87171' : '#6EE7B7' })
         lastState = currentState
       }
+      const overlayKey = currentOverlay ? `${currentOverlay.kind}:${currentOverlay.until}` : ''
+      if (overlayKey && overlayKey !== lastOverlayKey) {
+        const overlayColor = overlayVisual?.palette.hex ?? color
+        const count = currentOverlay?.kind === 'success' ? 3 : 1
+        for (let index = 0; index < count; index += 1) {
+          shockwaves.push({ progress: index * 0.12, color: overlayColor, speed: currentOverlay?.kind === 'success' ? 0.00072 : 0.0009 })
+        }
+      }
+      lastOverlayKey = overlayKey
       context.clearRect(0, 0, width, height)
       context.save()
       context.globalCompositeOperation = 'lighter'
@@ -135,14 +151,14 @@ export function NeuralOrbCanvas({ state, intensity, staticMotion, visible = true
         context.strokeStyle = rgba(color, 0.16 + visual.bloom * 0.08)
         context.beginPath(); context.moveTo(from.x, from.y); context.lineTo(to.x, to.y); context.stroke()
       }
-      const spawnRate = visual.pulseRate * (0.35 + intensityRef.current * 0.9)
+      const spawnRate = (overlayVisual?.pulseRate ?? visual.pulseRate) * (0.35 + intensityRef.current * 0.9)
       if (!staticMotion && Math.random() < spawnRate * delta * 0.004 && network.edges.length) {
         const edge = network.edges[Math.floor(Math.random() * network.edges.length)]
         pulses.push({ edge, progress: 0, speed: 0.7 + Math.random() * 1.4 })
       }
       for (let index = pulses.length - 1; index >= 0; index -= 1) {
         const pulse = pulses[index]
-        pulse.progress += delta * 0.001 * pulse.speed * (currentState === 'hot' ? 1.7 : currentState === 'surge' ? 1.4 : 1)
+        pulse.progress += delta * 0.001 * pulse.speed * (overlayVisual?.pulseRate ?? (currentState === 'hot' ? 1.7 : currentState === 'surge' ? 1.4 : 1))
         if (pulse.progress >= 1) { pulses.splice(index, 1); continue }
         const from = currentNodes[pulse.edge.from]
         const to = currentNodes[pulse.edge.to]
@@ -155,7 +171,7 @@ export function NeuralOrbCanvas({ state, intensity, staticMotion, visible = true
       }
       network.nodes.forEach((node, index) => {
         const target = currentNodes[index]
-        const pulse = staticMotion ? 0 : Math.sin(elapsed * visual.pulseRate * Math.PI * 2 + node.phase) * 0.7
+        const pulse = staticMotion ? 0 : Math.sin(elapsed * (overlayVisual?.pulseRate ?? visual.pulseRate) * Math.PI * 2 + node.phase) * 0.7
         const radius = (node.shell === 0 ? 5.5 : 2.6) * scale + pulse * scale
         context.fillStyle = rgba(color, 0.22 + visual.bloom * 0.45)
         context.beginPath(); context.arc(target.x, target.y, radius * 1.9, 0, Math.PI * 2); context.fill()
@@ -164,11 +180,12 @@ export function NeuralOrbCanvas({ state, intensity, staticMotion, visible = true
         context.fillStyle = `rgba(255,255,255,${0.2 + visual.bloom * 0.5})`
         context.beginPath(); context.arc(target.x, target.y, radius * 0.42, 0, Math.PI * 2); context.fill()
       })
-      context.strokeStyle = rgba(color, 0.24 + visual.bloom * 0.36)
+      context.strokeStyle = rgba(color, 0.24 + (overlayVisual?.bloom ?? visual.bloom) * 0.36)
       context.lineWidth = Math.max(1, scale * 1.4)
-      context.beginPath(); context.arc(width / 2, height / 2, 120 * scale, -0.1, 0.62); context.stroke()
+      const ringAngle = staticMotion ? 0 : elapsed * (overlayVisual?.ringDirection ?? 1) * (overlayVisual ? 2.4 : 0.35)
+      context.beginPath(); context.arc(width / 2, height / 2, 120 * scale, ringAngle - 0.1, ringAngle + 0.62); context.stroke()
       context.strokeStyle = rgba(color, 0.2)
-      context.beginPath(); context.arc(width / 2, height / 2, 130 * scale, 0, Math.PI * 2); context.stroke()
+      context.beginPath(); context.arc(width / 2, height / 2, 130 * scale, ringAngle, ringAngle + Math.PI * 2); context.stroke()
       for (let tick = 0; tick < 60; tick += 1) {
         const angle = tick * Math.PI / 30
         const length = tick % 15 === 0 ? 10 : 5
@@ -181,7 +198,7 @@ export function NeuralOrbCanvas({ state, intensity, staticMotion, visible = true
       }
       for (let index = shockwaves.length - 1; index >= 0; index -= 1) {
         const shockwave = shockwaves[index]
-        shockwave.progress += delta * 0.00055
+        shockwave.progress += delta * (shockwave.speed ?? 0.00055)
         if (shockwave.progress >= 1) { shockwaves.splice(index, 1); continue }
         context.strokeStyle = rgba(shockwave.color, 0.5 * (1 - shockwave.progress))
         context.beginPath(); context.arc(width / 2, height / 2, (104 + shockwave.progress * 120) * scale, 0, Math.PI * 2); context.stroke()
@@ -200,8 +217,7 @@ export function NeuralOrbCanvas({ state, intensity, staticMotion, visible = true
       resizeObserver.disconnect()
       document.removeEventListener('visibilitychange', visibility)
     }
-  }, [staticMotion, visible])
+  }, [overlay, state, staticMotion, visible])
 
   return <canvas ref={canvasRef} className="ob-neural-canvas" aria-hidden="true" />
 }
-

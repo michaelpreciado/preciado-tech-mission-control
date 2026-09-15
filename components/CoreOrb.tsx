@@ -13,7 +13,8 @@ import { ACCENT_DEFAULT, SEMANTIC } from '@/lib/tokens'
 import type { HostMetrics, HostSample } from '@/lib/host-metrics'
 import { apiFetch } from '@/lib/api-base'
 import { deriveOrbState, isOrbBelowCoolThreshold, orbLoadIntensity, type OrbState } from '@/lib/orb-state'
-import { deriveOrbVisual } from '@/lib/orb-visual'
+import { deriveOrbOverlayVisual, deriveOrbVisual } from '@/lib/orb-visual'
+import type { OrbOverlay } from '@/lib/orb-overlay'
 
 const TELEMETRY_POLL_MS = 8_000
 type Placement = 'desktop' | 'mobile'
@@ -68,20 +69,23 @@ float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(
 void main(){vec2 p=vUv-.5;float r=length(p)*2.;if(r>1.)discard;float a=atan(p.y,p.x);float n=noise(vec2(a*2.2+uTime*.11,r*4.-uTime*.24))+noise(vec2(a*4.-uTime*.08,r*8.+uTime*.15))*.35;float pulse=.5+.5*sin(uTime*6.28318);float core=exp(-r*r*5.8)*(.6+.4*pulse);float rim=pow(smoothstep(.5,1.,r),2.5);vec3 col=uColor*(core+rim*(.42+.25*n));col+=vec3(.85,.96,1.)*core*.22;float alpha=clamp(core+rim*.5,0.,1.)*.88;gl_FragColor=vec4(col*(.72+uBloom*.45),alpha);}`
 
 /** Shader plasma disc; the deterministic neural topology is rendered by the sibling 2D canvas. */
-function OrbScene({ visual, staticMotion, expanded }: { visual: VisualState; staticMotion: boolean; expanded: boolean }) {
+function OrbScene({ visual, overlay, staticMotion, expanded }: { visual: VisualState; overlay: OrbOverlay | null; staticMotion: boolean; expanded: boolean }) {
   const { invalidate } = useThree()
   const uniforms = useMemo(() => ({
     uTime: { value: 0 }, uBloom: { value: 0.55 }, uColor: { value: new THREE.Color(ACCENT_DEFAULT) },
   }), [])
   const currentColor = useRef(new THREE.Color(ACCENT_DEFAULT))
-  useEffect(() => { invalidate() }, [invalidate, visual])
+  useEffect(() => { invalidate() }, [invalidate, visual, overlay])
   useFrame((frame, delta) => {
-    const target = visual.state === 'hot' ? new THREE.Color(SEMANTIC.error.hex) : new THREE.Color(visual.state === 'idle' ? ACCENT_DEFAULT : '#7DEFFF')
+    const overlayVisual = overlay ? deriveOrbOverlayVisual(overlay.kind) : null
+    const target = overlayVisual
+      ? new THREE.Color(overlayVisual.palette.hex)
+      : visual.state === 'hot' ? new THREE.Color(SEMANTIC.error.hex) : new THREE.Color(visual.state === 'idle' ? ACCENT_DEFAULT : '#7DEFFF')
     if (staticMotion) currentColor.current.copy(target)
     else currentColor.current.lerp(target, Math.min(1, delta / (visual.state === 'hot' ? 1.5 : 3)))
     uniforms.uColor.value.copy(currentColor.current)
-    uniforms.uBloom.value = visual.state === 'idle' ? 0.55 : Math.max(0.75, visual.intensity)
-    uniforms.uTime.value = staticMotion ? 0 : frame.clock.elapsedTime * (visual.state === 'idle' ? 0.6 : 1.7)
+    uniforms.uBloom.value = overlayVisual ? overlayVisual.bloom : visual.state === 'idle' ? 0.55 : Math.max(0.75, visual.intensity)
+    uniforms.uTime.value = staticMotion ? 0 : frame.clock.elapsedTime * (overlayVisual?.pulseRate ?? (visual.state === 'idle' ? 0.6 : 1.7))
   })
   return <mesh scale={expanded ? 4.9 : 2.2}>
     <planeGeometry args={[2, 2]} />
@@ -172,7 +176,7 @@ function OrbRuntime({ placement }: { placement: Placement }) {
             gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
             style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
           >
-            <OrbScene visual={visual} staticMotion={staticMotion} expanded={showRing || showOrbit} />
+            <OrbScene visual={visual} overlay={activity.overlay} staticMotion={staticMotion} expanded={showRing || showOrbit} />
             {showRing && (showOrbit ? <PipelineKanbanFit><OrbitalKanbanRing staticMotion={staticMotion} visible={visible} /></PipelineKanbanFit> : <OrbitalKanbanRing staticMotion={staticMotion} visible={visible} />)}
             {showOrbit && <PipelineOrbit staticMotion={staticMotion} visible={visible} />}
           </Canvas>
@@ -181,7 +185,7 @@ function OrbRuntime({ placement }: { placement: Placement }) {
       {(!webglAvailable || webglFailed) && (
         <img src="/visuals/reactor-core-poster.svg" alt="" draggable={false} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} />
       )}
-      <NeuralOrbCanvas state={visual.state} intensity={visual.intensity} staticMotion={staticMotion} visible={visible} />
+      <NeuralOrbCanvas state={visual.state} intensity={visual.intensity} overlay={activity.overlay} staticMotion={staticMotion} visible={visible} />
       <span className="mc-core-orb-mark"><Icon name="brand" size={placement === 'desktop' ? 15 : 11} /></span>
       <span className="ob-orb-readout"><strong>{hostLoad}</strong><small>HOST LOAD</small><em>{params.palette.label.toUpperCase()} · {params.pulseRate.toFixed(1)}HZ</em></span>
     </div>

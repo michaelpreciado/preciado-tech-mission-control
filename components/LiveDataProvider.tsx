@@ -4,9 +4,12 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import type { MissionData } from '@/lib/types'
 import { apiFetch, apiUrl } from '@/lib/api-base'
 import type { BusEvent } from '@/lib/telemetry-types'
+import { ORB_OVERLAY_COOLDOWN_MS, parseOrbOverlayEvent, type OrbOverlay } from '@/lib/orb-overlay'
 
 const BUS_EVENT_NAMES = [
-  'task.created', 'task.assigned', 'task.progress', 'task.done', 'task.failed', 'agent.status', 'message',
+  'task.created', 'task.assigned', 'task.progress', 'task.done', 'task.failed', 'task.completed', 'task.closed', 'task.merge', 'task.merged',
+  'task.sync', 'task.synced', 'task.synchronize', 'task.synchronized', 'merge', 'merged', 'sync', 'synced',
+  'synchronize', 'synchronized', 'agent.status', 'message',
 ] as const
 const MAX_LIVE_EVENTS = 40
 type EventStreamState = 'connecting' | 'live' | 'stale'
@@ -26,10 +29,11 @@ export type OrbActivitySignal = {
   lastEventAt: number | null
   runningTaskCount: number
   now: number
+  overlay: OrbOverlay | null
 }
 
 const Ctx = createContext<LiveCtx>({ data: null, isLive: false, isLoading: true, error: null, lastUpdated: null, events: [], eventStream: 'connecting', refresh: async () => {} })
-const OrbActivityCtx = createContext<OrbActivitySignal>({ lastEventAt: null, runningTaskCount: 0, now: 0 })
+const OrbActivityCtx = createContext<OrbActivitySignal>({ lastEventAt: null, runningTaskCount: 0, now: 0, overlay: null })
 
 // Module-level deduplication: store the parsed JSON promise (not the Response)
 // to avoid the body-already-consumed bug when multiple callers await the same promise.
@@ -50,6 +54,9 @@ export function LiveDataProvider({ children }: { children: React.ReactNode }) {
   const [events, setEvents] = useState<BusEvent[]>([])
   const [eventStream, setEventStream] = useState<EventStreamState>('connecting')
   const [activityClock, setActivityClock] = useState(0)
+  const [orbOverlay, setOrbOverlay] = useState<OrbOverlay | null>(null)
+  const lastOrbOverlayAtRef = useRef<number | null>(null)
+  const orbOverlayTimerRef = useRef<number | null>(null)
 
   const refresh = useCallback(async () => {
     // Use cached data if still fresh (SWR pattern)
@@ -182,6 +189,18 @@ export function LiveDataProvider({ children }: { children: React.ReactNode }) {
             if (oldest !== undefined) seenEventIdsRef.current.delete(oldest)
           }
           setEvents(previous => [event, ...previous].slice(0, MAX_LIVE_EVENTS))
+
+          const parsedOverlay = parseOrbOverlayEvent(event, now)
+          const lastOverlayAt = lastOrbOverlayAtRef.current
+          if (parsedOverlay && (lastOverlayAt == null || now - lastOverlayAt >= ORB_OVERLAY_COOLDOWN_MS)) {
+            lastOrbOverlayAtRef.current = now
+            setOrbOverlay(parsedOverlay)
+            if (orbOverlayTimerRef.current != null) window.clearTimeout(orbOverlayTimerRef.current)
+            orbOverlayTimerRef.current = window.setTimeout(() => {
+              setOrbOverlay(null)
+              orbOverlayTimerRef.current = null
+            }, parsedOverlay.until - now)
+          }
         }
       } catch {
         // Keepalive frames and non-JSON bus messages still count as stream activity.
@@ -215,6 +234,7 @@ export function LiveDataProvider({ children }: { children: React.ReactNode }) {
       es?.close()
       inFlight.current?.abort()
       if (rafId.current) cancelAnimationFrame(rafId.current)
+      if (orbOverlayTimerRef.current != null) window.clearTimeout(orbOverlayTimerRef.current)
     }
   }, [refresh, refreshThrottled])
 
@@ -226,7 +246,8 @@ export function LiveDataProvider({ children }: { children: React.ReactNode }) {
     lastEventAt: lastSseEventRef.current,
     runningTaskCount: data?.kanban?.runningTasks ?? 0,
     now: activityClock,
-  }), [activityClock, data?.kanban?.runningTasks])
+    overlay: orbOverlay,
+  }), [activityClock, data?.kanban?.runningTasks, orbOverlay])
 
   return (
     <Ctx.Provider value={contextValue}>
