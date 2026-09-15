@@ -32,6 +32,7 @@ backend/venv/
 *.swo
 
 # Data files (generated at runtime)
+data/
 data/agents.json
 # OpenRouter per-month history store (forward snapshots)
 data/or-monthly.json

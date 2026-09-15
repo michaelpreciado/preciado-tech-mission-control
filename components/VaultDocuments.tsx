@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { Button, SkeletonPanel, Window } from './ui'
 import { obsidianLink, type VaultData } from '@/lib/vault-links'
+import { apiFetch } from '@/lib/api-base'
 import './vault-documents.css'
 
 const VaultContext = createContext<{ data: VaultData | null; error: string | null }>({ data: null, error: null })
@@ -14,7 +15,7 @@ export function VaultDocumentsProvider({ children }: { children: ReactNode }) {
     const controller = new AbortController()
     async function refresh() {
       try {
-        const response = await fetch('/api/vault', { cache: 'no-store', signal: controller.signal })
+        const response = await apiFetch('/api/vault', { cache: 'no-store', signal: controller.signal })
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
         setData(await response.json())
         setError(null)

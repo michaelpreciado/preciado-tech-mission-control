@@ -1,6 +1,6 @@
 /**
  * System health collector — liveness of every service the cockpit depends on.
- * HTTP probes are unauthenticated liveness checks only (any response = up);
+ * HTTP probes distinguish service health from mere reachability;
  * file checks read state the gateways already write.
  */
 import fs from 'node:fs/promises'
@@ -11,16 +11,30 @@ import type { ServiceHealth, SystemHealthData } from './types'
 
 const PROBE_TIMEOUT_MS = 1500
 
+type TruthfulServiceHealth = Omit<ServiceHealth, 'status'> & {
+  status: ServiceHealth['status'] | 'auth-fail' | 'degraded' | 'unavailable'
+  statusCode?: number
+}
+
+type HttpProbe = { id: string; name: string; url: string; configError?: string }
+
 function portOf(url: string): string {
   try { return new URL(url).port || '' } catch { return '' }
 }
 
 // Built per call so config edits (via /setup) apply without a restart.
-function httpProbes(): { id: string; name: string; url: string }[] {
+function httpProbes(): HttpProbe[] {
   const services = getConfig().services
+  let eventbusUrl = ''
+  let eventbusConfigError: string | undefined
+  try {
+    eventbusUrl = new URL('/health', services.eventbusUrl).toString()
+  } catch {
+    eventbusConfigError = 'invalid event bus URL'
+  }
   return [
     { id: 'openclaw-gateway', name: `OpenClaw gateway :${portOf(services.openclawGatewayUrl)}`, url: services.openclawGatewayUrl },
-    { id: 'eventbus', name: `Event bus :${portOf(services.eventbusUrl)}`, url: new URL('/health', services.eventbusUrl).toString() },
+    { id: 'eventbus', name: `Event bus :${portOf(services.eventbusUrl)}`, url: eventbusUrl, configError: eventbusConfigError },
     { id: 'ollama', name: `Ollama :${portOf(services.ollamaUrl)}`, url: services.ollamaUrl },
     { id: 'llmster', name: `LLMster :${portOf(services.llmsterUrl)}`, url: services.llmsterUrl },
   ]
@@ -49,16 +63,29 @@ function storeStaleMin(envName: string, days: number): number | null {
   return days * 24 * 60
 }
 
-async function httpProbe(p: { id: string; name: string; url: string }): Promise<ServiceHealth> {
+async function httpProbe(p: HttpProbe): Promise<TruthfulServiceHealth> {
   const started = Date.now()
+  if (p.configError) return { id: p.id, name: p.name, status: 'degraded', detail: p.configError }
   try {
     const ctl = new AbortController()
     const timer = setTimeout(() => ctl.abort(), PROBE_TIMEOUT_MS)
     const res = await fetch(p.url, { cache: 'no-store', signal: ctl.signal })
-    clearTimeout(timer)
+    let noModelLoaded = false
+    try {
+      if (p.id === 'llmster' && res.status === 200) {
+        const body: unknown = await res.json()
+        noModelLoaded = !!body && typeof body === 'object' && 'data' in body
+          && Array.isArray(body.data) && body.data.length === 0
+      }
+    } catch { /* Model metadata must not change a successful liveness probe. */ }
+    finally { clearTimeout(timer) }
     const latencyMs = Date.now() - started
-    // Any HTTP response (even 401/404) proves the service is listening.
-    return { id: p.id, name: p.name, status: 'up', detail: `HTTP ${res.status} · ${latencyMs}ms`, latencyMs }
+    const status = res.status >= 200 && res.status < 300
+      ? 'up'
+      : res.status === 401 || res.status === 403
+        ? 'auth-fail'
+        : 'degraded'
+    return { id: p.id, name: p.name, status, statusCode: res.status, detail: noModelLoaded ? 'no model loaded' : `HTTP ${res.status} · ${latencyMs}ms`, latencyMs }
   } catch {
     return { id: p.id, name: p.name, status: 'down', detail: 'no response (connection refused or timeout)' }
   }
@@ -75,7 +102,7 @@ function fmtAge(min: number): string {
   return `${Math.round(min / 1440)}d ago`
 }
 
-async function hermesGatewayHealth(): Promise<ServiceHealth> {
+async function hermesGatewayHealth(): Promise<TruthfulServiceHealth> {
   const id = 'hermes-gateway'
   const name = 'Agent gateway'
   try {
@@ -98,14 +125,14 @@ async function hermesGatewayHealth(): Promise<ServiceHealth> {
   }
 }
 
-async function fileHealth(f: { id: string; name: string; file: string; staleAfterMin: number | null }): Promise<ServiceHealth> {
+async function fileHealth(f: { id: string; name: string; file: string; staleAfterMin: number | null }): Promise<TruthfulServiceHealth> {
   try {
     // WAL-mode SQLite (e.g. kanban.db): writes land in -wal and only checkpoint
     // into the main .db later, so the main file's mtime can lag days behind
     // real activity. Judge freshness by the freshest of db/-wal/-shm.
-    const candidates = [f.file, `${f.file}-wal`, `${f.file}-shm`]
-    const mtimes = await Promise.all(candidates.map(p => fs.stat(p).then(s => s.mtimeMs).catch(() => 0)))
-    const st = { mtimeMs: Math.max(...mtimes) }
+    const primary = await fs.stat(f.file)
+    const adjunctMtimes = await Promise.all([`${f.file}-wal`, `${f.file}-shm`].map(p => fs.stat(p).then(s => s.mtimeMs).catch(() => 0)))
+    const st = { mtimeMs: Math.max(primary.mtimeMs, ...adjunctMtimes) }
     const min = ageMinutes(st.mtimeMs)
     const stale = f.staleAfterMin !== null && min > f.staleAfterMin
     return {
@@ -115,7 +142,7 @@ async function fileHealth(f: { id: string; name: string; file: string; staleAfte
       detail: `updated ${fmtAge(min)}${stale ? ' · STALE' : ''}`,
     }
   } catch {
-    return { id: f.id, name: f.name, status: 'down', detail: 'missing' }
+    return { id: f.id, name: f.name, status: 'unavailable', detail: 'missing' }
   }
 }
 
@@ -127,11 +154,11 @@ async function collectSystemHealthFresh(): Promise<SystemHealthData> {
   ])
   return {
     generatedAt: new Date().toISOString(),
-    services,
+    services: services as unknown as ServiceHealth[],
     problems: services.filter(s => s.status !== 'up').length,
   }
 }
 
 export function collectSystemHealth(): Promise<SystemHealthData> {
-  return getCachedCollector('system-health', collectSystemHealthFresh)
+  return getCachedCollector('system-health', collectSystemHealthFresh) as Promise<SystemHealthData>
 }

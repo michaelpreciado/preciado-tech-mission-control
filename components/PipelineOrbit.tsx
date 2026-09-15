@@ -6,6 +6,7 @@ import * as THREE from 'three'
 import { createPipelineProbeGeometry, PIPELINE_PROBE_ATLAS } from '@/components/threed/pipeline-probe'
 import type { PipelineData } from '@/lib/types'
 import { layoutPipelineOrbit, ORBIT_LIMIT, type OrbitLayout, type OrbitNode, type OrbitPlanet } from '@/lib/pipeline-orbit-layout'
+import { apiFetch } from '@/lib/api-base'
 
 const POLL_MS = 15_000
 const VELOCITIES = [0.008, -0.012, 0.016, -0.02] as const
@@ -21,7 +22,7 @@ function usePipelineSnapshot(): PipelineData | null {
       const controller = new AbortController()
       inFlight = controller
       try {
-        const response = await fetch('/api/pipeline', {
+        const response = await apiFetch('/api/pipeline', {
           cache: 'no-store', signal: controller.signal, headers: { Accept: 'application/json' },
         })
         if (!response.ok) return

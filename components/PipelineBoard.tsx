@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { PipelineData, PipelineLead, PipelineStage } from '@/lib/types'
 import { SkeletonPanel, fmtDate } from './ui'
 import { ClientDocsLink } from './VaultDocuments'
+import { apiFetch, apiUrl } from '@/lib/api-base'
 
 const POLL_MS = 12_000
 
@@ -156,7 +157,7 @@ export function PipelineBoard() {
 
   const refresh = useCallback(async () => {
     try {
-      const res = await fetch('/api/pipeline', { cache: 'no-store' })
+      const res = await apiFetch('/api/pipeline', { cache: 'no-store' })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       setData(await res.json())
       setError(null)
@@ -177,7 +178,7 @@ export function PipelineBoard() {
   // matches a lead's development.task_id refreshes the board immediately and
   // surfaces the event on the card (live build progress).
   useEffect(() => {
-    const es = new EventSource('/api/events')
+    const es = new EventSource(apiUrl('/api/events'))
     const onAny = (ev: MessageEvent) => {
       try {
         const evt = JSON.parse(ev.data) as { task_id?: string; raw_kind?: string; title?: string }
@@ -217,7 +218,6 @@ export function PipelineBoard() {
             <div key={col.stage} className="mc-window mc-pipe-col">
               <div className={`mc-tcol-head ${col.stage === 'awaiting_approval' ? 'alert' : ''}`}>
                 <div className="mc-window-dots" aria-hidden="true"><span className="mc-window-dot mc-window-dot--red" /><span className="mc-window-dot mc-window-dot--amber" /><span className="mc-window-dot mc-window-dot--green" /></div>
-                <span className="mc-prompt-user">user@mission-control:~</span>
                 <span className="mc-tcol-glyph">{col.glyph}</span>
                 <span>{col.label}</span>
                 <span className="mc-tcol-count">{total}</span>
@@ -239,7 +239,7 @@ export function PipelineBoard() {
 
       {events.length > 0 && (
         <div className="mc-window mc-pipe-log v4-entry">
-          <div className="mc-tcol-head"><div className="mc-window-dots" aria-hidden="true"><span className="mc-window-dot mc-window-dot--red" /><span className="mc-window-dot mc-window-dot--amber" /><span className="mc-window-dot mc-window-dot--green" /></div><span className="mc-prompt-user">user@mission-control:~</span><span className="mc-tcol-glyph">≋</span><span>PIPELINE EVENTS</span></div>
+          <div className="mc-tcol-head"><div className="mc-window-dots" aria-hidden="true"><span className="mc-window-dot mc-window-dot--red" /><span className="mc-window-dot mc-window-dot--amber" /><span className="mc-window-dot mc-window-dot--green" /></div><span className="mc-tcol-glyph">≋</span><span>PIPELINE EVENTS</span></div>
           <div className="mc-pipe-log-body">
             {events.slice(0, 12).map((e, i) => (
               <div key={i} className="mc-pipe-log-row">

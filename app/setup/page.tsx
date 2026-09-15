@@ -1,6 +1,6 @@
 'use client'
 
-import { AsciiKicker, AsciiDivider } from '../vf/Ascii'
+import { PageHeader } from '@/components/PageHeader'
 
 /**
  * F.R.I.D.A.Y. setup — configure the harness from the browser.
@@ -8,9 +8,10 @@ import { AsciiKicker, AsciiDivider } from '../vf/Ascii'
  * Bring-your-own keys: nothing here ever leaves this machine.
  */
 import { useEffect, useState } from 'react'
-import { Button, SectionHead } from '@/components/ui'
+import { Button } from '@/components/ui'
 import { ACCENT_PRESETS, DEFAULT_ACCENT } from '@/lib/theme'
 import { NAV_TABS, PINNED_TAB_IDS } from '@/lib/nav-tabs'
+import { apiFetch } from '@/lib/api-base'
 import '../vf/v3-lane.css'
 
 type MotionSetting = 'full' | 'reduced' | 'off'
@@ -120,7 +121,7 @@ export default function SetupPage() {
   const [overTabId, setOverTabId] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/api/setup', { cache: 'no-store' })
+    apiFetch('/api/setup', { cache: 'no-store' })
       .then(r => r.json())
       .then(j => { setCfg(j.config); setConfigured(Boolean(j.configured)) })
       .catch(() => setFlash({ tone: 'err', text: 'Could not load current config.' }))
@@ -201,7 +202,7 @@ export default function SetupPage() {
     if (ticktickKey.trim()) keys.ticktickToken = ticktickKey.trim()
     if (Object.keys(keys).length) body.keys = keys
     try {
-      const res = await fetch('/api/setup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      const res = await apiFetch('/api/setup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const j = await res.json()
       if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`)
       setOpenrouterKey('')
@@ -223,11 +224,11 @@ export default function SetupPage() {
     setBusy(true)
     setFlash(null)
     try {
-      const res = await fetch(`/api/setup/demo${force ? '?force=1' : ''}`, { method: 'POST' })
+      const res = await apiFetch(`/api/setup/demo${force ? '?force=1' : ''}`, { method: 'POST' })
       const j = await res.json()
       if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`)
       setFlash({ tone: 'ok', text: 'Demo data seeded — open the Deck to see it live.' })
-      const fresh = await fetch('/api/setup', { cache: 'no-store' }).then(r => r.json())
+      const fresh = await apiFetch('/api/setup', { cache: 'no-store' }).then(r => r.json())
       setCfg(fresh.config)
       setConfigured(Boolean(fresh.configured))
     } catch (err) {
@@ -239,8 +240,7 @@ export default function SetupPage() {
 
   return (
     <>
-      <AsciiKicker view="SETUP" detail="CONFIG-STATE" />
-      <SectionHead label="SETUP / CONFIGURE F.R.I.D.A.Y." />
+      <PageHeader eyebrow="~/setup · CONFIG-STATE" title="SETUP" subtitle="Configure identity, integrations, and interface behavior" />
       <div className="v3-kicker v4-legacy-kicker"><span className="jp">設定</span> configure</div>
       <div className="mc-setup">
         <div className="mc-setup-intro">
@@ -264,7 +264,6 @@ export default function SetupPage() {
         ) : (
           <>
             <div className="mc-setup-group">
-              <AsciiDivider />
               <div className="mc-setup-group-head">IDENTITY</div>
               <label className="mc-setup-field">
                 <span>App name (brand)</span>
@@ -300,7 +299,6 @@ export default function SetupPage() {
             </div>
 
             <div className="mc-setup-group w2l-setup-ui">
-              <AsciiDivider />
               <div className="mc-setup-group-head">UI CUSTOMIZATION <span>motion, density, nav, 3D elements · applies on next page load, no restart needed (like accent color)</span></div>
 
               <div className="mc-setup-field">
@@ -399,7 +397,6 @@ export default function SetupPage() {
             </div>
 
             <div className="mc-setup-group">
-              <AsciiDivider />
               <div className="mc-setup-group-head">API KEYS</div>
               <label className="mc-setup-field">
                 <span>OpenRouter API key {cfg.keysSet.openrouterApiKey && <b className="is-set">· configured ✓</b>}</span>
@@ -427,7 +424,6 @@ export default function SetupPage() {
 
             {FIELD_GROUPS.map(group => (
               <div className="mc-setup-group" key={group.title}>
-                <AsciiDivider />
               <div className="mc-setup-group-head">{group.title} <span>{group.sub}</span></div>
                 {group.fields.map(f => {
                   const branch = cfg[f.section] as Record<string, string>

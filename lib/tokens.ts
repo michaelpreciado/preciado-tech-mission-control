@@ -32,7 +32,7 @@ export const SEMANTIC = {
   ok:    { hex: '#28c840', ink: '#2be36b' },   // green
   warn:  { hex: '#febc2e', ink: '#ffc857' },   // amber
   error: { hex: '#ff5f57', ink: '#ff8a83' },   // red — semantic ONLY
-  info:  { hex: '#00d4ff', ink: '#7fe9ff' },   // cyan
+  info:  { hex: '#1E90FF', ink: '#9BC8FF' },   // dodger
 } as const
 
 /* Categorical chart palette — fixed, never cycled, validated against the dark
@@ -46,18 +46,14 @@ export const CATEGORICAL = {
 } as const
 
 /* Accent RGB triplets (for rgba() use). Keep in sync with ACCENT_DEFAULT. */
-export const ACCENT_RGB = '157,180,236'
-export const ACCENT_BRIGHT_RGB = '188,208,255'
+export const ACCENT_RGB = '30,144,255'
+export const ACCENT_BRIGHT_RGB = '125,190,255'
 
 /* ── Type roles ───────────────────────────────────────────────────── */
 export const FONT = {
-  /* Display & numerals — monospace, variable. */
-  display: "'JetBrains Mono','Fira Code',ui-monospace,SFMono-Regular,Menlo,Consolas,'Courier New',monospace",
-  /* Micro-labels (uppercase), IDs, paths, cron, numbers. */
-  mono: "'JetBrains Mono','Fira Code',ui-monospace,SFMono-Regular,Menlo,Consolas,'Courier New',monospace",
-  /* UI is deliberately mono for the Blue Matrix Glass theme: the spec calls
-     for strictly monospace typography, including prose and card content. */
-  ui: "'JetBrains Mono','Fira Code',ui-monospace,SFMono-Regular,Menlo,Consolas,'Courier New',monospace",
+  display: 'var(--pt-font-sans)',
+  mono: 'ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace',
+  ui: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif',
 } as const
 
 export const TYPE_SCALE = {
@@ -238,8 +234,10 @@ export function buildTokenCss(): string {
   /* type — three roles */
   --pt-font-mono: ${FONT.mono};
   --pt-font-display: ${FONT.display};
-  /* UI is intentionally mono per the Blue Matrix Glass theme spec. */
-  --pt-font-sans: var(--pt-font-ui, ${FONT.ui});
+  /* System UI stack avoids font downloads and fallback metric shifts. */
+  --pt-font-sans: ${FONT.ui};
+  --pt-font-ui: var(--pt-font-sans);
+  --mc-font-jp: var(--pt-font-sans);
 
   /* type scale */
   --pt-fs-display: ${TYPE_SCALE.display};

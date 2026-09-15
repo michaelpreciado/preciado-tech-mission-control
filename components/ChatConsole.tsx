@@ -27,6 +27,7 @@ import { cleanTitle, dayBucket, isJunk, sourceGlyph, type DayBucket } from '@/li
 import { ChatIntel } from '@/components/views/ChatIntel'
 import LiveChatMirror from '@/components/LiveChatMirror'
 import type { ConversationStats } from '@/lib/conversations'
+import { apiFetch } from '@/lib/api-base'
 import '../app/vf/v3-lane.css'
 
 /* ── Types (mirror the API) ─────────────────────────────── */
@@ -191,14 +192,14 @@ function CopyButton({ text }: { text: string }) {
         alignItems: 'center',
         justifyContent: 'center',
         fontSize: '11px',
-        fontFamily: 'var(--pt-font-mono, "JetBrains Mono"), monospace',
+        fontFamily: 'var(--pt-font-sans)',
         letterSpacing: '0.08em',
         opacity: copied ? 1 : 0.4,
         color: copied ? 'var(--mc-neon)' : 'inherit',
         flexShrink: 0,
       }}
     >
-      {copied ? 'COPIED' : '⎘'}
+      {copied ? 'Copied' : '⎘'}
     </button>
   )
 }
@@ -268,7 +269,7 @@ export default function ChatConsole() {
     setHandoffs(all => ({ ...all, [key]: [...(all[key] || []), message] }))
     setHandoffTask('')
     try {
-      const response = await fetch('/api/handoff', {
+      const response = await apiFetch('/api/handoff', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId: threadRef.id, agent: 'codex', task: message.task,
           sourceAgent: threadRef.agent || 'hermes', profile: threadRef.profile, device: threadRef.device }),
@@ -287,7 +288,7 @@ export default function ChatConsole() {
   const [agentStatus, setAgentStatus] = useState<AgentStatus[]>([])
   const [localSession, setLocalSession] = useState<string | null>(null)
   useEffect(() => {
-    fetch('/api/chat').then(r => r.json()).then(j => {
+    apiFetch('/api/chat').then(r => r.json()).then(j => {
       setAgentStatus(j.agents ?? [])
       try {
         const saved = localStorage.getItem('mc.chat.agent')
@@ -312,7 +313,7 @@ export default function ChatConsole() {
      /chat?session=<id>[&device=<name>] (from the command palette) additionally
      opens that thread once the list resolves. Read once on mount; afterwards
      the user's own filter choices win. */
-  const deepLinkRef = useRef<{ session: string; device: string } | null>(null)
+  const deepLinkRef = useRef<{ session: string; device: string; profile: string } | null>(null)
   const deepLinkDoneRef = useRef(false)
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search)
@@ -322,7 +323,7 @@ export default function ChatConsole() {
       setNewProfile(preset)
     }
     const session = sp.get('session')
-    if (session) deepLinkRef.current = { session, device: sp.get('device') ?? '' }
+    if (session) deepLinkRef.current = { session, device: sp.get('device') ?? '', profile: preset ?? '' }
   }, [])
 
   const [cursor, setCursor] = useState(-1)
@@ -362,7 +363,7 @@ export default function ChatConsole() {
         if (q) params.set('q', q)
         if (filterDevice) params.set('device', filterDevice)
         if (filterProfile) params.set('profile', filterProfile)
-        const res = await fetch(`/api/conversations?${params}`, { cache: 'no-store' })
+        const res = await apiFetch(`/api/conversations?${params}`, { cache: 'no-store' })
         const j = await res.json()
         if (!alive) return
         setConversations(j.conversations ?? [])
@@ -393,7 +394,7 @@ export default function ChatConsole() {
     setThread([])
     try {
       const params = new URLSearchParams({ profile: c.profile, device: c.device, agent: c.agent || 'hermes' })
-      const res = await fetch(`/api/conversations/${encodeURIComponent(c.id)}?${params}`, { cache: 'no-store' })
+      const res = await apiFetch(`/api/conversations/${encodeURIComponent(c.id)}?${params}`, { cache: 'no-store' })
       const j = await res.json()
       setThread(j.messages ?? [])
     } finally {
@@ -411,8 +412,9 @@ export default function ChatConsole() {
 
   /* Honour a /chat?session=<id> deep-link once the conversation index has
      resolved: open the matching thread (device-scoped if ?device= was given,
-     else first id match). If the id isn't in the result set we give up quietly
-     and leave the ?profile= pre-filter in place — never crash, never blank. */
+     else first id match). If the id isn't in the result set but a profile was
+     supplied, open a minimal stub so the thread endpoint can resolve it from
+     the real database — never crash, never blank. */
   useEffect(() => {
     if (deepLinkDoneRef.current || !loaded) return
     const dl = deepLinkRef.current
@@ -424,6 +426,23 @@ export default function ChatConsole() {
       deepLinkDoneRef.current = true
       deepLinkRef.current = null
       void openThread(match)
+    } else if (dl.profile) {
+      const stub: Conversation = {
+        id: dl.session,
+        title: '(canonical chat)',
+        profile: dl.profile || filterProfile,
+        device: dl.device,
+        source: 'desktop',
+        model: null,
+        startedAt: Date.now(),
+        lastActiveAt: Date.now(),
+        messageCount: 0,
+        preview: '',
+        active: false,
+      }
+      deepLinkDoneRef.current = true
+      deepLinkRef.current = null
+      void openThread(stub)
     } else if (conversations.length > 0) {
       // Index resolved without the target — stop retrying on later reloads.
       deepLinkDoneRef.current = true
@@ -452,7 +471,7 @@ export default function ChatConsole() {
     const ctrl = new AbortController()
     abortRef.current = ctrl
     try {
-      const res = await fetch(`/api/conversations/${encodeURIComponent(threadRef.id)}`, {
+      const res = await apiFetch(`/api/conversations/${encodeURIComponent(threadRef.id)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text, profile: threadRef.profile, device: threadRef.device }),
@@ -498,7 +517,7 @@ export default function ChatConsole() {
     const ctrl = new AbortController()
     abortRef.current = ctrl
     try {
-      const res = await fetch('/api/conversations/new', {
+      const res = await apiFetch('/api/conversations/new', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text, profile: newProfile, device: newDevice }),
@@ -549,7 +568,7 @@ export default function ChatConsole() {
     abortRef.current = ctrl
     setThread(t => [...t, { id: Date.now(), role: 'user', content: text, timestamp: Date.now(), agent }])
     try {
-      const res = await fetch('/api/chat', {
+      const res = await apiFetch('/api/chat', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctrl.signal,
         body: JSON.stringify({ agent, session, createSession: !threadRef, message: text, profile: agent === 'hermes' ? threadRef?.profile || newProfile : undefined }),
       })
@@ -708,10 +727,10 @@ export default function ChatConsole() {
                     border: 'none',
                     borderRight: agent === 'jarvis' ? '1px solid color-mix(in srgb, currentColor 12%, transparent)' : 'none',
                     cursor: busy ? 'not-allowed' : 'pointer',
-                    fontFamily: 'var(--pt-font-mono, "JetBrains Mono"), monospace',
+                    fontFamily: 'var(--pt-font-sans)',
                     fontSize: '10px',
                     letterSpacing: '0.16em',
-                    textTransform: 'uppercase',
+                    textTransform: 'none',
                     color: 'inherit',
                     opacity: busy ? 0.4 : 1,
                   }}
@@ -871,10 +890,10 @@ export default function ChatConsole() {
                   <div key={m.id}>
                     {showDiv && (
                       <div style={{
-                        fontFamily: 'var(--pt-font-mono, "JetBrains Mono"), monospace',
+                        fontFamily: 'var(--pt-font-sans)',
                         fontSize: '9px',
                         letterSpacing: '0.24em',
-                        textTransform: 'uppercase',
+                        textTransform: 'none',
                         opacity: 0.5,
                         padding: '10px 12px 6px',
                         display: 'flex',

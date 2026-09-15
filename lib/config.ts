@@ -290,7 +290,7 @@ function buildConfig(): FridayConfig {
           : 500_000_000,
         note: typeof file.billing?.fairUse?.note === 'string' && file.billing.fairUse.note.trim()
           ? file.billing.fairUse.note
-          : 'Owner estimate of ChatGPT Plus fair-use ceiling (tokens/month, Codex). Adjust as OpenAI changes policy.',
+          : 'Owner estimate of subscription fair-use ceiling (tokens/month, Codex). Weekly remaining comes from Codex session rate_limits, not this estimate.',
       },
       subscriptions: file.billing?.subscriptions && typeof file.billing.subscriptions === 'object'
         ? (file.billing.subscriptions as Record<string, { plan: string; amount: number }>)

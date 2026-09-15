@@ -1,9 +1,7 @@
 'use client'
 
-import { AsciiKicker, AsciiDivider } from '../vf/Ascii'
-
 import dynamic from 'next/dynamic'
-import { SectionHead } from '@/components/ui'
+import { PageHeader } from '@/components/PageHeader'
 import '../vf/v2-lane.css'
 
 const CommandHeader = dynamic(() => import('@/components/views/CommandHeader').then(m => m.CommandHeader), { ssr: false })
@@ -13,9 +11,7 @@ export default function ProjectsPage() {
   return (
     <>
       <CommandHeader />
-      <AsciiKicker view="PROJECTS" detail="BUILD-STATE" />
-      <SectionHead pre={<span className="v2-jp">案件</span>} label="PROJECTS / ACTIVE REPOS" />
-      <div className="srule-divider"><AsciiDivider /></div>
+      <PageHeader eyebrow="~/clients · BUILD-STATE" title="CLIENTS" subtitle="Active client workspaces and delivery repos" />
       <ProjectGrid />
     </>
   )

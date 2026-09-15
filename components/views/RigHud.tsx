@@ -19,6 +19,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { SkeletonPanel } from '../ui'
 import type { HostMetrics } from '@/lib/host-metrics'
+import { apiFetch } from '@/lib/api-base'
 
 const POLL_MS = 2_000
 
@@ -267,7 +268,7 @@ export function useHostMetrics() {
       const ctl = new AbortController()
       abort.current = ctl
       try {
-        const res = await fetch('/api/telemetry', { cache: 'no-store', signal: ctl.signal })
+        const res = await apiFetch('/api/telemetry', { cache: 'no-store', signal: ctl.signal })
         if (!res.ok) throw new Error(String(res.status))
         const json = (await res.json()) as HostMetrics
         if (!alive) return

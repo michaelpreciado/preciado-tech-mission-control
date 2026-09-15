@@ -1,8 +1,6 @@
 'use client'
 
-import { AsciiDivider } from '@/app/vf/Ascii'
-
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useLiveData } from '../LiveDataProvider'
 import { TFrame, SectionRule, Window, EmptyTerminal, SkeletonPanel } from '../ui'
 import dynamic from 'next/dynamic'
@@ -39,28 +37,42 @@ const MODE_META: Record<BillingMode, { label: string; color: string; note: strin
   'cloud-routed': { label: 'CLOUD-ROUTED', color: CATEGORICAL[5], note: "ollama's hardware · price not logged" },
 }
 
+function finite(n: unknown): n is number {
+  return typeof n === 'number' && Number.isFinite(n)
+}
+
+function fixed(n?: number | null, digits = 1): string {
+  return finite(n) ? n.toFixed(digits) : '—'
+}
+
+function count(n?: number | null): string {
+  return finite(n) ? n.toLocaleString('en-US') : '—'
+}
+
 function money(n?: number | null, digits = 2) {
-  if (n == null) return '—'
+  if (!finite(n)) return '—'
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: digits }).format(n)
 }
 
 /** Wall-clock duration for the generation-time readout. */
-function hours(sec: number): string {
+function hours(sec?: number | null): string {
+  if (!finite(sec) || sec < 0) return '—'
   if (sec >= 3600) return `${(sec / 3600).toFixed(1)}h`
   if (sec >= 60) return `${Math.round(sec / 60)}m`
   return `${Math.round(sec)}s`
 }
 
-function tok(n: number): string {
+function tok(n?: number | null): string {
+  if (!finite(n)) return '—'
   if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(2)}B`
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
   if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`
   return String(n)
 }
 
-function timeAgo(value?: string | null): string {
-  if (!value) return '—'
-  const elapsed = Math.max(0, Date.now() - new Date(value).getTime())
+function timeAgo(value: string | null | undefined, now: number | null): string {
+  if (!value || now === null || !Number.isFinite(Date.parse(value))) return '—'
+  const elapsed = Math.max(0, now - Date.parse(value))
   const minutes = Math.floor(elapsed / 60_000)
   if (minutes < 1) return 'now'
   if (minutes < 60) return `${minutes}m ago`
@@ -73,8 +85,9 @@ function timeAgo(value?: string | null): string {
 /** Never renders a non-zero share as "0%" — a real but tiny slice reading as
  *  zero is the same lie as omitting it. */
 function pct(n: number, d: number): string {
-  if (d <= 0) return '—'
+  if (!finite(n) || !finite(d) || d <= 0) return '—'
   const p = (n / d) * 100
+  if (!finite(p)) return '—'
   if (p > 0 && p < 0.1) return '<0.1%'
   return `${p.toFixed(p < 10 ? 1 : 0)}%`
 }
@@ -86,6 +99,94 @@ function spend(n: number): string {
   return money(n)
 }
 
+function planLabel(plan?: string | null): string {
+  if (!plan) return 'UNKNOWN'
+  switch (plan.toLowerCase()) {
+    case 'plus': return 'ChatGPT Plus'
+    case 'prolite': case 'pro': return 'ChatGPT Pro'
+    case 'free': return 'ChatGPT Free'
+    default: return plan
+  }
+}
+
+/** Begin ticking only after hydration; server and first client render agree. */
+function useClock(): number | null {
+  const [now, setNow] = useState<number | null>(null)
+  useEffect(() => {
+    setNow(Date.now())
+    const timer = window.setInterval(() => setNow(Date.now()), 60_000)
+    return () => window.clearInterval(timer)
+  }, [])
+  return now
+}
+
+/** UTC calendar anchor from data during SSR, then the live clock after mount. */
+function calendarEnd(dates: string[], now: number | null): number | null {
+  if (now !== null) return Math.floor(now / 86_400_000) * 86_400_000
+  const latest = dates.filter(date => /^\d{4}-\d{2}-\d{2}$/.test(date) && finite(Date.parse(date))).sort().at(-1)
+  return latest ? Date.parse(`${latest}T00:00:00Z`) : null
+}
+
+function utcTimestamp(value?: string | null): string {
+  const ms = value ? Date.parse(value) : NaN
+  return finite(ms) ? new Date(ms).toISOString().slice(0, 16).replace('T', ' ') + ' UTC' : '—'
+}
+
+function resetTime(value?: string | null): string {
+  const ms = value ? Date.parse(value) : NaN
+  if (!finite(ms)) return '—'
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles', timeZoneName: 'short',
+    weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true,
+  }).formatToParts(ms)
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find(p => p.type === type)?.value ?? ''
+  return `${part('weekday')} ${part('month')} ${part('day')} · ${part('hour')}:${part('minute')} ${part('dayPeriod')} ${part('timeZoneName')}`
+}
+
+function resetRelative(value: string | null | undefined, now: number | null): string {
+  const ms = value ? Date.parse(value) : NaN
+  if (!finite(ms) || now === null) return '—'
+  if (ms <= now) return 'reset time passed · awaiting provider snapshot'
+  const minutes = Math.floor((ms - now) / 60_000)
+  if (minutes < 1) return 'in <1m'
+  if (minutes < 60) return `in ${minutes}m`
+  const hours = Math.floor(minutes / 60)
+  return hours < 24 ? `in ${hours}h ${minutes % 60}m` : `in ${Math.floor(hours / 24)}d ${hours % 24}h`
+}
+
+type CodexLimits = NonNullable<CostDashboard['codexUsage']>['rateLimits']
+
+function weeklyPercent(value?: number | null): string {
+  return finite(value) ? `${value}%` : '—'
+}
+
+function WeeklyUsage({ limits, now, compact = false }: { limits: CodexLimits; now: number | null; compact?: boolean }) {
+  const used = limits?.weeklyUsedPercent
+  const remaining = weeklyPercent(limits?.weeklyRemainingPercent)
+  const tone = !finite(used) ? 'var(--pt-text-mute)' : used >= 90 ? STATUS.crit : used >= 70 ? STATUS.warn : STATUS.ok
+  const reset = resetTime(limits?.weeklyResetsAt)
+  const relative = resetRelative(limits?.weeklyResetsAt, now)
+  return (
+    <div className={compact ? undefined : 'cp-plan-band'} style={{ padding: compact ? '14px 0 0' : '14px 16px', borderBottom: 0 }}>
+      {compact ? (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px 24px', alignItems: 'flex-start' }}>
+          <Stat value={remaining} label="WEEKLY REMAINING" color={tone} />
+          <Stat value={reset} label="RESETS" sub={relative !== '—' ? relative : undefined} size="sm" />
+        </div>
+      ) : (
+        <>
+          <div className="cp-plan-band-head"><span style={{ color: tone }}>WEEKLY {weeklyPercent(used)} used · {remaining} remaining</span></div>
+          <div className="cp-plan-band-track" role="img" aria-label={`Weekly Codex usage: ${weeklyPercent(used)} used, ${remaining} remaining`}>
+            {finite(used) && <span style={{ width: `${Math.max(0, Math.min(100, used))}%`, background: tone }} />}
+          </div>
+          <div className="cp-plan-band-hint" style={{ lineHeight: 1.6 }}>RESETS {reset}{relative !== '—' && ` · ${relative}`}</div>
+        </>
+      )}
+      {!limits && <div className="cp-plan-band-hint">no provider snapshot in session logs</div>}
+    </div>
+  )
+}
+
 /* ── Primitives ─────────────────────────────────────────────────────── */
 
 function Stat({ value, label, sub, color = 'var(--pt-text-high)', size = 'md', glow = false }: {
@@ -94,14 +195,14 @@ function Stat({ value, label, sub, color = 'var(--pt-text-high)', size = 'md', g
 }) {
   const fs = size === 'hero' ? 36 : size === 'lg' ? 23 : size === 'sm' ? 14 : 17
   return (
-    <TFrame><div className="cp-stat">
+    <TFrame><div className="cp-stat" style={{ minWidth: 0, maxWidth: '100%', overflowWrap: 'anywhere' }}>
       <div style={{
         fontSize: fs, fontWeight: 700, lineHeight: 1.05,
         fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums',
         color: glow ? 'var(--pt-neon-bright)' : color,
         ...(glow ? { textShadow: 'var(--pt-glow-text)' } : {}),
-      }}>{value}</div>
-      <div style={{ fontSize: 7, color: 'var(--pt-text-mute)', letterSpacing: '0.18em', marginTop: 5, whiteSpace: 'nowrap' }}>{label}</div>
+      }}>{value == null || (typeof value === 'number' && !finite(value)) ? '—' : value}</div>
+      <div style={{ fontSize: 8, lineHeight: 1.5, color: 'var(--pt-text-mute)', letterSpacing: '0.12em', marginTop: 5 }}>{label}</div>
       {sub != null && <div style={{ fontSize: 8.5, color: 'var(--pt-text-dim)', marginTop: 3, fontFamily: 'var(--font-mono)' }}>{sub}</div>}
     </div></TFrame>
   )
@@ -135,22 +236,37 @@ function ModeDot({ mode }: { mode: BillingMode }) {
 
 type Col<T> = { key: string; head: string; align?: 'left' | 'right'; render: (row: T) => ReactNode; w?: number }
 
-function Table<T>({ cols, rows, empty }: { cols: Col<T>[]; rows: T[]; empty: string }) {
+function Table<T>({ cols, rows, empty, rowKey }: { cols: Col<T>[]; rows: T[]; empty: string; rowKey: (row: T) => string }) {
+  const wrapper = useRef<HTMLDivElement>(null)
+  // A stacked first render also fits narrow screens before hydration.
+  const [stacked, setStacked] = useState(true)
+  const isEmpty = rows.length === 0
+  const minTableWidth = Math.max(720, cols.reduce((sum, col) => sum + (col.w ?? 190), 0))
+  useEffect(() => {
+    const element = wrapper.current
+    if (!element) return
+    const observer = new ResizeObserver(([entry]) => setStacked(entry.contentRect.width < minTableWidth))
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [isEmpty, minTableWidth])
   if (!rows.length) {
     return <div style={{ padding: '16px', fontSize: 10, color: 'var(--pt-text-mute)', letterSpacing: '0.14em' }}>— {empty} —</div>
   }
   return (
-    <div className="cp-tablewrap">
-      <table className="cp-table">
-        <thead>
+    <div className="cp-tablewrap" ref={wrapper} style={{ minWidth: 0, overflowX: 'visible' }}>
+      <table className="cp-table" role="table" style={{ minWidth: 0, width: '100%', tableLayout: 'fixed', ...(stacked ? { display: 'block' } : {}) }}>
+        <thead style={stacked ? { display: 'none' } : undefined}>
           <tr>{cols.map(c => (
-            <th key={c.key} style={{ textAlign: c.align ?? 'left', width: c.w }}>{c.head}</th>
+            <th key={c.key} scope="col" style={{ textAlign: c.align ?? 'left', width: c.w ?? 'auto', minWidth: 0, whiteSpace: 'normal', overflowWrap: 'anywhere' }}>{c.head}</th>
           ))}</tr>
         </thead>
-        <tbody>
-          {rows.map((r, i) => (
-            <tr key={i}>{cols.map(c => (
-              <td key={c.key} data-label={c.head} style={{ textAlign: c.align ?? 'left' }}>{c.render(r)}</td>
+        <tbody role="rowgroup" style={stacked ? { display: 'block' } : undefined}>
+          {rows.map((r, index) => (
+            <tr key={rowKey(r)} role="row" style={stacked ? { display: 'block', padding: '14px 16px', borderBottom: index < rows.length - 1 ? '1px dashed var(--pt-border-dim)' : 0 } : undefined}>{cols.map(c => (
+              <td key={c.key} role="cell" data-label={c.head} style={{ textAlign: c.align ?? 'left', minWidth: 0, whiteSpace: 'normal', overflowWrap: 'anywhere', ...(stacked ? { display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'baseline', gap: '4px 12px', width: 'auto', padding: '5px 0', border: 0 } : {}) }}>
+                {stacked && <span style={{ color: 'var(--pt-text-mute)', fontSize: 8, letterSpacing: '0.12em' }}>{c.head}</span>}
+                <span style={{ minWidth: 0, ...(stacked ? { flex: '1 1 130px' } : { display: 'block' }) }}>{c.render(r)}</span>
+              </td>
             ))}</tr>
           ))}
         </tbody>
@@ -164,7 +280,7 @@ function Table<T>({ cols, rows, empty }: { cols: Col<T>[]; rows: T[]; empty: str
 function Bar({ value, max, color }: { value: number; max: number; color: string }) {
   return (
     <span className="cp-bar" aria-hidden>
-      <span style={{ width: `${max > 0 ? Math.max(1.5, (value / max) * 100) : 0}%`, background: color }} />
+      <span style={{ width: `${finite(value) && finite(max) && value > 0 && max > 0 ? Math.min(100, Math.max(1.5, (value / max) * 100)) : 0}%`, background: color }} />
     </span>
   )
 }
@@ -185,6 +301,7 @@ function BurnTrendSparkline({
 
   const daysInWindow = Math.max(1, windowDays)
   const latestCalendarDate = new Date(`${latestDate}T00:00:00Z`)
+  if (!finite(latestCalendarDate.getTime())) return null
   const days = Array.from({ length: daysInWindow }, (_, index) => {
     const date = new Date(latestCalendarDate)
     date.setUTCDate(latestCalendarDate.getUTCDate() - (daysInWindow - index - 1))
@@ -232,9 +349,9 @@ function ActualSpend({ costs }: { costs: CostDashboard }) {
   const or = costs.openRouterLive
   const lc = costs.localCompute
   const isCurrent = b && costs.subscription?.month === b.month
-  const plan = b?.planAmount ?? 0
-  const metered = b?.openRouterUsd ?? 0
-  const total = b ? plan + metered : null
+  const plan = b?.planAmount
+  const metered = b?.openRouterUsd
+  const total = finite(plan) && finite(metered) ? plan + metered : null
 
   const rate = lc?.blendedApiRatePerMTokens ?? null
   const displaced = rate != null && b ? (b.localTokens / 1_000_000) * rate : null
@@ -245,13 +362,13 @@ function ActualSpend({ costs }: { costs: CostDashboard }) {
   ]
 
   return (
-    <Window tag="◎" title={`ACTUAL SPEND · ${b?.month ?? 'THIS MONTH'}`}
+    <Window title={`ACTUAL SPEND · ${b?.month ?? 'THIS MONTH'}`}
       meta={isCurrent ? 'month to date' : 'no current-month record'}>
-      <div style={{ padding: '16px 16px 10px', display: 'flex', gap: 32, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+      <div style={{ padding: '14px 16px', display: 'flex', gap: 32, alignItems: 'flex-start', flexWrap: 'wrap' }}>
         <Stat value={money(total)} label="TOTAL BILLED THIS MONTH" size="hero" glow />
-        <div style={{ flex: '1 1 260px', minWidth: 220, paddingTop: 2 }}>
+        <div style={{ flex: '1 1 260px', minWidth: 0, paddingTop: 2 }}>
           {lines.map(l => (
-            <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', fontSize: 11, fontFamily: 'var(--font-mono)' }}>
+            <div key={l.label} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, padding: '4px 0', fontSize: 11, fontFamily: 'var(--font-mono)' }}>
               <ModeDot mode={l.kind} />
               <span style={{ color: 'var(--pt-text)' }}>{l.label}</span>
               <span style={{ color: 'var(--pt-text-mute)', fontSize: 8.5, letterSpacing: '0.08em' }}>{l.src}</span>
@@ -286,15 +403,16 @@ function ModeBreakdown({ costs }: { costs: CostDashboard }) {
   const maxBillable = Math.max(...modes.map(m => m.billableTokens), 1)
 
   return (
-    <Window tag="▤" title="VOLUME BY BILLING MODE · ALL-TIME LOGS"
+    <Window title="VOLUME BY BILLING MODE · ALL-TIME LOGS"
       meta="never summed across modes">
       <Table
         rows={modes}
+        rowKey={m => m.mode}
         empty="no usage logged"
         cols={[
           {
             key: 'mode', head: 'MODE', render: m => (
-              <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+              <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 7 }}>
                 <ModeDot mode={m.mode} />
                 <span style={{ color: 'var(--pt-text-high)', fontWeight: 600 }}>{MODE_META[m.mode].label}</span>
                 <span className="cp-cellnote">{MODE_META[m.mode].note}</span>
@@ -302,7 +420,7 @@ function ModeBreakdown({ costs }: { costs: CostDashboard }) {
             ),
           },
           { key: 'models', head: 'MODELS', align: 'right', w: 60, render: m => m.models },
-          { key: 'req', head: 'REQUESTS', align: 'right', w: 80, render: m => m.requests.toLocaleString() },
+          { key: 'req', head: 'REQUESTS', align: 'right', w: 80, render: m => count(m.requests) },
           {
             key: 'billable', head: 'BILLABLE', align: 'right', w: 150, render: m => (
               <span style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
@@ -314,7 +432,7 @@ function ModeBreakdown({ costs }: { costs: CostDashboard }) {
           { key: 'cache', head: 'CACHE READ', align: 'right', w: 84, render: m => m.cacheReadTokens > 0 ? tok(m.cacheReadTokens) : <span style={{ color: 'var(--pt-text-mute)' }}>—</span> },
           {
             key: 'lev', head: 'LEVERAGE', align: 'right', w: 74, render: m => m.cacheReadTokens > 0
-              ? <span style={{ color: CATEGORICAL[4] }}>{(m.cacheReadTokens / Math.max(1, m.billableTokens)).toFixed(1)}×</span>
+              ? <span style={{ color: CATEGORICAL[4] }}>{fixed(m.cacheReadTokens / Math.max(1, m.billableTokens))}×</span>
               : <span style={{ color: 'var(--pt-text-mute)' }}>—</span>,
           },
           {
@@ -352,7 +470,7 @@ function SourceSplit({ costs }: { costs: CostDashboard }) {
   const rate = lc?.blendedApiRatePerMTokens ?? null
 
   return (
-    <Window tag="◫" title="LOCAL vs METERED vs PLAN · WHO DID THE WORK"
+    <Window title="LOCAL vs METERED vs PLAN · WHO DID THE WORK"
       meta={`${tok(totalOut)} output tokens all-time`}>
       <div style={{ padding: '14px 16px 4px', display: 'flex', gap: 30, flexWrap: 'wrap' }}>
         {rows.map(r => (
@@ -362,11 +480,12 @@ function SourceSplit({ costs }: { costs: CostDashboard }) {
       </div>
       <Table
         rows={rows}
+        rowKey={r => r.mode}
         empty="no usage logged"
         cols={[
           {
             key: 'm', head: 'SOURCE', render: r => (
-              <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+              <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 7 }}>
                 <ModeDot mode={r.mode} />
                 <span style={{ color: 'var(--pt-text-high)', fontWeight: 600 }}>{MODE_META[r.mode].label}</span>
               </span>
@@ -382,7 +501,7 @@ function SourceSplit({ costs }: { costs: CostDashboard }) {
           },
           { key: 'share', head: 'SHARE', align: 'right', w: 66, render: r => pct(r.outputTokens, totalOut) },
           { key: 'in', head: 'INPUT', align: 'right', w: 76, render: r => tok(r.inputTokens) },
-          { key: 'req', head: 'REQUESTS', align: 'right', w: 82, render: r => r.requests.toLocaleString() },
+          { key: 'req', head: 'REQUESTS', align: 'right', w: 82, render: r => count(r.requests) },
           {
             key: 'avg', head: 'AVG OUT/REQ', align: 'right', w: 90,
             render: r => r.requests > 0 ? tok(Math.round(r.outputTokens / r.requests)) : <span style={{ color: 'var(--pt-text-mute)' }}>—</span>,
@@ -416,7 +535,7 @@ function MeteredSpend({ costs }: { costs: CostDashboard }) {
   const cov = or.usageLifetime > 0 ? logged / or.usageLifetime : 0
 
   return (
-    <Window tag="⬡" title="METERED SPEND · OPENROUTER" meta={or.label}>
+    <Window title="METERED SPEND · OPENROUTER" meta={or.label}>
       <div style={{ padding: '14px 16px 8px', display: 'flex', gap: 30, alignItems: 'flex-start', flexWrap: 'wrap' }}>
         <Stat value={money(or.usageMonthly)} label="THIS MONTH" size="hero" color={CATEGORICAL[0]} />
         <Stat value={money(or.usageWeekly)} label="LAST 7 DAYS" size="lg" />
@@ -426,7 +545,7 @@ function MeteredSpend({ costs }: { costs: CostDashboard }) {
       </div>
 
       <div style={{ padding: '6px 16px 12px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--pt-text-mute)', letterSpacing: '0.12em', marginBottom: 5 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between', fontSize: 9, color: 'var(--pt-text-mute)', letterSpacing: '0.12em', marginBottom: 5 }}>
           <span>LOG COVERAGE OF LIFETIME BILLING</span>
           <span style={{ color: cov < 0.5 ? STATUS.warn : 'var(--pt-text-dim)' }}>
             {money(logged)} of {money(or.usageLifetime)} · {pct(logged, or.usageLifetime)}
@@ -449,7 +568,7 @@ function MeteredSpend({ costs }: { costs: CostDashboard }) {
   )
 }
 
-/* ── 4 · Per-mode model tables ──────────────────────────────────────── */
+/* ── 4 · Scrollable model-burn chart ─────────────────────────────────── */
 
 type Row = {
   name: string; provider: string; mode: BillingMode
@@ -467,70 +586,84 @@ type Row = {
   freeTier?: boolean
 }
 
-function ModelTable({ title, tag, rows, windowDays, showCost, showSpeed, note, meta }: {
-  title: string; tag: string; rows: Row[]; windowDays: number
-  showCost?: boolean; showSpeed?: boolean; note: ReactNode; meta?: string
-}) {
-  const sorted = useMemo(() => [...rows].sort((a, b) => b.billable - a.billable), [rows])
-  const max = sorted[0]?.billable ?? 1
-  const color = sorted.length ? MODE_META[sorted[0].mode].color : CATEGORICAL[0]
+type ModelChartGroup = {
+  title: string
+  rows: Row[]
+  meta?: string
+  showCost?: boolean
+  showSpeed?: boolean
+  note: ReactNode
+}
 
-  const cols: Col<Row>[] = [
-    {
-      key: 'name', head: 'MODEL', render: r => (
-        <span style={{ display: 'flex', alignItems: 'baseline', gap: 7, minWidth: 0 }}>
-          <ModeDot mode={r.mode} />
-          <span style={{ color: 'var(--pt-text-high)', whiteSpace: 'nowrap' }}>{r.name}</span>
-          {/* The same model name reaches us through more than one provider
-              (gpt-5.5 arrives as both `openai` and `openai-codex`), so the
-              provider is part of the row's identity, not decoration. */}
-          {r.provider && <span className="cp-cellprov">{r.provider}</span>}
-        </span>
-      ),
-    },
-    {
-      key: 'billable', head: 'BILLABLE', align: 'right', w: 160, render: r => (
-        <span style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
-          <Bar value={r.billable} max={max} color={color} />
-          <span style={{ minWidth: 46, textAlign: 'right' }}>{tok(r.billable)}</span>
-        </span>
-      ),
-    },
-    { key: 'cache', head: 'CACHE READ', align: 'right', w: 84, render: r => r.cache > 0 ? tok(r.cache) : <span style={{ color: 'var(--pt-text-mute)' }}>—</span> },
-    { key: 'req', head: 'REQ', align: 'right', w: 62, render: r => r.requests == null ? <span style={{ color: 'var(--pt-text-mute)' }} title="this source logs no request count">—</span> : r.requests.toLocaleString() },
-  ]
-  if (showSpeed) cols.push({
-    key: 'tps', head: 'TOK/S', align: 'right', w: 62,
-    render: r => r.tokensPerSec ? <span style={{ color: CATEGORICAL[6] }}>{r.tokensPerSec.toFixed(1)}</span> : <span style={{ color: 'var(--pt-text-mute)' }}>—</span>,
-  })
-  if (showCost) cols.push({
-    key: 'cost', head: 'BILLED', align: 'right', w: 78,
-    render: r => r.cost > 0
-      ? <span style={{ color: STATUS.warn, fontWeight: 600 }}>{spend(r.cost)}</span>
-      : r.freeTier
-        ? <span style={{ color: CATEGORICAL[2], fontSize: 9 }}>free tier</span>
-        : <span style={{ color: 'var(--pt-text-mute)', fontSize: 9 }} title="this model moved tokens but its log records no price">no price logged</span>,
-  })
-  cols.push({
-    key: 'win', head: `${windowDays}D BILLABLE`, align: 'right', w: 92,
-    render: r => r.windowBillable > 0
-      ? <span style={{ color: 'var(--pt-text)' }}>{tok(r.windowBillable)}</span>
-      : <span style={{ color: 'var(--pt-text-mute)', fontSize: 9 }}>idle</span>,
-  })
+function ModelBurnChart({ groups, windowDays }: { groups: ModelChartGroup[]; windowDays: number }) {
+  const activeGroups = groups.filter(group => group.rows.length > 0)
+  const sortedGroups = activeGroups.map(group => ({
+    ...group,
+    rows: [...group.rows].sort((a, b) => b.billable - a.billable),
+  }))
+  const rows = sortedGroups.flatMap(group => group.rows)
+  const max = Math.max(...rows.map(row => row.billable), 1)
 
   return (
-    <Window tag={tag} title={title} meta={meta}>
-      <Table cols={cols} rows={sorted} empty="no usage in the session logs" />
-      <Note>{note}</Note>
+    <Window title="MODELS · RANKED ON BILLABLE TOKENS" meta={`${rows.length} models · scroll to inspect`}>
+      <div className="cp-model-chart">
+        <div className="cp-model-chart-legend" aria-label="Billing mode legend">
+          {(Object.entries(MODE_META) as [BillingMode, typeof MODE_META[BillingMode]][]).map(([mode, meta]) => (
+            <span key={mode}><ModeDot mode={mode} />{meta.label}</span>
+          ))}
+        </div>
+        <div className="cp-model-chart-scroll" role="region" aria-label="Models ranked by billable tokens">
+          {sortedGroups.map(group => (
+            <section className="cp-model-chart-group" key={group.title}>
+              <div className="cp-model-chart-group-head">
+                <span>{group.title}</span>
+                {group.meta && <span>{group.meta}</span>}
+              </div>
+              {group.rows.map(row => {
+                const modeColor = MODE_META[row.mode].color
+                const cost = row.cost > 0 ? spend(row.cost) : row.freeTier ? 'free tier' : 'no price logged'
+                const speed = finite(row.tokensPerSec) ? `${fixed(row.tokensPerSec)} tok/s` : '— tok/s'
+                return (
+                  <div className="cp-model-chart-row" key={JSON.stringify([row.mode, row.provider, row.name])}>
+                    <div className="cp-model-chart-main">
+                      <div className="cp-model-chart-name">
+                        <ModeDot mode={row.mode} />
+                        <span className="cp-model-chart-model">{row.name}</span>
+                        {row.provider && <span className="cp-cellprov">{row.provider}</span>}
+                      </div>
+                      <div className="cp-model-chart-barline">
+                        <div className="cp-model-chart-track" role="img" aria-label={`${row.name}: ${tok(row.billable)} billable tokens`}>
+                          <span style={{ width: `${Math.max(1.5, (row.billable / max) * 100)}%`, background: modeColor }} />
+                        </div>
+                        <strong>{tok(row.billable)}</strong>
+                      </div>
+                    </div>
+                    <div className="cp-model-chart-stats">
+                      <span>cache {row.cache > 0 ? tok(row.cache) : '—'}</span>
+                      <span>req {row.requests == null ? '—' : count(row.requests)}</span>
+                      <span>{windowDays}d {row.windowBillable > 0 ? tok(row.windowBillable) : 'idle'}</span>
+                      {group.showSpeed && <span style={{ color: CATEGORICAL[6] }}>{speed}</span>}
+                      {group.showCost && <span style={{ color: row.cost > 0 ? STATUS.warn : row.freeTier ? CATEGORICAL[2] : 'var(--pt-text-mute)' }}>{cost}</span>}
+                    </div>
+                  </div>
+                )
+              })}
+            </section>
+          ))}
+        </div>
+      </div>
+      <Note>
+        {sortedGroups.map(group => <div key={group.title} style={{ marginTop: 5 }}>{group.note}</div>)}
+      </Note>
     </Window>
   )
 }
 
 /* ── 5 · Activity: one bar per calendar day, colored by mode ────────── */
 
-function Activity({ costs, modeOf }: { costs: CostDashboard; modeOf: (m: string) => BillingMode }) {
-  const [hover, setHover] = useState<number | null>(null)
-  const windowDays = costs.dailyWindowDays ?? 30
+function Activity({ costs, modeOf, now }: { costs: CostDashboard; modeOf: (m: string) => BillingMode; now: number | null }) {
+  const [hover, setHover] = useState<string | null>(null)
+  const windowDays = finite(costs.dailyWindowDays) ? Math.max(0, Math.floor(costs.dailyWindowDays)) : 30
   const cu = costs.claudeUsage
   const xu = costs.codexUsage
 
@@ -557,14 +690,16 @@ function Activity({ costs, modeOf }: { costs: CostDashboard; modeOf: (m: string)
     // One column per calendar day. Plotting only active days spaces them evenly
     // and hides the quiet stretches, so a fortnight of silence would look
     // identical to a fortnight of steady work.
-    const now = new Date()
-    const end = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+    const end = calendarEnd([...byDate.keys()], now)
+    if (end === null) return []
     return Array.from({ length: windowDays }, (_, i) => {
       const date = new Date(end - (windowDays - 1 - i) * 86_400_000).toISOString().slice(0, 10)
       const v = byDate.get(date) ?? blank()
       return { date, ...v, total: v.metered + v.subscription + v.local + v['cloud-routed'] }
     })
-  }, [costs.daily, cu?.daily, xu?.daily, windowDays, modeOf])
+  }, [costs.daily, cu?.daily, xu?.daily, windowDays, modeOf, now])
+
+  const hoveredDay = days.find(day => day.date === hover)
 
   const max = Math.max(...days.map(d => d.total), 1)
   const active = days.filter(d => d.total > 0).length
@@ -576,7 +711,7 @@ function Activity({ costs, modeOf }: { costs: CostDashboard; modeOf: (m: string)
   const order: BillingMode[] = ['metered', 'subscription', 'local', 'cloud-routed']
 
   return (
-    <Window tag="▦" title={`ACTIVITY · LAST ${windowDays} DAYS`} meta={`${active} of ${windowDays} days active`}>
+    <Window title={`ACTIVITY · LAST ${windowDays} DAYS`} meta={`${active} of ${windowDays} days active`}>
       <div style={{ padding: '14px 16px 6px', display: 'flex', gap: 26, flexWrap: 'wrap' }}>
         <Stat value={tok(grand)} label={`TOKENS PROCESSED · ${windowDays}D`} size="lg" glow />
         {order.filter(k => totals[k] > 0).map(k => (
@@ -585,34 +720,34 @@ function Activity({ costs, modeOf }: { costs: CostDashboard; modeOf: (m: string)
         ))}
       </div>
       <div style={{ padding: '4px 16px 2px' }}>
-        <div style={{ display: 'flex', gap: 2, alignItems: 'flex-end', height: 92 }}>
-          {days.map((d, i) => (
+        <div style={{ display: 'flex', gap: 1, alignItems: 'flex-end', height: 92 }}>
+          {days.map(d => (
             <div key={d.date}
-              onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}
+              onMouseEnter={() => setHover(d.date)} onMouseLeave={() => setHover(null)}
               title={`${d.date} · ${tok(d.total)}`}
               style={{
-                flex: 1, minWidth: 3, height: '100%', display: 'flex', flexDirection: 'column',
+                flex: 1, minWidth: 0, height: '100%', display: 'flex', flexDirection: 'column',
                 justifyContent: 'flex-end', cursor: 'crosshair',
-                opacity: hover === null || hover === i ? 1 : 0.4, transition: 'opacity .14s',
+                opacity: !hoveredDay || hover === d.date ? 1 : 0.4, transition: 'opacity .14s',
               }}>
               {order.map(k => {
                 const hgt = (d[k] / max) * 88
                 return hgt > 0 ? <div key={k} style={{
                   height: Math.max(1.5, hgt),
                   background: MODE_META[k].color,
-                  opacity: hover === i ? 1 : 0.78,
+                  opacity: hover === d.date ? 1 : 0.78,
                 }} /> : null
               })}
               {d.total === 0 && <div style={{ height: 1, background: 'var(--pt-border-dim)' }} />}
             </div>
           ))}
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 8, color: 'var(--pt-text-mute)', letterSpacing: '0.1em', minHeight: 12 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between', marginTop: 6, fontSize: 8, color: 'var(--pt-text-mute)', letterSpacing: '0.1em', minHeight: 12 }}>
           <span>{days[0]?.date.slice(5)}</span>
-          {hover !== null && days[hover] && (
+          {hoveredDay && (
             <span style={{ color: 'var(--pt-text-high)' }}>
-              {days[hover].date} · {days[hover].total > 0 ? tok(days[hover].total) : 'no activity'}
-              {order.filter(k => days[hover][k] > 0).map(k => ` · ${MODE_META[k].label.toLowerCase()} ${tok(days[hover][k])}`).join('')}
+              {hoveredDay.date} · {hoveredDay.total > 0 ? tok(hoveredDay.total) : 'no activity'}
+              {order.filter(k => hoveredDay[k] > 0).map(k => ` · ${MODE_META[k].label.toLowerCase()} ${tok(hoveredDay[k])}`).join('')}
             </span>
           )}
           <span>{days[days.length - 1]?.date.slice(5)}</span>
@@ -634,26 +769,27 @@ function Activity({ costs, modeOf }: { costs: CostDashboard; modeOf: (m: string)
   )
 }
 
-function CodexUsage({ costs }: { costs: CostDashboard }) {
+function CodexUsage({ costs, now }: { costs: CostDashboard; now: number | null }) {
   const usage = costs.codexUsage
-  if (!usage || usage.totalTokens <= 0) return null
+  if (!usage) return null
   const max = Math.max(...usage.daily.map(day => day.tokens), 1)
-  const lastActivity = usage.lastActivityAt ? usage.lastActivityAt.slice(0, 16).replace('T', ' ') + ' UTC' : '—'
+  const lastActivity = utcTimestamp(usage.lastActivityAt)
   return (
-    <Window tag="◇" title="CODEX CLI · FLAT PLAN USAGE" meta={usage.planType ? `${usage.planType} · tokens only` : 'tokens only'}>
+    <Window title="CODEX CLI · FLAT PLAN USAGE" meta={usage.planType ? `${planLabel(usage.planType)} · tokens only` : 'tokens only'}>
       <div style={{ padding: '14px 16px 8px', display: 'flex', gap: 30, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-        <Stat value={usage.planType?.toUpperCase() ?? 'UNKNOWN'} label="PLAN" color={CATEGORICAL[3]} size="lg" />
+        <Stat value={planLabel(usage.planType)} label="PLAN" color={CATEGORICAL[3]} size="lg" />
         <Stat value={tok(usage.totalTokens)} label="TOKENS" color={CATEGORICAL[3]} size="lg" />
-        <Stat value={usage.sessionsCount.toLocaleString()} label="SESSIONS" size="lg" />
+        <Stat value={count(usage.sessionsCount)} label="SESSIONS" size="lg" />
         <Stat value={lastActivity} label="LAST ACTIVITY" size="sm" />
       </div>
+      <WeeklyUsage limits={usage.rateLimits} now={now} />
       <div style={{ padding: '4px 16px 12px' }}>
-        <div style={{ display: 'flex', gap: 2, alignItems: 'flex-end', height: 54 }} aria-label="Codex daily token activity">
+        <div style={{ display: 'flex', gap: 1, alignItems: 'flex-end', height: 54 }} aria-label="Codex daily token activity">
           {usage.daily.map(day => (
-            <div key={day.date} title={`${day.date} · ${tok(day.tokens)}`} style={{ flex: 1, minWidth: 3, height: `${Math.max(2, (day.tokens / max) * 52)}px`, background: CATEGORICAL[3], opacity: 0.82 }} />
+            <div key={day.date} title={`${day.date} · ${tok(day.tokens)}`} style={{ flex: 1, minWidth: 0, height: `${Math.max(2, (day.tokens / max) * 52)}px`, background: CATEGORICAL[3], opacity: 0.82 }} />
           ))}
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5, fontSize: 8, color: 'var(--pt-text-mute)' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between', marginTop: 5, fontSize: 8, color: 'var(--pt-text-mute)' }}>
           <span>{usage.daily[0]?.date.slice(5) ?? '—'}</span><span>{usage.daily.at(-1)?.date.slice(5) ?? '—'}</span>
         </div>
       </div>
@@ -664,7 +800,7 @@ function CodexUsage({ costs }: { costs: CostDashboard }) {
 
 /* ── 6 · Local AI ───────────────────────────────────────────────────── */
 
-function heatmapWeeks(daily: { date: string; tokens: number }[], weeksBack = 14): number[][] {
+function heatmapWeeks(daily: { date: string; tokens: number }[], now: number | null, weeksBack = 14): number[][] {
   const byDate = new Map(daily.map(d => [d.date, d.tokens]))
   const nz = daily.map(d => d.tokens).filter(t => t > 0).sort((a, b) => a - b)
   const q = (p: number) => nz.length ? nz[Math.min(nz.length - 1, Math.floor(p * nz.length))] : 0
@@ -672,8 +808,8 @@ function heatmapWeeks(daily: { date: string; tokens: number }[], weeksBack = 14)
   const lvl = (t: number) => t <= 0 ? 0 : t <= t1 ? 1 : t <= t2 ? 2 : t <= t3 ? 3 : 4
   // UTC throughout — daily[].date keys are UTC calendar dates, so building this
   // grid in local time would misalign every cell near midnight.
-  const now = new Date()
-  const end = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+  const end = calendarEnd(daily.map(day => day.date), now)
+  if (end === null) return []
   let start = end - (weeksBack * 7 - 1) * 86_400_000
   start -= new Date(start).getUTCDay() * 86_400_000
   const days: number[] = []
@@ -687,31 +823,30 @@ const SPARK = '▁▂▃▄▅▆▇█'
 function sparkline(v: number[]): string {
   if (!v.length) return ''
   const max = Math.max(...v, 1)
-  return v.map(x => SPARK[Math.min(7, Math.floor((x / max) * 7))]).join('')
+  return v.map(x => finite(x) && finite(max) ? SPARK[Math.max(0, Math.min(7, Math.floor((x / max) * 7)))] : '·').join('')
 }
 
-function LocalAI({ costs }: { costs: CostDashboard }) {
+function LocalAI({ costs, now }: { costs: CostDashboard; now: number | null }) {
   const lc = costs.localCompute
   if (!lc) return null
-  const weeks = heatmapWeeks(lc.daily)
+  const weeks = heatmapWeeks(lc.daily, now)
   const spark = lc.dailyThroughput.map(d => d.avgTokensPerSec)
   const rate = lc.blendedApiRatePerMTokens
 
   return (
     <>
-      <AsciiDivider />
-      <SectionRule index={7} label="LOCAL AI · OLLAMA" />
-      <Window tag="◆" title="LOCAL INFERENCE · WHAT THE RIG DID" meta={`${lc.totalRequests.toLocaleString()} requests all-time`}>
+      <SectionRule label="LOCAL AI · OLLAMA" />
+      <Window title="LOCAL INFERENCE · WHAT THE RIG DID" meta={`${count(lc.totalRequests)} requests all-time`}>
         <div style={{ padding: '14px 16px 12px', display: 'flex', gap: 28, flexWrap: 'wrap' }}>
           <Stat value={tok(lc.totalTokens)} label="TOKENS ALL-TIME" size="hero" color={CATEGORICAL[2]}
             sub={`${tok(lc.outputTokens)} generated · ${tok(lc.inputTokens)} prompt`} />
-          <Stat value={lc.medianTokensPerSec != null ? lc.medianTokensPerSec.toFixed(1) : '—'} label="MEDIAN TOK/S" size="lg" color={CATEGORICAL[6]}
-            sub={<>p95 {lc.p95TokensPerSec?.toFixed(1) ?? '—'} · mean {lc.avgTokensPerSec?.toFixed(1) ?? '—'}</>} />
+          <Stat value={fixed(lc.medianTokensPerSec)} label="MEDIAN TOK/S" size="lg" color={CATEGORICAL[6]}
+            sub={<>p95 {fixed(lc.p95TokensPerSec)} · mean {fixed(lc.avgTokensPerSec)}</>} />
           <Stat value={hours(lc.generationSeconds)} label="TIME SPENT GENERATING" size="lg" color={CATEGORICAL[6]}
-            sub={`${lc.sampleCount.toLocaleString()} sampled turns`} />
+            sub={`${count(lc.sampleCount)} sampled turns`} />
           <Stat value={rate != null ? money(lc.costAvoidedAllTimeUsd) : '—'} label="WOULD HAVE COST, METERED" size="lg" color={CATEGORICAL[2]}
             sub={rate != null ? `at ${money(rate)}/M` : 'no metered rate to compare'} />
-          <Stat value={lc.daily.length} label="ACTIVE DAYS" size="lg"
+          <Stat value={lc.daily.filter(day => day.tokens > 0).length} label="ACTIVE DAYS" size="lg"
             sub={lc.busiestDay ? `peak ${tok(lc.busiestDay.tokens)} on ${lc.busiestDay.date.slice(5)}` : undefined} />
           <Stat value={lc.totalRequests > 0 ? tok(Math.round(lc.totalTokens / lc.totalRequests)) : '—'} label="AVG TOKENS / REQUEST" size="lg" />
         </div>
@@ -729,7 +864,7 @@ function LocalAI({ costs }: { costs: CostDashboard }) {
 
       <div className="mc-viz-grid" style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(min(360px, 100%), 1fr))' }}>
         {weeks.length > 0 && (
-          <Window tag="▦" title="DAILY VOLUME" meta={`${weeks.length}w to today`}>
+          <Window title="DAILY VOLUME" meta={`${weeks.length}w to today`}>
             <div className="mc-gh-heatmap-wrap">
               <div className="mc-gh-day-labels"><span /><span>Mon</span><span /><span>Wed</span><span /><span>Fri</span><span /></div>
               <div className="mc-gh-heatmap-inner"><Heatmap data={weeks} /><div className="asciiviz-inset" title="Daily volume · chronological quartile density"><AsciiHeat cells={weeks.flat()} /></div></div>
@@ -743,14 +878,14 @@ function LocalAI({ costs }: { costs: CostDashboard }) {
           </Window>
         )}
         {spark.length > 1 && (
-          <Window tag="~" title="THROUGHPUT TREND" meta={`${lc.sampleCount.toLocaleString()} samples`}>
-            <div style={{ padding: '18px 14px 12px' }}>
+          <Window title="THROUGHPUT TREND" meta={`${count(lc.sampleCount)} samples`}>
+            <div style={{ padding: '14px 16px' }}>
               <div style={{ fontSize: 21, fontFamily: 'var(--font-mono)', color: CATEGORICAL[6], lineHeight: 1.2, wordBreak: 'break-all', textShadow: `0 0 8px ${CATEGORICAL[6]}55` }}>
                 {sparkline(spark)}
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 9, fontSize: 8, color: 'var(--pt-text-mute)', letterSpacing: '0.1em' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between', marginTop: 9, fontSize: 8, color: 'var(--pt-text-mute)', letterSpacing: '0.1em' }}>
                 <span>{lc.dailyThroughput[0]?.date}</span>
-                <span style={{ color: CATEGORICAL[6] }}>{Math.max(...spark).toFixed(0)} peak · {(spark.reduce((s, v) => s + v, 0) / spark.length).toFixed(1)} avg tok/s</span>
+                <span style={{ color: CATEGORICAL[6] }}>{fixed(Math.max(...spark), 0)} peak · {fixed(spark.reduce((s, v) => s + v, 0) / spark.length)} avg tok/s</span>
                 <span>{lc.dailyThroughput[lc.dailyThroughput.length - 1]?.date}</span>
               </div>
             </div>
@@ -769,20 +904,19 @@ function MonthlyBilling({ costs }: { costs: CostDashboard }) {
   if (!billing.length) return null
   return (
     <>
-      <AsciiDivider />
-      <SectionRule index={2} label="BILLING HISTORY" />
+      <SectionRule label="BILLING HISTORY" />
       <div className="mc-viz-grid" style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))' }}>
         {billing.map(b => {
-          const real = b.planAmount + (b.openRouterUsd ?? 0)
+          const real = finite(b.planAmount) && finite(b.openRouterUsd) ? b.planAmount + b.openRouterUsd : null
           const current = costs.subscription?.month === b.month
           return (
-            <Window key={b.month} tag="$" title={`${b.month} · ${b.plan.toUpperCase()}`} meta={current ? 'current' : 'previous'}>
-              <div style={{ padding: '13px 16px 15px', fontFamily: 'var(--font-mono)', fontSize: 11 }}>
+            <Window key={b.month} title={`${b.month} · ${b.plan.toUpperCase()}`} meta={current ? 'current' : 'previous'}>
+              <div style={{ padding: '14px 16px', fontFamily: 'var(--font-mono)', fontSize: 11 }}>
                 {[
                   { k: 'plan (flat)', v: money(b.planAmount), mode: 'subscription' as BillingMode },
                   { k: 'openrouter (metered)', v: b.openRouterUsd != null ? money(b.openRouterUsd) : 'no per-month history', mode: 'metered' as BillingMode },
                 ].map(r => (
-                  <div key={r.k} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0' }}>
+                  <div key={r.k} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, padding: '3px 0' }}>
                     <ModeDot mode={r.mode} />
                     <span style={{ color: 'var(--pt-text-mute)' }}>{r.k}</span>
                     <span style={{ marginLeft: 'auto', color: 'var(--pt-text-high)', fontVariantNumeric: 'tabular-nums' }}>{r.v}</span>
@@ -809,7 +943,7 @@ function MonthlyBilling({ costs }: { costs: CostDashboard }) {
 
 /* ── Subscription tools: real usage against the one flat plan ───────── */
 
-function SubscriptionTools({ costs }: { costs: CostDashboard }) {
+function SubscriptionTools({ costs, now }: { costs: CostDashboard; now: number | null }) {
   const days = costs.dailyWindowDays ?? 30
   const claude = costs.claudeUsage
   const codex = costs.codexUsage
@@ -830,39 +964,39 @@ function SubscriptionTools({ costs }: { costs: CostDashboard }) {
       sessions: codex?.sessionsCount ?? 0,
       lastActive: codex?.lastActivityAt,
       model: codex?.models?.[0]?.model,
-      tag: codex?.planType ? `via ${codex.planType.toLowerCase() === 'plus' ? 'ChatGPT Plus' : codex.planType}` : null,
+      tag: codex?.planType ? `via ${planLabel(codex.planType)}` : null,
     },
   ]
   const claudeTokens = usage[0].windowTokens
   const codexTokens = usage[1].windowTokens
-  const delta = claudeTokens === codexTokens
-    ? 'Equal logged workload'
-    : claudeTokens === 0 && codexTokens === 0
-      ? 'No recent workload logged'
+  const delta = claudeTokens === 0 && codexTokens === 0
+    ? 'No recent workload logged'
+    : claudeTokens === codexTokens
+      ? 'Equal logged workload'
       : `${usage[claudeTokens > codexTokens ? 0 : 1].name} is the heavier workload`
 
   return (
     <>
-      <AsciiDivider />
-      <SectionRule index={3} label="SUBSCRIPTION TOOLS — USE & KEEP" />
+      <SectionRule label="SUBSCRIPTION TOOLS — USE & KEEP" />
       <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))' }}>
         {usage.map(tool => {
           const hasUsage = !!tool.data?.models?.length || tool.windowTokens > 0
           return (
-            <Window key={tool.name} tag="◎" title={tool.name} meta="flat plan · usage logged locally">
-              <div style={{ padding: '14px 16px 15px', fontFamily: 'var(--font-mono)', opacity: hasUsage ? 1 : 0.55 }}>
+            <Window key={tool.name} title={tool.name} meta="flat plan · usage logged locally">
+              <div style={{ padding: '14px 16px', fontFamily: 'var(--font-mono)', opacity: hasUsage || (tool.name === 'Codex' && codex?.rateLimits) ? 1 : 0.55 }}>
                 {tool.tag && <div style={{ display: 'inline-block', padding: '3px 7px', border: '1px solid var(--pt-border)', color: CATEGORICAL[3], fontSize: 8, letterSpacing: '0.12em', marginBottom: 9 }}>{tool.tag}</div>}
                 {hasUsage ? (
                   <>
                     <Stat value={tok(tool.windowTokens)} label={`${days}-DAY TOKENS`} size="hero" glow />
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px 18px', marginTop: 15, fontSize: 9.5, color: 'var(--pt-text-dim)', lineHeight: 1.55 }}>
                       <div><span style={{ color: 'var(--pt-text-mute)', display: 'block', fontSize: 8, letterSpacing: '0.12em' }}>ALL-TIME TOKENS</span>{tok(tool.data?.totalTokens ?? 0)}</div>
-                      <div><span style={{ color: 'var(--pt-text-mute)', display: 'block', fontSize: 8, letterSpacing: '0.12em' }}>SESSIONS</span>{tool.sessions.toLocaleString()}</div>
-                      <div><span style={{ color: 'var(--pt-text-mute)', display: 'block', fontSize: 8, letterSpacing: '0.12em' }}>LAST ACTIVE</span>{timeAgo(tool.lastActive)}</div>
+                      <div><span style={{ color: 'var(--pt-text-mute)', display: 'block', fontSize: 8, letterSpacing: '0.12em' }}>SESSIONS</span>{count(tool.sessions)}</div>
+                      <div><span style={{ color: 'var(--pt-text-mute)', display: 'block', fontSize: 8, letterSpacing: '0.12em' }}>LAST ACTIVE</span>{timeAgo(tool.lastActive, now)}</div>
                       <div><span style={{ color: 'var(--pt-text-mute)', display: 'block', fontSize: 8, letterSpacing: '0.12em' }}>TOP MODEL</span><span style={{ overflowWrap: 'anywhere' }}>{tool.model ?? '—'}</span></div>
                     </div>
                   </>
                 ) : <div style={{ padding: '22px 0', fontSize: 10, color: 'var(--pt-text-mute)', letterSpacing: '0.12em' }}>— NO USAGE LOGGED —</div>}
+                {tool.name === 'Codex' && <WeeklyUsage limits={codex?.rateLimits} now={now} compact />}
               </div>
             </Window>
           )
@@ -889,7 +1023,7 @@ function FairUseGuard({ costs }: { costs: CostDashboard }) {
   const verdict = percent >= 90 ? 'THROTTLE RISK' : percent >= 70 ? 'WATCH' : 'COMFORT'
   const daily = (costs.codexUsage?.daily ?? []).slice(-7)
   const burnDays = [...(costs.codexUsage?.daily ?? [])].sort((a, b) => a.date.localeCompare(b.date))
-  const latestBurnDate = burnDays.at(-1)?.date
+  const latestBurnDate = burnDays.filter(day => finite(Date.parse(`${day.date}T00:00:00Z`))).at(-1)?.date
   const burnByDate = new Map(burnDays.map(day => [day.date, day.tokens]))
   const burn14 = latestBurnDate ? Array.from({ length: 14 }, (_, index) => {
     const date = new Date(`${latestBurnDate}T00:00:00Z`)
@@ -900,20 +1034,20 @@ function FairUseGuard({ costs }: { costs: CostDashboard }) {
 
   return (
     <>
-      <AsciiDivider />
-      <SectionRule index={4} label="FAIR-USE GUARD" />
+      <SectionRule label="FAIR-USE GUARD" />
       <div className="cp-fairuse" title={billing.fairUse.note}>
         <div className="cp-fairuse-main">
           <div className="cp-plan-band-head">
             <span>CODEX MONTHLY BURN</span>
-            <span>{tok(burnValue)} of {tok(ceilingValue)} estimate · {percent.toFixed(0)}%{burn14.length > 0 && <span className="asciiviz-burn" title="Last 14 days through latest logged date · Codex tokens"><span className="asciiviz-caption">14D TOKENS </span><AsciiSpark data={burn14} width={14} /></span>}</span>
+            <span>{tok(burnValue)} of {tok(ceilingValue)} estimate · {fixed(percent, 0)}%{burn14.length > 0 && <span className="asciiviz-burn" title="Last 14 days through latest logged date · Codex tokens"><span className="asciiviz-caption">14D TOKENS </span><AsciiSpark data={burn14} width={14} /></span>}</span>
           </div>
-          <div className="cp-plan-band-track" role="img" aria-label={`Codex burn is ${percent.toFixed(0)} percent of the estimated monthly ceiling`}>
+          <div className="cp-plan-band-track" role="img" aria-label={`Codex burn is ${fixed(percent, 0)} percent of the estimated monthly ceiling`}>
             <span style={{ width: `${Math.min(100, ratio * 100)}%`, background: tone }} />
           </div>
           <BurnTrendSparkline codexDaily={costs.codexUsage?.daily ?? []} windowDays={7} tone={tone} />
-          <div className="cp-fairuse-verdict" style={{ color: tone }}>{verdict} · {percent.toFixed(0)}% of estimated ceiling</div>
+          <div className="cp-fairuse-verdict" style={{ color: tone }}>{verdict} · {fixed(percent, 0)}% of estimated ceiling</div>
           <div className="cp-plan-band-hint">estimate only · owner-adjustable in data/config.json → billing.fairUse.codexTokens</div>
+          {costs.codexUsage?.rateLimits && <div className="cp-plan-band-hint">weekly percent is provider-reported from Codex session rate_limits</div>}
         </div>
         <div className="cp-fairuse-trend" aria-label="Codex daily token cadence for the last 7 days">
           <div className="cp-fairuse-trend-label">7-DAY CADENCE</div>
@@ -933,6 +1067,7 @@ function FairUseGuard({ costs }: { costs: CostDashboard }) {
 
 export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = {}) {
   const { data } = useLiveData()
+  const now = useClock()
   const costs = data?.costs ?? initialCosts
 
   const view = useMemo(() => {
@@ -1009,66 +1144,56 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
 
   if (!costs || !view) return <SkeletonPanel label="loading costs" />
   const or = costs.openRouterLive
-  const nothing = !or && !costs.models?.length && !costs.claudeUsage && !costs.codexUsage
+  const nothing = !or && !costs.models?.length && !costs.claudeUsage && !costs.codexUsage && !costs.billing?.length && !costs.localCompute
   if (nothing) return <EmptyTerminal label="no billing data — set OPENROUTER_API_KEY in .env" />
 
   return (
-    <div className="cp-panel v4-group">
+    <div className="cp-panel v4-group" style={{ minWidth: 0, overflowWrap: 'anywhere' }}>
       <div className={`mc-kb-sync${(costs.freshness?.staleDays ?? 0) > 3 ? ' is-stale' : ''}`} role="status">
         {(costs.freshness?.staleDays ?? 0) > 3 && 'STALE · '}
-        {costs.freshness?.lastLoggedAt ? `NEWEST LOG · ${costs.freshness.lastLoggedAt.slice(0, 16).replace('T', ' ')} UTC` : 'NEWEST LOG · unknown'}
+        {costs.freshness?.lastLoggedAt ? `NEWEST LOG · ${utcTimestamp(costs.freshness.lastLoggedAt)}` : 'NEWEST LOG · unknown'}
       </div>
-      <AsciiDivider />
-      <SectionRule index={1} label="WHAT IT COST" />
+      <SectionRule label="WHAT IT COST" />
       <div className="w2l-pair">
         <ActualSpend costs={costs} />
         <MeteredSpend costs={costs} />
       </div>
       <MonthlyBilling costs={costs} />
-      <SubscriptionTools costs={costs} />
+      <SubscriptionTools costs={costs} now={now} />
       <FairUseGuard costs={costs} />
 
-      <AsciiDivider />
-      <SectionRule index={5} label="WHAT IT DID" />
-      <Activity costs={costs} modeOf={view.modeOf} />
+      <SectionRule label="WHAT IT DID" />
+      <Activity costs={costs} modeOf={view.modeOf} now={now} />
       <ModeBreakdown costs={costs} />
       <SourceSplit costs={costs} />
-      <CodexUsage costs={costs} />
+      <CodexUsage costs={costs} now={now} />
 
-      <AsciiDivider />
-      <SectionRule index={6} label="MODELS · RANKED ON BILLABLE TOKENS" />
-      {view.metered.length > 0 && (
-        <ModelTable tag="◆" title="METERED · PAID PER TOKEN" rows={view.metered} windowDays={view.windowDays} showCost
-          meta={`${money(costs.meteredCostUsd)} logged`}
-          note={<>EVERY DOLLAR HERE IS A REAL CHARGE. A ROW READING &ldquo;NO PRICE LOGGED&rdquo; STILL MOVED TOKENS — THE SESSION LOG
-            SIMPLY RECORDED NO COST FOR IT, SO THE COLUMN TOTAL IS A FLOOR, NOT A BILL.</>} />
-      )}
-      {view.subscription.length > 0 && (
-        <ModelTable tag="◆" title="SUBSCRIPTION · COVERED BY A FLAT PLAN" rows={view.subscription} windowDays={view.windowDays}
-          meta={`${costs.subscription?.plan ?? 'plan'} · no per-token $`}
-          note={<>DELIBERATELY NO $ COLUMN. THESE LOGS DO RECORD A LIST-RATE PRICE, BUT A FLAT PLAN HAD ALREADY PAID FOR THE
-            REQUEST — COUNTING IT AS SPEND IS WHAT PUT {money(costs.modes?.reduce((s, m) => s + m.notionalCostUsd, 0) ?? 0)} OF
-            PHANTOM COST ON THIS PAGE.</>} />
-      )}
-      {view.local.length > 0 && (
-        <ModelTable tag="◆" title="LOCAL · RAN ON THIS MACHINE" rows={view.local} windowDays={view.windowDays} showSpeed
-          meta="free"
-          note={<>NO CACHE COLUMN VALUES BECAUSE OLLAMA LOGS NO CACHE READS AT ALL — WHICH IS EXACTLY WHY THESE MODELS MUST BE
-            COMPARED ON BILLABLE TOKENS. AGAINST TOTALS, A CACHED API LOOP OUTRANKS THE RIG 27× FOR THE SAME WORK.</>} />
-      )}
-      {view.cloud.length > 0 && (
-        <ModelTable tag="◆" title="CLOUD-ROUTED · NEITHER LOCAL NOR FREE" rows={view.cloud} windowDays={view.windowDays}
-          meta="price not logged"
-          note={<>OLLAMA `:cloud` MODELS EXECUTE ON OLLAMA&apos;S HARDWARE. THEY LOG A $0 COST, WHICH MAKES THEM INVISIBLE ON THE
-            PAID SIDE, AND THEY ARE NOT THIS RIG, WHICH KEEPS THEM OUT OF THE LOCAL FIGURES. LISTED SEPARATELY SO THE TOKENS
-            ARE NOT SILENTLY UNACCOUNTED.</>} />
-      )}
+      <ModelBurnChart
+        windowDays={view.windowDays}
+        groups={[
+          {
+            title: 'METERED · PAID PER TOKEN', rows: view.metered, showCost: true, meta: `${money(costs.meteredCostUsd)} logged`,
+            note: <>EVERY DOLLAR HERE IS A REAL CHARGE. &ldquo;NO PRICE LOGGED&rdquo; STILL MOVED TOKENS — THE SESSION LOG RECORDED NO COST, SO THE COLUMN TOTAL IS A FLOOR, NOT A BILL.</>,
+          },
+          {
+            title: 'SUBSCRIPTION · COVERED BY A FLAT PLAN', rows: view.subscription, meta: `${costs.subscription?.plan ?? 'plan'} · no per-token $`,
+            note: <>DELIBERATELY NO $ COLUMN. THESE LOGS DO RECORD A LIST-RATE PRICE, BUT A FLAT PLAN HAD ALREADY PAID FOR THE REQUEST — COUNTING IT AS SPEND CREATES PHANTOM COST.</>,
+          },
+          {
+            title: 'LOCAL · RAN ON THIS MACHINE', rows: view.local, showSpeed: true, meta: 'free',
+            note: <>OLLAMA LOGS NO CACHE READS, SO THESE MODELS ARE COMPARED ON BILLABLE TOKENS. AGAINST TOTALS, A CACHED API LOOP CAN OUTRANK THE RIG FOR THE SAME WORK.</>,
+          },
+          {
+            title: 'CLOUD-ROUTED · NEITHER LOCAL NOR FREE', rows: view.cloud, meta: 'price not logged',
+            note: <>OLLAMA <code>:cloud</code> MODELS EXECUTE ON OLLAMA&apos;S HARDWARE. LISTED SEPARATELY SO THEIR TOKENS ARE NOT SILENTLY UNACCOUNTED.</>,
+          },
+        ]}
+      />
 
-      <LocalAI costs={costs} />
+      <LocalAI costs={costs} now={now} />
 
-      <AsciiDivider />
-      <SectionRule index={8} label="BURN LANDSCAPE · LAST 14 DAYS" />
-      <Window tag="▦" title="DAILY BURN · BY BILLING MODE" meta="tokens processed per day">
+      <SectionRule label="BURN LANDSCAPE · LAST 14 DAYS" />
+      <Window title="DAILY BURN · BY BILLING MODE" meta="tokens processed per day">
         <BurnLandscape costs={costs} />
         <Note>
           AXONOMETRIC PROJECTION — NO VANISHING POINT, SO A UNIT OF HEIGHT IS THE SAME NUMBER OF PIXELS FOR THE NEAREST
@@ -1078,7 +1203,7 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
       </Window>
 
       {(costs.warnings?.length ?? 0) > 0 && (
-        <Window tag="⚠" title="DATA CAVEATS" meta={`${costs.warnings.length}`}>
+        <Window title="DATA CAVEATS" meta={`${costs.warnings.length}`}>
           <div style={{ padding: '10px 16px 12px' }}>
             {costs.warnings.map((w, i) => (
               <div key={i} style={{ display: 'flex', gap: 9, padding: '5px 0', fontSize: 10, color: 'var(--pt-text-dim)', lineHeight: 1.6 }}>
@@ -1088,7 +1213,7 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
             {costs.freshness?.lastLoggedAt && (
               <div style={{ display: 'flex', gap: 9, padding: '5px 0', fontSize: 10, color: 'var(--pt-text-mute)' }}>
                 <span style={{ flexShrink: 0 }}>◷</span>
-                <span>newest parsed session {costs.freshness.lastLoggedAt.slice(0, 16).replace('T', ' ')} UTC · source {costs.source}</span>
+                <span>newest parsed session {utcTimestamp(costs.freshness.lastLoggedAt)} · source {costs.source}</span>
               </div>
             )}
           </div>

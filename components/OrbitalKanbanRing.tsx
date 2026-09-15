@@ -9,6 +9,7 @@ import {
   kanbanRingArcs, layoutKanbanRing, RING_LIMIT, RING_RADII, ringLane,
   type RingLayout,
 } from '@/lib/kanban-ring-layout'
+import { apiFetch } from '@/lib/api-base'
 
 type KanbanSnapshot = {
   available: boolean
@@ -30,7 +31,7 @@ function useKanbanSnapshot(): KanbanSnapshot | null {
       const controller = new AbortController()
       inFlight = controller
       try {
-        const response = await fetch('/api/kanban?limit=200', {
+        const response = await apiFetch('/api/kanban?limit=200', {
           cache: 'no-store', signal: controller.signal, headers: { Accept: 'application/json' },
         })
         if (!response.ok) return

@@ -30,6 +30,7 @@
  *    REMOVE; routine toggles use the same zone without the typed gate.
  */
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { apiFetch } from '@/lib/api-base'
 import dynamic from 'next/dynamic'
 import { useUiSettings } from '../ui-settings'
 import { useRouter } from 'next/navigation'
@@ -331,7 +332,11 @@ function BotCard({
   const [remState, setRemState] = useState<RemoveState>({ step: 'idle' })
   const [typed, setTyped] = useState('')
 
-  const engage = () => router.push(`/chat?profile=${encodeURIComponent(bot.name)}`)
+  const engage = () => {
+    const p = new URLSearchParams({ profile: bot.name })
+    if (bot.canonicalSessionId) p.set('session', bot.canonicalSessionId)
+    router.push(`/chat?${p}`)
+  }
 
   const confirmRemove = async () => {
     if (typed !== bot.name) return
@@ -453,7 +458,7 @@ function BotCard({
             borderTop: '1px solid var(--pt-rule)',
           }}
         >
-          <button className="mc-btn mc-btn-primary" onClick={engage} title={`Open a chat console against ${bot.name}`}>
+          <button className="mc-btn mc-btn-primary" onClick={engage} title={`Open ${bot.name}'s canonical Bot Chat`}>
             ◈ ENGAGE
           </button>
 
@@ -595,7 +600,7 @@ function AddBotForm({
     onBusyChange(true)
     setMsg(null)
     try {
-      const res = await fetch('/api/bots/actions', {
+      const res = await apiFetch('/api/bots/actions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'create', name: name.trim(), cloneFrom: cloneFrom || 'default' }),
@@ -695,7 +700,7 @@ export function BotsPanel() {
 
   useEffect(() => {
     let alive = true
-    const load = () => fetch('/api/bots', { cache: 'no-store' })
+    const load = () => apiFetch('/api/bots', { cache: 'no-store' })
       .then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((j: BotsSnapshot) => { if (alive) { setData(j); setErr(false) } })
       .catch(() => { if (alive) setErr(true) })
@@ -723,7 +728,7 @@ export function BotsPanel() {
    *  bumps the reload token on success so the roster re-reads on-disk truth. */
   const postAction: PostAction = async body => {
     try {
-      const res = await fetch('/api/bots/actions', {
+      const res = await apiFetch('/api/bots/actions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),

@@ -10,6 +10,7 @@ import { MemoryStream } from './MemoryStream'
 import { useUiSettings } from '../ui-settings'
 import { CATEGORICAL } from '@/lib/chart-colors'
 import type { MemoryGraph as MemoryGraphData, MemoryGraphNode } from '@/lib/types'
+import { apiFetch } from '@/lib/api-base'
 
 const POLL_MS = 180_000
 const WIDTH = 900
@@ -90,7 +91,7 @@ export function MemoryGraphView() {
     let cancelled = false
     async function load() {
       try {
-        const res = await fetch('/api/memory/graph', { cache: 'no-store' })
+        const res = await apiFetch('/api/memory/graph', { cache: 'no-store' })
         if (!res.ok) throw new Error(String(res.status))
         const json = (await res.json()) as MemoryGraphData
         if (!cancelled) { setData(json); setLoadError(false) }

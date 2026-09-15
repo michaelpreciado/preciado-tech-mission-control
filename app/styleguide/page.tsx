@@ -1,6 +1,6 @@
 'use client'
 
-import { AsciiKicker, AsciiDivider } from '../vf/Ascii'
+import { AsciiKicker } from '../vf/Ascii'
 
 /**
  * STYLEGUIDE — renders every design token and component variant from the
@@ -11,6 +11,7 @@ import { AsciiKicker, AsciiDivider } from '../vf/Ascii'
  * renders identically for every visitor.
  */
 import { Button, SectionHead } from '@/components/ui'
+import { PageHeader } from '@/components/PageHeader'
 import {
   designTokens, SEMANTIC, CATEGORICAL, FONT, TYPE_SCALE, SPACING,
   RADIUS, GLOW, MOTION, DENSITY, ACCENT_DEFAULT,
@@ -42,7 +43,6 @@ function Section({ id, label, children }: { id: string; label: string; children:
   return (
     <>
       <div id={id} className="sg-anchor" />
-      <AsciiDivider />
       <SectionHead label={label} />
       {children}
     </>
@@ -161,18 +161,13 @@ function ElevationSpecimens() {
 export default function StyleGuide() {
   return (
     <div className="sg">
-      <AsciiKicker view="STYLEGUIDE" detail="DECK-VOCABULARY" />
-      <SectionHead label="DESIGN SYSTEM / STYLEGUIDE" post={<span className="sg-count">source: lib/tokens.ts</span>} />
+      <PageHeader eyebrow="~/styleguide · DECK-VOCABULARY" title="STYLEGUIDE" subtitle="OmniBridge tokens and shared component vocabulary" actions={<Button variant="ghost" href="#sg-components">Components</Button>} />
       <div className="v3-kicker v4-legacy-kicker"><span className="jp">設計</span> matrix-glass-blue · source of truth</div>
 
       <div className="v4-reference">
         <Section id="sg-ascii-kicker" label="ASCII / ROUTE KICKER">
           <p className="sg-desc">Inert text in the existing mono voice. Full route/state line above 820px; a separate short line below. No client measurement. Maximum 48 characters at 12px; the longest mobile label is 22 characters at 11px.</p>
           <AsciiKicker view="PIPELINE" detail="FUNNEL-STATE" />
-        </Section>
-        <Section id="sg-ascii-divider" label="ASCII / SECTION DIVIDER">
-          <p className="sg-desc">One shared hairline and a small glyph break. Decorative text is aria-hidden; the following heading carries the meaning.</p>
-          <AsciiDivider />
         </Section>
         <Section id="sg-ascii-corners" label="ASCII / HERO CORNERS">
           <p className="sg-desc">Two static pseudo-element brackets using the accent token. Reserved for the dashboard rig core and the pipeline funnel header. Mobile uses a single accent.</p>
@@ -215,9 +210,10 @@ export default function StyleGuide() {
         </div>
         <div className="sg-subhead">families</div>
         <div className="sg-rows">
-          <TokenRow k="--pt-font-sans (prose)" v="Inter (loaded via next/font)" />
-          <TokenRow k="--pt-font-mono / display" v={FONT.mono} />
-          <TokenRow k="--mc-font-jp (accent)" v="Noto Sans JP 400/700 (loaded via next/font) — eyebrow kickers only" />
+          <TokenRow k="--pt-font-sans (prose)" v="SF system stack (no webfont download)" />
+          <TokenRow k="--pt-font-mono (terminal / telemetry)" v={FONT.mono} />
+          <TokenRow k="--pt-font-display" v={FONT.display} />
+          <TokenRow k="--mc-font-jp (accent)" v="System sans fallback" />
         </div>
       </Section>
 

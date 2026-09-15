@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { assertSameOrigin } from '@/lib/mission-api'
+import { assertSameOrigin, getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv } from '@/lib/mission-api'
 import { recordHeartbeat, getHeartbeats } from '@/lib/heartbeats'
 
 const SECRET = process.env.INTERNAL_API_SECRET
 
 function isAuthorized(req: NextRequest): boolean {
-  // Localhost bypass
-  const forwarded = req.headers.get('x-forwarded-for')
-  const ip = forwarded?.split(',')[0]?.trim() || '127.0.0.1'
-  if (ip === '127.0.0.1' || ip === '::1' || ip === 'localhost') return true
+  const ip = getClientIpFromHeaders(req.headers)
+  if (isTrustedIp(ip, trustedRangesFromEnv())) return true
   // Bearer token check
   if (!SECRET) return true // No secret configured = open
   const auth = req.headers.get('authorization')

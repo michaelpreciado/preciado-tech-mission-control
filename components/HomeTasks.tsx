@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import type { HermesKanbanSnapshot } from '@/lib/types'
 import { TFrame, SectionRule } from './ui'
 import styles from './HomeWorkspace.module.css'
+import { apiFetch } from '@/lib/api-base'
 
 const closed = new Set(['done', 'completed', 'cancelled', 'canceled', 'archived'])
 const ago = (iso?: string | null) => { if (!iso) return ''; const d = Date.now() - new Date(iso).getTime(); if (!Number.isFinite(d) || d < 0) return ''; const m = Math.round(d / 60000); if (m < 1) return 'now'; if (m < 60) return m + 'm'; const h = Math.round(m / 60); if (h < 24) return h + 'h'; return Math.round(h / 24) + 'd' }
@@ -19,7 +20,7 @@ export function HomeTasks() {
       if (document.hidden) { timer = setTimeout(poll, 10000); return }
       controller = new AbortController()
       try {
-        const response = await fetch('/api/kanban?limit=500', { cache: 'no-store', signal: controller.signal })
+        const response = await apiFetch('/api/kanban?limit=500', { cache: 'no-store', signal: controller.signal })
         if (!response.ok) throw new Error('Unable to load open tasks.')
         const result = await response.json()
         if (!stopped) { setSnapshot(result); setError('') }

@@ -5,12 +5,18 @@ import { AsciiMsg, AsciiPromptGutter } from '@/components/ascii-msg'
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { Markdown } from './Markdown'
-import { Icon } from './icons'
 import { SectionRule } from './ui'
 import styles from './HomeWorkspace.module.css'
+import { apiFetch } from '@/lib/api-base'
 
 type Message = { role: 'user' | 'assistant'; content: string; timestamp?: number }
 const STORAGE = 'mc-home-chat-v1'
+const QUICK_PROMPTS = [
+  'Summarize what needs attention',
+  'Show my active and pending tasks',
+  'Run a system health check',
+  'Dispatch a Codex agent for urgent work',
+]
 // getRandomValues also works on the phone's plain-HTTP LAN connection.
 const createSession = () => `home-${Array.from(crypto.getRandomValues(new Uint8Array(16)), byte => byte.toString(16).padStart(2, '0')).join('')}`
 
@@ -22,6 +28,7 @@ export function HomeChat() {
   const [available, setAvailable] = useState<boolean | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [now, setNow] = useState<Date | null>(null)
   const lock = useRef(false)
   const abort = useRef<AbortController | null>(null)
   const log = useRef<HTMLDivElement>(null)
@@ -34,9 +41,10 @@ export function HomeChat() {
     setSession(typeof saved.session === 'string' && /^home-[a-zA-Z0-9-]{1,40}$/.test(saved.session) ? saved.session : createSession())
     if (Array.isArray(saved.messages)) setMessages(saved.messages.filter(m => m && ['user', 'assistant'].includes(m.role) && typeof m.content === 'string').slice(-100))
     if (typeof saved.draft === 'string') setDraft(saved.draft.slice(0, 4000))
+    setNow(new Date())
     setReady(true)
     const controller = new AbortController()
-    void fetch('/api/chat', { cache: 'no-store', signal: controller.signal })
+    void apiFetch('/api/chat', { cache: 'no-store', signal: controller.signal })
       .then(async r => { if (!r.ok) throw new Error('Unable to check chat availability'); return r.json() })
       .then(data => setAvailable(Boolean(data.available)))
       .catch(e => { if (e.name !== 'AbortError') setError('Could not check the agent connection. You can still try sending a message.') })
@@ -52,8 +60,8 @@ export function HomeChat() {
     if (following.current && log.current) log.current.scrollTop = log.current.scrollHeight
   }, [messages, busy])
 
-  const send = async () => {
-    const message = draft.trim()
+  const send = async (messageOverride?: string) => {
+    const message = (messageOverride ?? draft).trim()
     if (!message || lock.current || !ready || available === false) return
     lock.current = true
     setBusy(true); setError(''); setDraft(''); following.current = true
@@ -61,7 +69,7 @@ export function HomeChat() {
     const controller = new AbortController()
     abort.current = controller
     try {
-      const response = await fetch('/api/chat', {
+      const response = await apiFetch('/api/chat', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message, session }), signal: controller.signal,
       })
@@ -84,6 +92,9 @@ export function HomeChat() {
     input.current?.focus()
   }
 
+  const greeting = now ? (now.getHours() < 12 ? 'Good morning' : now.getHours() < 18 ? 'Good afternoon' : 'Good evening') : 'Welcome back'
+  const dateLine = now ? now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) : 'Today'
+
   const composerForm = (
     <form className={styles.composer} onSubmit={event => { event.preventDefault(); void send() }}>
       {error && <AsciiMsg who="SYS" side="system" compact><p role="alert">{error}</p></AsciiMsg>}
@@ -99,23 +110,31 @@ export function HomeChat() {
     </form>
   )
 
-  return <section id="home-conversation" className={`${styles.chat} amsg-surface amsg-container`} data-empty={messages.length === 0} aria-label="Mission Control chat">
-    <header className={`${styles.chatHeader} srule-home-header`}>
+  return <section className={`${styles.chat} amsg-surface amsg-container`} data-empty={messages.length === 0} aria-label="Mission Control chat">
+    {messages.length > 0 && <header className={`${styles.chatHeader} srule-home-header`}>
       <SectionRule label="MISSION CONTROL" index={1} />
       <div><span className={styles.connection}><span className={styles.connectionDot} data-status={available === false ? 'unavailable' : available ? 'connected' : 'connecting'} aria-hidden="true" />{available === false ? 'Agent unavailable' : available ? 'Agent connected' : 'Connecting…'}</span></div>
       <div className={styles.chatActions}><Link href="/chat" aria-label="Open chat history">History</Link><button onClick={newChat} disabled={busy || !ready} aria-label="Start a new chat">＋ New chat</button></div>
-    </header>
+    </header>}
     <div className={styles.messages} ref={log} role="log" aria-label="Conversation" onScroll={() => {
       const el = log.current
       if (el) following.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80
     }}>
       {messages.length === 0 && <div className={styles.welcome}>
-        <div className={styles.orb} aria-hidden="true"><Icon name="brand" size={30} /></div>
-        <span className={styles.kicker}>YOUR COMMAND SPACE</span>
-        <h1>What are we working on?</h1>
-        <p>Think it through. Make a plan. Move the mission forward.</p>
+        <pre className={styles.heroArt} aria-hidden="true">{`███   ███  ██████
+████ ████ ██
+██ ███ ██ ██
+██  █  ██ ██
+██     ██  ██████`}</pre>
+        <span className={styles.kicker}>PRECIADO TECH · MISSION CONTROL</span>
+        <div className={styles.greetingGlow}>
+          <div className={styles.halo} aria-hidden="true" />
+          <h1>{greeting}, Michael</h1>
+        </div>
+        <p className={styles.dateLine}>{dateLine}</p>
+        <p>Everything is synced. Ask, dispatch, or drill in — the bridge is listening.</p>
         {composerForm}
-        <div className={styles.suggestions}>{['Help me prioritize my tasks', 'Check on my system', 'Let’s plan something new'].map(text => <button key={text} onClick={() => { setDraft(text); input.current?.focus() }}>{text}<span aria-hidden="true">↗</span></button>)}</div>
+        <div className={styles.suggestions} aria-label="Quick prompts">{QUICK_PROMPTS.map(text => <button type="button" key={text} disabled={busy || !ready || available === false} onClick={() => void send(text)}>{text}</button>)}</div>
       </div>}
       {messages.map((message, i) => <AsciiMsg key={i} compact who={message.role === 'user' ? 'MICHAEL' : 'AGENT'} side={message.role === 'user' ? 'user' : 'agent'} idx={i + 1} ts={message.timestamp ? new Date(message.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : undefined}><Markdown text={message.content} /></AsciiMsg>)}
       {busy && <AsciiMsg who="SYS" side="system" compact><p role="status">Working on your message…</p></AsciiMsg>}

@@ -1,9 +1,8 @@
 'use client'
 
-import { AsciiKicker } from '../vf/Ascii'
-
 import dynamic from 'next/dynamic'
-import { SectionHead, SkeletonPanel } from '@/components/ui'
+import { SkeletonPanel } from '@/components/ui'
+import { PageHeader } from '@/components/PageHeader'
 import '../vf/v2-lane.css'
 
 const CommandHeader = dynamic(() => import('@/components/views/CommandHeader').then(m => m.CommandHeader), { loading: () => <SkeletonPanel label="loading header" /> })
@@ -11,11 +10,10 @@ const CostsPanel = dynamic(() => import('@/components/views/CostsPanel').then(m 
 
 export default function CostsPage() {
   return (
-    <>
+    <div className="mc-costs-page">
       <CommandHeader />
-      <AsciiKicker view="COSTS" detail="BURN-STATE" />
-      <SectionHead pre={<span className="v2-jp">費用</span>} label="COSTS / MODEL USAGE" />
+      <PageHeader eyebrow="~/costs · USAGE-STATE" title="COSTS" subtitle="Model usage, billing, and burn" />
       <CostsPanel />
-    </>
+    </div>
   )
 }

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import type { MLContentIdea } from '@/lib/types'
 import { Button, SkeletonPanel, fmtDate } from './ui'
 import { EmptyState } from './EmptyState'
+import { apiFetch } from '@/lib/api-base'
 
 const POLL_MS = 30_000
 
@@ -144,7 +145,7 @@ export function ContentCreationBoard() {
 
   const refresh = useCallback(async () => {
     try {
-      const res = await fetch('/api/ml-content', { cache: 'no-store' })
+      const res = await apiFetch('/api/ml-content', { cache: 'no-store' })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       setIdeas(data.ideas ?? [])
@@ -212,7 +213,7 @@ export function ContentCreationBoard() {
   }, [ideas, query, project, scoreRange, undispatchedOnly, sort])
 
   const dispatchOne = useCallback(async (idea: MLContentIdea): Promise<void> => {
-    const kanbanRes = await fetch('/api/kanban', {
+      const kanbanRes = await apiFetch('/api/kanban', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -228,7 +229,7 @@ export function ContentCreationBoard() {
 
     // Separate call: only marks the idea as already-dispatched so the UI
     // doesn't offer to re-dispatch it — does not itself create a task.
-    const dispatchRes = await fetch('/api/ml-content', {
+      const dispatchRes = await apiFetch('/api/ml-content', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: idea.id }),

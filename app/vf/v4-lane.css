@@ -38,7 +38,7 @@ html:not([data-motion="off"]) .mc-main .v4-group > :nth-child(3n) { --v4-entry-n
 }
 @media (min-width: 821px) {
 @supports (animation-timeline: view()) and (animation-range: entry 0% entry 40%) {
-  html:not([data-motion="off"]) .mc-main :is(.v4-entry, .v4-group > :not(.mc-ascii-head):not(.v4-divider):not(.is-floating)) {
+  html:not([data-motion="off"]) .mc-main :is(.v4-entry, .v4-group > :not(.mc-ascii-head):not(.is-floating)) {
     animation: var(--v4-entry-name) var(--v4-duration) var(--pt-ease) both !important;
     animation-timeline: view() !important;
     animation-range: entry 0% entry 40% !important;
@@ -111,7 +111,7 @@ html:not([data-motion="off"]) .mc-main .mc-repo-name { min-width: 0; flex: 1; }
    48ch × 7.2px = 345.6px at 12px mono. Desktop starts at 821px.
    Mobile's longest 22ch × 6.6px = 145.2px, below even the 298px styleguide content width.
    There is no letter spacing to silently invalidate that width budget. */
-.mc-main :is(.v4-kicker, .v4-divider, .v4-console, .v4-reference) { display: none; }
+.mc-main :is(.v4-kicker, .v4-console, .v4-reference) { display: none; }
 html:not([data-motion="off"]) .mc-main :is(.v4-legacy-kicker, .v4-legacy-mark) { display: none; }
 html:not([data-motion="off"]) .mc-main .v4-kicker {
   display: flex;
@@ -131,23 +131,6 @@ html:not([data-motion="off"]) .mc-main .v4-kicker::after {
 }
 .mc-main .v4-ascii-full { display: block; max-width: 48ch; white-space: nowrap; }
 .mc-main .v4-ascii-short { display: none; white-space: nowrap; }
-html:not([data-motion="off"]) .mc-main .v4-divider {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-block: 16px 8px;
-  font: 400 11px/1 var(--pt-font-mono);
-  color: var(--mc-ink-mute);
-  pointer-events: none;
-}
-html:not([data-motion="off"]) .mc-main .v4-divider::before,
-html:not([data-motion="off"]) .mc-main .v4-divider::after {
-  content: "";
-  height: 1px;
-  flex: 1;
-  background: var(--mc-line);
-}
-html:not([data-motion="off"]) .mc-main .v4-divider + .mc-ascii-head .rule { display: none; }
 html:not([data-motion="off"]) .mc-main .v4-corners { position: relative; }
 html:not([data-motion="off"]) .mc-main .v4-corners::before,
 html:not([data-motion="off"]) .mc-main .v4-corners::after {
@@ -196,7 +179,7 @@ html:not([data-motion="off"]) .mc-main .v4-reference { display: block; }
 /* PASS 3 · Final scroll contract: transform/opacity only. The pass-1 blur
    was removed in this pass: animating a filter cannot support a strict
    no-paint proof. No will-change is introduced, even on small elements. */
-html:not([data-motion="off"]) .mc-main > :is(.v4-group, .v4-kicker, .v4-divider) { animation: none !important; }
+html:not([data-motion="off"]) .mc-main > :is(.v4-group, .v4-kicker) { animation: none !important; }
 html[data-motion="off"] .mc-main,
 html[data-motion="off"] .mc-main *,
 html[data-motion="off"] .mc-main *::before,
@@ -216,8 +199,6 @@ html[data-motion="reduced"] .mc-main :is(.v4-entry, .v4-group, .v4-group > *) { 
 
 /* Mechanical cleanup from the assembled deck: single divider rhythm,
    wrapped long tokens, and no duplicate ticker copy on narrow tiles. */
-html:not([data-motion="off"]) .mc-main .v4-divider + .mc-ascii-head { margin-top: 0; }
-html:not([data-motion="off"]) .mc-main .mc-home-corebody > .v4-divider { margin-top: 0; }
 html:not([data-motion="off"]) .mc-main .v4-kicker { max-width: 1080px; }
 html:not([data-motion="off"]) .mc-main .mc-pipe-card-head { align-items: flex-start; }
 html:not([data-motion="off"]) .mc-main .mc-pipe-score { flex-shrink: 0; }
@@ -241,7 +222,7 @@ html:not([data-motion="off"]) .mc-main .sg-density-grid { min-width: 0; }
   html:not([data-motion="off"]) .mc-main :is(.v4-entry, .v4-group) { --v4-entry-name: v4-fade; }
   html[data-motion="reduced"] .mc-main :is(.v4-entry, .v4-group) { --v4-entry-name: v4-fade-reduced; }
   /* No child entries under a group: one whole panel, no translate/filter. */
-  html:not([data-motion="off"]) .mc-main .v4-group > :not(.mc-ascii-head):not(.v4-divider):not(.is-floating) { animation: none !important; }
+  html:not([data-motion="off"]) .mc-main .v4-group > :not(.mc-ascii-head):not(.is-floating) { animation: none !important; }
   @supports (animation-timeline: view()) and (animation-range: entry 0% entry 40%) {
     html:not([data-motion="off"]) .mc-main :is(.v4-entry, .v4-group) {
       animation: var(--v4-entry-name) var(--v4-duration) var(--pt-ease) both !important;
@@ -251,7 +232,6 @@ html:not([data-motion="off"]) .mc-main .sg-density-grid { min-width: 0; }
   }
   html:not([data-motion="off"]) .mc-main :is(.v4-entry, .v4-group):focus-within { animation: none !important; }
   html:not([data-motion="off"]) .mc-main .v4-cursor { animation-iteration-count: 1; }
-  html:not([data-motion="off"]) .mc-main .v4-divider { margin-block: 12px 6px; }
   html:not([data-motion="off"]) .mc-main .mc-tile-label-track { animation: none !important; transform: none; white-space: normal; }
   html:not([data-motion="off"]) .mc-main .mc-tile-label-track > span[aria-hidden] { display: none; }
   html:not([data-motion="off"]) .mc-main .mc-home-tile-label { white-space: normal; overflow-wrap: anywhere; }

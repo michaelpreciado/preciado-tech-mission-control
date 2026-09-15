@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { AsciiPanelTrim, AsciiTerminalArt } from '@/app/vf/Ascii'
+import { AsciiTerminalArt } from '@/app/vf/Ascii'
 
 export function fmtDate(value?: string) {
   if (!value) return '—'
@@ -50,9 +50,12 @@ export type ButtonProps = ButtonOwnProps &
 
 export const Button = React.forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
   function Button({ variant = 'ghost', active, loading = false, href, className = '', children, disabled, type = 'button', ...rest }, ref) {
+    const obVariant = variant === 'confirm' ? 'ob-btn-confirm' : `ob-btn-${variant}`
     const cls = [
       'mc-btn',
       `mc-btn-${variant}`,
+      'ob-btn',
+      obVariant,
       active ? 'is-on' : '',
       loading ? 'is-loading' : '',
       className,
@@ -118,15 +121,15 @@ export function TFrame({ children }: {
   return React.cloneElement(children, { className }, children.props.children, ...corners)
 }
 
-export function SectionRule({ label, index = 1, post, id }: {
+export function SectionRule({ label, index, post, id }: {
   label: string; index?: number; post?: React.ReactNode; id?: string
 }) {
   return <div className="srule-section">
     <div className="srule-line">
-      <span className="srule-stroke srule-lead" aria-hidden="true">{'─'.repeat(8)}</span>
+      <span className="srule-stroke srule-lead" aria-hidden="true" />
       <h2 className="srule-label" id={id}>{label}</h2>
-      <span className="srule-stroke" aria-hidden="true">{'─'.repeat(256)}</span>
-      <span className="srule-index" aria-hidden="true">[{String(index).padStart(2, '0')}]</span>
+      <span className="srule-stroke" aria-hidden="true" />
+      {index != null && <span className="srule-index" aria-hidden="true">[{String(index).padStart(2, '0')}]</span>}
     </div>
     {post && <div className="srule-meta">{post}</div>}
   </div>
@@ -207,7 +210,6 @@ export function Window({ tag, title, meta, children, style, className = '', fram
         <span className="mc-window-dot mc-window-dot--green" />
       </div>
       <div className="mc-window-title">
-        <span className="mc-prompt-user">user@mission-control:~</span>
         {tag && <span className="mc-win-tag">{tag}</span>}
         <span>{title}</span>
       </div>
@@ -236,7 +238,6 @@ export function Window({ tag, title, meta, children, style, className = '', fram
               <span className="mc-window-dot mc-window-dot--green" />
             </div>
             <div className="mc-window-title">
-              <span className="mc-prompt-user">user@mission-control:~</span>
               {tag && <span className="mc-win-tag">{tag}</span>}
               <span>{title}</span>
             </div>
@@ -253,7 +254,6 @@ export function Window({ tag, title, meta, children, style, className = '', fram
             {frameCorners}
             {head(true)}
             <div className="mc-window-float-body">{children}</div>
-            <AsciiPanelTrim />
             <div className="mc-window-resize" title="Resize" {...resize} />
           </div>,
           document.body,
@@ -267,7 +267,6 @@ export function Window({ tag, title, meta, children, style, className = '', fram
       {frameCorners}
       {head(false)}
       {children}
-      <AsciiPanelTrim />
     </div>
   )
 }
@@ -276,7 +275,6 @@ export function SkeletonPanel({ label }: { label: string }) {
   return (
     <div className="mc-window" role="status" aria-live="polite">
       <div style={{ padding: 14, color: 'var(--pt-text-dim)', fontSize: 11, letterSpacing: '0.14em' }}>
-        <span className="cyber-loading-mark" aria-hidden="true">{'[ / / / ] '}</span>
         {label}...
       </div>
     </div>

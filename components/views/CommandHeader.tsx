@@ -5,6 +5,7 @@ import { useLiveData } from '../LiveDataProvider'
 import { useBrand } from '../Shell'
 import { Button } from '../ui'
 import type { SystemHealthData } from '@/lib/types'
+import { apiFetch } from '@/lib/api-base'
 
 /* ── Cockpit (stat header) ────────────────────────────── */
 
@@ -25,7 +26,7 @@ export function CommandHeader() {
   useEffect(() => {
     let alive = true
     const load = () => {
-      fetch('/api/system', { cache: 'no-store' })
+      apiFetch('/api/system', { cache: 'no-store' })
         .then(r => r.json())
         .then((j: SystemHealthData) => { if (alive && Array.isArray(j.services)) setHealth(j) })
         .catch(() => {})

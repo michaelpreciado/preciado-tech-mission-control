@@ -31,13 +31,27 @@ export { taskScanRoots }
  */
 const SLOW_COLLECTOR_MS = 750
 let lastTimings: Record<string, number> = {}
+let lastGoodAt: Record<string, string> = {}
 
-async function safeCollect<T>(name: string, fn: () => Promise<T>, fallback: T): Promise<T> {
+type TruthfulMissionData = MissionData & {
+  collectorErrors: Record<string, string>
+  lastGoodAt: Record<string, string>
+}
+
+async function safeCollect<T>(
+  name: string,
+  fn: () => Promise<T>,
+  fallback: T,
+  collectorErrors: Record<string, string>,
+): Promise<T> {
   const started = Date.now()
   try {
-    return await fn()
+    const value = await fn()
+    lastGoodAt = { ...lastGoodAt, [name]: new Date().toISOString() }
+    return value
   } catch (err) {
     logger.error('collector', err, { collector: name })
+    collectorErrors[name] = err instanceof Error ? err.message : String(err)
     return fallback
   } finally {
     const ms = Date.now() - started
@@ -53,8 +67,9 @@ export function collectorTimings(): { name: string; ms: number }[] {
     .sort((a, b) => b.ms - a.ms)
 }
 
-export async function getMissionData(): Promise<MissionData> {
+export async function getMissionData(): Promise<TruthfulMissionData> {
   lastTimings = {}
+  const collectorErrors: Record<string, string> = {}
   const collectStarted = Date.now()
   const emptyGithub: GitHubActivity = { username: getConfig().github.username, weeks: [], repos: [], recentEvents: [], source: 'unavailable' }
   const emptyCosts: CostDashboard = { source: 'unavailable', totalRequests: 0, totalTokens: 0, totalBillableTokens: 0, totalInputTokens: 0, totalOutputTokens: 0, totalCacheReadTokens: 0, totalCacheWriteTokens: 0, estimatedCostUsd: 0, meteredCostUsd: 0, models: [], modes: [], dailyWindowDays: 30, daily: [], warnings: ['Cost collection failed'] }
@@ -66,22 +81,22 @@ export async function getMissionData(): Promise<MissionData> {
   const emptyTelemetry: import('./types').SystemTelemetry = { generatedAt: '', cpu: null, memory: null, disk: null, gpus: null, ollama: null }
 
   const [tasks, cron, memory, integrationStates, github, costs, operations, calendarResult, ideasResult, missionsResult, kanban, telemetry] = await Promise.all([
-    safeCollect('tasks', collectTasks, []),
-    safeCollect('cron', collectCron, []),
-    safeCollect('memory', collectMemory, []),
-    safeCollect('integrations', integrations, []),
-    safeCollect('github', collectGithub, emptyGithub),
-    safeCollect('costs', collectCosts, emptyCosts),
-    safeCollect('operations', collectOperations, emptyOps),
-    safeCollect('calendar', getCalendarEvents, emptyCalendar),
-    safeCollect('ideas', collectIdeas, emptyIdeas),
-    safeCollect('missions', collectMissions, emptyMissions),
-    safeCollect('kanban', collectKanbanActivity, emptyKanban),
-    safeCollect('telemetry', collectTelemetry, emptyTelemetry),
+    safeCollect('tasks', collectTasks, [], collectorErrors),
+    safeCollect('cron', collectCron, [], collectorErrors),
+    safeCollect('memory', collectMemory, [], collectorErrors),
+    safeCollect('integrations', integrations, [], collectorErrors),
+    safeCollect('github', collectGithub, emptyGithub, collectorErrors),
+    safeCollect('costs', collectCosts, emptyCosts, collectorErrors),
+    safeCollect('operations', collectOperations, emptyOps, collectorErrors),
+    safeCollect('calendar', getCalendarEvents, emptyCalendar, collectorErrors),
+    safeCollect('ideas', collectIdeas, emptyIdeas, collectorErrors),
+    safeCollect('missions', collectMissions, emptyMissions, collectorErrors),
+    safeCollect('kanban', collectKanbanActivity, emptyKanban, collectorErrors),
+    safeCollect('telemetry', collectTelemetry, emptyTelemetry, collectorErrors),
   ])
   const [projects, vaultFiles] = await Promise.all([
-    safeCollect('projects', () => collectProjects(tasks), [] as MissionProject[]),
-    safeCollect('vaultWalk', () => walk(ROOTS.vault, { extensions: ['.md'], max: 1000, depth: 8 }), [] as string[]),
+    safeCollect('projects', () => collectProjects(tasks), [] as MissionProject[], collectorErrors),
+    safeCollect('vaultWalk', () => walk(ROOTS.vault, { extensions: ['.md'], max: 1000, depth: 8 }), [] as string[], collectorErrors),
   ])
   {
     // One line per collection: this aggregate is the critical path for every
@@ -137,5 +152,7 @@ export async function getMissionData(): Promise<MissionData> {
       kanban: { available: kanban.available, source: kanban.source, lastEventAt: kanban.lastEventAt },
     },
     warnings,
+    collectorErrors,
+    lastGoodAt,
   }
 }

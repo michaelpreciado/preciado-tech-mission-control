@@ -12,6 +12,7 @@ import type {
 import { TFrame, Button, SkeletonPanel, fmtDate } from './ui'
 import { RelativeTime } from './RelativeTime'
 import { TaskOverview } from './TaskOverview'
+import { apiFetch, apiUrl } from '@/lib/api-base'
 
 const POLL_MS = 15_000
 const SHOW_DONE_LS_KEY = 'mc-kanban:showDone'
@@ -44,10 +45,10 @@ const MINE_ASSIGNEES = new Set(['jarvis', 'friday'])
 type FilterId = 'all' | 'mine' | 'active' | 'attention'
 
 const FILTER_CHIPS: { id: FilterId; label: string }[] = [
-  { id: 'all', label: 'all' },
-  { id: 'mine', label: 'mine' },
-  { id: 'active', label: 'active' },
-  { id: 'attention', label: 'needs attention' },
+  { id: 'all', label: 'All' },
+  { id: 'mine', label: 'Mine' },
+  { id: 'active', label: 'Active' },
+  { id: 'attention', label: 'Needs attention' },
 ]
 
 /** Any status not explicitly defined falls into a catch-all column. */
@@ -131,7 +132,7 @@ function DetailDrawer({ id, onClose, onChanged, token = '' }: { id: string; onCl
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch(`/api/kanban/${encodeURIComponent(id)}`, { cache: 'no-store' })
+      const res = await apiFetch(`/api/kanban/${encodeURIComponent(id)}`, { cache: 'no-store' })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       setDetail(await res.json())
       setError(null)
@@ -149,7 +150,7 @@ function DetailDrawer({ id, onClose, onChanged, token = '' }: { id: string; onCl
   }, [onClose])
 
   useEffect(() => {
-    const es = new EventSource('/api/events')
+    const es = new EventSource(apiUrl('/api/events'))
     const onAny = (ev: MessageEvent) => {
       try {
         const evt = JSON.parse(ev.data) as { task_id?: string }
@@ -166,7 +167,7 @@ function DetailDrawer({ id, onClose, onChanged, token = '' }: { id: string; onCl
     setBusy(action)
     setActErr(null)
     try {
-      const res = await fetch(`/api/kanban/${encodeURIComponent(id)}`, {
+      const res = await apiFetch(`/api/kanban/${encodeURIComponent(id)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ action, ...payload }),
@@ -194,7 +195,7 @@ function DetailDrawer({ id, onClose, onChanged, token = '' }: { id: string; onCl
     setBusy('dispatch')
     setActErr(null)
     try {
-      const res = await fetch(`/api/kanban/${encodeURIComponent(id)}`, {
+      const res = await apiFetch(`/api/kanban/${encodeURIComponent(id)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ action: 'dispatch-claude' }),
@@ -396,7 +397,7 @@ function FilterBar({ filter, onFilter, query, onQuery, searchRef, onFocusSearch 
           ref={searchRef}
           className="mc-kb-input mc-kb-search-input"
           type="search"
-          placeholder="search title…  ( / )"
+          placeholder="Search tasks…  ( / )"
           aria-label="Search tasks by title"
           value={query}
           onChange={e => onQuery(e.target.value)}
@@ -447,7 +448,7 @@ function CreateModal({ sources, onClose, onCreated, token = '' }: {
     setErr(null)
     const assignee = form.assignee === 'other' ? form.assigneeOther.trim() : form.assignee
     try {
-      const res = await fetch('/api/kanban', {
+      const res = await apiFetch('/api/kanban', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({
@@ -479,7 +480,7 @@ function CreateModal({ sources, onClose, onCreated, token = '' }: {
         onClick={e => e.stopPropagation()}
       >
         <div className="mc-drawer-head">
-          <span className="mc-drawer-title">NEW TASK</span>
+          <span className="mc-drawer-title">New Task</span>
           <button className="mc-drawer-close" onClick={onClose} aria-label="Close">✕</button>
         </div>
         <div className="mc-drawer-body">
@@ -760,7 +761,7 @@ export function KanbanBoard({ token = '' }: { token?: string }) {
 
   const refresh = useCallback(async () => {
     try {
-      const res = await fetch('/api/kanban', { cache: 'no-store' })
+      const res = await apiFetch('/api/kanban', { cache: 'no-store' })
       if (res.ok) setSnap(await res.json())
     } catch { /* offline */ }
   }, [])
@@ -774,7 +775,7 @@ export function KanbanBoard({ token = '' }: { token?: string }) {
   }, [refresh])
 
   useEffect(() => {
-    const es = new EventSource('/api/events')
+    const es = new EventSource(apiUrl('/api/events'))
     const onAny = () => {
       const now = Date.now()
       if (now - lastEventRef.current > 3000) {
@@ -833,7 +834,7 @@ export function KanbanBoard({ token = '' }: { token?: string }) {
         : action === 'unblock'
           ? { action: 'unblock', reason: 'unblocked from Mission Control' }
           : { action: 'set-status', status: to }
-      const res = await fetch(`/api/kanban/${encodeURIComponent(info.id)}`, {
+      const res = await apiFetch(`/api/kanban/${encodeURIComponent(info.id)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify(body),
@@ -912,15 +913,15 @@ export function KanbanBoard({ token = '' }: { token?: string }) {
             ))}
           </div>
           <div className="mc-kb-toolbar">
-            <Button variant="ghost" active={view === 'overview'} onClick={() => setView('overview')}>overview</Button>
-            <Button variant="ghost" active={view === 'board'} onClick={() => setView('board')}>board</Button>
+            <Button variant="ghost" active={view === 'overview'} onClick={() => setView('overview')}>Overview</Button>
+            <Button variant="ghost" active={view === 'board'} onClick={() => setView('board')}>Board</Button>
             {hasDoneWork && (
               <Button variant="ghost" active={showDone} onClick={toggleShowDone}>
-                {showDone ? 'hide done' : `show ${doneCount} done · ${archivedCount} archived`}
+                {showDone ? 'Hide done' : `Show ${doneCount} done · ${archivedCount} archived`}
               </Button>
             )}
             <Button variant="ghost" active={showCreate} onClick={() => setShowCreate(v => !v)}>
-              {showCreate ? '✕ close' : '+ new task'}
+              {showCreate ? 'Close' : '+ New task'}
             </Button>
           </div>
         </div>

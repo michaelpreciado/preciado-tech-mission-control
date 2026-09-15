@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { SystemHealthData } from '@/lib/types'
 import { SkeletonPanel } from './ui'
+import { apiFetch } from '@/lib/api-base'
 
 const POLL_MS = 20_000
 
@@ -24,7 +25,7 @@ export function SystemHealthPanel() {
 
   const refresh = useCallback(async () => {
     try {
-      const res = await fetch('/api/system', { cache: 'no-store' })
+      const res = await apiFetch('/api/system', { cache: 'no-store' })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       setData(await res.json())
       setError(null)
@@ -53,7 +54,6 @@ export function SystemHealthPanel() {
     <div className="mc-window mc-health">
       <div className={`mc-tcol-head ${problems ? 'alert' : ''}`}>
         <div className="mc-window-dots" aria-hidden="true"><span className="mc-window-dot mc-window-dot--red" /><span className="mc-window-dot mc-window-dot--amber" /><span className="mc-window-dot mc-window-dot--green" /></div>
-        <span className="mc-prompt-user">user@mission-control:~</span>
         <span className="mc-tcol-glyph">⚡</span>
         <span>SYSTEM HEALTH</span>
         <span className="mc-tcol-count">{problems ? `${problems} ISSUE${problems > 1 ? 'S' : ''}` : 'ALL UP'}</span>

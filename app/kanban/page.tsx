@@ -1,10 +1,9 @@
 'use client'
 
-import { AsciiKicker } from '../vf/Ascii'
-
 import dynamic from 'next/dynamic'
 import { useState } from 'react'
-import { SectionHead, SkeletonPanel } from '@/components/ui'
+import { SkeletonPanel } from '@/components/ui'
+import { PageHeader } from '@/components/PageHeader'
 import '../vf/v2-lane.css'
 import './deck.css'
 
@@ -17,8 +16,7 @@ export default function KanbanPage() {
   return (
     <>
       <CommandHeader />
-      <AsciiKicker view="KANBAN" detail="TASK-STATE" />
-      <SectionHead pre={<span className="v2-jp">任務</span>} label="AGENT DECK · HERMES TASKS" />
+      <PageHeader eyebrow="~/kanban · TASK-STATE" title="KANBAN" subtitle="Agent deck and Hermes task state" />
       <div className="mc-command-deck">
         <AgentDeck onCredentialChange={setToken} />
         <section className="mc-command-tasks" aria-label="Kanban tasks"><KanbanBoard token={token} /></section>

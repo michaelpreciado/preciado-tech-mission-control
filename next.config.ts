@@ -19,7 +19,6 @@ const nextConfig: NextConfig = {
     removeConsole: process.env.NODE_ENV === 'production',
   },
   experimental: {
-    optimizeCss: true,
     // Keep client side-effect-free; three/drei/fiber ship many named exports and
     // @react-three/drei especially pulls subpath modules — optimize so only the
     // named exports a route actually imports survive into the bundle.

@@ -29,6 +29,47 @@ type Session = {
 const MAX_FILES = 500
 const WINDOW_MS = 35 * 86_400_000
 
+type CodexRateLimits = NonNullable<NonNullable<CostDashboard['codexUsage']>['rateLimits']>
+
+function record(value: unknown): Record<string, unknown> | null {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, unknown> : null
+}
+
+function finiteNumber(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null
+}
+
+function resetIso(value: unknown): string | null {
+  const seconds = finiteNumber(value)
+  if (seconds === null) return null
+  const date = new Date(seconds * 1000)
+  return Number.isFinite(date.getTime()) ? date.toISOString() : null
+}
+
+/** Parse provider values without inferring a limit from logged token volume. */
+export function parseCodexRateLimits(payload: unknown, timestamp: unknown = null): CodexRateLimits | null {
+  const limits = record(record(payload)?.rate_limits)
+  if (!limits) return null
+  const primary = record(limits.primary)
+  const secondary = record(limits.secondary)
+  const used = finiteNumber(primary?.used_percent)
+  const capturedMs = typeof timestamp === 'string' ? Date.parse(timestamp) : NaN
+  return {
+    planType: typeof limits.plan_type === 'string' ? limits.plan_type : null,
+    weeklyUsedPercent: used,
+    weeklyRemainingPercent: used === null ? null : Math.max(0, Math.min(100, 100 - used)),
+    weeklyWindowMinutes: finiteNumber(primary?.window_minutes),
+    weeklyResetsAt: resetIso(primary?.resets_at),
+    capturedAt: Number.isFinite(capturedMs) ? new Date(capturedMs).toISOString() : null,
+    ...(secondary ? {
+      secondaryUsedPercent: finiteNumber(secondary.used_percent),
+      secondaryResetsAt: resetIso(secondary.resets_at),
+      secondaryWindowMinutes: finiteNumber(secondary.window_minutes),
+    } : {}),
+  }
+}
+
 function number(value: unknown): number {
   const n = Number(value)
   return Number.isFinite(n) && n > 0 ? n : 0
@@ -60,13 +101,14 @@ export async function collectCodexUsage(now = Date.now()): Promise<NonNullable<C
   const empty = (): NonNullable<CostDashboard['codexUsage']> => ({
     models: [], totalInputTokens: 0, totalOutputTokens: 0, totalCacheTokens: 0,
     totalTokens: 0, daily: calendarWindow([], DAILY_WINDOW_DAYS, now), monthlyTokens: {},
-    planType: null, sessionsCount: 0, lastActivityAt: null,
+    planType: null, sessionsCount: 0, lastActivityAt: null, rateLimits: null,
   })
 
   try {
     const files = await rolloutFiles(path.join(os.homedir(), '.codex', 'sessions'), now - WINDOW_MS)
     const sessions = new Map<string, Session>()
-    let planType: string | null = null
+    let rateLimits: CodexRateLimits | null = null
+    let rateLimitsAt = -Infinity
     for (const { file, mtimeMs } of files) {
       const fallbackId = file
       let sessionId = fallbackId
@@ -104,8 +146,16 @@ export async function collectCodexUsage(now = Date.now()): Promise<NonNullable<C
         const activity = String(obj.timestamp || '')
         if (activity && (!session.lastActivityAt || activity > session.lastActivityAt)) session.lastActivityAt = activity
         sessions.set(sessionId, session)
-        const rateLimits = payload.rate_limits as Record<string, unknown> | undefined
-        if (rateLimits?.plan_type) planType = String(rateLimits.plan_type)
+        const snapshot = parseCodexRateLimits(payload, obj.timestamp || session.lastActivityAt)
+        if (snapshot) {
+          const capturedAt = snapshot.capturedAt ? Date.parse(snapshot.capturedAt) : -Infinity
+          // File traversal/mtime order is not event order. Prefer the newest
+          // timestamp; ties (including undated snapshots) use last write wins.
+          if (capturedAt >= rateLimitsAt) {
+            rateLimits = snapshot
+            rateLimitsAt = capturedAt
+          }
+        }
       }
     }
     const byModel = new Map<string, { inputTokens: number; outputTokens: number; cacheTokens: number; totalTokens: number }>()
@@ -133,7 +183,7 @@ export async function collectCodexUsage(now = Date.now()): Promise<NonNullable<C
       totalCacheTokens: models.reduce((sum, model) => sum + model.cacheTokens, 0),
       totalTokens: models.reduce((sum, model) => sum + model.totalTokens, 0),
       daily: calendarWindow([...byDay.entries()].map(([date, value]) => ({ date, ...value })), DAILY_WINDOW_DAYS, now),
-      monthlyTokens, planType, sessionsCount: sessions.size, lastActivityAt,
+      monthlyTokens, planType: rateLimits?.planType ?? null, sessionsCount: sessions.size, lastActivityAt, rateLimits,
     }
   } catch { return empty() }
 }

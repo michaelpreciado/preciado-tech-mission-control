@@ -38,25 +38,48 @@ import type { UsageRecord } from './costs-aggregate'
 import { billableOf } from './costs-usage'
 
 /** Profiles never change mid-process; discover once. */
-let cachedRecords: UsageRecord[] | null = null
+let cachedRecords: HermesUsageRecord[] | null = null
 let cachedStamp = ''
 
-/** Newest sessions-table mtime across every profile DB — invalidation stamp. */
-function discoveryStamp(): string {
-  const stamps: string[] = []
-  const home = path.join(os.homedir(), '.hermes')
+type HermesUsageRecord = UsageRecord & { sessionKey: string }
+
+/** Resolve the Hermes root from the configured profile DB, with the legacy
+ * default retained when no configured path is available. */
+function hermesRoot(): string {
+  const configuredDb = getConfig().paths.agentStateDbFile
+  if (configuredDb) {
+    const profileDir = path.dirname(configuredDb)
+    const profilesDir = path.dirname(profileDir)
+    if (path.basename(profilesDir) === 'profiles') return path.dirname(profilesDir)
+    return profileDir
+  }
+  return path.join(os.homedir(), '.hermes')
+}
+
+function hermesDbFiles(): string[] {
+  const root = hermesRoot()
+  const configuredDb = getConfig().paths.agentStateDbFile
   const candidates = [
-    path.join(home, 'state.db'),
-    path.join(getConfig().paths.agentStateDbFile ?? '', '..'),
+    path.join(root, 'state.db'),
+    ...(configuredDb ? [configuredDb] : []),
   ]
-  const profilesDir = path.join(home, 'profiles')
+  const profilesDir = path.join(root, 'profiles')
   try {
     for (const name of fs.existsSync(profilesDir) ? fs.readdirSync(profilesDir) : []) {
       candidates.push(path.join(profilesDir, name, 'state.db'))
     }
   } catch { /* no profiles dir */ }
-  for (const c of candidates) {
-    try { stamps.push(`${c}:${fs.statSync(c).mtimeMs}`) } catch { /* absent */ }
+  return [...new Set(candidates)]
+}
+
+/** DB-file mtime+size across every profile DB — invalidation stamp. */
+function discoveryStamp(): string {
+  const stamps: string[] = []
+  for (const c of hermesDbFiles()) {
+    try {
+      const st = fs.statSync(c)
+      stamps.push(`${c}:${st.mtimeMs}:${st.size}`)
+    } catch { /* absent */ }
   }
   return stamps.sort().join('|')
 }
@@ -119,7 +142,7 @@ function rowToRecord(r: any): UsageRecord | null {
 }
 
 /** Session-level identity: one row per hermes session, dedup-safe on re-read. */
-function recordKey(r: { model: string; provider: string; timestamp: string }, sessionId: string): string {
+export function hermesRecordKey(r: { model: string; provider: string }, sessionId: string): string {
   return `hermes:${sessionId}:${r.provider}::${r.model}`
 }
 
@@ -128,23 +151,13 @@ function recordKey(r: { model: string; provider: string; timestamp: string }, se
  * Returns [] (never throws) so the costs pipeline degrades gracefully when
  * the stores are absent or locked.
  */
-export function collectHermesUsage(): UsageRecord[] {
+export function collectHermesUsage(): HermesUsageRecord[] {
   const stamp = discoveryStamp()
   if (cachedRecords && stamp === cachedStamp) return cachedRecords
 
-  const home = path.join(os.homedir(), '.hermes')
-  const dbs = [
-    path.join(home, 'state.db'),
-    path.join(getConfig().paths.agentStateDbFile ?? '', '..', 'state.db'),
-  ]
-  const profilesDir = path.join(home, 'profiles')
-  try {
-    for (const name of fs.existsSync(profilesDir) ? fs.readdirSync(profilesDir) : []) {
-      dbs.push(path.join(profilesDir, name, 'state.db'))
-    }
-  } catch { /* no profiles dir */ }
+  const dbs = hermesDbFiles()
 
-  const out: UsageRecord[] = []
+  const out: HermesUsageRecord[] = []
   const seen = new Set<string>()
   for (const file of [...new Set(dbs)]) {
     if (!fs.existsSync(file)) continue
@@ -163,10 +176,10 @@ export function collectHermesUsage(): UsageRecord[] {
       for (const r of rows) {
         const rec = rowToRecord(r)
         if (!rec) continue
-        const key = recordKey(rec, String(r.id))
+        const key = hermesRecordKey(rec, String(r.id))
         if (seen.has(key)) continue
         seen.add(key)
-        out.push(rec)
+        out.push({ ...rec, sessionKey: key })
       }
     } catch (e) {
       logger.warn('costs', `hermes sessions read failed for ${file}: ${e instanceof Error ? e.message : e}`)

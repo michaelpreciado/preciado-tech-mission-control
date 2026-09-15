@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { HerdrAgent, HerdrKind, HerdrSnapshot } from '@/lib/herdr-types';
 import { TFrame } from './ui'
 import styles from './AgentDeck.module.css';
-import { AsciiPanelTrim } from '@/app/vf/Ascii';
+import { apiFetch } from '@/lib/api-base';
 
 // Memory only: credentials are discarded when this component unmounts.
 export default function AgentDeck({ onCredentialChange }: { onCredentialChange?: (token: string) => void }) {
@@ -30,7 +30,7 @@ export default function AgentDeck({ onCredentialChange }: { onCredentialChange?:
   const [revision, setRevision] = useState(0);
   const dialog = useRef<HTMLDialogElement>(null);
   const request = useCallback(async (url: string, init: RequestInit = {}) => {
-    const response = await fetch(url, { ...init, cache: 'no-store', headers: {
+    const response = await apiFetch(url, { ...init, cache: 'no-store', headers: {
       'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...init.headers,
     } });
     const body = await response.json();
@@ -117,7 +117,6 @@ export default function AgentDeck({ onCredentialChange }: { onCredentialChange?:
   const current = snapshot?.agents.find(agent => agent.id === selected?.id) ?? selected;
 
   return <section className={`${styles.deck} cyber-agent-deck`} aria-label="Live agent deck">
-    <AsciiPanelTrim />
     <header className={styles.header}><div><h2>Agent deck</h2><p>Live local agent instances · updates every 4 seconds</p></div>
       <button type="button" disabled={busy || !snapshot?.available} onClick={() => { setLauncher(true); setError(''); setNotice(''); }}>New agent</button></header>
     <details className={styles.access}><summary>Access</summary><form onSubmit={event => { event.preventDefault(); const nextToken = credential.trim(); setToken(nextToken); onCredentialChange?.(nextToken); setCredential(''); }}>

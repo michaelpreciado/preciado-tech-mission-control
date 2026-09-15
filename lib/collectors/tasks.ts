@@ -53,7 +53,6 @@ export function taskScanRoots(): string[] {
 
 export async function collectTasks(): Promise<MissionTask[]> {
   const snapshot = getKanbanSnapshot(undefined, 400)
-  if (!snapshot.available) return []
 
   const tasks: MissionTask[] = snapshot.tasks.map(t => {
     // A task that keeps failing needs a human regardless of its column.
