@@ -46,15 +46,20 @@ function TelemetryCard() {
   const cpu = telemetry?.cpu
   const memory = telemetry?.memory
   const memoryPct = memory && memory.totalKb > 0 ? Math.round((1 - memory.availableKb / memory.totalKb) * 100) : null
+  const lines = data ? [
+    `cpu   ${cpu ? `${cpu.load1.toFixed(2)} load` : '—'}`,
+    `cores ${cpu?.cores ?? '—'} online`,
+    `mem   ${memoryPct == null ? '—' : `${memoryPct}% used`}`,
+  ] : ['uplink awaiting mission data…']
   return <section className={styles.obCard} aria-labelledby="ob-telemetry-title">
     <CardHeader label="UPLINK TELEMETRY" meta="ASCII BUS" />
     <div className={styles.obTelemetryBody}>
-      <pre className={styles.obAscii} aria-hidden="true">{`0..0 0.1·:01· 1.7·:1110...11\n51·000:000·1100 :1·1.001\n01100:0.:1011.000:1 10.0`}</pre>
+      <pre className={styles.obAscii} aria-hidden="true">{lines.join('\n')}</pre>
       <div className={styles.obReadouts}>
         <span>LOAD <b>{cpu ? cpu.load1.toFixed(2) : '—'}</b></span>
         <span>CORES <b>{cpu?.cores ?? '—'}</b></span>
         <span>MEM <b>{memoryPct == null ? '—' : `${memoryPct}%`}</b></span>
-        <span>PACKETS <b>{data ? data.counts.openTasks.toLocaleString() : '—'}</b></span>
+        <span>OPEN TASKS <b>{data ? data.counts.openTasks.toLocaleString() : '—'}</b></span>
       </div>
     </div>
   </section>
@@ -65,7 +70,7 @@ function FinanceCard() {
   const costs = data?.costs
   const amount = costs?.meteredCostUsd ?? costs?.estimatedCostUsd
   return <section className={styles.obCard} aria-labelledby="ob-finance-title">
-    <CardHeader label="FINANCE" meta="MTD" href="/costs" />
+    <CardHeader label="FINANCE" meta={costs ? `${costs.dailyWindowDays}D WINDOW` : 'SYNCING'} href="/costs" />
     <div className={styles.obFinanceBody}>
       <strong>{amount == null ? '—' : `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</strong>
       <span>{costs ? `${costs.totalRequests.toLocaleString()} requests · ${costs.dailyWindowDays}d window` : 'Loading ledger…'}</span>
@@ -76,12 +81,13 @@ function FinanceCard() {
 
 function DatastreamCard() {
   const { data } = useLiveData()
+  const warningCount = data ? data.warnings.length + Object.keys(data.collectorErrors ?? {}).length : null
   const lines = data ? [
     `crew  ${data.crew.length.toString().padStart(2, '0')} linked`,
     `tasks ${data.counts.openTasks.toString().padStart(2, '0')} open`,
     `cron  ${data.counts.enabledCronJobs.toString().padStart(2, '0')} enabled`,
     `vault ${data.counts.vaultMarkdown.toString().padStart(2, '0')} indexed`,
-    `warn  ${data.warnings.length.toString().padStart(2, '0')} raised`,
+    `warn  ${warningCount?.toString().padStart(2, '0') ?? '—'} raised`,
   ] : ['connecting to mission bus…']
   return <section className={`${styles.obCard} ${styles.obDatastream}`} aria-labelledby="ob-datastream-title">
     <CardHeader label="DATASTREAM" meta="RAW" />
@@ -91,6 +97,13 @@ function DatastreamCard() {
 
 /** OmniBridge shell: all data panels remain the existing polling components. */
 export function HomeDeck() {
+  const { data, isLive, isLoading, eventStream } = useLiveData()
+  const collectorErrorCount = Object.keys(data?.collectorErrors ?? {}).length
+  const warningCount = (data?.warnings.length ?? 0) + collectorErrorCount
+  const systemLabel = !data ? (isLoading ? 'SYNCING MISSION DATA' : 'MISSION DATA OFFLINE') : isLive ? (warningCount ? `${warningCount} WARNINGS` : 'ALL SYSTEMS NOMINAL') : 'MISSION DATA STALE'
+  const syncLabel = data?.generatedAt ? `SYNC ${new Date(data.generatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'SYNCING'
+  const githubWeeks = data?.github?.weeks?.length
+  const githubMeta = data?.github?.syncedAt ? 'SYNCED' : data ? 'SYNC UNKNOWN' : 'SYNCING'
   return <div className={`${styles.home} mc-home-workspace ob-home`}>
     <MatrixRainBackground />
     <nav className={styles.obJumps} aria-label="Home sections">
@@ -99,7 +112,7 @@ export function HomeDeck() {
     <header className={styles.obHeader}>
       <button className={styles.menuButton} aria-label="Open navigation tabs" onClick={() => window.dispatchEvent(new Event('mc:open-home-nav'))}>☰</button>
       <div className={styles.obHeaderBrand}><span className={styles.obHeaderDots}>● ● ●</span><b>PRECIADO<span>TECH</span></b><small>michael@preciado-tech:~<i>/mission-control</i></small></div>
-      <div className={styles.obHeaderStatus}><span><i className={styles.obLed} /> ALL SYSTEMS NOMINAL</span><span>BUILD 2026.09</span><button onClick={() => window.dispatchEvent(new Event('mc:open-cmdp'))}>QUICK GO <kbd>⌘K</kbd></button></div>
+      <div className={styles.obHeaderStatus}><span><i className={styles.obLed} /> {systemLabel}</span><span>{syncLabel}</span><button onClick={() => window.dispatchEvent(new Event('mc:open-cmdp'))}>QUICK GO <kbd>⌘K</kbd></button></div>
       <ActionFeed compact />
     </header>
 
@@ -111,21 +124,21 @@ export function HomeDeck() {
         <div className={styles.obUplink}><NeuralUplink portraitArt={<AsciiPortrait />} /></div>
         <div className={styles.obOrbDock}>
           <div className={styles.obOrbStage}><HomeCoreOrb placement="desktop" /></div>
-          <span className={styles.obOrbLabel}>NEURAL CORE · LIVE</span>
+          <span className={styles.obOrbLabel}>NEURAL CORE</span>
         </div>
       </aside>
 
       <main className={styles.obCenter}>
         <section id="home-mission-feed" className={`${styles.obCard} ${styles.obMissionCard}`} aria-label="Mission feed">
-          <CardHeader label="MISSION FEED" meta="/var/log/mission · STREAMING" />
+          <CardHeader label="MISSION FEED" meta={`/var/log/mission · ${eventStream.toUpperCase()}`} />
           <ActionFeed />
         </section>
         <div className={styles.obMetricRow}><TelemetryCard /><FinanceCard /></div>
       </main>
 
       <aside className={styles.obRail} aria-label="Mission signals">
-        <section className={`${styles.obCard} ${styles.obPipelineCard}`} aria-label="Revenue pipeline"><CardHeader label="PIPELINE" meta="LIVE" href="/pipeline" /><RevenuePipeline /></section>
-        <section className={`${styles.obCard} ${styles.obGithubCard}`} aria-label="GitHub activity"><CardHeader label="GITHUB · 12WK" meta="SYNCED" href="/github" /><GithubPanel /></section>
+        <section className={`${styles.obCard} ${styles.obPipelineCard}`} aria-label="Revenue pipeline"><CardHeader label="PIPELINE" meta="POLLING" href="/pipeline" /><RevenuePipeline /></section>
+        <section className={`${styles.obCard} ${styles.obGithubCard}`} aria-label="GitHub activity"><CardHeader label={`GITHUB · ${githubWeeks ?? '—'}WK`} meta={githubMeta} href="/github" /><GithubPanel /></section>
         <DatastreamCard />
       </aside>
     </div>

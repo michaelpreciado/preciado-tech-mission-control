@@ -3,6 +3,13 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { MissionData } from '@/lib/types'
 import { apiFetch, apiUrl } from '@/lib/api-base'
+import type { BusEvent } from '@/lib/telemetry-types'
+
+const BUS_EVENT_NAMES = [
+  'task.created', 'task.assigned', 'task.progress', 'task.done', 'task.failed', 'agent.status', 'message',
+] as const
+const MAX_LIVE_EVENTS = 40
+type EventStreamState = 'connecting' | 'live' | 'stale'
 
 type LiveCtx = {
   data: MissionData | null
@@ -10,6 +17,8 @@ type LiveCtx = {
   isLoading: boolean
   error: string | null
   lastUpdated: number | null
+  events: BusEvent[]
+  eventStream: EventStreamState
   refresh: () => Promise<void>
 }
 
@@ -19,7 +28,7 @@ export type OrbActivitySignal = {
   now: number
 }
 
-const Ctx = createContext<LiveCtx>({ data: null, isLive: false, isLoading: true, error: null, lastUpdated: null, refresh: async () => {} })
+const Ctx = createContext<LiveCtx>({ data: null, isLive: false, isLoading: true, error: null, lastUpdated: null, events: [], eventStream: 'connecting', refresh: async () => {} })
 const OrbActivityCtx = createContext<OrbActivitySignal>({ lastEventAt: null, runningTaskCount: 0, now: 0 })
 
 // Module-level deduplication: store the parsed JSON promise (not the Response)
@@ -37,6 +46,9 @@ export function LiveDataProvider({ children }: { children: React.ReactNode }) {
   const inFlight = useRef<AbortController | null>(null)
   const rafId = useRef<number | null>(null)
   const lastSseEventRef = useRef<number | null>(null)
+  const seenEventIdsRef = useRef<Set<number>>(new Set())
+  const [events, setEvents] = useState<BusEvent[]>([])
+  const [eventStream, setEventStream] = useState<EventStreamState>('connecting')
   const [activityClock, setActivityClock] = useState(0)
 
   const refresh = useCallback(async () => {
@@ -154,13 +166,26 @@ export function LiveDataProvider({ children }: { children: React.ReactNode }) {
     // Live refresh: subscribe to the same-origin /api/events SSE firehose and
     // refresh when agent activity flows, so cost/leaderboard data updates in
     // near-real-time instead of only on the poll interval. Debounced to avoid
-    // flooding the API (EventSource auto-reconnects, so onerror is a no-op).
+    // flooding the API; EventSource reconnects after transient errors.
     let es: EventSource | null = null
     let lastEvt = 0
-    const onBusEvent = () => {
+    const onBusEvent = (message: MessageEvent<string>) => {
       const now = Date.now()
       lastSseEventRef.current = now
       if (document.visibilityState === 'visible') setActivityClock(now)
+      try {
+        const event = JSON.parse(message.data) as BusEvent
+        if (typeof event.id === 'number' && !seenEventIdsRef.current.has(event.id)) {
+          seenEventIdsRef.current.add(event.id)
+          if (seenEventIdsRef.current.size > MAX_LIVE_EVENTS * 2) {
+            const oldest = [...seenEventIdsRef.current].sort((a, b) => a - b)[0]
+            if (oldest !== undefined) seenEventIdsRef.current.delete(oldest)
+          }
+          setEvents(previous => [event, ...previous].slice(0, MAX_LIVE_EVENTS))
+        }
+      } catch {
+        // Keepalive frames and non-JSON bus messages still count as stream activity.
+      }
       if (now - lastEvt < 6000) return
       lastEvt = now
       if (document.visibilityState === 'visible' && navigator.onLine) void refreshThrottled()
@@ -168,7 +193,9 @@ export function LiveDataProvider({ children }: { children: React.ReactNode }) {
     try {
       es = new EventSource(apiUrl('/api/events'))
       es.onmessage = onBusEvent
-      es.onerror = () => { /* EventSource reconnects on its own */ }
+      for (const eventName of BUS_EVENT_NAMES) es.addEventListener(eventName, onBusEvent as EventListener)
+      es.onopen = () => setEventStream('live')
+      es.onerror = () => setEventStream('stale')
     } catch { /* noop */ }
 
     // Only tick while an SSE event can still affect the orb. This makes the
@@ -192,8 +219,8 @@ export function LiveDataProvider({ children }: { children: React.ReactNode }) {
   }, [refresh, refreshThrottled])
 
   const contextValue = useMemo(() => ({
-    data, isLive, isLoading, error, lastUpdated, refresh
-  }), [data, isLive, isLoading, error, lastUpdated, refresh])
+    data, isLive, isLoading, error, lastUpdated, events, eventStream, refresh
+  }), [data, isLive, isLoading, error, lastUpdated, events, eventStream, refresh])
 
   const orbActivity = useMemo<OrbActivitySignal>(() => ({
     lastEventAt: lastSseEventRef.current,

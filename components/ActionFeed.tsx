@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
 import { useLiveData } from './LiveDataProvider'
 import type { HermesTask, SystemHealthData } from '@/lib/types'
+import type { BusEvent } from '@/lib/telemetry-types'
 import { apiFetch } from '@/lib/api-base'
 
 const POLL_MS = 15_000
@@ -16,6 +17,36 @@ type FeedRow = {
   href: string
 }
 
+function eventTime(ts: number): string {
+  const millis = ts < 10_000_000_000 ? ts * 1000 : ts
+  const age = Math.max(0, Date.now() - millis)
+  if (age < 60_000) return 'now'
+  if (age < 3_600_000) return `${Math.floor(age / 60_000)}m`
+  if (age < 86_400_000) return `${Math.floor(age / 3_600_000)}h`
+  return new Date(millis).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
+
+function eventTone(event: BusEvent): FeedRow['tone'] {
+  const signal = `${event.type} ${event.raw_kind} ${event.status ?? ''}`.toLowerCase()
+  if (/failed|blocked|error|crash|gave_up|timed_out/.test(signal)) return 'urgent'
+  if (/assign|attention|warn/.test(signal)) return 'warn'
+  return 'note'
+}
+
+function eventRow(event: BusEvent): FeedRow {
+  const kind = event.raw_kind || event.type
+  const agent = event.to_agent || event.from_agent || 'EVENT BUS'
+  const task = event.title || event.task_id || 'mission event'
+  const tone = eventTone(event)
+  return {
+    id: `event:${event.id}`,
+    tone,
+    glyph: tone === 'urgent' ? '✕' : tone === 'warn' ? '⚠' : '·',
+    text: `${eventTime(event.ts)} · ${agent.toUpperCase()} · ${kind} · ${task}`,
+    href: event.type === 'agent.status' ? '/bots' : '/kanban',
+  }
+}
+
 /**
  * Needs-my-action strip — the first thing on the Deck (and on mobile, the
  * first thing on screen): down services, agents/tasks in trouble (both the
@@ -23,7 +54,7 @@ type FeedRow = {
  * tasks), data warnings. Everything taps through to its tab.
  */
 export function ActionFeed({ compact = false }: { compact?: boolean }) {
-  const { data } = useLiveData()
+  const { data, events, eventStream } = useLiveData()
   const [health, setHealth] = useState<SystemHealthData | null>(null)
   const [blockedTasks, setBlockedTasks] = useState<HermesTask[]>([])
 
@@ -44,7 +75,7 @@ export function ActionFeed({ compact = false }: { compact?: boolean }) {
     return () => clearInterval(timer)
   }, [refresh])
 
-  const rows: FeedRow[] = []
+  const rows: FeedRow[] = events.map(eventRow)
 
   for (const svc of health?.services ?? []) {
     // Store-freshness probes (pipeline store, cron jobs.json) are telemetry, not
@@ -66,6 +97,9 @@ export function ActionFeed({ compact = false }: { compact?: boolean }) {
   for (const [i, warning] of (data?.warnings ?? []).entries()) {
     rows.push({ id: `warn:${i}`, tone: 'note', glyph: '◇', text: warning, href: '/' })
   }
+  for (const [collector, error] of Object.entries(data?.collectorErrors ?? {})) {
+    rows.push({ id: `collector:${collector}`, tone: 'urgent', glyph: '✕', text: `Collector ${collector} — ${error}`, href: '/' })
+  }
   for (const task of blockedTasks.slice(0, 3)) {
     rows.push({ id: `hermes:${task.id}`, tone: 'warn', glyph: '⚠', text: `Hermes task ${task.status} — ${task.title}`, href: '/kanban' })
   }
@@ -73,7 +107,7 @@ export function ActionFeed({ compact = false }: { compact?: boolean }) {
   if (compact) {
     const alerts = rows.filter(row => row.tone !== 'note').sort((a, b) => Number(b.tone === 'urgent') - Number(a.tone === 'urgent'))
     return <details className="mc-urgent-strip">
-      <summary><span className="mc-urgent-dot" data-alert={alerts.length > 0} aria-hidden="true" /><span className="mc-urgent-label"><span className="mc-urgent-eyebrow">NEEDS ATTENTION</span><strong>{alerts.length ? `${alerts.length} need attention` : !health ? 'Checking notifications…' : 'No urgent notifications'}</strong></span><span className="mc-urgent-preview">{alerts[0]?.text || 'Your command center is ready'}</span><span className="mc-urgent-toggle" aria-hidden="true">⌄</span></summary>
+      <summary><span className="mc-urgent-dot" data-alert={alerts.length > 0} aria-hidden="true" /><span className="mc-urgent-label"><span className="mc-urgent-eyebrow">NEEDS ATTENTION</span><strong>{alerts.length ? `${alerts.length} need attention` : !health ? 'Checking notifications…' : 'No urgent notifications'}</strong></span><span className="mc-urgent-preview">{alerts[0]?.text || (events[0] ? eventRow(events[0]).text : health ? 'No urgent notifications' : 'Checking notifications…')}</span><span className="mc-urgent-toggle" aria-hidden="true">⌄</span></summary>
       <div className="mc-urgent-details">
         {alerts.length ? alerts.map(row => <Link key={row.id} href={row.href === '/' ? '#home-system-telemetry' : row.href}>{row.text}<span aria-hidden="true">↗</span></Link>) : <p>No services or tasks currently need your attention.</p>}
       </div>
@@ -89,15 +123,15 @@ export function ActionFeed({ compact = false }: { compact?: boolean }) {
       <div className="mc-feed-head">
         <span className="mc-feed-title">{compact ? '> NEEDS YOU' : '> MISSION FEED'}</span>
         <span className={`mc-feed-count ${urgentCount ? 'hot' : ''}`}>
-          {compact ? (urgentCount ? `${urgentCount} URGENT` : 'ALL CLEAR') : 'STREAMING'}
+          {compact ? (urgentCount ? `${urgentCount} URGENT` : 'ALL CLEAR') : eventStream.toUpperCase()}
         </span>
       </div>
-      {shown.length > 0 && (
+      {(shown.length > 0 || data || events.length > 0) && (
         <div className="mc-feed-body" role="status" aria-live="polite">
           {shown.map(row => (
             <Link key={row.id} href={row.href} className={`mc-feed-row ${row.tone}`}
               aria-label={`${row.tone === 'urgent' ? 'Urgent — ' : row.tone === 'warn' ? 'Warning — ' : ''}${row.text}`}>
-              <span className="mc-feed-glyph" aria-hidden="true">&gt;</span>
+              <span className="mc-feed-glyph" aria-hidden="true">{row.glyph}</span>
               <span className="mc-feed-text" title={row.text}>{row.text}</span>
               <span className="mc-feed-arrow" aria-hidden="true">&gt;</span>
             </Link>
@@ -108,6 +142,7 @@ export function ActionFeed({ compact = false }: { compact?: boolean }) {
               <span className="mc-feed-text">{extra} more…</span>
             </div>
           )}
+          {shown.length === 0 && <div className="mc-feed-row note is-static"><span className="mc-feed-glyph">&gt;</span><span className="mc-feed-text">{events.length ? 'No mission alerts.' : data ? 'No live mission events received.' : 'Connecting to mission event bus…'}</span></div>}
         </div>
       )}
     </div>

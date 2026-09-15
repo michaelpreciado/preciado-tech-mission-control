@@ -6,6 +6,13 @@ import { SectionRule } from './ui'
 import styles from './HomeWorkspace.module.css'
 
 const rate = (value: number) => value > 1048576 ? `${(value / 1048576).toFixed(1)} MB/s` : `${(value / 1024).toFixed(1)} KB/s`
+const sampleAge = (iso?: string) => {
+  if (!iso) return 'live'
+  const age = Math.max(0, Date.now() - new Date(iso).getTime())
+  if (age < 5_000) return 'now'
+  if (age < 60_000) return `${Math.floor(age / 1_000)}s`
+  return `${Math.floor(age / 60_000)}m`
+}
 export function HomeSystem() {
   const { data, error } = useHostMetrics()
   const sample = data?.current
@@ -15,7 +22,7 @@ export function HomeSystem() {
   const gpu = sample?.gpus[0]
   return (
     <section className={styles.section} aria-labelledby="home-system-telemetry">
-      <SectionRule label="SYSTEM" index={3} id="home-system-telemetry" post={<span className={styles.live} data-stale={error}>{error ? 'Connection lost' : sample ? '● Live · 2s' : 'Connecting…'}</span>} />
+      <SectionRule label="SYSTEM" index={3} id="home-system-telemetry" post={<span className={styles.live} data-stale={error}>{error ? 'Connection lost' : sample ? `● Live · ${sampleAge(data?.generatedAt)}` : 'Connecting…'}</span>} />
       {error && <p role="status" className={styles.error}>{data ? 'Showing the last received sample while reconnecting.' : 'Telemetry is unavailable. Reconnecting…'}</p>}
       {!sample && !error && <p className={styles.empty}>Waiting for the first hardware sample…</p>}
       {sample && <>

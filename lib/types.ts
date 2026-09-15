@@ -386,6 +386,9 @@ export type MissionData = {
     kanban: { available: boolean; source: string; lastEventAt: string | null }
   }
   warnings: string[]
+  /** Optional diagnostics emitted by the aggregate collector, when a source degraded. */
+  collectorErrors?: Record<string, string>
+  lastGoodAt?: Record<string, string>
   agent_id?: AgentId
 }
 

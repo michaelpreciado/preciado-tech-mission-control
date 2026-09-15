@@ -103,6 +103,7 @@ function OrbRuntime({ placement }: { placement: Placement }) {
   const previousState = useRef<OrbState>('idle')
   const coolBelowSince = useRef<number | null>(null)
   const abort = useRef<AbortController | null>(null)
+  const [sample, setSample] = useState<HostSample | null>(null)
   const [visual, setVisual] = useState<VisualState>({ state: 'idle', intensity: 0 })
   const [webglFailed, setWebglFailed] = useState(webglFailedForSession)
   const webglAvailable = useMemo(() => detectWebGL(), [])
@@ -136,8 +137,10 @@ function OrbRuntime({ placement }: { placement: Placement }) {
         if (!response.ok) return
         const metrics = await response.json() as HostMetrics
         if (!alive) return
-        sampleRef.current = metrics.current; evaluate()
-      } catch (error) { if ((error as Error).name !== 'AbortError') sampleRef.current = null }
+        sampleRef.current = metrics.current
+        setSample(metrics.current)
+        evaluate()
+      } catch (error) { if ((error as Error).name !== 'AbortError') { sampleRef.current = null; setSample(null) } }
     }
     let pollTimer: number | null = null; let stateTimer: number | null = null
     const stopTimers = () => {
@@ -156,6 +159,7 @@ function OrbRuntime({ placement }: { placement: Placement }) {
 
   const markWebGLFailed = useCallback(() => { webglFailedForSession = true; setWebglFailed(true) }, [])
   const params = deriveOrbVisual(visual.state)
+  const hostLoad = sample ? `${Math.round(Math.min(1, orbLoadIntensity(sample)) * 100)}%` : '—'
   return (
     <div className={`mc-core-orb mc-core-orb-${placement}`} data-orb-state={visual.state} aria-hidden="true">
       {webglAvailable && !webglFailed && (
@@ -179,7 +183,7 @@ function OrbRuntime({ placement }: { placement: Placement }) {
       )}
       <NeuralOrbCanvas state={visual.state} intensity={visual.intensity} staticMotion={staticMotion} visible={visible} />
       <span className="mc-core-orb-mark"><Icon name="brand" size={placement === 'desktop' ? 15 : 11} /></span>
-      <span className="ob-orb-readout"><strong>{(98.2 + (visual.state === 'hot' ? -1 : visual.state === 'surge' ? 0.4 : 0)).toFixed(1)}%</strong><small>INTEGRITY</small><em>{params.palette.label.toUpperCase()} · {params.pulseRate.toFixed(1)}HZ</em></span>
+      <span className="ob-orb-readout"><strong>{hostLoad}</strong><small>HOST LOAD</small><em>{params.palette.label.toUpperCase()} · {params.pulseRate.toFixed(1)}HZ</em></span>
     </div>
   )
 }
