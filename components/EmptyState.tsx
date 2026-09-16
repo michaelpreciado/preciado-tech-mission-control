@@ -15,6 +15,7 @@ import type { ReactNode } from 'react'
 import { Button } from './ui'
 import { usePathname } from 'next/navigation'
 import { AsciiEmblem } from '@/app/vf/Ascii'
+import { BracketFrame } from './BracketFrame'
 
 export type EmptyStateAction = {
   label: string
@@ -47,6 +48,7 @@ export function EmptyState({
   const pathname = usePathname()
   return (
     <div className={`mc-empty is-${tone}${compact ? ' is-compact' : ''}`} role="status" aria-live="polite">
+      <BracketFrame />
       <AsciiEmblem view={pathname ?? '/'} />
       <span className="mc-empty-glyph" aria-hidden>{glyph}</span>
       <span className="mc-empty-title">{title}</span>

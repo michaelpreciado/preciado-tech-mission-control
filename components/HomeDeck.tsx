@@ -11,6 +11,8 @@ import { RevenuePipeline } from './RevenuePipeline'
 import { HomeTasks } from './HomeTasks'
 import { HomeSystem } from './HomeSystem'
 import { GithubPanel } from './views/GithubPanel'
+import { BracketFrame } from './BracketFrame'
+import { CountUp } from './CountUp'
 import styles from './HomeWorkspace.module.css'
 
 const HomeCoreOrb = dynamic(() => import('./CoreOrb'), { ssr: false })
@@ -51,14 +53,15 @@ function TelemetryCard() {
     `mem   ${memoryPct == null ? '—' : `${memoryPct}% used`}`,
   ] : ['uplink awaiting mission data…']
   return <section id="home-telemetry" className={`${styles.obCard} ${styles.obTelemetryCard}`} aria-labelledby="ob-telemetry-title">
+    <BracketFrame />
     <CardHeader label="UPLINK TELEMETRY" meta="ASCII BUS" />
     <div className={styles.obTelemetryBody}>
       <pre className={styles.obAscii} aria-hidden="true">{lines.join('\n')}</pre>
       <div className={styles.obReadouts}>
-        <span>LOAD <b>{cpu ? cpu.load1.toFixed(2) : '—'}</b></span>
-        <span>CORES <b>{cpu?.cores ?? '—'}</b></span>
-        <span>MEM <b>{memoryPct == null ? '—' : `${memoryPct}%`}</b></span>
-        <span>OPEN TASKS <b>{data ? data.counts.openTasks.toLocaleString() : '—'}</b></span>
+        <span>LOAD <b>{cpu ? <CountUp value={cpu.load1} decimals={2} /> : '—'}</b></span>
+        <span>CORES <b>{cpu?.cores == null ? '—' : <CountUp value={cpu.cores} />}</b></span>
+        <span>MEM <b>{memoryPct == null ? '—' : <CountUp value={memoryPct} suffix="%" />}</b></span>
+        <span>OPEN TASKS <b>{data ? <CountUp value={data.counts.openTasks} /> : '—'}</b></span>
       </div>
     </div>
   </section>
@@ -69,9 +72,10 @@ function FinanceCard() {
   const costs = data?.costs
   const amount = costs?.meteredCostUsd ?? costs?.estimatedCostUsd
   return <section className={`${styles.obCard} ${styles.obFinanceCard}`} aria-labelledby="ob-finance-title">
+    <BracketFrame />
     <CardHeader label="FINANCE" meta={costs ? `${costs.dailyWindowDays}D WINDOW` : 'SYNCING'} href="/costs" />
     <div className={styles.obFinanceBody}>
-      <strong>{amount == null ? '—' : `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</strong>
+      <strong>{amount == null ? '—' : <CountUp value={amount} prefix="$" decimals={2} />}</strong>
       <span>{costs ? `${costs.totalRequests.toLocaleString()} requests · ${costs.dailyWindowDays}d window` : 'Loading ledger…'}</span>
       <small>metered usage · <Link href="/costs">OPEN COST LEDGER ↗</Link></small>
     </div>
@@ -122,7 +126,7 @@ export function HomeDeck() {
         <div className={`${styles.obCard} ${styles.obTasksCard}`}><HomeTasks /></div>
         <div className={styles.obUplink}><NeuralUplink portraitArt={<AsciiPortrait />} /></div>
         <div className={styles.obOrbDock}>
-          <div className={styles.obOrbStage}><HomeCoreOrb placement="desktop" /></div>
+          <div className={styles.obOrbStage}><BracketFrame /><HomeCoreOrb placement="desktop" /></div>
           <span className={styles.obOrbLabel}>NEURAL CORE</span>
         </div>
       </aside>

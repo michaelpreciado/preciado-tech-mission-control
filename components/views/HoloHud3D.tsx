@@ -10,6 +10,7 @@ import { createDispatchHub } from '@/components/threed/dispatch-hub'
 import { useUiSettings } from '../ui-settings'
 import type { AgentNode } from '@/lib/telemetry-types'
 import { HOLO_NODE_CAP } from '@/components/threed/holo-config'
+import { BracketFrame } from '../BracketFrame'
 
 type PositionedNode = { node: AgentNode; position: THREE.Vector3; hub: boolean }
 
@@ -149,6 +150,7 @@ export default function HoloHud3D({ nodes, selectedId }: { nodes: AgentNode[]; s
   }, [nodes])
   const staticMotion = reduced || motion === 'reduced' || motion === 'off'
   return <div ref={host} className="mc-hud3d" aria-hidden="true">
+    <BracketFrame />
     {visible && inView && elements3d.teamGraph && <HoloBoundary>
       <Canvas dpr={[1, 1.5]} frameloop={staticMotion ? 'demand' : 'always'} camera={{ position: [0, 0, 16], fov: 40 }} gl={{ alpha: true, antialias: true }} fallback={<p>3D unavailable. Use the roster below.</p>}>
         <Scene nodes={bounded} selectedId={selectedId} staticMotion={staticMotion} />
