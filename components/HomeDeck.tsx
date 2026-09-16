@@ -113,7 +113,7 @@ export function HomeDeck() {
     </nav>
     <header className={styles.obHeader}>
       <div className={styles.obHeaderBrand}><span className={styles.obHeaderDots}>● ● ●</span><b>PRECIADO<span>TECH</span></b><small>michael@preciado-tech:~<i>/mission-control</i></small></div>
-      <div className={styles.obHeaderStatus}><span><i className={styles.obLed} /> {systemLabel}</span><span>{syncLabel}</span><button onClick={() => window.dispatchEvent(new Event('mc:open-cmdp'))}>QUICK GO <kbd>⌘K</kbd></button></div>
+      <div className={styles.obHeaderStatus}><span><i className={styles.obLed} /> {systemLabel}</span><span>{syncLabel}</span><button onClick={() => window.dispatchEvent(new Event('mc:open-cmdp'))}>QUICK GO <kbd>⌘K</kbd></button><button onClick={() => window.dispatchEvent(new Event('mc:launch'))}>▶ LAUNCH FILM</button></div>
       <ActionFeed compact />
     </header>
 
@@ -136,7 +136,7 @@ export function HomeDeck() {
           <CardHeader label="MISSION FEED" meta={`/var/log/mission · ${eventStream.toUpperCase()}`} />
           <ActionFeed />
         </section>
-        <div className={styles.obMetricRow}><TelemetryCard /><FinanceCard /></div>
+        <div className={`${styles.obMetricRow} mc-reveal`}><TelemetryCard /><FinanceCard /></div>
       </main>
 
       <aside className={styles.obRail} aria-label="Mission signals">
