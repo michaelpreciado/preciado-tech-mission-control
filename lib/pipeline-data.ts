@@ -71,6 +71,7 @@ function normalizeLead(raw: any): PipelineLead | null {
     qualified: typeof raw.qualified === 'boolean' ? raw.qualified : undefined,
     socials: raw.socials ?? undefined,
     extraData: raw.extra_data ?? raw.extraData ?? undefined,
+    outreach: raw.outreach ?? undefined,
     concept: raw.concept ? {
       designDirection: raw.concept.design_direction ?? raw.concept.designDirection,
       inspirationSources: raw.concept.inspiration_sources ?? raw.concept.inspirationSources,
@@ -259,6 +260,21 @@ export async function collectPipeline(revenue = false): Promise<PipelineData> {
   const counts = Object.fromEntries(PIPELINE_STAGES.map(s => [s, 0])) as Record<PipelineStage, number>
   for (const lead of leads) counts[lead.stage] += 1
 
+  const today = new Date().toISOString().slice(0, 10)
+  const followups: NonNullable<PipelineData['followups']> = { overdue: 0, upcoming: 0 }
+  for (const lead of leads) {
+    const outreach = lead.outreach
+    if (!outreach?.followup_due || outreach.status !== 'sent' || outreach.followup_sent_at
+      || (outreach.reply != null && outreach.reply !== 'none recorded')) continue
+    const due = outreach.followup_due
+    if (due.slice(0, 10) < today) {
+      followups.overdue += 1
+    } else {
+      followups.upcoming += 1
+      if (!followups.nextDue || due < followups.nextDue) followups.nextDue = due
+    }
+  }
+
   const display: PipelineLead[] = []
   for (const stage of PIPELINE_STAGES) {
     const pool = leads.filter(l => l.stage === stage)
@@ -284,6 +300,7 @@ export async function collectPipeline(revenue = false): Promise<PipelineData> {
     leads: display,
     counts,
     leadsTotal: leads.length,
+    followups,
     events,
   }
 }

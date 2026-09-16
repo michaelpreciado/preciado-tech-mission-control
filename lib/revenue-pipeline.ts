@@ -21,6 +21,19 @@ export function deadlineChip(deadline?: string | null, now = Date.now()): { kind
   return { kind: 'due', label: `DUE ${new Date(deadline).toISOString().slice(5, 10)}` }
 }
 
+export function followupChip(lead: PipelineLead, now = Date.now()): { kind: 'overdue' | 'due' | 'done' | 'none'; label: string } {
+  const outreach = lead.outreach
+  if (!outreach?.followup_due) return { kind: 'none', label: '' }
+  if (outreach.followup_sent_at) return { kind: 'done', label: `FOLLOWED UP ${outreach.followup_sent_at.slice(5, 10)}` }
+  const due = outreach.followup_due
+  if (!Number.isFinite(Date.parse(due))) return { kind: 'none', label: '' }
+  if (Date.parse(due) < now) {
+    const delta = formatTimeInStage(due, now)
+    return { kind: 'overdue', label: `FOLLOW-UP OVERDUE +${delta === 'now' ? '<1m' : delta}` }
+  }
+  return { kind: 'due', label: `FOLLOW UP ${due.slice(5, 10)}` }
+}
+
 export function revenueLeads(leads: PipelineLead[]): PipelineLead[] {
   const oldest = (a: PipelineLead, b: PipelineLead) => (a.updatedAt ?? '').localeCompare(b.updatedAt ?? '')
   return [

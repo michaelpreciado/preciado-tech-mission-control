@@ -5,6 +5,7 @@ import type { PipelineData, PipelineLead, PipelineStage } from '@/lib/types'
 import { SkeletonPanel, fmtDate } from './ui'
 import { ClientDocsLink } from './VaultDocuments'
 import { apiFetch, apiUrl } from '@/lib/api-base'
+import { followupChip } from '@/lib/revenue-pipeline'
 
 const POLL_MS = 12_000
 
@@ -92,6 +93,10 @@ function CompletedState({ lead }: { lead: PipelineLead }) {
 }
 
 function LeadCard({ lead, liveNote }: { lead: PipelineLead; liveNote?: string }) {
+  const outreach = lead.outreach
+  const status = outreach?.status ?? (typeof lead.extraData?.outreach_status === 'string' ? lead.extraData.outreach_status : undefined)
+  const followup = followupChip(lead)
+  const sentAt = outreach?.sent_at ?? (typeof lead.extraData?.sent_at === 'string' ? lead.extraData.sent_at : undefined)
   return (
     <div className="mc-pipe-card" data-stage={lead.stage}>
       <div className="mc-pipe-card-head">
@@ -115,6 +120,20 @@ function LeadCard({ lead, liveNote }: { lead: PipelineLead; liveNote?: string })
           <a className="mc-pipe-preview" href={lead.extraData?.preview_url || lead.extraData?.previewUrl} target="_blank" rel="noreferrer"
              style={{ flex: 1, textAlign: 'center' }}>▶ VIEW PREVIEW</a>
         </div>
+      )}
+
+      {status && (
+        <>
+          <div className="mc-pipe-row">
+            <span className={`mc-pipe-out is-${status}`}>
+              {status === 'sent' ? `✓ SENT${sentAt ? ' ' + sentAt.slice(5, 10) : ''}`
+                : status === 'replied' ? '↩ REPLIED' : status === 'dead' ? '✗ DEAD'
+                : status === 'parked' ? '⏸ PARKED' : status === 'shelved' ? '‖ SHELVED' : status.toUpperCase()}
+            </span>
+            {followup.kind !== 'none' && <span className={`mc-pipe-follow-chip is-${followup.kind}`}>{followup.label}</span>}
+          </div>
+          {outreach?.reply && outreach.reply !== 'none recorded' && <div className="mc-pipe-row">↩ {outreach.reply}</div>}
+        </>
       )}
 
       {lead.stage === 'social_scraped' && <SocialLinks lead={lead} />}
@@ -209,6 +228,14 @@ export function PipelineBoard() {
     <>
       {error && <div className="mc-pipe-error">⚠ pipeline store unreachable — {error}</div>}
       <div className="mc-kb-sync" role="status">{data ? `${data.leadsTotal} leads · updated ${fmtDate(data.generatedAt)}` : 'No snapshot'}{error ? ' · STALE' : ''}</div>
+      {data?.followups && data.followups.overdue + data.followups.upcoming > 0 && (
+        <div className="mc-pipe-follow" role="status">
+          FOLLOW-UPS
+          {data.followups.overdue > 0 && <span className="mc-pipe-follow-count is-overdue">{data.followups.overdue} OVERDUE</span>}
+          <span className="mc-pipe-follow-count">{data.followups.upcoming} UPCOMING</span>
+          {data.followups.nextDue && <span className="mc-pipe-follow-count">next {data.followups.nextDue.slice(5, 10)}</span>}
+        </div>
+      )}
       <div className="mc-pipeline v4-group">
         {COLUMNS.map(col => {
           const items = leads.filter(l => l.stage === col.stage)
