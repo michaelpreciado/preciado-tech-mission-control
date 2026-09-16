@@ -8748,3 +8748,44 @@ html[data-theme='friday'] .mc-tab.is-active::after { content: none; }
 @media (prefers-reduced-motion: reduce) {
   .mc-pipe-follow-chip.is-overdue { animation: none; }
 }
+
+/* ── V1 · SIGNAL CRAFT — brackets motif (§4c) ─────────────────────────── */
+.mc-brk { position: absolute; inset: 7px; pointer-events: none; z-index: 4; }
+.mc-brk > i {
+  position: absolute; width: 18px; height: 18px;
+  border: 2px solid rgba(var(--pt-neon-rgb), 0.3);
+  transition: border-color 0.35s ease;
+}
+.mc-brk > i.tl { top: 0; left: 0; border-right: 0; border-bottom: 0; }
+.mc-brk > i.tr { top: 0; right: 0; border-left: 0; border-bottom: 0; }
+.mc-brk > i.bl { bottom: 0; left: 0; border-right: 0; border-top: 0; }
+.mc-brk > i.br { bottom: 0; right: 0; border-left: 0; border-top: 0; }
+.ob-home section:hover .mc-brk > i,
+.ob-home [class*='obOrbDock']:hover .mc-brk > i,
+.mc-empty:hover .mc-brk > i,
+.mc-hud3d:hover .mc-brk > i { border-color: rgba(var(--pt-neon-rgb), 0.95); }
+.mc-empty { position: relative; }
+
+/* ── V1 · MAGIC LAYER — micro-interactions, motion-gated (§11.3) ──────── */
+.mc-count { font-variant-numeric: tabular-nums; }
+.mc-main :is(input, textarea, select) { transition: box-shadow 0.2s ease, border-color 0.2s ease; }
+.mc-main :is(input, textarea, select):focus-visible {
+  outline: 2px solid rgba(var(--pt-neon-rgb), 0.5);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(var(--pt-neon-rgb), 0.12);
+}
+.ob-btn:active, .mc-btn:active { transform: translateY(1px) scale(0.985); }
+.mc-pipe-card { transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.22s ease; }
+.mc-pipe-card:hover { transform: translateY(-2px); }
+
+/* ── V1 · TYPE PASS — conservative v1 (§4b) ───────────────────────────── */
+.mc-main h1, .mc-main h2 { text-wrap: balance; }
+
+@media (hover: none), (pointer: coarse) {
+  .mc-pipe-card:hover { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mc-pipe-card, .ob-btn, .mc-btn, .mc-main :is(input, textarea, select) { transition: none; }
+  .mc-pipe-card:hover { transform: none; }
+  .ob-btn:active, .mc-btn:active { transform: none; }
+}
