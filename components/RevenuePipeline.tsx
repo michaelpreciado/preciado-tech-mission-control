@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { PipelineData } from '@/lib/types'
-import { deadlineChip, formatTimeInStage, revenueLeads, stageStartedAt } from '@/lib/revenue-pipeline'
+import { deadlineChip, followupChip, formatTimeInStage, revenueLeads, stageStartedAt } from '@/lib/revenue-pipeline'
 import { SkeletonPanel, SectionRule, fmtDate } from './ui'
 import { apiFetch } from '@/lib/api-base'
 
@@ -56,7 +56,9 @@ export function RevenuePipeline() {
     {data && !shown.length && <p style={{ color: 'var(--pt-text-dim)', fontSize: 12 }}>No active revenue — pipeline is quiet.</p>}
     <div style={{ overflowX: 'auto' }}>
       {shown.map(lead => {
-        const deadline = deadlineChip(lead.extraData?.next_action)
+        const deadline = deadlineChip(lead.outreach?.followup_due ?? (typeof lead.extraData?.next_action_due === 'string' ? lead.extraData.next_action_due : undefined))
+        const outreachStatus = lead.outreach?.status ?? (typeof lead.extraData?.outreach_status === 'string' ? lead.extraData.outreach_status : undefined)
+        const followup = followupChip(lead)
         const preview = lead.previewUrl ?? lead.extraData?.preview_url ?? lead.extraData?.previewUrl ?? lead.completed?.previewUrl
         const safePreview = preview && /^https?:\/\//i.test(preview) ? preview : undefined
         const offer = lead.extraData?.offer_estimate
@@ -68,6 +70,14 @@ export function RevenuePipeline() {
           <strong style={{ color: 'var(--pt-text-high)' }}>{typeof offer === 'number' ? `$${offer.toLocaleString('en-US')}` : lead.extraData?.price_range ?? '—'}</strong>
           <span title={since ? `In stage since ${fmtDate(since)}` : 'Stage entry unknown'} style={{ color: 'var(--pt-text-dim)' }}>{formatTimeInStage(since)}</span>
           {deadline.kind !== 'none' && <span style={{ ...chipStyle, color: deadline.kind === 'overdue' ? 'var(--pt-error-ink)' : 'var(--pt-warn-ink)' }}>{deadline.label}</span>}
+          {outreachStatus && <>
+            <span style={{ ...chipStyle, color: outreachStatus === 'sent' || outreachStatus === 'replied' ? 'var(--pt-ok-ink)' : outreachStatus === 'dead' ? 'var(--pt-error-ink)' : 'var(--pt-text-dim)' }}>
+              {outreachStatus === 'sent' ? '✓ SENT' : outreachStatus === 'replied' ? '↩ REPLIED'
+                : outreachStatus === 'dead' ? '✗ DEAD' : outreachStatus === 'parked' ? '⏸ PARKED'
+                : outreachStatus === 'shelved' ? '‖ SHELVED' : outreachStatus.toUpperCase()}
+            </span>
+            {(followup.kind === 'overdue' || followup.kind === 'due') && <span style={{ ...chipStyle, color: followup.kind === 'overdue' ? 'var(--pt-error-ink)' : 'var(--pt-warn-ink)' }}>{followup.label}</span>}
+          </>}
           {safePreview && <a href={safePreview} target="_blank" rel="noreferrer" style={{ color: 'var(--pt-neon)' }}>◉ preview</a>}
           <span aria-label={`Approval ${status}`} style={{ ...chipStyle, color: status === 'approved' ? 'var(--pt-ok-ink)' : status === 'rejected' ? 'var(--pt-error-ink)' : 'var(--pt-warn-ink)' }}>{status === 'approved' ? '✓' : status === 'rejected' ? '✗' : '⏳ AWAITING'}</span>
           {lead.stage === 'awaiting_approval' && <span style={{ display: 'flex', gap: 6, marginLeft: 'auto' }}>

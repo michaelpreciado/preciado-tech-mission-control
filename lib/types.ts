@@ -458,6 +458,25 @@ export type PipelineLeadApproval = {
   decidedAt?: string
 }
 
+export type PipelineLeadOutreach = {
+  status?: string
+  channel?: string
+  to?: string
+  sent_at?: string
+  sent_time_local?: string
+  resend_id?: string
+  resend_status?: string
+  followup_due?: string
+  followup_drafted?: string
+  followup_sent_at?: string | null
+  reply?: string
+  blocker?: string
+  parked_at?: string
+  shelved_at?: string
+  dead_at?: string
+  reason?: string
+}
+
 export type PipelineLead = {
   id: string
   stage: PipelineStage
@@ -490,6 +509,7 @@ export type PipelineLead = {
     estimatedScope?: string
   }
   approval?: PipelineLeadApproval
+  outreach?: PipelineLeadOutreach
   development?: {
     taskId?: string
     status?: string
@@ -525,6 +545,7 @@ export type PipelineData = {
   leads: PipelineLead[]
   counts: Record<PipelineStage, number>
   leadsTotal: number
+  followups?: { overdue: number; upcoming: number; nextDue?: string }
   events: PipelineEvent[]
 }
 
