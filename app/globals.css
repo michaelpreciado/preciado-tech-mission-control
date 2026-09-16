@@ -8789,3 +8789,73 @@ html[data-theme='friday'] .mc-tab.is-active::after { content: none; }
   .mc-pipe-card:hover { transform: none; }
   .ob-btn:active, .mc-btn:active { transform: none; }
 }
+
+/* ── V2 · BRIDGE STRIP — always-on live facts (§11.4 + §7) ────────────── */
+.mc-bridge {
+  position: sticky; top: 0; z-index: 6;
+  display: flex; align-items: center; flex-wrap: wrap; gap: 14px;
+  margin: 0 0 10px; padding: 7px 14px;
+  border-bottom: 1px solid var(--pt-border-dim);
+  background: rgba(8, 10, 14, 0.72);
+  backdrop-filter: blur(14px);
+  font-family: var(--pt-font-mono, ui-monospace, monospace);
+  font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--pt-text-dim);
+}
+.mc-bridge-dot {
+  width: 6px; height: 6px; border-radius: 50%; flex: none;
+  background: var(--pt-neon); box-shadow: 0 0 8px var(--pt-neon);
+  animation: bridge-pulse 2.4s ease-in-out infinite;
+}
+@keyframes bridge-pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+.mc-bridge-seg { display: inline-flex; align-items: baseline; gap: 5px; }
+.mc-bridge-seg b { color: var(--pt-text); font-weight: 600; font-variant-numeric: tabular-nums; }
+.mc-bridge-seg.is-warn, .mc-bridge-seg.is-warn b { color: #febc2e; }
+.mc-bridge-seg.is-due b { color: #febc2e; }
+.mc-bridge-seg.is-overdue, .mc-bridge-seg.is-overdue b { color: var(--pt-error-ink); }
+.mc-bridge-seg.is-quiet { color: var(--pt-text-mute); }
+@media (max-width: 700px) {
+  .mc-bridge { gap: 10px; padding: 6px 10px; font-size: 8.5px; letter-spacing: 0.12em; }
+}
+@media (pointer: coarse) {
+  .mc-bridge { backdrop-filter: none; background: rgba(8, 10, 14, 0.92); }
+}
+
+/* ── V2 · DESIGNED LOADING — skeletons with the seam motif ────────────── */
+.mc-skel { display: flex; flex-direction: column; gap: 8px; padding: 14px 14px 8px; }
+.mc-skel-line {
+  display: block; height: 8px; border-radius: 4px;
+  background: linear-gradient(90deg,
+    rgba(var(--pt-neon-rgb), 0.08) 25%,
+    rgba(var(--pt-neon-rgb), 0.18) 50%,
+    rgba(var(--pt-neon-rgb), 0.08) 75%);
+  background-size: 200% 100%;
+  animation: mc-skel-sweep 1.8s ease-in-out infinite;
+}
+@keyframes mc-skel-sweep { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+.mc-skel-label {
+  display: block; padding: 0 14px 14px;
+  color: var(--pt-text-dim); font-size: 11px; letter-spacing: 0.14em;
+}
+
+/* ── V2 · DESIGNED BOOT — the bridge mark draws itself ────────────────── */
+.boot-draw { display: block; width: 140px; height: 44px; margin: 0 0 10px; color: var(--pt-neon); opacity: 0.9; }
+.boot-draw-path {
+  fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round;
+  stroke-dasharray: 220; stroke-dashoffset: 220;
+  animation: boot-draw-in 0.9s ease-out forwards;
+}
+.boot-draw-path:nth-child(2) { animation-delay: 0.12s; }
+.boot-draw-path:nth-child(3), .boot-draw-path:nth-child(4) { animation-delay: 0.3s; }
+@keyframes boot-draw-in { to { stroke-dashoffset: 0; } }
+
+/* ── V2 · empty states get a quiet entrance ───────────────────────────── */
+@keyframes mc-empty-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.mc-empty { animation: mc-empty-in 0.4s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mc-bridge-dot { animation: none; }
+  .mc-skel-line { animation: none; background-position: 0 0; }
+  .boot-draw-path { animation: none; stroke-dashoffset: 0; }
+  .mc-empty { animation: none; }
+}
