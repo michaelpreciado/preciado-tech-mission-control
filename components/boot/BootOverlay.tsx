@@ -1,12 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { BootSequence } from './BootSequence'
+import { LaunchFilm } from './LaunchFilm'
 
 const SESSION_KEY = 'mc:boot:w2i'
 
 export function BootOverlay() {
   const [phase, setPhase] = useState<'hidden' | 'active' | 'leaving'>('hidden')
+  const [nonce, setNonce] = useState(0)
 
   useEffect(() => {
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -22,6 +23,16 @@ export function BootOverlay() {
   }, [])
 
   useEffect(() => {
+    const launch = () => {
+      try { sessionStorage.removeItem(SESSION_KEY) } catch {}
+      setNonce(n => n + 1)
+      setPhase('active')
+    }
+    window.addEventListener('mc:launch', launch)
+    return () => window.removeEventListener('mc:launch', launch)
+  }, [])
+
+  useEffect(() => {
     if (phase === 'hidden') return
     if (phase === 'leaving') {
       const timer = window.setTimeout(() => setPhase('hidden'), 300)
@@ -30,7 +41,7 @@ export function BootOverlay() {
     const dismiss = () => setPhase('leaving')
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)')
     const reduce = () => { if (motion.matches) setPhase('hidden') }
-    const timer = window.setTimeout(dismiss, 1200)
+    const timer = window.setTimeout(dismiss, 6600)
     window.addEventListener('keydown', dismiss)
     motion.addEventListener('change', reduce)
     return () => {
@@ -38,12 +49,12 @@ export function BootOverlay() {
       window.removeEventListener('keydown', dismiss)
       motion.removeEventListener('change', reduce)
     }
-  }, [phase])
+  }, [phase, nonce])
 
   if (phase === 'hidden') return null
   return (
     <div className={`boot-overlay${phase === 'leaving' ? ' boot-leaving' : ''}`} onClick={() => setPhase('leaving')}>
-      <BootSequence />
+      <LaunchFilm key={nonce} />
       <span className="boot-skip">CLICK / ANY KEY TO SKIP</span>
     </div>
   )
