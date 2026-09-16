@@ -17,6 +17,11 @@ export function BootSequence() {
     <div className="boot-console" role="status" aria-label="Loading Mission Control">
       <div aria-hidden="true">
         <AsciiTerminalArt />
+        <svg className="boot-draw" viewBox="0 0 140 44" aria-hidden="true">
+          <path className="boot-draw-path" d="M4 30 H136" />
+          <path className="boot-draw-path" d="M14 30 C 45 6, 95 6, 126 30" />
+          <path className="boot-draw-path" d="M45 30 V18 M95 30 V18" />
+        </svg>
         <div className="boot-eyebrow">MC / POWER-ON SELF TEST</div>
         <div className="boot-readout">
           {lines.map((line, index) => (

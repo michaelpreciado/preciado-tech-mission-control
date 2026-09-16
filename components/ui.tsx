@@ -274,9 +274,12 @@ export function Window({ tag, title, meta, children, style, className = '', fram
 export function SkeletonPanel({ label }: { label: string }) {
   return (
     <div className="mc-window" role="status" aria-live="polite">
-      <div style={{ padding: 14, color: 'var(--pt-text-dim)', fontSize: 11, letterSpacing: '0.14em' }}>
-        {label}...
+      <div className="mc-skel" aria-hidden="true">
+        <span className="mc-skel-line" style={{ width: '42%' }} />
+        <span className="mc-skel-line" style={{ width: '76%' }} />
+        <span className="mc-skel-line" style={{ width: '58%' }} />
       </div>
+      <span className="mc-skel-label">{label}…</span>
     </div>
   )
 }

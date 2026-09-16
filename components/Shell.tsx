@@ -5,6 +5,7 @@ import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { usePathname } from 'next/navigation'
 import { LiveDataProvider } from './LiveDataProvider'
+import { BridgeStrip } from './BridgeStrip'
 import { Button } from './ui'
 import { Icon, type IconName } from './icons'
 import { FOLD_INNER_MEDIA_QUERY, Sidebar as OmniBridgeSidebar } from './Sidebar'
@@ -376,6 +377,7 @@ export function Shell({ appName, appTagline, ui, children }: { appName: string; 
       <div className={`mc-shell${pathname === '/' ? ' is-home' : ''}`}>
         <OmniBridgeSidebar />
         <main id="mc-main-content" className="mc-main">
+          <BridgeStrip />
           {children}
         </main>
       </div>
