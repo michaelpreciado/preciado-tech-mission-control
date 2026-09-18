@@ -1,0 +1,119 @@
+.page,
+.board {
+  min-width: 0;
+  max-width: 100%;
+  font-family: var(--pt-font-ui);
+  color: var(--pt-text);
+  overflow-wrap: anywhere;
+}
+
+.page { display: grid; gap: var(--pt-s-5); }
+.page h1 { margin: 0; font-size: var(--pt-fs-h2); line-height: var(--pt-lh-tight); color: var(--pt-text-high); }
+.board { display: grid; gap: var(--pt-s-4); }
+.toolbar,
+.searchRow { display: flex; align-items: center; gap: var(--pt-s-3); min-width: 0; }
+.toolbar { flex-wrap: wrap; justify-content: space-between; }
+.searchRow > input { flex: 1; min-width: 0; }
+.searchRow > button { flex-shrink: 0; }
+.filters.filters { min-width: 0; }
+.filters > button { text-transform: none; letter-spacing: 0; min-width: 0; }
+.lanes { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--pt-s-4); align-items: start; min-width: 0; }
+.lane { min-width: 0; }
+.laneHeader { position: sticky; top: 0; z-index: 2; margin: 0 0 var(--pt-s-2); padding-block: var(--pt-s-1); background: var(--pt-bg-terminal-solid); border-radius: var(--pt-r-md); font-size: var(--pt-fs-body); }
+.laneToggle.laneToggle,
+.laneTitle { display: flex; width: 100%; align-items: center; justify-content: flex-start; gap: var(--pt-s-2); min-height: 48px; padding: var(--pt-s-2) var(--pt-s-3); }
+.laneToggle.laneToggle { font-size: var(--pt-fs-body); white-space: normal; }
+.chevron { margin-left: auto; }
+.laneBody { display: grid; gap: var(--pt-s-3); padding: var(--pt-s-1); min-width: 0; min-height: 64px; border-radius: var(--pt-r-md); }
+.laneBody[hidden] { display: none; }
+.taskCard.taskCard { backdrop-filter: none; box-shadow: none; }
+:global(html) :global(body) .taskCard .taskButton.taskButton {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: var(--pt-s-2);
+  width: 100%;
+  height: 100%;
+  padding: var(--pt-s-4);
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: var(--pt-text);
+  text-align: left;
+  white-space: normal;
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: var(--pt-font-ui);
+  box-shadow: none;
+}
+:global(html) :global(body) .taskCard .taskButton.taskButton:hover { background: rgba(var(--pt-text-rgb), 0.06); box-shadow: none; border-color: transparent; }
+.taskButton.taskButton:focus-visible { outline: 2px solid var(--pt-neon); outline-offset: -2px; }
+.taskTitle { font-size: var(--pt-fs-body); line-height: var(--pt-lh-snug); color: var(--pt-text-high); overflow-wrap: anywhere; }
+.taskButton > span { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.taskMeta { max-width: 100%; font-size: var(--pt-fs-sm); line-height: var(--pt-lh-ui); color: var(--pt-text-dim); font-weight: 400; overflow-wrap: anywhere; }
+.dragging { opacity: .5; }
+.dropReady { outline: 1px dashed var(--pt-border); }
+.dropOver { background: rgba(var(--pt-neon-rgb), .12); }
+.empty { margin: 0; padding: var(--pt-s-4); color: var(--pt-text-dim); font-size: var(--pt-fs-sm); }
+.muted { color: var(--pt-text-dim); font-size: var(--pt-fs-sm); }
+.errorPanel { gap: var(--pt-s-2); align-items: flex-start; }
+.errorPanel p { margin: 0; }
+.sheetContent { display: grid; gap: var(--pt-s-5); min-width: 0; font-family: var(--pt-font-ui); font-size: var(--pt-fs-body); line-height: var(--pt-lh-body); overflow-wrap: anywhere; }
+.sheetContent p { margin: 0; }
+.sheetContent input,
+.sheetContent select,
+.sheetContent textarea { box-sizing: border-box; min-width: 0; max-width: 100%; }
+.sheetContent button { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.section { display: grid; gap: var(--pt-s-3); min-width: 0; border-top: 1px solid var(--pt-border-dim); padding-top: var(--pt-s-4); }
+.section h3 { margin: 0; font-size: var(--pt-fs-body); color: var(--pt-text-high); }
+.section > button { justify-self: start; }
+.actions,
+.meta { display: flex; flex-wrap: wrap; gap: var(--pt-s-2); align-items: center; min-width: 0; }
+.meta { color: var(--pt-text-dim); font-size: var(--pt-fs-sm); }
+.prose { white-space: pre-wrap; }
+.formGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--pt-s-3); }
+.facts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--pt-s-2) var(--pt-s-4); margin: 0; font-size: var(--pt-fs-sm); }
+.facts dt { color: var(--pt-text-dim); }
+.facts dd { margin: 0; }
+.agentToggle.agentToggle { justify-content: space-between; width: 100%; }
+.agentSection { min-width: 0; }
+.agentSection > div { margin-top: var(--pt-s-3); }
+
+/* Sheet has no className prop; scope its title wrapping through our content. */
+:global([role='dialog']):has(.sheetContent) > div > h2 { min-width: 0; overflow-wrap: anywhere; }
+
+@media (max-width: 600px) {
+  .toolbar { gap: var(--pt-s-3); }
+  .filters.filters { width: 100%; }
+  .filters > button { flex: 1; padding-inline: var(--pt-s-2); }
+  .toolbar > button { margin-left: auto; }
+  .formGrid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (min-width: 900px) {
+  .lanes { grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
+  .laneHeader { position: static; }
+}
+
+/* Agent management shares the same route-owned vocabulary. */
+.agentDeck { min-width: 0; font-family: var(--pt-font-ui); gap: var(--pt-s-4); backdrop-filter: none; }
+.agentHeader { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--pt-s-3); }
+.agentHeader h2 { margin: 0; color: var(--pt-text-high); font-size: var(--pt-fs-h3); }
+.agentHeader p { margin: var(--pt-s-1) 0 0; font-size: var(--pt-fs-sm); color: var(--pt-text-dim); }
+.agentGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: var(--pt-s-3); min-width: 0; }
+:global(html) :global(body) .agentDeck .agentGrid .agentTile { display: flex; flex-direction: column; gap: var(--pt-s-3); text-align: left; white-space: normal; width: 100%; height: 100%; min-width: 0; padding: var(--pt-s-4); border: 0; border-radius: inherit; background: transparent; color: var(--pt-text); box-shadow: none; }
+.agentRow { display: flex; align-items: center; justify-content: space-between; gap: var(--pt-s-3); width: 100%; overflow-wrap: anywhere; font-size: var(--pt-fs-sm); }
+.agentPath { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--pt-fs-xs); color: var(--pt-text-dim); }
+.agentAccess form, .agentFields form { display: grid; gap: var(--pt-s-3); min-width: 0; }
+.agentAccess form { max-width: 540px; }
+.agentAccess button, .agentFields form > button { justify-self: start; }
+.agentMessage { margin: 0; overflow-wrap: anywhere; }
+.agentDialog { display: grid; gap: var(--pt-s-4); min-width: 0; font-family: var(--pt-font-ui); overflow-wrap: anywhere; }
+.agentDialog p { margin: 0; }
+.agentDialog button { max-width: 100%; white-space: normal; }
+.agentDeck input, .agentDialog input, .agentDialog textarea, .agentDialog select { min-width: 0; max-width: 100%; box-sizing: border-box; }
+.agentFields { display: grid; gap: var(--pt-s-4); border: 0; margin: 0; padding: 0; min-width: 0; }
+.agentActions { display: flex; flex-wrap: wrap; gap: var(--pt-s-2); }
+.agentTail { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 36dvh; min-height: 120px; overflow: auto; margin: 0; padding: var(--pt-s-3); font-size: var(--pt-fs-sm); }
+:global([role='dialog']):has(.agentDialog) > div > h2 { min-width: 0; overflow-wrap: anywhere; }
