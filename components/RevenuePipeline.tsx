@@ -1,15 +1,62 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { PipelineData } from '@/lib/types'
+import type { PipelineData, PipelineLead, PipelineStage } from '@/lib/types'
 import { deadlineChip, followupChip, formatTimeInStage, revenueLeads, stageStartedAt } from '@/lib/revenue-pipeline'
-import { SkeletonPanel, SectionRule, fmtDate } from './ui'
+import { Button, Card, CardHead, Chip, Row, Stat, type ChipTone } from './ui'
 import { apiFetch } from '@/lib/api-base'
+import styles from './Pipeline.module.css'
 
 const POLL_MS = 12_000
-const chipStyle = { border: '1px solid currentColor', borderRadius: 'var(--pt-r-sm)', padding: '2px 5px', fontSize: 10 }
+export const STAGES: { stage: PipelineStage; label: string; next: string; tone: ChipTone }[] = [
+  { stage: 'leads_found', label: 'Leads found', next: 'Qualify lead', tone: 'neutral' },
+  { stage: 'social_scraped', label: 'Social scraped', next: 'Prepare concept', tone: 'neutral' },
+  { stage: 'concept_ready', label: 'Concept ready', next: 'Review preview', tone: 'info' },
+  { stage: 'awaiting_approval', label: 'Awaiting approval', next: 'Review proposal', tone: 'info' },
+  { stage: 'in_development', label: 'In development', next: 'Review build progress', tone: 'info' },
+  { stage: 'completed', label: 'Completed', next: 'Review delivery sign-off', tone: 'neutral' },
+]
+export function StageChip({ stage }: { stage: PipelineStage }) {
+  const item = STAGES.find(item => item.stage === stage)!
+  return <span aria-label={stage.replaceAll('_', ' ')}><Chip tone={item.tone}>{item.label}</Chip></span>
+}
+export function nextAction(lead: PipelineLead) {
+  return lead.extraData?.next_action || (lead.completed?.emailStatus === 'sent' ? 'Delivery sent' : STAGES.find(item => item.stage === lead.stage)!.next)
+}
+export function buildValue(lead: PipelineLead) {
+  const offer = lead.extraData?.offer_estimate
+  return typeof offer === 'number' && Number.isFinite(offer) ? `$${offer.toLocaleString('en-US')}` : lead.extraData?.price_range || 'Not recorded'
+}
+export function attention(lead: PipelineLead, now = Date.now()) {
+  const followup = followupChip(lead, now)
+  const due = deadlineChip(typeof lead.extraData?.next_action_due === 'string' ? lead.extraData.next_action_due : undefined, now)
+  const since = stageStartedAt(lead)
+  if (followup.kind === 'overdue') return 'Follow-up overdue'
+  if (due.kind === 'overdue') return 'Next action overdue'
+  // A visible operational heuristic, not a stored SLA. Completed work is exempt.
+  if (lead.stage !== 'completed' && since && now - Date.parse(since) >= 7 * 86400000) return 'Stalled · 7+ days'
+  return ''
+}
+export function ClientSummary({ lead, now = Date.now() }: { lead: PipelineLead; now?: number }) {
+  const stalled = attention(lead, now)
+  return <span className={styles.clientSummary}>
+    <span className={styles.chips}><StageChip stage={lead.stage} />{stalled && <Chip tone="warn">{stalled}</Chip>}</span>
+    <span className={styles.next}>Next · {nextAction(lead)}</span>
+    <span>{formatTimeInStage(stageStartedAt(lead), now)} in stage</span>
+    <span>Build · {buildValue(lead)}</span>
+    <span>Deposit · {storedTerm(lead, 'deposit')} · Care · {storedTerm(lead, 'care_plan')}</span>
+  </span>
+}
+function storedTerm(lead: PipelineLead, key: string) {
+  const value = lead.extraData?.[key]
+  return typeof value === 'string' && value.trim() ? value : 'Not recorded'
+}
+export function previewUrl(lead: PipelineLead) {
+  const value = lead.previewUrl ?? lead.extraData?.preview_url ?? lead.extraData?.previewUrl ?? lead.completed?.previewUrl
+  return typeof value === 'string' && /^https?:\/\//i.test(value) ? value : undefined
+}
 
-export function RevenuePipeline() {
+export function RevenuePipeline({ docked = false }: { docked?: boolean }) {
   const [data, setData] = useState<PipelineData | null>(null)
   const [error, setError] = useState('')
   const [pending, setPending] = useState<string | null>(null)
@@ -38,7 +85,7 @@ export function RevenuePipeline() {
     setPending(id)
     setError('')
     try {
-    const response = await apiFetch('/api/pipeline/review', {
+      const response = await apiFetch('/api/pipeline/review', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lead_id: id, review: decision }),
       })
@@ -49,44 +96,31 @@ export function RevenuePipeline() {
   }
 
   const shown = revenueLeads(data?.leads ?? [])
-  return <section id="home-revenue" aria-labelledby="home-revenue-title" style={{ minWidth: 0, fontFamily: 'var(--pt-font-mono)' }}>
-    <SectionRule label="REVENUE PIPELINE" id="home-revenue-title" />
-    {error && <p role="alert" style={{ color: 'var(--pt-error-ink)', fontSize: 12 }}>{error}</p>}
-    {!data && !error && <SkeletonPanel label="loading pipeline" />}
-    {data && !shown.length && <p style={{ color: 'var(--pt-text-dim)', fontSize: 12 }}>No active revenue — pipeline is quiet.</p>}
-    <div style={{ overflowX: 'auto' }}>
-      {shown.map(lead => {
-        const deadline = deadlineChip(lead.outreach?.followup_due ?? (typeof lead.extraData?.next_action_due === 'string' ? lead.extraData.next_action_due : undefined))
-        const outreachStatus = lead.outreach?.status ?? (typeof lead.extraData?.outreach_status === 'string' ? lead.extraData.outreach_status : undefined)
-        const followup = followupChip(lead)
-        const preview = lead.previewUrl ?? lead.extraData?.preview_url ?? lead.extraData?.previewUrl ?? lead.completed?.previewUrl
-        const safePreview = preview && /^https?:\/\//i.test(preview) ? preview : undefined
-        const offer = lead.extraData?.offer_estimate
-        const status = lead.approval?.status ?? 'pending'
-        const since = stageStartedAt(lead)
-        return <div key={lead.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', minWidth: 'max-content', whiteSpace: 'nowrap', borderBottom: '1px solid var(--pt-border-dim)', background: 'var(--pt-surface)', fontSize: 12 }}>
-          <strong title={lead.businessName} style={{ width: 190, overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--pt-text-high)' }}>▲ {lead.businessName}</strong>
-          <span title={lead.stage.replaceAll('_', ' ')} aria-label={lead.stage.replaceAll('_', ' ')} style={{ color: 'var(--pt-neon)' }}>{lead.stage === 'awaiting_approval' ? '⏳' : lead.stage === 'in_development' ? '▶' : '✓'}</span>
-          <strong style={{ color: 'var(--pt-text-high)' }}>{typeof offer === 'number' ? `$${offer.toLocaleString('en-US')}` : lead.extraData?.price_range ?? '—'}</strong>
-          <span title={since ? `In stage since ${fmtDate(since)}` : 'Stage entry unknown'} style={{ color: 'var(--pt-text-dim)' }}>{formatTimeInStage(since)}</span>
-          {deadline.kind !== 'none' && <span style={{ ...chipStyle, color: deadline.kind === 'overdue' ? 'var(--pt-error-ink)' : 'var(--pt-warn-ink)' }}>{deadline.label}</span>}
-          {outreachStatus && <>
-            <span style={{ ...chipStyle, color: outreachStatus === 'sent' || outreachStatus === 'replied' ? 'var(--pt-ok-ink)' : outreachStatus === 'dead' ? 'var(--pt-error-ink)' : 'var(--pt-text-dim)' }}>
-              {outreachStatus === 'sent' ? '✓ SENT' : outreachStatus === 'replied' ? '↩ REPLIED'
-                : outreachStatus === 'dead' ? '✗ DEAD' : outreachStatus === 'parked' ? '⏸ PARKED'
-                : outreachStatus === 'shelved' ? '‖ SHELVED' : outreachStatus.toUpperCase()}
-            </span>
-            {(followup.kind === 'overdue' || followup.kind === 'due') && <span style={{ ...chipStyle, color: followup.kind === 'overdue' ? 'var(--pt-error-ink)' : 'var(--pt-warn-ink)' }}>{followup.label}</span>}
+  const active = (data?.leads ?? []).filter(lead => lead.stage === 'awaiting_approval' || lead.stage === 'in_development')
+  const priced = active.filter(lead => typeof lead.extraData?.offer_estimate === 'number' && Number.isFinite(lead.extraData.offer_estimate))
+  const estimated = priced.reduce((sum, lead) => sum + lead.extraData!.offer_estimate!, 0)
+  return <Card as="section" id="home-revenue" aria-labelledby="home-revenue-title" className={styles.revenue}>
+    <CardHead title={<span id="home-revenue-title">Revenue pipeline</span>} sub="Offers and approvals" />
+    {error && <p role="alert" className={styles.error}>{error}</p>}
+    {!data && !error && <p role="status" aria-live="polite" className={styles.note}>Loading revenue…</p>}
+    {data && <>
+      <div className={styles.metrics}>
+        <Stat label="Active offer estimates" value={priced.length ? `$${estimated.toLocaleString('en-US')}` : '—'} sub={`${priced.length} of ${active.length} active clients priced · not collected revenue`} />
+        <Stat label="Awaiting approval" value={data.counts.awaiting_approval} />
+      </div>
+      {!shown.length && <p className={styles.note}>No active revenue — pipeline is quiet.</p>}
+      {shown.map(lead => <div key={lead.id} className={styles.revenueClient}>
+        <Row title={lead.businessName} sub={<ClientSummary lead={lead} />} />
+        <div className={styles.actions}>
+          {previewUrl(lead) && <Button href={previewUrl(lead)}>View preview</Button>}
+          <span aria-label={`Approval ${lead.approval?.status ?? 'pending'}`}><Chip tone="neutral">{lead.extraData?.review === 'held' ? 'Held' : `Approval ${lead.approval?.status ?? 'pending'}`}</Chip></span>
+          {lead.stage === 'awaiting_approval' && <>
+            <Button variant="primary" disabled={pending !== null} loading={pending === lead.id} aria-label={`Approve ${lead.businessName} for send`} onClick={() => void review(lead.id, 'approved')}>Approve for send</Button>
+            <Button disabled={pending !== null} aria-label={`Hold ${lead.businessName}`} onClick={() => void review(lead.id, 'held')}>Hold</Button>
           </>}
-          {safePreview && <a href={safePreview} target="_blank" rel="noreferrer" style={{ color: 'var(--pt-neon)' }}>◉ preview</a>}
-          <span aria-label={`Approval ${status}`} style={{ ...chipStyle, color: status === 'approved' ? 'var(--pt-ok-ink)' : status === 'rejected' ? 'var(--pt-error-ink)' : 'var(--pt-warn-ink)' }}>{status === 'approved' ? '✓' : status === 'rejected' ? '✗' : '⏳ AWAITING'}</span>
-          {lead.stage === 'awaiting_approval' && <span style={{ display: 'flex', gap: 6, marginLeft: 'auto' }}>
-            <button className="mc-btn" disabled={pending !== null} aria-label={`Approve ${lead.businessName} for send`} onClick={() => void review(lead.id, 'approved')}>Approve for send</button>
-            <button className="mc-btn" disabled={pending !== null} aria-label={`Hold ${lead.businessName}`} onClick={() => void review(lead.id, 'held')}>Hold</button>
-          </span>}
         </div>
-      })}
-    </div>
-    {data && <a href="/pipeline" style={{ display: 'block', padding: '10px 12px', fontSize: 11, color: 'var(--pt-text-dim)' }}>+{Math.max(0, data.leadsTotal - shown.length)} more in the pipeline → /pipeline</a>}
-  </section>
+      </div>)}
+      {!docked && <div className={styles.actions}><Button href="/pipeline">Open pipeline · {data.leadsTotal} clients</Button></div>}
+    </>}
+  </Card>
 }

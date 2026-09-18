@@ -1,237 +1,21 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { PipelineData, PipelineLead, PipelineSentBucket, PipelineStage } from '@/lib/types'
-import { SkeletonPanel, fmtDate } from './ui'
+import type { PipelineData } from '@/lib/types'
+import { Button, Card, CardHead, Chip, Row, Segmented, Sheet, Stat, fmtDate } from './ui'
 import { ClientDocsLink } from './VaultDocuments'
 import { apiFetch, apiUrl } from '@/lib/api-base'
-import { followupChip } from '@/lib/revenue-pipeline'
+import { stageStartedAt } from '@/lib/revenue-pipeline'
+import { attention, ClientSummary, nextAction, previewUrl, RevenuePipeline, STAGES } from './RevenuePipeline'
+import styles from './Pipeline.module.css'
 
 const POLL_MS = 12_000
 
-const COLUMNS: { stage: PipelineStage; label: string; glyph: string; hint: string }[] = [
-  { stage: 'leads_found', label: 'LEADS FOUND', glyph: '◎', hint: 'play store scan' },
-  { stage: 'social_scraped', label: 'SOCIAL SCRAPED', glyph: '⌁', hint: 'ig · fb · linkedin' },
-  { stage: 'concept_ready', label: 'CONCEPT READY', glyph: '◇', hint: 'x api inspiration' },
-  { stage: 'awaiting_approval', label: 'AWAITING APPROVAL', glyph: '⏳', hint: 'telegram gate' },
-  { stage: 'in_development', label: 'IN DEVELOPMENT', glyph: '▶', hint: 'claude code build' },
-  { stage: 'completed', label: 'COMPLETED', glyph: '✓', hint: 'email sign-off gate' },
-]
-
-function ScoreChip({ score }: { score?: number }) {
-  if (typeof score !== 'number') return null
-  const tone = score >= 70 ? 'hi' : score >= 40 ? 'mid' : 'lo'
-  return <span className={`mc-pipe-score ${tone}`}>SCORE {score}</span>
-}
-
-function SocialLinks({ lead }: { lead: PipelineLead }) {
-  const entries = Object.entries(lead.socials ?? {}).filter(([, v]) => v)
-  if (!entries.length) return null
-  return (
-    <div className="mc-pipe-socials">
-      {entries.map(([k, v]) => (
-        <a key={k} href={v} target="_blank" rel="noreferrer" className="mc-pipe-social">
-          {k === 'instagram' ? 'IG' : k === 'facebook' ? 'FB' : k === 'linkedin' ? 'LI' : k.toUpperCase()}
-        </a>
-      ))}
-    </div>
-  )
-}
-
-function ApprovalState({ lead }: { lead: PipelineLead }) {
-  const a = lead.approval
-  if (!a) return <div className="mc-pipe-row dim">telegram notify pending…</div>
-  return (
-    <>
-      {a.telegramSentAt && <div className="mc-pipe-row">TG sent · {fmtDate(a.telegramSentAt)}</div>}
-      <div className={`mc-pipe-approval ${a.status ?? 'pending'}`}>
-        {a.status === 'approved' ? '✓ APPROVED' : a.status === 'rejected' ? '✗ REJECTED' : '⏳ AWAITING TELEGRAM REPLY'}
-      </div>
-    </>
-  )
-}
-
-function DevProgress({ lead, liveNote }: { lead: PipelineLead; liveNote?: string }) {
-  const d = lead.development
-  if (!d) return <div className="mc-pipe-row dim">awaiting handoff…</div>
-  const pct = Math.max(0, Math.min(100, d.progressPct ?? 0))
-  return (
-    <>
-      {d.status && <div className="mc-pipe-row">{d.status}</div>}
-      <div className="mc-pipe-bar"><span style={{ width: `${pct}%` }} /></div>
-      <div className="mc-pipe-row dim">{pct}%{d.taskId ? ` · task ${d.taskId.slice(0, 8)}` : ''}</div>
-      {(d.milestones ?? []).map((m, i) => (
-        <div key={i} className={`mc-pipe-milestone ${m.done ? 'done' : ''}`}>
-          <span>{m.done ? '✓' : '·'}</span> {m.label}
-        </div>
-      ))}
-      {liveNote && <div className="mc-pipe-live-note">⚡ {liveNote}</div>}
-    </>
-  )
-}
-
-function CompletedState({ lead }: { lead: PipelineLead }) {
-  const c = lead.completed
-  if (!c) return <div className="mc-pipe-row dim">finalizing…</div>
-  const emailLabel = c.emailStatus === 'sent' ? '✓ EMAIL SENT'
-    : c.emailStatus === 'approved' ? '✓ APPROVED — SENDING'
-    : c.emailStatus === 'awaiting_signoff' ? '⏳ AWAITING TELEGRAM SIGN-OFF'
-    : 'EMAIL DRAFT'
-  return (
-    <>
-      {c.previewUrl && (
-        <a className="mc-pipe-preview" href={c.previewUrl} target="_blank" rel="noreferrer">
-          ▶ VIEW PREVIEW
-        </a>
-      )}
-      <div className={`mc-pipe-approval ${c.emailStatus === 'sent' || c.emailStatus === 'approved' ? 'approved' : 'pending'}`}>
-        {emailLabel}
-      </div>
-      {c.emailDraft && <div className="mc-pipe-draft">{c.emailDraft}</div>}
-    </>
-  )
-}
-
-function LeadCard({ lead, liveNote }: { lead: PipelineLead; liveNote?: string }) {
-  const outreach = lead.outreach
-  const status = outreach?.status ?? (typeof lead.extraData?.outreach_status === 'string' ? lead.extraData.outreach_status : undefined)
-  const followup = followupChip(lead)
-  const sentAt = outreach?.sent_at ?? (typeof lead.extraData?.sent_at === 'string' ? lead.extraData.sent_at : undefined)
-  return (
-    <div className="mc-pipe-card" data-stage={lead.stage}>
-      <div className="mc-pipe-card-head">
-        <span className="mc-pipe-name" title={lead.businessName}>{lead.businessName}</span>
-        <ScoreChip score={lead.score} />
-      </div>
-      <div className="mc-pipe-meta">
-        {lead.location && <span>{lead.location}</span>}
-        {lead.vertical && <span>· {lead.vertical}</span>}
-        {typeof lead.rating === 'number' && <span>· ★ {lead.rating}{typeof lead.reviewCount === 'number' ? ` (${lead.reviewCount})` : ''}</span>}
-      </div>
-      {(lead.phone || lead.website || lead.playStoreUrl) && (
-        <div className="mc-pipe-meta">
-          {lead.phone && <a className="mc-pipe-link" href={`tel:${lead.phone.replace(/[^+\d]/g, '')}`}>{lead.phone}</a>}
-          {lead.website && <a className="mc-pipe-link" href={lead.website} target="_blank" rel="noreferrer">site ↗</a>}
-          {lead.playStoreUrl && <a className="mc-pipe-link" href={lead.playStoreUrl} target="_blank" rel="noreferrer">play store ↗</a>}
-        </div>
-      )}
-      {(lead.extraData?.preview_url || lead.extraData?.previewUrl) && (
-        <div className="mc-pipe-row" style={{ display: 'flex', gap: '.5rem', margin: '.4rem 0' }}>
-          <a className="mc-pipe-preview" href={lead.extraData?.preview_url || lead.extraData?.previewUrl} target="_blank" rel="noreferrer"
-             style={{ flex: 1, textAlign: 'center' }}>▶ VIEW PREVIEW</a>
-        </div>
-      )}
-
-      {status && (
-        <>
-          <div className="mc-pipe-row">
-            <span className={`mc-pipe-out is-${status}`}>
-              {status === 'sent' ? `✓ SENT${sentAt ? ' ' + sentAt.slice(5, 10) : ''}`
-                : status === 'replied' ? '↩ REPLIED' : status === 'dead' ? '✗ DEAD'
-                : status === 'parked' ? '⏸ PARKED' : status === 'shelved' ? '‖ SHELVED' : status.toUpperCase()}
-            </span>
-            {followup.kind !== 'none' && <span className={`mc-pipe-follow-chip is-${followup.kind}`}>{followup.label}</span>}
-          </div>
-          {outreach?.reply && outreach.reply !== 'none recorded' && <div className="mc-pipe-row">↩ {outreach.reply}</div>}
-        </>
-      )}
-
-      {lead.stage === 'social_scraped' && <SocialLinks lead={lead} />}
-      {lead.stage === 'concept_ready' && lead.concept && (
-        <>
-          {lead.concept.designDirection && <div className="mc-pipe-row">{lead.concept.designDirection}</div>}
-          {(lead.concept.inspirationSources ?? []).slice(0, 3).map((s, i) => (
-            <div key={i} className="mc-pipe-row dim">◇ {s}</div>
-          ))}
-          {lead.concept.estimatedScope && <div className="mc-pipe-row">scope · {lead.concept.estimatedScope}</div>}
-        </>
-      )}
-      {lead.stage === 'awaiting_approval' && <ApprovalState lead={lead} />}
-      {lead.stage === 'in_development' && <DevProgress lead={lead} liveNote={liveNote} />}
-      {lead.stage === 'completed' && <CompletedState lead={lead} />}
-
-      {Object.entries(lead.extraData ?? {}).slice(0, 3).map(([k, v]) => (
-        <div key={k} className="mc-pipe-row dim">{k.replace(/_/g, ' ')}: {
-          typeof v === 'string' && /^https?:\/\//.test(v)
-            ? <a className="mc-pipe-link" href={v} target="_blank" rel="noreferrer">{v.replace(/^https?:\/\//, '').replace(/\/$/, '').slice(0, 42)}{v.length > 42 ? '…' : ''}</a>
-            : String(v)
-        }</div>
-      ))}
-      <div className="mc-pipe-when">{lead.updatedAt ? fmtDate(lead.updatedAt) : ''}</div>
-      <ClientDocsLink leadId={lead.id} />
-    </div>
-  )
-}
-
-function displayStat(value: number | undefined, hasSummary: boolean): number | string {
-  return hasSummary && typeof value === 'number' && Number.isFinite(value) ? value : '—'
-}
-
-function PipelineBarChart({ buckets, month = false }: { buckets: PipelineSentBucket[]; month?: boolean }) {
-  const safeBuckets = buckets.map(item => ({ ...item, count: Number.isFinite(item.count) ? Math.max(0, item.count) : 0 }))
-  const max = safeBuckets.reduce((highest, item) => Math.max(highest, item.count), 0)
-  return (
-    <div className={`mc-pipe-stat-chart ${month ? 'is-month' : 'is-week'}`} role="img"
-      aria-label={`${month ? 'Daily sends this month' : 'Daily sends this week'}; maximum ${max}`}
-      data-empty={safeBuckets.length === 0 ? 'true' : undefined}>
-      {safeBuckets.length === 0 && <span className="mc-pipe-stat-chart-empty">— no send activity yet</span>}
-      {safeBuckets.map(item => {
-        const height = max > 0 ? (item.count / max) * 100 : 0
-        return (
-          <div key={item.date} className="mc-pipe-stat-bar" title={`${item.date}: ${item.count} sent`} aria-label={`${item.date}: ${item.count} sent`}>
-            <span className="mc-pipe-stat-bar-value">{item.count}</span>
-            <span className="mc-pipe-stat-bar-track"><span style={{ height: `${height}%` }} /></span>
-            <span className="mc-pipe-stat-bar-label">{month ? item.date.slice(8) : item.label}</span>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-function PipelineStats({ summary }: { summary?: PipelineData['sentSummary'] }) {
-  const hasSummary = Boolean(summary)
-  const weekBuckets = summary?.byDayThisWeek ?? []
-  const monthBuckets = summary?.byDayThisMonth ?? []
-  return (
-    <section className="mc-pipe-stats" aria-label="Pipeline send summary">
-      <div className="mc-pipe-stat-hero is-sent">
-        <span className="mc-pipe-stat-label">WEBSITES SENT OUT</span>
-        <strong className="mc-pipe-stat-value">{displayStat(summary?.sentTotal, hasSummary)}</strong>
-        <span className="mc-pipe-stat-detail">ALL TIME · ACTUALLY SENT</span>
-      </div>
-      <div className="mc-pipe-stat-hero is-queue">
-        <span className="mc-pipe-stat-label">IN QUEUE</span>
-        <strong className="mc-pipe-stat-value">{displayStat(summary?.queuedTotal, hasSummary)}</strong>
-        <span className="mc-pipe-stat-detail">NOT-YET-SENT · FUNNEL ACTIVE</span>
-      </div>
-      <div className="mc-pipe-stat-period is-week">
-        <div className="mc-pipe-stat-head">
-          <div>
-            <span className="mc-pipe-stat-label">SENT THIS WEEK</span>
-            <span className="mc-pipe-stat-sub">WEEK OF {summary?.weekStart ?? '—'}</span>
-          </div>
-          <strong className="mc-pipe-stat-period-value">{displayStat(summary?.sentThisWeek, hasSummary)}</strong>
-        </div>
-        <PipelineBarChart buckets={weekBuckets} />
-        {!hasSummary && <span className="mc-pipe-stat-quiet">no send activity yet</span>}
-      </div>
-      <div className="mc-pipe-stat-period is-month">
-        <div className="mc-pipe-stat-head">
-          <div>
-            <span className="mc-pipe-stat-label">SENT THIS MONTH</span>
-            <span className="mc-pipe-stat-sub">{summary?.monthLabel ?? '—'} · LOCAL TIME</span>
-          </div>
-          <strong className="mc-pipe-stat-period-value">{displayStat(summary?.sentThisMonth, hasSummary)}</strong>
-        </div>
-        <PipelineBarChart buckets={monthBuckets} month />
-        {!hasSummary && <span className="mc-pipe-stat-quiet">no send activity yet</span>}
-      </div>
-    </section>
-  )
-}
-
 export function PipelineBoard() {
+  const [filter, setFilter] = useState('all')
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [showEvents, setShowEvents] = useState(false)
+  const closeDetail = useCallback(() => setSelectedId(null), [])
   const [data, setData] = useState<PipelineData | null>(null)
   const [error, setError] = useState<string | null>(null)
   // task_id → last live event note from the hermes-eventbus firehose
@@ -244,7 +28,7 @@ export function PipelineBoard() {
 
   const refresh = useCallback(async () => {
     try {
-      const res = await apiFetch('/api/pipeline', { cache: 'no-store' })
+      const res = await apiFetch('/api/pipeline?view=revenue', { cache: 'no-store' })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       setData(await res.json())
       setError(null)
@@ -287,68 +71,87 @@ export function PipelineBoard() {
     return () => es.close()
   }, [refresh])
 
-  if (!data && !error) return <SkeletonPanel label="loading pipeline" />
+  if (!data && !error) return <Card><CardHead title="Client pipeline" /><p className={styles.note} role="status" aria-live="polite">Loading pipeline…</p></Card>
 
-  const leads = data?.leads ?? []
-  const events = data?.events ?? []
+  const now = data ? Date.parse(data.generatedAt) : Date.now()
+  const leads = [...(data?.leads ?? [])].sort((a, b) => Number(Boolean(attention(b, now))) - Number(Boolean(attention(a, now))) || (stageStartedAt(a) ?? '').localeCompare(stageStartedAt(b) ?? ''))
+  const stalled = leads.filter(lead => attention(lead, now))
+  const selected = leads.find(lead => lead.id === selectedId)
+  const summary = data?.sentSummary
+  const clientRow = (lead: typeof leads[number]) => <Row key={lead.id} title={lead.businessName} sub={<ClientSummary lead={lead} now={now} />} onClick={() => setSelectedId(lead.id)} aria-label={`Open ${lead.businessName} details`} aria-haspopup="dialog" />
 
-  return (
-    <>
-      {error && <div className="mc-pipe-error">⚠ pipeline store unreachable — {error}</div>}
-      <div className="mc-kb-sync" role="status">{data ? `${data.leadsTotal} leads · updated ${fmtDate(data.generatedAt)}` : 'No snapshot'}{error ? ' · STALE' : ''}</div>
-      <PipelineStats summary={data?.sentSummary} />
-      {data?.followups && data.followups.overdue + data.followups.upcoming > 0 && (
-        <div className="mc-pipe-follow" role="status">
-          FOLLOW-UPS
-          {data.followups.overdue > 0 && <span className="mc-pipe-follow-count is-overdue">{data.followups.overdue} OVERDUE</span>}
-          <span className="mc-pipe-follow-count">{data.followups.upcoming} UPCOMING</span>
-          {data.followups.nextDue && <span className="mc-pipe-follow-count">next {data.followups.nextDue.slice(5, 10)}</span>}
+  return <div className={styles.workspace}>
+    <div className={styles.boardMain}>
+      {error && <p className={styles.error} role="alert">Pipeline unavailable · {error}{data ? ' · showing last snapshot' : ''}</p>}
+      <div className={styles.toolbar}><span role="status">{data ? `${data.leadsTotal} clients · updated ${fmtDate(data.generatedAt)}` : 'No snapshot'}{error ? ' · Stale' : ''}</span><Button onClick={() => void refresh()}>Refresh</Button></div>
+      <Card as="section" aria-label="Needs attention">
+        <CardHead title="Needs attention" sub="Overdue actions or 7+ days in an unfinished stage. Oldest first among clients shown." right={<Chip tone={stalled.length ? 'warn' : 'neutral'}>{stalled.length}</Chip>} />
+        {data?.followups && data.followups.overdue > 0 && <p role="status" className={styles.note}>{data.followups.overdue} overdue follow-ups across the full pipeline.</p>}
+        <div className={styles.attentionList}>{stalled.slice(0, 3).map(clientRow)}</div>
+        {stalled.length > 3 && <p className={styles.note}>{stalled.length - 3} more flagged in the stages below.</p>}
+        {!stalled.length && <p className={styles.note}>{data ? 'No stalled work in the current snapshot.' : 'Waiting for pipeline data.'}</p>}
+      </Card>
+      <Card as="section" aria-label="Pipeline send summary">
+        <CardHead title="Delivery activity" sub="Actual sends · Los Angeles time" />
+        <div className={styles.metrics}>
+          <Stat label="Websites sent out" value={summary?.sentTotal ?? '—'} />
+          <Stat label="In queue" value={summary?.queuedTotal ?? '—'} />
+          <div role="img" aria-label={`Daily sends this week; ${(summary?.byDayThisWeek ?? []).map(item => `${item.date}: ${item.count} sent`).join('; ') || 'no send activity yet'}`}><Stat label="Sent this week" value={summary?.sentThisWeek ?? '—'} sub={`Week of ${summary?.weekStart ?? '—'}`} series={summary?.byDayThisWeek?.map(item => item.count)} /></div>
+          <div role="img" aria-label={`Daily sends this month; ${(summary?.byDayThisMonth ?? []).map(item => `${item.date}: ${item.count} sent`).join('; ') || 'no send activity yet'}`}><Stat label="Sent this month" value={summary?.sentThisMonth ?? '—'} sub={summary?.monthLabel} series={summary?.byDayThisMonth?.map(item => item.count)} /></div>
         </div>
-      )}
-      <div className="mc-pipeline v4-group">
-        {COLUMNS.map(col => {
-          const items = leads.filter(l => l.stage === col.stage)
-          const total = data?.counts?.[col.stage] ?? items.length
-          const capped = total > items.length
-          return (
-            <div key={col.stage} className="mc-window mc-pipe-col">
-              <div className={`mc-tcol-head ${col.stage === 'awaiting_approval' ? 'alert' : ''}`}>
-                <div className="mc-window-dots" aria-hidden="true"><span className="mc-window-dot mc-window-dot--red" /><span className="mc-window-dot mc-window-dot--amber" /><span className="mc-window-dot mc-window-dot--green" /></div>
-                <span className="mc-tcol-glyph">{col.glyph}</span>
-                <span>{col.label}</span>
-                <span className="mc-tcol-count">{total}</span>
-              </div>
-              <div className="mc-pipe-hint">
-                {capped ? `top ${items.length} of ${total} · ${col.hint}` : col.hint}
-              </div>
-              <div className="mc-pipe-col-body">
-                {items.length === 0 && <div className="mc-pipe-empty">— empty —</div>}
-                {items.map(lead => (
-                  <LeadCard key={lead.id} lead={lead}
-                    liveNote={lead.development?.taskId ? liveNotes[lead.development.taskId] : undefined} />
-                ))}
-              </div>
-            </div>
-          )
+      </Card>
+      <div className={styles.mobileFilter}>
+        <p id="pipeline-filter-label" className={styles.note}>Filter by stage</p>
+        <Segmented className={styles.stageFilter} value={filter} onChange={setFilter} options={[{ value: 'all', label: `All · ${data?.leadsTotal ?? 0}` }, ...STAGES.map(item => ({ value: item.stage, label: `${item.label} · ${data?.counts[item.stage] ?? 0}` }))]} />
+      </div>
+      <div className={styles.stages}>
+        {STAGES.map(col => {
+          const items = leads.filter(lead => lead.stage === col.stage)
+          const total = data?.counts[col.stage] ?? items.length
+          return <Card as="section" key={col.stage} className={`${styles.stage} ${filter !== 'all' && filter !== col.stage ? styles.filteredOut : ''}`}>
+            <CardHead title={col.label} sub={col.next} right={<Chip tone={col.tone}>{total}</Chip>} />
+            {items.length < total && <p className={styles.note}>Showing {items.length} of {total} clients</p>}
+            {items.map(clientRow)}
+            {!items.length && <p className={styles.note}>No clients at this stage.</p>}
+          </Card>
         })}
       </div>
-
-      {events.length > 0 && (
-        <div className="mc-window mc-pipe-log v4-entry">
-          <div className="mc-tcol-head"><div className="mc-window-dots" aria-hidden="true"><span className="mc-window-dot mc-window-dot--red" /><span className="mc-window-dot mc-window-dot--amber" /><span className="mc-window-dot mc-window-dot--green" /></div><span className="mc-tcol-glyph">≋</span><span>PIPELINE EVENTS</span></div>
-          <div className="mc-pipe-log-body">
-            {events.slice(0, 12).map((e, i) => (
-              <div key={i} className="mc-pipe-log-row">
-                <span className="when">{fmtDate(e.ts)}</span>
-                <span className="who">{e.businessName ?? e.leadId}</span>
-                <span className="stage">{e.stage.replace(/_/g, ' ')}</span>
-                {e.action && <span className="act">→ {e.action}</span>}
-                {e.detail && <span className="det">{e.detail}</span>}
-              </div>
-            ))}
-          </div>
+      {(data?.events.length ?? 0) > 0 && <Card>
+        <CardHead title="Recent activity" right={<Button aria-expanded={showEvents} aria-controls="pipeline-events" onClick={() => setShowEvents(value => !value)}>{showEvents ? 'Hide' : 'Show'}</Button>} />
+        {showEvents && <div id="pipeline-events">{data!.events.slice(0, 12).map((event, index) => <Row key={index} title={event.businessName ?? event.leadId} sub={`${fmtDate(event.ts)} · ${event.detail ?? event.action ?? event.stage.replaceAll('_', ' ')}`} />)}</div>}
+      </Card>}
+    </div>
+    <aside className={styles.revenueDock} aria-label="Revenue"><RevenuePipeline docked /></aside>
+    <Sheet open={Boolean(selected)} onClose={closeDetail} title={selected?.businessName ?? 'Client details'}>
+      {selected && <div className={styles.detail}>
+        <Card><CardHead title="Next action" sub={nextAction(selected)} /><Row title={selected.businessName} sub={<ClientSummary lead={selected} now={now} />} /></Card>
+        <div className={styles.actions}>
+          {previewUrl(selected) && <Button variant="primary" href={previewUrl(selected)}>View preview</Button>}
+          {selected.website && /^https?:\/\//i.test(selected.website) && <Button href={selected.website}>Website</Button>}
+          {selected.phone && <Button href={`tel:${selected.phone.replace(/[^+\d]/g, '')}`}>Call client</Button>}
+          <ClientDocsLink leadId={selected.id} />
         </div>
-      )}
-    </>
-  )
+        <Card><CardHead title="Delivery details" />
+          {typeof selected.score === 'number' && <Row title="Qualification" trailing={<Stat label="Score" value={selected.score} />} />}
+          {selected.vertical && <Row title="Business type" sub={selected.vertical} />}
+          {selected.outreach?.status && <Row title="Outreach" sub={selected.outreach.status} />}
+          {selected.outreach?.followup_due && <Row title="Follow-up due" sub={fmtDate(selected.outreach.followup_due)} />}
+          {selected.location && <Row title="Location" sub={selected.location} />}
+          {selected.concept?.designDirection && <Row title="Design direction" sub={selected.concept.designDirection} />}
+          {selected.concept?.estimatedScope && <Row title="Scope" sub={selected.concept.estimatedScope} />}
+          {selected.approval && <Row title="Approval" sub={selected.approval.status ?? 'Pending'} />}
+          {selected.development && <>
+            <Row title="Build progress" sub={selected.development.status} trailing={<Stat label="Complete" value={typeof selected.development.progressPct === 'number' ? `${Math.max(0, Math.min(100, selected.development.progressPct))}%` : '—'} />} />
+            {selected.development.milestones?.map((milestone, index) => <Row key={index} title={milestone.label} trailing={<Chip>{milestone.done ? 'Done' : 'Pending'}</Chip>} />)}
+            {selected.development.taskId && liveNotes[selected.development.taskId] && <p className={styles.note} role="status">{liveNotes[selected.development.taskId]}</p>}
+          </>}
+          {selected.outreach?.reply && <Row title="Client reply" sub={selected.outreach.reply} />}
+          {selected.completed && <Row title="Delivery email" sub={selected.completed.emailStatus?.replaceAll('_', ' ') ?? 'Draft'} />}
+          {selected.completed?.emailDraft && <Row title="Email draft" sub={selected.completed.emailDraft} />}
+          {Object.entries(selected.socials ?? {}).filter(([, url]) => url && /^https?:\/\//i.test(url)).map(([label, url]) => <Row key={label} title={label} href={url} />)}
+        </Card>
+        {Boolean(selected.history?.length) && <Card><CardHead title="Stage history" />{selected.history!.map((entry, index) => <Row key={index} title={STAGES.find(item => item.stage === entry.stage)?.label ?? entry.stage} sub={`${fmtDate(entry.ts)}${entry.note ? ` · ${entry.note}` : ''}`} />)}</Card>}
+      </div>}
+    </Sheet>
+  </div>
 }
