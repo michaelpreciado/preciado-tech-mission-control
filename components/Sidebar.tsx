@@ -17,12 +17,12 @@ type PrimaryItem = {
 const PRIMARY_NAV: PrimaryItem[] = [
   { id: 'home', label: '~/home', href: '/', icon: 'deck' },
   { id: 'kanban', label: '~/kanban', href: '/kanban', icon: 'kanban' },
+  { id: 'chat', label: '~/chat', href: '/chat', icon: 'chat' },
+  { id: 'system', label: '~/system', href: '/system', icon: 'memory' },
   { id: 'pipeline', label: '~/pipeline', href: '/pipeline', icon: 'pipeline' },
   { id: 'clients', label: '~/clients', href: '/projects', icon: 'projects' },
   { id: 'costs', label: '~/costs', href: '/costs', icon: 'costs' },
   { id: 'github', label: '~/github', href: '/github', icon: 'github' },
-  { id: 'system', label: '~/system', href: '/memory', icon: 'memory' },
-  { id: 'vault', label: '~/vault', href: '/chat', icon: 'chat' },
 ]
 
 const CREW_NAV = [

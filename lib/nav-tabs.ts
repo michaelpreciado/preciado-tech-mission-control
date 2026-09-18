@@ -26,12 +26,12 @@ export const NAV: NavSection[] = [
     { id: '/costs', label: 'Costs', icon: 'costs' },
   ]},
   { section: 'Operations', items: [
-    { id: '/projects', label: 'Projects', icon: 'projects' },
+    { id: '/projects', label: 'Clients', icon: 'projects' },
     { id: '/pipeline', label: 'Web Dev Pipeline', icon: 'pipeline' },
     { id: '/content-creation', label: 'Content Creation', icon: 'content' },
-    { id: '/bots', label: 'Bots', icon: 'team' },
   ]},
-  { section: 'System', items: [
+  { section: 'Machine', items: [
+    { id: '/system', label: 'System', icon: 'memory' },
     { id: '/memory', label: 'Memory', icon: 'memory' },
     { id: '/setup', label: 'Setup', icon: 'setup' },
   ]},

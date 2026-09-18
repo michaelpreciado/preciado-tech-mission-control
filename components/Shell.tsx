@@ -87,7 +87,7 @@ const PRIMARY: { id: string; label: string; icon: IconName }[] = [
   { id: '/', label: 'Home', icon: 'deck' },
   { id: '/kanban', label: 'Kanban', icon: 'kanban' },
   { id: '/chat', label: 'Chat', icon: 'chat' },
-  { id: '/bots', label: 'Bots', icon: 'team' },
+  { id: '/system', label: 'System', icon: 'memory' },
 ]
 
 const PRIMARY_IDS = new Set(PRIMARY.map(p => p.id))
@@ -294,7 +294,7 @@ function MobileNav() {
             )
           })}
           <HomeControl placement="mobile" />
-          {visiblePrimary.filter(item => item.id === '/bots').map(item => {
+          {visiblePrimary.filter(item => item.id === '/system').map(item => {
             const active = isActive(item.id)
             return (
               <Link key={item.id} href={item.id} aria-current={active ? 'page' : undefined}

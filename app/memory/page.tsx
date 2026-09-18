@@ -11,7 +11,7 @@ export default function MemoryPage() {
   return (
     <>
       <CommandHeader />
-      <PageHeader eyebrow="~/system · VAULT-STATE" title="SYSTEM" subtitle="Memory graph, vault index, and operational context" />
+      <PageHeader eyebrow="~/memory · VAULT-STATE" title="MEMORY" subtitle="Memory graph, vault index, and operational context" />
       <MemoryGraphView />
     </>
   )

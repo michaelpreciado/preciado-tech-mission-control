@@ -10,7 +10,7 @@ export default function ChatPage() {
   return (
     <>
       <div className="cockpit-standalone"><CommandHeader /></div>
-      <PageHeader eyebrow="~/vault · SIGNAL-STATE" title="VAULT" subtitle="Conversation archive and live command console" />
+      <PageHeader eyebrow="~/chat · SIGNAL-STATE" title="CHAT" subtitle="Conversation archive and live command console" />
       <ChatConsole />
     </>
   )
