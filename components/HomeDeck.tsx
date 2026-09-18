@@ -17,9 +17,9 @@ import styles from './HomeWorkspace.module.css'
 
 const HomeCoreOrb = dynamic(() => import('./CoreOrb'), { ssr: false })
 
-function CardHeader({ label, meta, href }: { label: string; meta?: string; href?: string }) {
+function CardHeader({ label, meta, href, id }: { label: string; meta?: string; href?: string; id?: string }) {
   return <div className={styles.obCardHeader}>
-    <strong>{label}</strong>
+    <strong id={id}>{label}</strong>
     {meta && <span>{meta}</span>}
     {href && <Link href={href} aria-label={`Open ${label.toLowerCase()}`}>↗</Link>}
   </div>
@@ -29,7 +29,7 @@ function CrewCard() {
   const { data, isLive } = useLiveData()
   const crew = data?.crew ?? []
   return <section className={`${styles.obCard} ${styles.obCrewCard}`} aria-labelledby="ob-crew-title">
-    <CardHeader label="CREW STATUS" meta={isLive ? `${crew.length}/LINKED` : 'SYNCING'} />
+    <CardHeader label="CREW STATUS" meta={isLive ? `${crew.length}/LINKED` : 'SYNCING'} id="ob-crew-title" />
     <div className={styles.obCardBody}>
       {crew.length === 0 && <span className={styles.obMuted}>Awaiting crew signal…</span>}
       {crew.slice(0, 5).map(member => <div className={styles.obListRow} key={member.id}>
@@ -54,7 +54,7 @@ function TelemetryCard() {
   ] : ['uplink awaiting mission data…']
   return <section id="home-telemetry" className={`${styles.obCard} ${styles.obTelemetryCard}`} aria-labelledby="ob-telemetry-title">
     <BracketFrame />
-    <CardHeader label="UPLINK TELEMETRY" meta="ASCII BUS" />
+    <CardHeader label="UPLINK TELEMETRY" meta="ASCII BUS" id="ob-telemetry-title" />
     <div className={styles.obTelemetryBody}>
       <pre className={styles.obAscii} aria-hidden="true">{lines.join('\n')}</pre>
       <div className={styles.obReadouts}>
@@ -73,7 +73,7 @@ function FinanceCard() {
   const amount = costs?.meteredCostUsd ?? costs?.estimatedCostUsd
   return <section className={`${styles.obCard} ${styles.obFinanceCard}`} aria-labelledby="ob-finance-title">
     <BracketFrame />
-    <CardHeader label="FINANCE" meta={costs ? `${costs.dailyWindowDays}D WINDOW` : 'SYNCING'} href="/costs" />
+    <CardHeader label="FINANCE" meta={costs ? `${costs.dailyWindowDays}D WINDOW` : 'SYNCING'} href="/costs" id="ob-finance-title" />
     <div className={styles.obFinanceBody}>
       <strong>{amount == null ? '—' : <CountUp value={amount} prefix="$" decimals={2} />}</strong>
       <span>{costs ? `${costs.totalRequests.toLocaleString()} requests · ${costs.dailyWindowDays}d window` : 'Loading ledger…'}</span>
@@ -93,7 +93,7 @@ function DatastreamCard() {
     `warn  ${warningCount?.toString().padStart(2, '0') ?? '—'} raised`,
   ] : ['connecting to mission bus…']
   return <section className={`${styles.obCard} ${styles.obDatastream}`} aria-labelledby="ob-datastream-title">
-    <CardHeader label="DATASTREAM" meta="RAW" />
+    <CardHeader label="DATASTREAM" meta="RAW" id="ob-datastream-title" />
     <pre className={styles.obAscii}>{lines.join('\n')}</pre>
   </section>
 }

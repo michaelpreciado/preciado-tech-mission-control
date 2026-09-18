@@ -42,7 +42,7 @@ export function HomeTasks() {
     <TFrame><div className={styles.tasks}>{shown.map(task => {
       const running = rank(task.status) === 0
       const attention = rank(task.status) === 1
-      return <Link className={styles.task} key={task.id} href="/kanban" data-state={running ? 'running' : attention ? 'attention' : 'queued'} data-running={running}>
+      return <Link className={styles.task} key={task.id} href={`/kanban?task=${encodeURIComponent(task.id)}`} data-state={running ? 'running' : attention ? 'attention' : 'queued'} data-running={running}>
         <span className={styles.taskDot} data-attention={attention} data-running={running} aria-hidden="true" />
         <div><strong>{task.title}</strong><span>{running
           ? `${task.assignee || 'agent'} · running · ${ago(task.lastHeartbeatAt ?? task.startedAt)} ago`
