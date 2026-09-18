@@ -5,7 +5,6 @@
 .w2l-section-nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
 .w2l-section-nav a { display: inline-flex; align-items: center; min-height: 44px; }
 #ideas, #studio, #signals { scroll-margin-top: 16px; }
-.cc-search, .cc-search input { min-width: 0; }
 .mc-drawer { overscroll-behavior: contain; }
 .mc-drawer-head { position: sticky; top: -16px; z-index: 3; background: var(--pt-bg); padding-block: 10px; }
 .mc-drawer-title { overflow-wrap: anywhere; }
@@ -20,23 +19,9 @@
   .mc-setup-intro, .mc-setup-flash, .mc-setup-actions.sticky { grid-column: 1 / -1; }
   .mc-pipeline { grid-auto-flow: row; grid-template-columns: repeat(3, minmax(0, 1fr)); overflow: visible; }
 }
-/* One bounded chat workspace. Only the list/thread scroll, including when the
-   Android keyboard resizes the content viewport. */
-.mc-main:has(> .cc) { display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
-.mc-main:has(> .cc) > :not(.cc) { flex-shrink: 0; }
-.mc-main > .cc { flex: 1; height: auto; min-height: 0; }
-.cc-toolbar, .cc-filters, .cc-listmeta, .cc-thread-head, .cc-composer { flex-shrink: 0; }
+/* CHAT layout is owned by components/AgentConsole.module.css. */
 @media (max-width: 900px) {
   :root { --w2l-bottom: 12px; }
-  .mc-main > .cc { grid-template-columns: minmax(0, 1fr); }
-  .cc-listpane, .cc-threadpane { grid-area: 1 / 1; }
-  .cc-listpane.is-hidden-mobile { display: none; }
-  .cc-threadpane.is-empty { display: none; }
-  .cc-back { display: inline-flex; align-items: center; justify-content: center; }
-  .cc-listpane { gap: 6px; }
-  .cc-toolbar { order: 2; padding: 8px; border-top: 1px solid var(--pt-border-dim); }
-  .cc-newbtn { width: auto; min-width: 64px; }
-  .cc-listmeta-hint { display: none; }
   .mc-main :is(button, .mc-btn, select, input:not([type='checkbox']):not([type='radio']), summary),
   .mc-drawer :is(button, .mc-btn, input, select), .mc-home-nav-drawer header button {
     min-height: 44px;
@@ -58,7 +43,6 @@
   .w2l-move-jump { display: inline-flex; align-items: center; }
   .mc-drawer { max-width: 100%; height: 100dvh; }
   .mc-setup .mc-setup-actions.sticky { position: sticky; bottom: var(--w2l-bottom); z-index: 30; padding: 10px; background: var(--pt-bg); flex-wrap: wrap; }
-  .w2l-bot-actions { position: sticky; top: 0; z-index: 20; padding: 6px; background: var(--pt-bg); }
   .mc-mem-tags { flex-wrap: nowrap; overflow-x: auto; }
   .mc-mem-tags > * { flex-shrink: 0; }
   .w2l-section-nav { position: sticky; top: 0; z-index: 20; background: var(--pt-bg); padding-block: 6px; }
@@ -113,15 +97,11 @@
   .mc-commit .when { display: block; }
 }
 
-.w2l-chat-list-content { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior-y: auto; }
-.w2l-chat-list-content .cc-list, .w2l-chat-list-content .mcl-list { overflow: visible; max-height: none; }
 @media (max-width: 900px) {
   .mc-main .cockpit-standalone { margin-bottom: 0; }
   html body .mc-main .cyber-route-art { margin: 0; }
   html[data-theme='friday'] .mc-main .mc-ascii-head { padding-block: 4px; margin-block: 4px; min-height: 0; }
   html[data-theme='friday'] .mc-main { padding-inline: max(12px, env(safe-area-inset-left)); }
-  .mc-main .cc-toolbar { order: 2; }
-  .w2l-chat-list-content > div:first-child { min-height: 44px; }
 }
 @media (max-width: 560px) {
   .mc-cockpit .mc-cockpit-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 6px; min-height: 44px; }

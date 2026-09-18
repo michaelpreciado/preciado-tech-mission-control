@@ -1,0 +1,155 @@
+/* CHAT owns its layout without inheriting the legacy cc-* terminal recipes. */
+:global(html body .mc-main):has(.page) {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  padding-top: var(--pt-s-3);
+  padding-bottom: 0;
+}
+.page {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  padding-bottom: var(--pt-s-2);
+  box-sizing: border-box;
+  color: var(--pt-text);
+  font-family: var(--pt-font-ui);
+  font-size: var(--pt-fs-body);
+  line-height: var(--pt-lh-ui);
+}
+.pageHead { flex: 0 0 auto; padding: var(--pt-s-2) var(--pt-s-1) var(--pt-s-3); }
+.pageHead h1 { margin: 0; font: inherit; font-size: var(--pt-fs-h3); font-weight: 700; color: var(--pt-text-high); }
+.console { display: grid; grid-template-columns: minmax(0, 1fr); flex: 1; min-height: 0; min-width: 0; gap: var(--pt-s-3); }
+.console *, .management * { box-sizing: border-box; }
+.console :is(h2, h3, p), .management :is(h2, h3, p) { margin: 0; }
+.console h2, .management h3 { font-size: var(--pt-fs-h3); font-weight: 600; line-height: var(--pt-lh-ui); }
+.console :is(button, input, textarea, select), .management :is(button, input, textarea, select) {
+  font-family: var(--pt-font-ui);
+  font-size: var(--pt-fs-body);
+  text-transform: none;
+  letter-spacing: normal;
+  text-shadow: none;
+  box-shadow: none;
+  max-width: 100%;
+}
+.console :is(input, textarea, select), .management :is(input, textarea, select) { border-color: transparent; }
+.console :is(button, input, textarea, select):focus-visible, .management :is(button, input, textarea, select):focus-visible {
+  outline: 2px solid var(--pt-info);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+.console :global(.mc-btn), .management :global(.mc-btn) {
+  min-height: 44px;
+  border: 0;
+  border-radius: var(--pt-r-pill);
+  background: var(--pt-surface-2);
+  color: var(--pt-text);
+  padding: var(--pt-s-2) var(--pt-s-4);
+  white-space: normal;
+}
+.console :global(.mc-btn-primary), .management :global(.mc-btn-primary) { background: var(--pt-info); color: var(--pt-text-high); }
+.management :global(.mc-btn-danger) { background: color-mix(in srgb, var(--pt-error) 16%, var(--pt-bg)); color: var(--pt-error-ink); }
+.console :global(.mc-btn):hover, .management :global(.mc-btn):hover { box-shadow: none; text-shadow: none; filter: none; }
+.console :global(.mc-btn):disabled, .management :global(.mc-btn):disabled { opacity: .5; cursor: not-allowed; }
+.rail, .threadPane { min-width: 0; min-height: 0; overflow: hidden; border: 0; border-radius: var(--pt-r-lg); background: var(--pt-bg-soft); box-shadow: none; }
+.rail { display: flex; flex-direction: column; }
+.rosterPane { min-height: 0; overflow: auto; }
+.roster { padding: var(--pt-s-2); }
+.sectionHead, .threadHead { display: flex; align-items: center; justify-content: space-between; gap: var(--pt-s-2); padding: var(--pt-s-3); flex-shrink: 0; }
+.sectionHead h2, .threadHead > div { min-width: 0; overflow-wrap: anywhere; }
+.sectionHead > button { flex-shrink: 0; }
+.botRow, .conversationRow { padding: 0; border: 0; gap: var(--pt-s-1); min-width: 0; }
+.console .allBots { display: flex; justify-content: space-between; width: 100%; background: transparent; text-align: left; }
+.console .botIdentity, .console .conversationButton {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  background: transparent;
+  border-radius: var(--pt-r-lg);
+  text-align: left;
+  justify-content: flex-start;
+  gap: var(--pt-s-3);
+  padding: var(--pt-s-3);
+}
+.console :is(.botIdentity, .conversationButton, .allBots)[aria-pressed='true'] { background: var(--pt-surface-2); color: var(--pt-text-high); }
+.botCopy { display: flex; flex-direction: column; flex: 1; min-width: 0; gap: var(--pt-s-1); overflow-wrap: anywhere; }
+.botModel { display: none; font-size: var(--pt-fs-sm); color: var(--pt-text-dim); overflow-wrap: anywhere; }
+.dot { flex: 0 0 auto; width: var(--pt-s-2); height: var(--pt-s-2); border-radius: var(--pt-r-pill); background: var(--pt-text-mute); }
+.dot[data-status='running'] { background: var(--pt-ok); }
+.dot[data-status='degraded'] { background: var(--pt-warn); }
+.dot[data-status='stopped'] { background: var(--pt-error); }
+.conversations { display: flex; flex: 1; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; }
+.search { display: flex; gap: var(--pt-s-2); padding: 0 var(--pt-s-3) var(--pt-s-3); }
+.search input { min-width: 0; flex: 1; }
+.filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--pt-s-3); padding: var(--pt-s-3); flex-shrink: 0; max-height: 45%; overflow: auto; }
+.filters > * { min-width: 0; }
+.conversationList { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 0 var(--pt-s-2); }
+.console .conversationButton { flex-direction: column; align-items: stretch; gap: var(--pt-s-1); }
+.rowTop { display: flex; align-items: baseline; gap: var(--pt-s-2); min-width: 0; }
+.rowTop strong { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: 600; }
+.rowTop > .rowMeta { flex-shrink: 0; }
+.preview { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; color: var(--pt-text-dim); font-size: var(--pt-fs-sm); }
+.rowMeta { display: block; color: var(--pt-text-dim); font-size: var(--pt-fs-xs); font-weight: 400; overflow-wrap: anywhere; }
+.mobileBack { display: flex; padding: var(--pt-s-2); flex-shrink: 0; }
+.threadPane { display: flex; flex-direction: column; }
+.threadHead { border-bottom: 1px solid color-mix(in srgb, var(--pt-text) 10%, transparent); }
+.threadHead h2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.messages { flex: 1; min-height: 0; min-width: 0; overflow: auto; overscroll-behavior: contain; padding: var(--pt-s-4); }
+.message { width: fit-content; max-width: 100%; margin-bottom: var(--pt-s-4); padding: var(--pt-s-3); border-radius: var(--pt-r-lg); overflow-wrap: anywhere; }
+.userMessage { margin-left: auto; background: var(--pt-surface-2); }
+.agentMessage { background: transparent; }
+.messageMeta { display: flex; flex-wrap: wrap; gap: var(--pt-s-3); margin-bottom: var(--pt-s-2); color: var(--pt-text-dim); font-size: var(--pt-fs-xs); }
+.message :is(pre, table) { max-width: 100%; overflow-x: auto; }
+.message pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.message img { max-width: 100%; height: auto; }
+.message :global(.mc-markdown) { min-width: 0; }
+.tool { min-width: 0; }
+.tool pre { margin-top: var(--pt-s-2); }
+.composer { flex: 0 0 auto; min-width: 0; padding: var(--pt-s-2) var(--pt-s-3) max(var(--pt-s-3), env(safe-area-inset-bottom)); background: var(--pt-bg-soft); border-top: 1px solid color-mix(in srgb, var(--pt-text) 10%, transparent); display: flex; flex-direction: column; gap: var(--pt-s-2); }
+.composerTools { display: flex; align-items: center; flex-wrap: wrap; gap: var(--pt-s-2); justify-content: space-between; }
+.mode { border: 0; margin: 0; padding: 0; min-width: 0; }
+.mode button { font-size: var(--pt-fs-sm); }
+.composerInput { display: flex; align-items: flex-end; gap: var(--pt-s-2); min-width: 0; }
+.composerInput textarea { flex: 1; min-width: 0; min-height: 44px; max-height: 22dvh; resize: none; }
+.composerInput > button { flex-shrink: 0; }
+.latest { align-self: center; }
+.emptyThread { margin: auto; padding: var(--pt-s-6); text-align: center; color: var(--pt-text-dim); display: flex; flex-direction: column; align-items: center; gap: var(--pt-s-3); }
+.notice { padding: var(--pt-s-4); display: flex; flex-direction: column; gap: var(--pt-s-3); overflow-wrap: anywhere; }
+.inlineNotice { display: flex; flex-wrap: wrap; align-items: center; gap: var(--pt-s-2); overflow-wrap: anywhere; }
+.muted { color: var(--pt-text-dim); font-size: var(--pt-fs-sm); overflow-wrap: anywhere; }
+.error { color: var(--pt-error-ink); font-size: var(--pt-fs-sm); overflow-wrap: anywhere; }
+.stack { display: flex; flex-direction: column; gap: var(--pt-s-3); min-width: 0; }
+.management { display: flex; flex-direction: column; gap: var(--pt-s-6); min-width: 0; font-family: var(--pt-font-ui); font-size: var(--pt-fs-body); overflow-wrap: anywhere; }
+.management code { overflow-wrap: anywhere; white-space: normal; }
+.management section { padding-block: var(--pt-s-3); }
+.management :is(section, [class*='card']) { border-color: color-mix(in srgb, var(--pt-text) 10%, transparent); box-shadow: none; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--pt-s-2); }
+.stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--pt-s-4); }
+.draftSettings { flex-shrink: 0; padding: var(--pt-s-2) var(--pt-s-3); max-height: 40%; overflow: auto; }
+.draftSettings .filters { max-height: none; }
+@media (max-width: 899px) {
+  .console[data-stage='roster'] .conversations,
+  .console[data-stage='roster'] .threadPane,
+  .console[data-stage='conversations'] .rosterPane,
+  .console[data-stage='conversations'] .threadPane,
+  .console[data-stage='thread'] .rail { display: none; }
+  .rosterPane { flex: 1; }
+}
+@media (min-width: 900px) {
+  .console { grid-template-columns: minmax(260px, 34%) minmax(0, 1fr); }
+  .rosterPane { max-height: 42%; flex-shrink: 0; border-bottom: 1px solid color-mix(in srgb, var(--pt-text) 10%, transparent); }
+  .botModel { display: block; }
+  .mobileBack { display: none; }
+}
+
+.handoff { gap: var(--pt-s-3); margin-bottom: var(--pt-s-4); border: 0; background: var(--pt-surface-2); overflow-wrap: anywhere; }
+.handoff pre { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
+.message p + p { margin-top: var(--pt-s-3); }
+.message :is(h1, h2, h3, ul, ol, blockquote, pre) { margin-block: var(--pt-s-3); }
+:global([role='dialog']):has(.management) { border-color: color-mix(in srgb, var(--pt-text) 10%, transparent); }
+.management :is([class*='row'], [class*='cardHead']) { border-color: color-mix(in srgb, var(--pt-text) 10%, transparent); }

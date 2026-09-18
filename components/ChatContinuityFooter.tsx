@@ -1,43 +1,40 @@
 'use client'
+
 import { useEffect, useState } from 'react'
 import type { ChatContinuity } from '@/lib/chat-continuity'
+import { apiFetch } from '@/lib/api-base'
+import { Button } from './ui'
+import styles from './AgentConsole.module.css'
 
-export function ChatContinuityFooter({ session, profile, busy, onBusy, onOutput }: {
-  session: string; profile: string; busy: boolean; onBusy: (value: boolean) => void; onOutput: (text: string) => void
-}) {
+/** Read-only session details for the management sheet. Sending belongs to the single composer. */
+export function ChatContinuityFooter({ session, profile }: { session: string; profile: string }) {
   const [record, setRecord] = useState<ChatContinuity | null>(null)
-  const [text, setText] = useState('')
   const [error, setError] = useState('')
-  const refresh = async () => {
-    const response = await fetch(`/api/chat?${new URLSearchParams({ session, profile })}`, { cache: 'no-store' })
-    const body = await response.json()
-    if (!response.ok) throw new Error(body.error || 'Continuity unavailable')
-    setRecord(body.continuity)
-  }
-  useEffect(() => { void refresh().catch(e => setError(e.message)) }, [session, profile]) // keyed by the owning conversation
-  async function send() {
-    if (busy || !text.trim()) return
-    onBusy(true); setError('')
-    try {
-      const response = await fetch('/api/herdr/agent', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ op: 'continue-chat', session, profile, text }) })
-      const body = await response.json()
-      if (!response.ok) throw new Error(body.error || 'Herdr continuation failed')
-      setRecord(body.continuity); setText('')
-      onOutput(`Herdr terminal snapshot (may include prompt and prior output):\n${body.terminalText}`)
-    } catch (e) { setError((e as Error).message) }
-    finally { await refresh().catch(() => {}); onBusy(false) }
-  }
-  return <footer className="cc-continuity" aria-label="Session location">
-    <strong>~/chat / location</strong>
-    {record ? <>
-      <div>MC: {record.mcConversationId}</div>
-      <div>Hermes {record.sessionName || record.selector === 'id' ? 'id' : 'name (id unresolved)'}: {record.hermesSession} · {record.profile}</div>
-      <div>Herdr: {record.herdrPane || 'not attached'}</div>
-      <label>Next message in Herdr<textarea value={text} maxLength={4000} disabled={busy} onChange={e => setText(e.target.value)} /></label>
-      <button disabled={busy || !text.trim()} onClick={() => void send()}>{busy ? 'Waiting for agent…' : 'Continue in herdr'}</button>
-      {record.herdrPane && <a href="/kanban">Open agent deck</a>}
-    </> : <span>Send a local Hermes message to register this session.</span>}
-    {error && <p role="alert">{error}</p>}
-  </footer>
+  const [loading, setLoading] = useState(true)
+  const [retry, setRetry] = useState(0)
+  useEffect(() => {
+    let alive = true
+    const controller = new AbortController()
+    setLoading(true); setError(''); setRecord(null)
+    void (async () => {
+      try {
+        const response = await apiFetch(`/api/chat?${new URLSearchParams({ session, profile })}`, { signal: controller.signal })
+        const body = await response.json()
+        if (!response.ok) throw new Error(body.error || 'Continuity unavailable')
+        if (alive) setRecord(body.continuity)
+      } catch (e) { if (alive) setError((e as Error).message) }
+      finally { if (alive) setLoading(false) }
+    })()
+    return () => { alive = false; controller.abort() }
+  }, [session, profile, retry])
+  return <section className={styles.stack} aria-label="Session location">
+    <h3>Session location</h3>
+    {loading ? <p role="status">Loading session details…</p> : error ? <div role="alert"><p>{error}</p><Button onClick={() => setRetry(v => v + 1)}>Retry</Button></div> : record ? <>
+      <p>Conversation: <code>{record.mcConversationId}</code></p>
+      <p>Hermes session: <code>{record.hermesSession}</code></p>
+      <p>Profile: {record.profile}</p>
+      <p>Herdr: {record.herdrPane || 'Not attached'}</p>
+      {record.herdrPane && <Button href="/kanban">Open agent deck</Button>}
+    </> : <p>No continuity record yet. Send a local Hermes message to register this session.</p>}
+  </section>
 }
