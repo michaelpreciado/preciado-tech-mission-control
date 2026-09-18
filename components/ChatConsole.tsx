@@ -1,1003 +1,403 @@
 'use client'
 
-import { ChatContinuityFooter } from '@/components/ChatContinuityFooter'
-import './chat-continuity.css'
-import { HandoffCard, type HandoffMessage } from '@/components/HandoffCard'
-import { AsciiMsg, AsciiPromptGutter, messageSide } from '@/components/ascii-msg'
-
-/**
- * CHAT CONSOLE — every Hermes conversation, every agent, every device, in one
- * mobile-first surface.
- *
- *  - Conversation list (searchable, filterable by agent/device/source) over a
- *    thread viewer in a two-pane layout on desktop; a single paned stack on
- *    mobile (list ⇄ thread).
- *  - With nothing selected the thread pane shows CHAT INTEL — archive-wide
- *    stats — rather than sitting empty.
- *  - Continue any conversation in place (real Hermes `--resume`), or start a
- *    brand-new one.
- *  - Performance: rows and bubbles use CSS content-visibility, so off-screen
- *    entries cost DOM but skip layout and paint.
- */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { SectionHead } from '@/components/ui'
-import { Icon } from '@/components/icons'
-import { Markdown } from '@/components/Markdown'
-import { cleanTitle, dayBucket, isJunk, sourceGlyph, type DayBucket } from '@/lib/conv-format'
-import { ChatIntel } from '@/components/views/ChatIntel'
-import LiveChatMirror from '@/components/LiveChatMirror'
-import type { ConversationStats } from '@/lib/conversations'
+import { Button, Card, Field, IconButton, Input, Row, Segmented, Select, TextArea } from './ui'
+import { Markdown } from './Markdown'
+import { BotsPanel, ago } from './views/BotsPanel'
+import { ChatContinuityFooter } from './ChatContinuityFooter'
+import LiveChatMirror from './LiveChatMirror'
 import { apiFetch } from '@/lib/api-base'
-import '../app/vf/v3-lane.css'
+import type { HandoffReport } from '@/lib/handoff'
+import { cleanTitle, isJunk } from '@/lib/conv-format'
+import styles from './AgentConsole.module.css'
 
-/* ── Types (mirror the API) ─────────────────────────────── */
-
-type AgentId = 'hermes' | 'pi' | 'codex'
-type AgentStatus = { id: AgentId; enabled: boolean; available: boolean }
-
+type Agent = 'hermes' | 'pi'
+type AgentStatus = { id: string; enabled: boolean; available: boolean }
 type Conversation = {
-  agent?: 'hermes' | 'pi'
-  id: string
-  title: string
-  profile: string
-  device: string
-  source: string
-  model: string | null
-  startedAt: number
-  lastActiveAt: number
-  messageCount: number
-  preview: string
-  active: boolean
+  agent?: Agent; id: string; title: string; profile: string; device: string; source: string
+  model: string | null; startedAt: number; lastActiveAt: number; messageCount: number; preview: string; active: boolean
 }
-
-type ChatMessage = {
-  agent?: AgentId
-  id: number
-  role: string
-  content: string | null
-  toolName?: string
-  toolCalls?: string
-  timestamp: number
-  ms?: number
-}
-
+type Message = { id: number; role: string; content: string | null; toolName?: string; timestamp: number }
 type Device = { name: string; isLocal: boolean }
-
-const BUCKET_ORDER: DayBucket[] = ['TODAY', 'YESTERDAY', 'THIS WEEK', 'THIS MONTH', 'OLDER']
-
-/**
- * Rows rendered per page. content-visibility skips PAINT for off-screen rows
- * but they still cost DOM: the full archive put ~8,000 nodes on the page
- * against ~900 on every other tab. Paging keeps the tree small while search
- * still queries the whole archive server-side.
- */
+type Target = { id: string; profile: string; device: string; agent: Agent; title: string; draft?: boolean }
+type Index = { conversations: Conversation[]; devices: Device[]; profiles: string[] }
+const keyOf = (c: Target | Conversation) => JSON.stringify([c.agent || 'hermes', c.device, c.profile, c.id])
 const PAGE_SIZE = 60
 
-/* ── SSE reader ─────────────────────────────────────────── */
-
-type SseEvent = { event: string; data: unknown }
-
-async function* readSse(body: ReadableStream<Uint8Array>): AsyncGenerator<SseEvent> {
+async function* readSse(body: ReadableStream<Uint8Array>) {
   const reader = body.getReader()
-  const dec = new TextDecoder()
-  let buf = ''
-  let curEvent = 'message'
-  let curData = ''
+  const decoder = new TextDecoder()
+  let buffer = ''
   try {
     while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      buf += dec.decode(value, { stream: true })
-      const lines = buf.split('\n')
-      buf = lines.pop() ?? ''
-      for (const line of lines) {
-        if (line.startsWith('event:')) {
-          curEvent = line.slice(6).trim()
-        } else if (line.startsWith('data:')) {
-          curData = line.slice(5).trim()
-        } else if (line === '') {
-          if (curData !== '') {
-            try { yield { event: curEvent, data: JSON.parse(curData) } } catch { /* skip bad frame */ }
-          }
-          curEvent = 'message'
-          curData = ''
-        }
+      const { value, done } = await reader.read()
+      buffer += done ? decoder.decode() : decoder.decode(value, { stream: true })
+      buffer = buffer.replace(/\r\n/g, '\n')
+      let end: number
+      while ((end = buffer.indexOf('\n\n')) !== -1) {
+        const frame = buffer.slice(0, end); buffer = buffer.slice(end + 2)
+        const lines = frame.split('\n')
+        const event = lines.find(l => l.startsWith('event:'))?.slice(6).trim()
+        const data = lines.filter(l => l.startsWith('data:')).map(l => l.slice(5).trim()).join('\n')
+        if (data) yield { event, data: JSON.parse(data) as { ok?: boolean; error?: string; reply?: string; messages?: Message[] } }
       }
+      if (done) break
     }
-  } finally {
-    reader.releaseLock()
-  }
+  } finally { reader.releaseLock() }
 }
 
-/* ── Helpers ────────────────────────────────────────────── */
-
-function relTime(ts: number): string {
-  const diff = Date.now() - ts
-  const m = Math.floor(diff / 60000)
-  if (m < 1) return 'now'
-  if (m < 60) return `${m}m`
-  const h = Math.floor(m / 60)
-  if (h < 24) return `${h}h`
-  const d = Math.floor(h / 24)
-  if (d < 7) return `${d}d`
-  return new Date(ts).toLocaleDateString([], { month: 'short', day: 'numeric' })
-}
-
-function fmtStamp(ts: number): string {
-  return new Date(ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
-}
-
-function convoKey(c: Conversation): string {
-  return `${c.device}::${c.profile}::${c.id}`
-}
-
-/** Render a message body — tool logs collapsed, prose as markdown. */
-function MessageBody({ m }: { m: ChatMessage }) {
+function MessageBody({ message }: { message: Message }) {
   const [open, setOpen] = useState(false)
-  if (m.role === 'tool') {
-    const text = m.content || m.toolCalls || ''
-    return (
-      <div className={`cc-tool ${open ? 'is-open' : ''}`}>
-        <button className="cc-tool-head" onClick={() => setOpen(o => !o)} aria-expanded={open}>
-          <span>⚙ {m.toolName || 'tool'}</span>
-          <span className="cc-tool-toggle">{open ? '−' : '+'}</span>
-        </button>
-        {open && <pre className="cc-tool-body">{text}</pre>}
-      </div>
-    )
-  }
-  if (m.role === 'session_meta' || (m.content && m.content.startsWith('[System:'))) {
-    return <div className="cc-meta">{String(m.content || '')}</div>
-  }
-  // Agent replies are markdown; users type plain text but markdown is harmless
-  // there and keeps pasted snippets readable.
-  return <div className="cc-msg-body"><Markdown text={m.content || ''} /></div>
+  if (message.role === 'tool') return <div className={styles.tool}>
+    <Button aria-expanded={open} onClick={() => setOpen(v => !v)}>{message.toolName || 'Tool output'} {open ? '−' : '+'}</Button>
+    {open && <pre>{message.content}</pre>}
+  </div>
+  return <Markdown text={message.content || ''} />
 }
-
-/* ── Copy-to-clipboard button ───────────────────────────── */
-
-function fallbackCopy(text: string, onDone: () => void) {
-  const el = document.createElement('textarea')
-  el.value = text
-  el.style.cssText = 'position:fixed;opacity:0;top:0;left:0'
-  document.body.appendChild(el)
-  el.select()
-  try { document.execCommand('copy') } catch { /* best-effort */ }
-  document.body.removeChild(el)
-  onDone()
-}
-
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false)
-  const done = () => { setCopied(true); setTimeout(() => setCopied(false), 1500) }
-  const copy = () => {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done))
-    } else {
-      fallbackCopy(text, done)
-    }
-  }
-  return (
-    <button
-      onClick={copy}
-      aria-label={copied ? 'Copied' : 'Copy message'}
-      style={{
-        background: 'none',
-        border: 'none',
-        cursor: 'pointer',
-        padding: '12px',
-        minWidth: '44px',
-        minHeight: '44px',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '11px',
-        fontFamily: 'var(--pt-font-sans)',
-        letterSpacing: '0.08em',
-        opacity: copied ? 1 : 0.4,
-        color: copied ? 'var(--mc-neon)' : 'inherit',
-        flexShrink: 0,
-      }}
-    >
-      {copied ? 'Copied' : '⎘'}
-    </button>
-  )
-}
-
-/* ── Conversation list row ──────────────────────────────── */
-
-function ConvoRow({ c, active, cursor, onOpen }: {
-  c: Conversation; active: boolean; cursor: boolean; onOpen: (c: Conversation) => void
-}) {
-  const title = cleanTitle(c.title) ?? `${c.source || 'session'} · ${new Date(c.startedAt).toLocaleDateString()}`
-  return (
-    <button
-      className={`cc-row ${active ? 'is-active' : ''} ${cursor ? 'is-cursor' : ''}`}
-      onClick={() => onOpen(c)}
-      data-convo={convoKey(c)}
-    >
-      <span className="cc-row-side">
-        <span className={`cc-led ${c.active ? 'is-live' : ''}`} />
-      </span>
-      <span className="cc-row-main">
-        <span className="cc-row-top">
-          <span className="cc-row-title">{title}</span>
-          <span className="cc-row-time">{relTime(c.lastActiveAt)}</span>
-        </span>
-        <span className="cc-row-preview">{c.preview || '—'}</span>
-        <span className="cc-row-meta">
-          <span className="cc-chip cc-chip-src" title={`source: ${c.source || 'unknown'}`}>
-            {sourceGlyph(c.source)} {c.source || '—'}
-          </span>
-          <span className="cc-chip cc-chip-dev">{c.device}</span>
-          <span className="cc-chip cc-chip-agent">{c.profile}</span>
-          {c.agent === 'pi' && <span className="cc-row-model" style={{ maxWidth: '100%' }} title={`Pi session: ${c.id}`}>{c.id}</span>}
-          {c.model && <span className="cc-row-model">{c.model.split('/').pop()}</span>}
-          {c.messageCount > 0 && <span className="cc-row-count">{c.messageCount} msgs</span>}
-        </span>
-      </span>
-    </button>
-  )
-}
-
-/* ── Main console ───────────────────────────────────────── */
 
 export default function ChatConsole() {
-  const [conversations, setConversations] = useState<Conversation[]>([])
-  const [devices, setDevices] = useState<Device[]>([])
-  const [profiles, setProfiles] = useState<string[]>([])
-  const [stats, setStats] = useState<ConversationStats | null>(null)
-  const [loaded, setLoaded] = useState(false)
+  const [index, setIndex] = useState<Index | null>(null)
+  const [listError, setListError] = useState('')
+  const [listLoading, setListLoading] = useState(true)
+  const [reload, setReload] = useState(0)
+  const refresh = useCallback(() => setReload(v => v + 1), [])
+  const [profile, setProfile] = useState('')
   const [q, setQ] = useState('')
-  const [filterDevice, setFilterDevice] = useState('')
-  const [filterProfile, setFilterProfile] = useState('')
-  const [filterAgent, setFilterAgent] = useState('')
-  const [filterSource, setFilterSource] = useState('')
-  const [showJunk, setShowJunk] = useState(false)
-
-  const [openId, setOpenId] = useState<string | null>(null)
-  const [thread, setThread] = useState<ChatMessage[]>([])
-  const [threadRef, setThreadRef] = useState<Conversation | null>(null)
-  // System messages belong to their originating conversation even if the user
-  // switches threads while the independent Codex request is running.
-  const [handoffs, setHandoffs] = useState<Record<string, HandoffMessage[]>>({})
-  const [handoffTask, setHandoffTask] = useState('')
-  const handoffBusy = Object.values(handoffs).some(items => items.some(m => m.state === 'running'))
-  async function handoffToCodex() {
-    if (!threadRef || handoffBusy || !handoffTask.trim()) return
-    const key = convoKey(threadRef)
-    const message: HandoffMessage = { id: Date.now(), role: 'system', state: 'running', task: handoffTask.trim() }
-    setHandoffs(all => ({ ...all, [key]: [...(all[key] || []), message] }))
-    setHandoffTask('')
-    try {
-      const response = await apiFetch('/api/handoff', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId: threadRef.id, agent: 'codex', task: message.task,
-          sourceAgent: threadRef.agent || 'hermes', profile: threadRef.profile, device: threadRef.device }),
-      })
-      const report = await response.json()
-      if (!response.ok) throw new Error(report.error || `Handoff failed (${response.status})`)
-      setHandoffs(all => ({ ...all, [key]: all[key].map(m => m.id === message.id ? { ...m, state: report.ok ? 'done' : 'failed', report } : m) }))
-    } catch (error) {
-      setHandoffs(all => ({ ...all, [key]: all[key].map(m => m.id === message.id ? { ...m, state: 'failed', error: (error as Error).message } : m) }))
-    }
-  }
+  const [device, setDevice] = useState('')
+  const [agentFilter, setAgentFilter] = useState('')
+  const [source, setSource] = useState('')
+  const [filters, setFilters] = useState(false)
+  const [showEmpty, setShowEmpty] = useState(false)
+  const [limit, setLimit] = useState(PAGE_SIZE)
+  const [stage, setStage] = useState<'roster' | 'conversations' | 'thread'>('roster')
+  const [target, setTarget] = useState<Target | null>(null)
+  const [thread, setThread] = useState<Message[]>([])
   const [threadLoading, setThreadLoading] = useState(false)
-  const [atBottom, setAtBottom] = useState(true)
-
-  const [agent, setAgent] = useState<AgentId>('hermes')
-  const [agentStatus, setAgentStatus] = useState<AgentStatus[]>([])
-  const [localSession, setLocalSession] = useState<string | null>(null)
-  useEffect(() => {
-    apiFetch('/api/chat').then(r => r.json()).then(j => {
-      setAgentStatus(j.agents ?? [])
-      try {
-        const saved = localStorage.getItem('mc.chat.agent')
-        if (!new URLSearchParams(window.location.search).has('session') && saved === 'pi' && j.agents?.some((a: AgentStatus) => a.id === 'pi' && a.enabled && a.available)) setAgent('pi')
-      } catch { /* storage unavailable */ }
-    }).catch(() => {})
-  }, [])
-
+  const [threadError, setThreadError] = useState('')
+  const [threadRetry, setThreadRetry] = useState(0)
   const [composer, setComposer] = useState('')
+  const [mode, setMode] = useState('chat')
+  const [handoffs, setHandoffs] = useState<Record<string, { task: string; report: HandoffReport }[]>>({})
   const [busy, setBusy] = useState(false)
   const busyRef = useRef(false)
-  busyRef.current = busy
+  const [sendError, setSendError] = useState('')
   const [elapsed, setElapsed] = useState(0)
-  const abortRef = useRef<AbortController | null>(null)
+  const [initialized, setInitialized] = useState(false)
+  const [remoteComplete, setRemoteComplete] = useState(false)
+  const [settings, setSettings] = useState(false)
+  const [agents, setAgents] = useState<AgentStatus[]>([])
+  const [availabilityError, setAvailabilityError] = useState('')
+  const [availabilityRetry, setAvailabilityRetry] = useState(0)
+  const [management, setManagement] = useState<string | null>(null)
+  const [atBottom, setAtBottom] = useState(true)
+  const root = useRef<HTMLDivElement>(null)
+  const messagesEl = useRef<HTMLDivElement>(null)
+  const requestKey = useRef('')
+  const threadRevision = useRef(0)
+  const threadRequest = useRef<AbortController | null>(null)
+  const sendRequest = useRef<AbortController | null>(null)
+  const deepLink = useRef<{ session: string; profile: string; device: string; agent: Agent } | null>(null)
 
-  const [showNew, setShowNew] = useState(false)
-  const [newProfile, setNewProfile] = useState('jarvis')
-  const [newDevice, setNewDevice] = useState('')
-
-  /* Deep-link support: /chat?profile=<name> (from the Bots roster's ENGAGE
-     action) pre-filters the list AND presets the NEW composer to that bot.
-     /chat?session=<id>[&device=<name>] (from the command palette) additionally
-     opens that thread once the list resolves. Read once on mount; afterwards
-     the user's own filter choices win. */
-  const deepLinkRef = useRef<{ session: string; device: string; profile: string } | null>(null)
-  const deepLinkDoneRef = useRef(false)
   useEffect(() => {
-    const sp = new URLSearchParams(window.location.search)
-    const preset = sp.get('profile')
-    if (preset) {
-      setFilterProfile(preset)
-      setNewProfile(preset)
+    const params = new URLSearchParams(window.location.search)
+    const preset = params.get('profile') || ''
+    if (preset) { setProfile(preset); setStage('conversations') }
+    if (params.get('session')) deepLink.current = { session: params.get('session')!, profile: preset, device: params.get('device') || '', agent: params.get('agent') === 'pi' ? 'pi' : 'hermes' }
+    return () => { threadRequest.current?.abort(); sendRequest.current?.abort() }
+  }, [])
+
+  // Size to the actual visual viewport, including Android keyboard/pan changes.
+  // The shell owns navigation; reserve only the space its visible bottom bar occupies.
+  useEffect(() => {
+    const page = root.current?.parentElement
+    if (!page) return
+    const fit = () => {
+      const viewport = window.visualViewport
+      const bottom = (viewport?.height ?? window.innerHeight) + (viewport?.offsetTop ?? 0)
+      const nav = document.querySelector<HTMLElement>('.mc-mobile-nav')
+      const navRect = nav?.getBoundingClientRect()
+      const reserve = navRect && getComputedStyle(nav!).display !== 'none' && navRect.top < bottom ? bottom - navRect.top : 0
+      page.style.height = `${Math.max(0, bottom - page.getBoundingClientRect().top - reserve)}px`
     }
-    const session = sp.get('session')
-    if (session) deepLinkRef.current = { session, device: sp.get('device') ?? '', profile: preset ?? '' }
+    fit()
+    window.addEventListener('resize', fit)
+    window.visualViewport?.addEventListener('resize', fit)
+    window.visualViewport?.addEventListener('scroll', fit)
+    const observer = new ResizeObserver(fit)
+    const nav = document.querySelector('.mc-mobile-nav')
+    if (nav) observer.observe(nav)
+    return () => { window.removeEventListener('resize', fit); window.visualViewport?.removeEventListener('resize', fit); window.visualViewport?.removeEventListener('scroll', fit); observer.disconnect() }
   }, [])
 
-  const [cursor, setCursor] = useState(-1)
-  /* Bumped after a send so the list effect re-runs and picks up the new
-     message count, preview and ordering. */
-  const [reloadToken, setReloadToken] = useState(0)
-  const [limit, setLimit] = useState(PAGE_SIZE)
-
-  const listRef = useRef<HTMLDivElement>(null)
-  const threadRefEl = useRef<HTMLDivElement>(null)
-  const threadBottomRef = useRef<HTMLDivElement>(null)
-  const composerRef = useRef<HTMLTextAreaElement>(null)
-
-  /* Tick the elapsed display while busy. Server heartbeats anchor the truth;
-     the client interval keeps it smooth between them. */
-  const busyStartRef = useRef<number>(0)
-  useEffect(() => {
-    if (!busy) { setElapsed(0); return }
-    busyStartRef.current = Date.now()
-    setElapsed(0)
-    const t = setInterval(() => setElapsed(Math.floor((Date.now() - busyStartRef.current) / 1000)), 500)
-    return () => clearInterval(t)
-  }, [busy])
-
-  /* Abort any in-flight request on unmount. */
-  useEffect(() => {
-    return () => { abortRef.current?.abort() }
-  }, [])
-
-  /* Load the conversation index. One debounced effect owns every fetch — an
-     eager load plus a debounced load fired two requests per keystroke. */
   useEffect(() => {
     let alive = true
-    const run = async () => {
+    const controller = new AbortController()
+    setAvailabilityError('')
+    void (async () => {
+      try {
+        const response = await apiFetch('/api/chat', { signal: controller.signal })
+        if (!response.ok) throw new Error(`Agent availability could not be loaded (${response.status})`)
+        const data = await response.json()
+        if (alive) setAgents(data.agents || [])
+      } catch (e) { if (alive) setAvailabilityError((e as Error).message) }
+    })()
+    return () => { alive = false; controller.abort() }
+  }, [availabilityRetry])
+
+  useEffect(() => {
+    let alive = true
+    const controller = new AbortController()
+    setListLoading(true); setListError('')
+    const timer = setTimeout(async () => {
       try {
         const params = new URLSearchParams()
         if (q) params.set('q', q)
-        if (filterDevice) params.set('device', filterDevice)
-        if (filterProfile) params.set('profile', filterProfile)
-        if (filterAgent) params.set('agent', filterAgent)
-        const res = await apiFetch(`/api/conversations?${params}`, { cache: 'no-store' })
-        const j = await res.json()
-        if (!alive) return
-        setConversations(j.conversations ?? [])
-        setDevices(j.devices ?? [])
-        setProfiles(j.profiles ?? [])
-        setStats(j.stats ?? null)
-      } catch {
-        /* keep whatever is on screen */
-      } finally {
-        if (alive) setLoaded(true)
-      }
-    }
-    const t = setTimeout(run, q ? 250 : 0)
-    return () => { alive = false; clearTimeout(t) }
-  }, [q, filterDevice, filterProfile, filterAgent, reloadToken])
+        if (profile) params.set('profile', profile)
+        if (device) params.set('device', device)
+        if (agentFilter) params.set('agent', agentFilter)
+        const response = await apiFetch(`/api/conversations?${params}`, { signal: controller.signal })
+        const data = await response.json()
+        if (!response.ok) throw new Error(data.error || `Could not load conversations (${response.status})`)
+        if (alive) setIndex({ conversations: data.conversations ?? [], devices: data.devices ?? [], profiles: data.profiles ?? [] })
+      } catch (e) { if (alive) setListError((e as Error).message) }
+      finally { if (alive) setListLoading(false) }
+    }, q ? 250 : 0)
+    return () => { alive = false; controller.abort(); clearTimeout(timer) }
+  }, [q, profile, device, agentFilter, reload])
+  useEffect(() => { const timer = setInterval(refresh, 20_000); return () => clearInterval(timer) }, [refresh])
+  useEffect(() => setLimit(PAGE_SIZE), [q, profile, device, agentFilter, source, showEmpty])
 
-  useEffect(() => { setLimit(PAGE_SIZE); setCursor(-1) }, [q, filterDevice, filterProfile, filterAgent, filterSource, showJunk])
-
-  /* Load a thread */
-  const openThread = useCallback(async (c: Conversation) => {
+  const selectTarget = useCallback((next: Target) => {
     if (busyRef.current) return
-    setAgent(c.agent || 'hermes')
-    setLocalSession(c.id)
-    setOpenId(c.id)
-    setThreadRef(c)
-    setShowNew(false)
-    setThreadLoading(true)
-    setThread([])
-    try {
-      const params = new URLSearchParams({ profile: c.profile, device: c.device, agent: c.agent || 'hermes' })
-      const res = await apiFetch(`/api/conversations/${encodeURIComponent(c.id)}?${params}`, { cache: 'no-store' })
-      const j = await res.json()
-      setThread(j.messages ?? [])
-    } finally {
-      setThreadLoading(false)
-    }
+    threadRequest.current?.abort()
+    requestKey.current = keyOf(next)
+    setTarget(next); setThread([]); setThreadError(''); setSendError(''); setComposer('')
+    setMode('chat'); setInitialized(false); setRemoteComplete(false); setSettings(false); setAtBottom(true)
+    setThreadLoading(!next.draft); setStage('thread')
   }, [])
-
-  const closeThread = useCallback(() => {
-    if (busyRef.current) return
-    setOpenId(null)
-    setThreadRef(null)
-    setThread([])
-    setShowNew(false)
-  }, [])
-
-  /* Honour a /chat?session=<id> deep-link once the conversation index has
-     resolved: open the matching thread (device-scoped if ?device= was given,
-     else first id match). If the id isn't in the result set but a profile was
-     supplied, open a minimal stub so the thread endpoint can resolve it from
-     the real database — never crash, never blank. */
-  useEffect(() => {
-    if (deepLinkDoneRef.current || !loaded) return
-    const dl = deepLinkRef.current
-    if (!dl) { deepLinkDoneRef.current = true; return }
-    const match =
-      conversations.find(c => c.id === dl.session && (!dl.device || c.device === dl.device)) ??
-      conversations.find(c => c.id === dl.session)
-    if (match) {
-      deepLinkDoneRef.current = true
-      deepLinkRef.current = null
-      void openThread(match)
-    } else if (dl.profile) {
-      const stub: Conversation = {
-        id: dl.session,
-        title: '(canonical chat)',
-        profile: dl.profile || filterProfile,
-        device: dl.device,
-        source: 'desktop',
-        model: null,
-        startedAt: Date.now(),
-        lastActiveAt: Date.now(),
-        messageCount: 0,
-        preview: '',
-        active: false,
-      }
-      deepLinkDoneRef.current = true
-      deepLinkRef.current = null
-      void openThread(stub)
-    } else if (conversations.length > 0) {
-      // Index resolved without the target — stop retrying on later reloads.
-      deepLinkDoneRef.current = true
-      deepLinkRef.current = null
-    }
-  }, [loaded, conversations, openThread])
+  const openThread = useCallback((c: Conversation) => selectTarget({ id: c.id, profile: c.profile, device: c.device, agent: c.agent || 'hermes', title: cleanTitle(c.title) || 'Conversation' }), [selectTarget])
 
   useEffect(() => {
-    threadBottomRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' })
-  }, [openId, threadLoading, thread.length])
+    if (!index || listLoading || listError || !deepLink.current) return
+    const link = deepLink.current
+    deepLink.current = null
+    const found = index.conversations.find(c => c.id === link.session && (!link.profile || c.profile === link.profile) && (!link.device || c.device === link.device) && (c.agent || 'hermes') === link.agent)
+    if (found) { setProfile(found.profile); openThread(found) }
+    else if (link.profile) selectTarget({ id: link.session, profile: link.profile, device: link.device, agent: link.agent, title: 'Conversation' })
+    else { setStage('conversations'); setListError('The linked conversation was not found. Search the archive or choose a bot.') }
+  }, [index, listLoading, listError, openThread, selectTarget])
 
-  /* Track whether we're pinned to the newest message (drives JUMP TO LATEST). */
-  const onThreadScroll = useCallback(() => {
-    const el = threadRefEl.current
-    if (!el) return
-    setAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 120)
-  }, [])
-
-  /* Send a message to continue the OPEN conversation */
-  const sendContinue = useCallback(async () => {
-    const text = composer.trim()
-    if (!text || busy || !threadRef) return
-    setComposer('')
-    setBusy(true)
-    setThread(t => [...t, { id: Date.now(), role: 'user', content: text, timestamp: Date.now() }])
-    const ctrl = new AbortController()
-    abortRef.current = ctrl
-    try {
-      const res = await apiFetch(`/api/conversations/${encodeURIComponent(threadRef.id)}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, profile: threadRef.profile, device: threadRef.device }),
-        signal: ctrl.signal,
-      })
-      if (!res.ok || !res.body) {
-        const j = await res.json().catch(() => ({ error: 'send failed' }))
-        setThread(t => [...t, { id: Date.now() - 1, role: 'tool', content: `⚠ ${j.error || 'send failed'}`, timestamp: Date.now() }])
-      } else {
-        for await (const ev of readSse(res.body)) {
-          if (ev.event === 'heartbeat') {
-            const d = ev.data as { elapsedMs?: number }
-            if (typeof d.elapsedMs === 'number') {
-              busyStartRef.current = Date.now() - d.elapsedMs
-            }
-          } else if (ev.event === 'done') {
-            const d = ev.data as { ok?: boolean; error?: string; reply?: string; messages?: ChatMessage[] }
-            if (!d.ok) {
-              setThread(t => [...t, { id: Date.now() - 1, role: 'tool', content: `⚠ ${d.error || 'send failed'}`, timestamp: Date.now() }])
-            } else {
-              setThread(d.messages ?? [])
-            }
-          }
-        }
+  useEffect(() => {
+    if (!target || target.draft) return
+    const key = keyOf(target)
+    const controller = new AbortController()
+    threadRequest.current = controller
+    let alive = true
+    let timer: ReturnType<typeof setTimeout>
+    const load = async (initial: boolean) => {
+      if (busyRef.current) { timer = setTimeout(() => void load(false), 5000); return }
+      const revision = threadRevision.current
+      try {
+        const params = new URLSearchParams({ profile: target.profile, device: target.device, agent: target.agent })
+        const response = await apiFetch(`/api/conversations/${encodeURIComponent(target.id)}?${params}`, { signal: controller.signal })
+        const data = await response.json()
+        if (!response.ok) throw new Error(data.error || `Could not load this conversation (${response.status})`)
+        // Key, lifetime and sending guards apply to success, errors and loading state.
+        if (alive && requestKey.current === key && revision === threadRevision.current && !busyRef.current) { setThread(data.messages ?? []); setThreadError('') }
+      } catch (e) { if (alive && requestKey.current === key && revision === threadRevision.current && !busyRef.current) setThreadError((e as Error).message) }
+      finally {
+        if (alive && requestKey.current === key) { if (initial) setThreadLoading(false); timer = setTimeout(() => void load(false), 5000) }
       }
-    } catch (err) {
-      if ((err as Error).name !== 'AbortError') {
-        setThread(t => [...t, { id: Date.now() - 1, role: 'tool', content: `⚠ ${(err as Error).message}`, timestamp: Date.now() }])
-      }
-    } finally {
-      abortRef.current = null
-      setBusy(false)
-      setReloadToken(t => t + 1)
     }
-  }, [composer, busy, threadRef])
+    setThreadLoading(true); setThreadError('')
+    void load(true)
+    return () => { alive = false; controller.abort(); clearTimeout(timer) }
+  }, [target, threadRetry])
 
-  /* Start a brand-new conversation */
-  const startNew = useCallback(async () => {
+  useEffect(() => {
+    const el = messagesEl.current
+    if (el && atBottom) el.scrollTop = el.scrollHeight
+  }, [thread, handoffs, threadLoading, busy, atBottom])
+  useEffect(() => {
+    if (!busy) { setElapsed(0); return }
+    const started = Date.now()
+    const timer = setInterval(() => setElapsed(Math.floor((Date.now() - started) / 1000)), 1000)
+    return () => clearInterval(timer)
+  }, [busy])
+
+  const selectBot = (name: string) => {
+    if (busyRef.current) return
+    setProfile(name); setQ(''); setSource(''); setDevice(''); setAgentFilter(''); setStage('conversations')
+    setTarget(null); requestKey.current = ''; threadRequest.current?.abort(); setThread([]); setComposer('')
+  }
+  const newChat = () => selectTarget({ id: crypto.randomUUID(), profile: profile || index?.profiles[0] || 'default', device: '', agent: 'hermes', title: 'New conversation', draft: true })
+  const remote = Boolean(target?.agent === 'hermes' && target?.device && index?.devices.some(d => d.name === target.device && !d.isLocal))
+  const localAvailable = agents.some(a => a.id === target?.agent && a.enabled && a.available)
+  const available = mode === 'codex' ? agents.some(a => a.id === 'codex' && a.enabled && a.available) : remote || mode === 'herdr' || localAvailable
+  const canCompose = Boolean(target && !threadLoading && !threadError && !remoteComplete)
+  const back = () => {
+    if (busyRef.current) return
+    setStage('conversations'); setTarget(null); requestKey.current = ''; threadRequest.current?.abort()
+    setThread([]); setComposer(''); setSendError('')
+  }
+
+  async function send() {
     const text = composer.trim()
-    if (!text || busy) return
+    if (!target || !text || busyRef.current || !canCompose || !available) return
+    busyRef.current = true; threadRevision.current += 1; setBusy(true); setSendError('')
+    const current = target
+    const controller = new AbortController(); sendRequest.current = controller
+    const message: Message = { id: Date.now(), role: 'user', content: text, timestamp: Date.now() }
+    if (mode !== 'codex') setThread(items => [...items, message])
     setComposer('')
-    setBusy(true)
-    const ctrl = new AbortController()
-    abortRef.current = ctrl
     try {
-      const res = await apiFetch('/api/conversations/new', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, profile: newProfile, device: newDevice }),
-        signal: ctrl.signal,
-      })
-      if (!res.ok || !res.body) {
-        const j = await res.json().catch(() => ({ error: 'send failed' }))
-        setThread(t => [...t, { id: Date.now() - 1, role: 'tool', content: `⚠ ${j.error || 'send failed'}`, timestamp: Date.now() }])
-      } else {
-        for await (const ev of readSse(res.body)) {
-          if (ev.event === 'heartbeat') {
-            const d = ev.data as { elapsedMs?: number }
-            if (typeof d.elapsedMs === 'number') {
-              busyStartRef.current = Date.now() - d.elapsedMs
-            }
-          } else if (ev.event === 'done') {
-            const d = ev.data as { ok?: boolean; error?: string; reply?: string }
-            if (!d.ok) {
-              setThread(t => [...t, { id: Date.now() - 1, role: 'tool', content: `⚠ ${d.error || 'send failed'}`, timestamp: Date.now() }])
-            } else {
-              setLocalSession(null); setOpenId('__new__')
-              setThread([{ id: Date.now(), role: 'user', content: text, timestamp: Date.now() },
-                { id: Date.now() - 1, role: 'assistant', content: d.reply ?? '', timestamp: Date.now() }])
-              setThreadRef(null)
-            }
-          }
+      if (mode === 'codex') {
+        const response = await apiFetch('/api/handoff', { method: 'POST', signal: controller.signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: current.id, agent: 'codex', task: text, sourceAgent: current.agent, profile: current.profile, device: current.device }) })
+        const report = await response.json()
+        if (!response.ok) throw new Error(report.error || 'Codex handoff failed')
+        const key = keyOf(current)
+        setHandoffs(all => ({ ...all, [key]: [...(all[key] || []), { task: text, report }] }))
+        setAtBottom(true)
+        return
+      }
+      let reply = ''
+      let replacement: Message[] | undefined
+      if (mode === 'herdr') {
+        const response = await apiFetch('/api/herdr/agent', { method: 'POST', signal: controller.signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ op: 'continue-chat', session: current.id, profile: current.profile, text }) })
+        const data = await response.json()
+        if (!response.ok) throw new Error(data.error || 'Herdr continuation failed')
+        reply = `Herdr terminal snapshot (may include prompt and prior output):\n${data.terminalText || ''}`
+      } else if (remote) {
+        const response = await apiFetch(current.draft ? '/api/conversations/new' : `/api/conversations/${encodeURIComponent(current.id)}`, { method: 'POST', signal: controller.signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text, profile: current.profile, device: current.device }) })
+        if (!response.ok) { const data = await response.json(); throw new Error(data.error || 'Send failed') }
+        if (!response.body) throw new Error('No response stream received')
+        let completed = false
+        for await (const event of readSse(response.body)) {
+          if (event.event !== 'done') continue
+          if (!event.data.ok) throw new Error(event.data.error || 'Send failed')
+          completed = true; reply = event.data.reply || ''; replacement = event.data.messages
         }
+        if (!completed) throw new Error('Connection ended before the agent finished. Check the conversation before retrying.')
+        // The remote creation contract returns no session ID. Require selection
+        // from the authoritative list before continuing, never silently start another chat.
+        if (current.draft) setRemoteComplete(true)
+      } else {
+        const response = await apiFetch('/api/chat', { method: 'POST', signal: controller.signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ agent: current.agent, session: current.id, createSession: Boolean(current.draft && !initialized), message: text, profile: current.agent === 'hermes' ? current.profile : undefined }) })
+        const data = await response.json()
+        if (!response.ok) throw new Error(data.error || 'Send failed')
+        reply = data.reply || ''; setInitialized(true)
       }
-    } catch (err) {
-      if ((err as Error).name !== 'AbortError') {
-        setThread(t => [...t, { id: Date.now() - 1, role: 'tool', content: `⚠ ${(err as Error).message}`, timestamp: Date.now() }])
+      if (requestKey.current === keyOf(current)) {
+        if (replacement) setThread(replacement)
+        else setThread(items => [...items, { id: Date.now(), role: mode === 'herdr' ? 'tool' : 'assistant', content: reply, timestamp: Date.now() }])
+        setAtBottom(true)
+      }
+    } catch (e) {
+      if (!controller.signal.aborted && requestKey.current === keyOf(current)) {
+        setThread(items => items.filter(item => item !== message)); setComposer(text)
+        setSendError((e as Error).message)
       }
     } finally {
-      abortRef.current = null
-      setBusy(false)
-      setReloadToken(t => t + 1)
-    }
-  }, [composer, busy, newProfile, newDevice])
-
-  const sendLocal = async () => {
-    const text = composer.trim()
-    if (!text || busy || agent === 'codex') return
-    const session = localSession || crypto.randomUUID()
-    setLocalSession(session)
-    setComposer('')
-    setBusy(true)
-    const ctrl = new AbortController()
-    abortRef.current = ctrl
-    setThread(t => [...t, { id: Date.now(), role: 'user', content: text, timestamp: Date.now(), agent }])
-    try {
-      const res = await apiFetch('/api/chat', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctrl.signal,
-        body: JSON.stringify({ agent, session, createSession: !threadRef, message: text, profile: agent === 'hermes' ? threadRef?.profile || newProfile : undefined }),
-      })
-      const j = await res.json()
-      if (!res.ok) throw new Error(j.error || 'send failed')
-      setLocalSession(j.session)
-      setThread(t => [...t, { id: Date.now(), role: 'assistant', content: j.reply, timestamp: Date.now(), agent: j.agent }])
-    } catch (err) {
-      if ((err as Error).name !== 'AbortError') setThread(t => [...t, { id: Date.now(), role: 'tool', content: `⚠ ${(err as Error).message}`, timestamp: Date.now(), agent }])
-    } finally {
-      abortRef.current = null
-      setBusy(false)
-      setReloadToken(t => t + 1)
+      busyRef.current = false; setBusy(false); sendRequest.current = null; refresh()
     }
   }
 
-  /* Every source present in the current result set, for the source filter. */
-  const sources = useMemo(() => {
-    const set = new Set<string>()
-    for (const c of conversations) if (c.source) set.add(c.source)
-    return [...set].sort()
-  }, [conversations])
+  const filtered = useMemo(() => (index?.conversations || []).filter(c => (!profile || c.profile === profile) && (!source || c.source === source)), [index, profile, source])
+  // Count independently of visibility, so Show empty can always be switched off.
+  const emptyCount = filtered.filter(isJunk).length
+  const visible = showEmpty ? filtered : filtered.filter(c => !isJunk(c))
+  const sources = Array.from(new Set((index?.conversations || []).map(c => c.source).filter(Boolean)))
+  const changeDraft = (changes: Partial<Target>) => {
+    if (!target || busyRef.current || initialized) return
+    const next = { ...target, ...changes, id: crypto.randomUUID() }
+    requestKey.current = keyOf(next); setTarget(next)
+  }
+  const sessionDetails = target && management === target.profile ? <section className={styles.stack}>
+    <h3>Current conversation</h3><p>Session: <code>{target.id}</code></p><p>Agent: {target.agent}</p><p>Device: {target.device || 'Local'}</p>
+    {target.agent === 'hermes' && !remote && <ChatContinuityFooter session={target.id} profile={target.profile} />}
+    {!target.draft && !remote && <Button disabled={busy || !agents.some(a => a.id === 'codex' && a.enabled && a.available)} onClick={() => { setMode('codex'); setManagement(null) }}>Use composer for Codex handoff</Button>}
+  </section> : undefined
 
-  const { visible, hiddenCount } = useMemo(() => {
-    const bySource = filterSource ? conversations.filter(c => c.source === filterSource) : conversations
-    if (showJunk) return { visible: bySource, hiddenCount: 0 }
-    const kept = bySource.filter(c => !isJunk(c))
-    return { visible: kept, hiddenCount: bySource.length - kept.length }
-  }, [conversations, filterSource, showJunk])
-
-  /* Only the current page is rendered; `visible` stays the full result set so
-     counts and keyboard navigation still describe the whole archive. */
-  const shown = useMemo(() => visible.slice(0, limit), [visible, limit])
-  const remaining = visible.length - shown.length
-
-  /* Group into day buckets for sticky headers. */
-  const groups = useMemo(() => {
-    const now = Date.now()
-    const map = new Map<DayBucket, Conversation[]>()
-    for (const c of shown) {
-      const b = dayBucket(c.lastActiveAt, now)
-      const arr = map.get(b)
-      if (arr) arr.push(c)
-      else map.set(b, [c])
-    }
-    return BUCKET_ORDER.filter(b => map.has(b)).map(b => ({ bucket: b, rows: map.get(b)! }))
-  }, [shown])
-
-  /* j/k navigation over the flattened list. */
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const el = e.target as HTMLElement | null
-      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return
-      if (e.metaKey || e.ctrlKey || e.altKey) return
-      if (e.key === 'j' || e.key === 'k') {
-        e.preventDefault()
-        setCursor(prev => {
-          const next = e.key === 'j' ? Math.min(visible.length - 1, prev + 1) : Math.max(0, prev - 1)
-          // Walking off the rendered page pulls the next one in.
-          if (next >= limit) setLimit(l => l + PAGE_SIZE)
-          const target = visible[next]
-          if (target) {
-            listRef.current?.querySelector(`[data-convo="${CSS.escape(convoKey(target))}"]`)
-              ?.scrollIntoView({ block: 'nearest' })
-          }
-          return next
-        })
-      } else if (e.key === 'Enter' && cursor >= 0 && visible[cursor]) {
-        e.preventDefault()
-        void openThread(visible[cursor])
-      } else if (e.key === 'Escape' && openId) {
-        closeThread()
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [visible, cursor, openId, openThread, closeThread, limit])
-
-  /* Auto-grow the composer with its content. */
-  useEffect(() => {
-    const el = composerRef.current
-    if (!el) return
-    el.style.height = 'auto'
-    el.style.height = `${Math.min(200, el.scrollHeight)}px`
-  }, [composer])
-
-  const hasActiveThread = openId !== null
-  const showIntel = !hasActiveThread || openId === '__intel__'
-  /* Intel is a read-only view — it must not enable the composer. */
-  const composable = Boolean(threadRef) || openId === '__new__'
-  const canSend = openId === '__new__' ? Boolean(composer.trim()) : Boolean(threadRef && composer.trim())
-  const remote = agent === 'hermes' && (threadRef ? devices.some(d => d.name === threadRef.device && !d.isLocal) : Boolean(newDevice))
-  const resumeConversation = threadRef || conversations.find(c => (c.agent || 'hermes') === agent && c.id === localSession)
-  const submit = () => void (remote ? (openId === '__new__' ? startNew() : sendContinue()) : sendLocal())
-  const activeFilters = Boolean(filterDevice || filterProfile || filterAgent || filterSource)
-
-  return (
-    <>
-      <SectionHead label="~/chat / all conversations" />
-      <div className="v1-kicker v4-legacy-kicker">
-        <span className="jp" lang="ja">通信</span>
-        <span>Comms channel</span>
+  return <div ref={root} className={styles.console} data-stage={stage}>
+    <LiveChatMirror onActivity={refresh} />
+    <Card className={styles.rail}>
+      <div className={styles.rosterPane}>
+        <BotsPanel selected={profile} onSelect={selectBot} disabled={busy} management={management} onManage={setManagement} details={sessionDetails} />
       </div>
-      <div className="cc amsg-surface">
-        {/* ── LIST PANE ── */}
-        <div className={`amsg-container cc-listpane ${hasActiveThread ? 'is-hidden-mobile' : ''}`}>
-          <div className="cc-toolbar">
-            <div className="cc-search">
-              <Icon name="chat" size={14} />
-              <input
-                value={q}
-                onChange={e => setQ(e.target.value)}
-                placeholder="Search all conversations…"
-                aria-label="Search conversations"
-              />
-              {q && <button className="cc-clear-q" onClick={() => setQ('')} aria-label="Clear search">✕</button>}
-            </div>
-            <button className="cc-intelbtn" onClick={() => { if (busyRef.current) return; setShowNew(false); setThread([]); setThreadRef(null); setOpenId('__intel__') }} title="Archive stats">
-              ◈ <span>INTEL</span>
-            </button>
-            <button className="cc-newbtn" onClick={() => { if (busyRef.current) return; setShowNew(true); setThread([]); setThreadRef(null); setLocalSession(null); setOpenId('__new__') }} disabled={busy}>
-              <Icon name="ok" size={14} /> NEW
-            </button>
-          </div>
-
-          <div className="w2l-chat-list-content">
-          {/* Stage D: Pinned agent slots — always visible, outside filtered buckets */}
-          <div style={{
-            display: 'flex',
-            gap: '1px',
-            borderBottom: '1px solid color-mix(in srgb, currentColor 12%, transparent)',
-            background: 'color-mix(in srgb, currentColor 3%, transparent)',
-          }}>
-            {(['jarvis', 'friday'] as const).map(agent => {
-              const id = profiles.includes(agent) ? agent : agent
-              const live = conversations.some(c => c.profile === id && c.active)
-              return (
-                <button
-                  key={agent}
-                  onClick={() => { if (busyRef.current) return;
-                    setNewProfile(id)
-                    setShowNew(true)
-                    setThread([])
-                    setThreadRef(null)
-                    setLocalSession(null); setOpenId('__new__')
-                  }}
-                  disabled={busy}
-                  style={{
-                    flex: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5em',
-                    padding: '0 10px',
-                    minHeight: '44px',
-                    background: 'none',
-                    border: 'none',
-                    borderRight: agent === 'jarvis' ? '1px solid color-mix(in srgb, currentColor 12%, transparent)' : 'none',
-                    cursor: busy ? 'not-allowed' : 'pointer',
-                    fontFamily: 'var(--pt-font-sans)',
-                    fontSize: '10px',
-                    letterSpacing: '0.16em',
-                    textTransform: 'none',
-                    color: 'inherit',
-                    opacity: busy ? 0.4 : 1,
-                  }}
-                  aria-label={`Start new conversation with ${agent}`}
-                >
-                  <span style={{
-                    width: '6px',
-                    height: '6px',
-                    borderRadius: '50%',
-                    flexShrink: 0,
-                    background: live ? '#00e87a' : 'color-mix(in srgb, currentColor 30%, transparent)',
-                    boxShadow: live ? '0 0 5px #00e87a' : 'none',
-                  }} />
-                  <span style={{ flex: 1, textAlign: 'left' }}>{agent.toUpperCase()}</span>
-                  <span style={{ opacity: 0.45, fontSize: '9px', letterSpacing: '0.12em' }}>START</span>
-                </button>
-              )
-            })}
-          </div>
-
-          {/* LIVE MIRROR — ongoing desktop chats, streamed in real time.
-              Click a row for the inline thread; ⇱ jumps to the console view. */}
-          <LiveChatMirror
-            localDevice={devices.find(d => d.isLocal)?.name ?? 'local'}
-            onOpen={c => { setShowNew(false); void openThread(c) }}
-          />
-
-          {/* Filters are ALWAYS mounted. They used to be gated on a filter
-              already being set, which made them unreachable: the only controls
-              that could set one were inside the block that needed one. */}
-          <div className="cc-filters">
-            <select value={filterAgent} onChange={e => setFilterAgent(e.target.value)} aria-label="Filter by agent">
-              <option value="">agent: all</option>
-              <option value="hermes">hermes</option>
-              <option value="pi">pi</option>
-              <option value="codex">codex</option>
-            </select>
-            <select value={filterProfile} onChange={e => setFilterProfile(e.target.value)} aria-label="Filter by profile">
-              <option value="">profile: all</option>
-              {profiles.map(p => <option key={p} value={p}>{p}</option>)}
-            </select>
-            <select value={filterDevice} onChange={e => setFilterDevice(e.target.value)} aria-label="Filter by device">
-              <option value="">device: all</option>
-              {devices.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
-            </select>
-            <select value={filterSource} onChange={e => setFilterSource(e.target.value)} aria-label="Filter by source">
-              <option value="">source: all</option>
-              {sources.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-            {activeFilters && (
-              <button className="cc-clear" onClick={() => { if (busyRef.current) return; setFilterDevice(''); setFilterProfile(''); setFilterAgent(''); setFilterSource('') }} aria-label="Clear filters">✕</button>
-            )}
-          </div>
-
-          <div className="cc-listmeta">
-            <span>{shown.length} shown · {visible.length} of {stats?.totalConversations ?? conversations.length}</span>
-            {hiddenCount > 0 && (
-              <button className="cc-showjunk" onClick={() => setShowJunk(v => !v)}>
-                {showJunk ? 'hide' : `+${hiddenCount}`} empty
-              </button>
-            )}
-            <span className="cc-listmeta-hint">j/k to move · ↵ open</span>
-          </div>
-
-          <div className="cc-list" ref={listRef}>
-            {!loaded ? (
-              <div className="cc-empty">loading conversations…</div>
-            ) : visible.length === 0 ? (
-              <div className="cc-empty">
-                {q || activeFilters ? 'no matches — try clearing filters' : 'no conversations yet — start one with NEW'}
-              </div>
-            ) : (
-              groups.map(g => (
-                <div key={g.bucket} className="cc-group">
-                  <div className="cc-group-head">{g.bucket}<span>{g.rows.length}</span></div>
-                  {g.rows.map(c => (
-                    <ConvoRow
-                      key={convoKey(c)}
-                      c={c}
-                      active={openId === c.id}
-                      cursor={cursor >= 0 && visible[cursor] === c}
-                      onOpen={openThread}
-                    />
-                  ))}
-                </div>
-              ))
-            )}
-            {remaining > 0 && (
-              <button className="cc-loadmore" onClick={() => setLimit(l => l + PAGE_SIZE)}>
-                LOAD {Math.min(PAGE_SIZE, remaining)} MORE · {remaining} REMAINING
-              </button>
-            )}
-          </div>
-          </div>
+      <section className={styles.conversations} aria-label="Conversations">
+        <div className={styles.sectionHead}><h2>{profile || 'All conversations'}</h2><Button variant="primary" disabled={busy} onClick={newChat}>New chat</Button></div>
+        <div className={styles.search}>
+          <Input type="search" value={q} onChange={e => setQ(e.target.value)} placeholder="Search conversations" aria-label="Search conversations" />
+          <Button aria-expanded={filters} aria-controls="chat-filters" onClick={() => setFilters(v => !v)} active={filters}>Filters</Button>
         </div>
-
-        {/* ── THREAD PANE ── */}
-        <div className={`amsg-container cc-threadpane ${hasActiveThread ? '' : 'is-empty'}`}>
-          {(threadRef || openId === '__intel__' || openId === '__new__') && (
-            <div className="cc-thread-head">
-              <button className="cc-back" onClick={closeThread} aria-label="Back to conversations">⌃</button>
-              {threadRef && <details>
-                <summary aria-label="Conversation actions">Actions</summary>
-                <div style={{ padding: 8, maxWidth: 320 }}>
-                  <label>Codex task<textarea aria-label="Codex handoff task" maxLength={4000} value={handoffTask}
-                    onChange={e => setHandoffTask(e.target.value)} style={{ width: '100%' }} /></label>
-                  <p>Starts a new Codex context in this server’s repository. Temporary outputs under /tmp require an explicit path in the task.</p>
-                  <button disabled={handoffBusy || !handoffTask.trim()} onClick={() => void handoffToCodex()}>
-                    {handoffBusy ? 'Codex running…' : 'Hand off to Codex'}
-                  </button>
-                </div>
-              </details>}
-              <div className="cc-thread-title">
-                <span className="cc-thread-name">
-                  {threadRef ? (cleanTitle(threadRef.title) ?? threadRef.source ?? 'conversation') : openId === '__new__' ? 'NEW CONVERSATION' : 'CHAT INTEL'}
-                </span>
-                <span className="cc-thread-sub">
-                  {threadRef ? (
-                    <>
-                      {sourceGlyph(threadRef.source)} {threadRef.source} · {threadRef.device} / {threadRef.profile}
-                      {threadRef.model ? ` · ${threadRef.model.split('/').pop()}` : ''} · {threadRef.messageCount} msgs
-                    </>
-                  ) : `every conversation across ${stats?.byDevice.length ?? 0} devices`}
-                </span>
-              </div>
-            </div>
-          )}
-
-          <div className="cc-thread" ref={threadRefEl} onScroll={onThreadScroll}>
-            {showNew && openId === '__new__' && (
-              <div className="cc-new-panel">
-                <div className="cc-new-title">◈ NEW CONVERSATION</div>
-                <div className="cc-new-fields" style={agent !== 'hermes' ? { display: 'none' } : undefined}>
-                  <select value={newProfile} onChange={e => setNewProfile(e.target.value)} aria-label="Agent / profile">
-                    {profiles.map(p => <option key={p} value={p}>{p}</option>)}
-                  </select>
-                  <select value={newDevice} onChange={e => setNewDevice(e.target.value)} aria-label="Device">
-                    <option value="">this machine</option>
-                    {devices.filter(d => !d.isLocal).map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
-                  </select>
-                </div>
-                <div className="cc-new-hint">Type a first message below to open the conversation. It hits the selected agent on this machine (or the selected Hermes device).</div>
-              </div>
-            )}
-
-            {/* Nothing selected → the archive at a glance, not dead space. */}
-            {showIntel && stats && <ChatIntel stats={stats} onOpen={(id, profile, device) => {
-              const match = conversations.find(c => c.id === id && c.profile === profile && c.device === device)
-              if (match) void openThread(match)
-            }} />}
-
-            {threadLoading && <div className="cc-empty">loading thread…</div>}
-
-            {(() => {
-              let prevDay = ''
-              return thread.map((m, i) => {
-                const day = new Date(m.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-                const showDiv = day !== prevDay
-                prevDay = day
-                const divLabel = dayBucket(m.timestamp)
-                const isUserOrAssistant = m.role === 'user' || m.role === 'assistant'
-                return (
-                  <div key={m.id}>
-                    {showDiv && (
-                      <div style={{
-                        fontFamily: 'var(--pt-font-sans)',
-                        fontSize: '9px',
-                        letterSpacing: '0.24em',
-                        textTransform: 'none',
-                        opacity: 0.5,
-                        padding: '10px 12px 6px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.75em',
-                      }}>
-                        <span style={{ flex: 1, borderTop: '1px solid currentColor', opacity: 0.3 }} />
-                        <span>{divLabel}</span>
-                        <span style={{ flex: 1, borderTop: '1px solid currentColor', opacity: 0.3 }} />
-                      </div>
-                    )}
-                    <AsciiMsg who={messageSide(m.role, m.content) === 'system' ? 'SYS' : m.role === 'user' ? 'MICHAEL' : m.agent || threadRef?.agent || 'hermes'} side={messageSide(m.role, m.content)} ts={fmtStamp(m.timestamp)} idx={i + 1} actions={isUserOrAssistant ? <CopyButton text={m.content ?? ''} /> : undefined}>
-                      {m.role === 'tool' && m.ms != null && <span>{(m.ms / 1000).toFixed(1)}s</span>}
-                      <MessageBody m={m} />
-                    </AsciiMsg>
-                  </div>
-                )
-              })
-            })()}
-            {threadRef && (handoffs[convoKey(threadRef)] || []).map(message => <HandoffCard key={message.id} message={message} />)}
-            {busy && (
-              <AsciiMsg who={agent} idx={thread.length + 1} ts="…">
-                <div className="cc-msg-body cc-thinking">
-                  thinking…
-                  {elapsed > 0 && (
-                    <span style={{ marginLeft: '0.5em', opacity: 0.6 }}>
-                      {String(Math.floor(elapsed / 60)).padStart(2, '0')}:{String(elapsed % 60).padStart(2, '0')}
-                    </span>
-                  )}
-                </div>
-              </AsciiMsg>
-            )}
-            <div ref={threadBottomRef} />
-          </div>
-
-          {hasActiveThread && !atBottom && (
-            <button className="cc-jump" onClick={() => threadBottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })}>
-              ↓ JUMP TO LATEST
-            </button>
-          )}
-
-          {/* Agent changes start a separate native session. */}
-          <div className="cc-agent-controls" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '8px 12px', minWidth: 0 }}>
-            <select aria-label="Chat agent" value={agent} disabled={busy} style={{ minHeight: 44, maxWidth: '100%', background: 'var(--pt-bg)', color: 'var(--pt-text-high)', border: '1px solid var(--pt-border-dim)', borderRadius: 8, padding: '0 8px' }} onChange={e => {
-              const next = e.target.value as AgentId
-              setAgent(next); setThread([]); setThreadRef(null); setLocalSession(null)
-              setOpenId('__new__'); setShowNew(true); setNewDevice('')
-              try { localStorage.setItem('mc.chat.agent', next) } catch { /* storage unavailable */ }
-            }}>
-              <option value="hermes">Hermes</option>
-              <option value="pi" disabled={!agentStatus.some(a => a.id === 'pi' && a.enabled && a.available)}>Pi</option>
-              <option value="codex" disabled title="session continuity unsupported">Codex — session continuity unsupported</option>
-            </select>
-            <select aria-label="Resume session" disabled={busy} value={resumeConversation ? convoKey(resumeConversation) : ''} style={{ flex: '1 1 160px', minWidth: 0, maxWidth: '100%', minHeight: 44, background: 'var(--pt-bg)', color: 'var(--pt-text-high)', border: '1px solid var(--pt-border-dim)', borderRadius: 8, padding: '0 8px' }} onChange={e => {
-              const c = conversations.find(c => convoKey(c) === e.target.value)
-              if (c) void openThread(c)
-              else { setThreadRef(null); setThread([]); setLocalSession(null); setOpenId('__new__'); setShowNew(true) }
-            }}>
-              <option value="">New session</option>
-              {conversations.filter(c => (c.agent || 'hermes') === agent).map(c => <option key={convoKey(c)} value={convoKey(c)}>{c.profile} · {c.title}{c.agent === 'pi' ? ` · ${c.id}` : ''}</option>)}
-            </select>
-          </div>
-          {agent === 'hermes' && localSession && !remote && hasActiveThread && <ChatContinuityFooter
-            key={`${threadRef?.profile || newProfile}:${localSession}:${reloadToken}`}
-            session={localSession} profile={threadRef?.profile || newProfile} busy={busy} onBusy={setBusy}
-            onOutput={text => setThread(t => [...t, { id: Date.now(), role: 'tool', content: text, timestamp: Date.now() }])}
-          />}
-          {/* Composer */}
-          <form className="cc-composer aprompt-line" onSubmit={e => { e.preventDefault(); submit() }}>
-            <AsciiPromptGutter empty={composer.length === 0} />
-            <textarea
-              ref={composerRef}
-              value={composer}
-              onChange={e => setComposer(e.target.value)}
-              onKeyDown={e => {
-                // Enter sends; Shift+Enter and Cmd/Ctrl+Enter both newline-or-send
-                // in different apps, so support Cmd+Enter as an explicit send too.
-                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); submit(); return }
-                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit() }
-              }}
-              placeholder={
-                openId === '__new__' ? 'First message to the agent…'
-                  : threadRef ? `Continue “${cleanTitle(threadRef.title) ?? 'this conversation'}”…`
-                    : 'Select a conversation, or press NEW to start one'
-              }
-              rows={2}
-              maxLength={remote ? 8000 : 4000}
-              disabled={busy || !composable}
-              aria-label="Message"
-            />
-            <button type="submit" className="aprompt-send" disabled={busy || !canSend}>
-              {busy ? '[ … ]' : '[ SEND ]'}
-            </button>
-          </form>
+        {filters && <div id="chat-filters" className={styles.filters}>
+          <Field label="Agent"><Select value={agentFilter} onChange={e => setAgentFilter(e.target.value)}><option value="">All agents</option><option value="hermes">Hermes</option><option value="pi">Pi</option><option value="codex">Codex</option></Select></Field>
+          <Field label="Profile"><Select value={profile} disabled={busy} onChange={e => setProfile(e.target.value)}><option value="">All profiles</option>{index?.profiles.map(p => <option key={p}>{p}</option>)}</Select></Field>
+          <Field label="Device"><Select value={device} onChange={e => setDevice(e.target.value)}><option value="">All devices</option>{index?.devices.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}</Select></Field>
+          <Field label="Source"><Select value={source} onChange={e => setSource(e.target.value)}><option value="">All sources</option>{sources.map(s => <option key={s}>{s}</option>)}</Select></Field>
+          <Button active={showEmpty} onClick={() => setShowEmpty(v => !v)}>{showEmpty ? 'Hide empty' : 'Show empty'} ({emptyCount})</Button>
+          <Button onClick={() => { setDevice(''); setAgentFilter(''); setSource(''); setShowEmpty(false); setQ('') }}>Reset filters</Button>
+        </div>}
+        <div className={styles.conversationList} aria-busy={listLoading}>
+          {listError ? <div role="alert" className={styles.notice}><p>{listError}</p><Button onClick={refresh}>Retry</Button></div> : listLoading && !index ? <p className={styles.notice} role="status">Loading conversations…</p> : <>
+            {visible.slice(0, limit).map(c => <Row key={keyOf(c)} className={styles.conversationRow} title={<Button className={styles.conversationButton} disabled={busy} active={Boolean(target && keyOf(c) === keyOf(target))} onClick={() => openThread(c)}>
+              <span className={styles.rowTop}><strong>{cleanTitle(c.title) || 'Untitled conversation'}</strong><span className={styles.rowMeta}>{ago(c.lastActiveAt)}</span></span>
+              <span className={styles.preview}>{c.preview || 'No messages yet'}</span>
+              <span className={styles.rowMeta}>{c.active ? 'Active · ' : ''}{profile ? c.source : c.profile}{c.device ? ` · ${c.device}` : ''}</span>
+            </Button>} />)}
+            {!listLoading && visible.length === 0 && <p className={styles.notice}>{q || source || device || agentFilter ? 'No matching conversations. Try changing the search or filters.' : emptyCount && !showEmpty ? 'Only empty conversations. Use Filters → Show empty to see them.' : 'No conversations yet. Start a new chat.'}</p>}
+            {visible.length > limit && <Button onClick={() => setLimit(v => v + PAGE_SIZE)}>Show more conversations</Button>}
+          </>}
         </div>
-      </div>
-    </>
-  )
+        <div className={styles.mobileBack}><Button disabled={busy} onClick={() => setStage('roster')}>‹ Bots</Button></div>
+      </section>
+    </Card>
+    <Card className={styles.threadPane} aria-label="Conversation">
+      {target ? <>
+        <div className={styles.threadHead}><div><h2>{target.title}</h2><span className={styles.muted}>{target.profile} · {target.agent}</span></div><IconButton aria-label={`Manage ${target.profile} and session details`} disabled={busy} onClick={() => setManagement(target.profile)}>⋯</IconButton></div>
+        {target.draft && !initialized && !remoteComplete && <div className={styles.draftSettings}>
+          <Button aria-expanded={settings} aria-controls="new-chat-options" disabled={busy} onClick={() => setSettings(v => !v)}>Chat options</Button>
+          {settings && <div id="new-chat-options" className={styles.filters}>
+            <Field label="Profile"><Select value={target.profile} disabled={busy} onChange={e => changeDraft({ profile: e.target.value })}>{Array.from(new Set([target.profile, ...(index?.profiles || [])])).map(p => <option key={p}>{p}</option>)}</Select></Field>
+            <Field label="Agent"><Select value={target.agent} disabled={busy} onChange={e => changeDraft({ agent: e.target.value as Agent, device: '' })}><option value="hermes">Hermes</option><option value="pi" disabled={!agents.some(a => a.id === 'pi' && a.enabled && a.available)}>Pi</option></Select></Field>
+            {target.agent === 'hermes' && <Field label="Device"><Select value={target.device} disabled={busy} onChange={e => changeDraft({ device: e.target.value })}><option value="">Local</option>{index?.devices.filter(d => !d.isLocal).map(d => <option key={d.name} value={d.name}>{d.name}</option>)}</Select></Field>}
+          </div>}
+        </div>}
+        <div ref={messagesEl} className={styles.messages} role="log" aria-label="Messages" aria-live="polite" aria-busy={threadLoading} onScroll={() => { const el = messagesEl.current; if (el) setAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 100) }}>
+          {threadLoading && <p role="status">Loading conversation…</p>}
+          {threadError && <div role="alert" className={styles.notice}><p>{threadError}</p><Button onClick={() => setThreadRetry(v => v + 1)}>Retry</Button></div>}
+          {!threadLoading && !threadError && thread.length === 0 && <p className={styles.emptyThread}>{target.draft ? `What would you like to ask ${target.profile}?` : 'No messages in this conversation yet.'}</p>}
+          {thread.map((m, i) => <article key={`${m.id}:${i}`} className={`${styles.message} ${m.role === 'user' ? styles.userMessage : styles.agentMessage}`}>
+            <div className={styles.messageMeta}><span>{m.role === 'user' ? 'You' : m.role === 'assistant' ? target.profile : m.role === 'tool' ? 'Tool' : 'System'}</span><time dateTime={new Date(m.timestamp).toISOString()}>{new Date(m.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</time></div>
+            <MessageBody message={m} />
+          </article>)}
+          {(handoffs[keyOf(target)] || []).map((handoff, i) => <Card key={i} pad="sm" className={styles.handoff} role="status" aria-label="handoff result" data-handoff-state={handoff.report.ok ? 'done' : 'failed'}>
+            <strong>Handoff result · Codex · {handoff.report.ok ? 'Done' : 'Failed'}</strong>
+            <p>New agent context seeded from this conversation; this is not a resumed session.</p>
+            <p>{handoff.task}</p><p>Process exit code: {handoff.report.exitCode ?? 'unavailable'}. Process evidence does not verify task completion.</p>
+            <h3>Repository diff evidence</h3><pre>{handoff.report.diffStat || 'No diff reported'}</pre>
+            <h3>Output tail</h3><pre>{handoff.report.outputTail || 'No output'}</pre>
+          </Card>)}
+          {busy && <p role="status">Waiting for {mode === 'codex' ? 'Codex' : mode === 'herdr' ? 'Herdr' : target.profile}… {elapsed}s</p>}
+        </div>
+        {!atBottom && <Button className={styles.latest} onClick={() => setAtBottom(true)}>↓ Latest messages</Button>}
+        <form className={styles.composer} onSubmit={e => { e.preventDefault(); void send() }}>
+          <div className={styles.composerTools}>
+            <Button disabled={busy} aria-describedby={busy ? 'chat-send-status' : undefined} onClick={back} aria-label="Back to conversations">‹ Conversations</Button>
+            {((target.agent === 'hermes' && !remote && (!target.draft || initialized)) || mode === 'codex') && <fieldset disabled={busy} className={styles.mode} aria-label="Message destination"><Segmented size="sm" value={mode} onChange={setMode} options={[{ value: 'chat', label: 'Chat' }, ...(target.agent === 'hermes' ? [{ value: 'herdr', label: 'Herdr' }] : []), ...(mode === 'codex' ? [{ value: 'codex', label: 'Codex' }] : [])]} /></fieldset>}
+          </div>
+          {busy && <p id="chat-send-status" className={styles.muted} role="status">Navigation is paused while your message sends.</p>}
+          {availabilityError && <div role="alert" className={styles.inlineNotice}>{availabilityError}<Button onClick={() => setAvailabilityRetry(v => v + 1)}>Retry</Button></div>}
+          {!available && !availabilityError && <p className={styles.muted}>This agent is unavailable. <Button onClick={() => setAvailabilityRetry(v => v + 1)}>Retry availability</Button></p>}
+          {sendError && <p role="alert" className={styles.error}>{sendError} Your message is kept below; check the thread before sending again.</p>}
+          {mode === 'codex' && <p className={styles.muted}>Send a task to Codex with a brief from this conversation.</p>}
+          {remoteComplete && <p role="status">Conversation created. Open it from Conversations to continue.</p>}
+          <div className={styles.composerInput}>
+            <TextArea value={composer} onChange={e => setComposer(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !e.nativeEvent.isComposing) { e.preventDefault(); void send() } }} rows={2} maxLength={remote && mode === 'chat' ? 8000 : 4000} disabled={busy || !canCompose} aria-label="Message" placeholder={mode === 'codex' ? 'Task for Codex…' : mode === 'herdr' ? 'Continue this chat in Herdr…' : 'Message…'} />
+            <Button variant="primary" type="submit" disabled={!composer.trim() || !canCompose || !available} loading={busy}>Send</Button>
+          </div>
+        </form>
+      </> : <div className={styles.emptyThread}><h2>Choose a conversation</h2><p>Select a bot to pick up where you left off.</p><Button variant="primary" onClick={newChat}>New chat</Button></div>}
+    </Card>
+  </div>
 }

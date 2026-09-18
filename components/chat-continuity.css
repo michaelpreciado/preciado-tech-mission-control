@@ -1,22 +1,2 @@
-/* Blue Matrix Glass: scoped to the L1–L4 chat additions. */
-.cc-agent-controls, .cc-continuity, .cc-handoff {
-  --pt-bg: #050506;
-  --pt-text-high: #e5f4fa;
-  --pt-border-dim: rgba(56,189,248,.28);
-  color: #e5f4fa;
-  background: rgba(10,12,14,.72);
-  backdrop-filter: blur(18px);
-  font-family: 'JetBrains Mono', monospace;
-  border: 1px solid rgba(56,189,248,.28);
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-.cc-continuity { padding: 12px; font-size: 11px; max-height: 36vh; overflow: auto; }
-.cc-continuity strong, .cc-handoff strong { color: #00E5FF; }
-.cc-continuity label { display: block; margin-top: 8px; }
-.cc-continuity textarea { display: block; box-sizing: border-box; width: 100%; min-height: 44px; background: #0A0A0B; color: inherit; border: 1px solid #38BDF8; }
-.cc-continuity button, .cc-continuity a, .cc-handoff summary { display: inline-flex; align-items: center; box-sizing: border-box; min-height: 44px; padding: 8px; }
-.cc-continuity button { background: #050506; color: #00E5FF; border: 1px solid #38BDF8; border-radius: 8px; }
-.cc-continuity button:disabled { opacity: .5; }
-.cc-continuity a { color: #38BDF8; }
-.cc-agent-controls select:focus-visible, .cc-continuity :focus-visible { outline: 2px solid #00E5FF; outline-offset: 2px; }
+/* Session details and the single composer's mode control use AgentConsole.module.css.
+   Deliberately no local theme-token overrides. */
