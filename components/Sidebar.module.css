@@ -1,5 +1,33 @@
 .sidebar {
   --sidebar-width: 236px;
+  /* Keep rail geometry in one state so Fold can opt in before the class lands. */
+  --sidebar-rail-content-max-width: 100%;
+  --sidebar-rail-content-flex-basis: auto;
+  --sidebar-rail-content-min-width: 0;
+  --sidebar-rail-content-opacity: 1;
+  --sidebar-rail-content-pointer-events: auto;
+  --sidebar-rail-content-transform: none;
+  --sidebar-rail-row-justify: flex-start;
+  --sidebar-rail-nav-padding: 11px;
+  --sidebar-rail-nav-min-height: 38px;
+  --sidebar-rail-crew-padding: 11px;
+  --sidebar-rail-crew-status-margin: auto;
+  --sidebar-rail-section-padding: 10px;
+  --sidebar-rail-user-padding: 10px;
+  --sidebar-rail-user-width: auto;
+  --sidebar-rail-quick-width: 100%;
+  --sidebar-rail-quick-min-height: 36px;
+  --sidebar-rail-quick-gap: 7px;
+  --sidebar-rail-quick-padding: 18px;
+  --sidebar-rail-footer-padding-bottom: 30px;
+  --sidebar-rail-footer-justify: stretch;
+  --sidebar-rail-toggle-position: absolute;
+  --sidebar-rail-toggle-right: 0;
+  --sidebar-rail-toggle-bottom: 0;
+  --sidebar-rail-toggle-size: 24px;
+  --sidebar-rail-kbd-margin-left: auto;
+  --sidebar-rail-kbd-padding-inline: 5px;
+  --sidebar-rail-kbd-border-width: 1px;
   position: fixed;
   inset: 0 auto 0 0;
   z-index: 20;
@@ -31,7 +59,36 @@
   background: radial-gradient(ellipse at 30% 0%, rgba(0, 229, 255, .1), transparent 70%);
 }
 
-.collapsed { width: 64px; padding-inline: 10px; }
+.collapsed {
+  width: 64px;
+  padding-inline: 10px;
+  --sidebar-rail-content-max-width: 0;
+  --sidebar-rail-content-flex-basis: 0;
+  --sidebar-rail-content-min-width: 0;
+  --sidebar-rail-content-opacity: 0;
+  --sidebar-rail-content-pointer-events: none;
+  --sidebar-rail-content-transform: translateX(-5px);
+  --sidebar-rail-row-justify: center;
+  --sidebar-rail-nav-padding: 0;
+  --sidebar-rail-crew-padding: 0;
+  --sidebar-rail-crew-status-margin: 0;
+  --sidebar-rail-section-padding: 0;
+  --sidebar-rail-user-padding: 0;
+  --sidebar-rail-user-width: 44px;
+  --sidebar-rail-quick-width: 44px;
+  --sidebar-rail-quick-min-height: 44px;
+  --sidebar-rail-quick-gap: 0;
+  --sidebar-rail-quick-padding: 0;
+  --sidebar-rail-footer-padding-bottom: 0;
+  --sidebar-rail-footer-justify: center;
+  --sidebar-rail-toggle-position: static;
+  --sidebar-rail-toggle-right: auto;
+  --sidebar-rail-toggle-bottom: auto;
+  --sidebar-rail-toggle-size: 44px;
+  --sidebar-rail-kbd-margin-left: 0;
+  --sidebar-rail-kbd-padding-inline: 0;
+  --sidebar-rail-kbd-border-width: 0;
+}
 
 .brandBlock,
 .userBlock,
@@ -42,28 +99,35 @@
 
 .brandBlock { display: flex; align-items: center; gap: 10px; min-height: 38px; }
 .brandMark { display: grid; width: 32px; height: 32px; flex: 0 0 32px; place-items: center; border: 1px solid var(--ob-border); border-radius: 8px; color: var(--ob-cyan); background: rgba(0, 229, 255, .06); box-shadow: 0 0 18px rgba(0, 229, 255, .12); }
-.brandCopy { min-width: 0; overflow: hidden; transition: opacity var(--ob-dur-fast, 150ms) ease, transform var(--ob-dur-fast, 150ms) ease; }
+.brandCopy { min-width: 0; overflow: hidden; transition: max-width var(--ob-dur-fast, 150ms) ease, opacity var(--ob-dur-fast, 150ms) ease, transform var(--ob-dur-fast, 150ms) ease; }
 .wordmark { color: var(--ob-text); font-size: 11px; font-weight: 700; letter-spacing: .14em; white-space: nowrap; }
 .wordmark span { color: var(--ob-cyan); }
 .buildTag, .sectionLabel { color: var(--ob-text-4); font-size: 8px; letter-spacing: .18em; text-transform: uppercase; white-space: nowrap; }
 .buildTag { margin-top: 5px; }
 
 .section { display: grid; gap: 8px; }
-.sectionLabel { padding: 0 10px; color: var(--ob-text-4); }
+.sectionLabel { padding: 0 var(--sidebar-rail-section-padding); color: var(--ob-text-4); }
 .section nav { display: grid; gap: 3px; }
-.navItem { display: flex; min-height: 38px; align-items: center; gap: 11px; padding: 0 11px; overflow: hidden; border: 1px solid transparent; border-radius: 10px; color: var(--ob-text-3); text-decoration: none; transition: color var(--ob-dur-fast, 150ms) ease, background var(--ob-dur-fast, 150ms) ease, border-color var(--ob-dur-fast, 150ms) ease, box-shadow var(--ob-dur-fast, 150ms) ease; }
+.navItem { display: flex; min-height: var(--sidebar-rail-nav-min-height); align-items: center; justify-content: var(--sidebar-rail-row-justify); gap: 11px; padding: 0 var(--sidebar-rail-nav-padding); overflow: hidden; border: 1px solid transparent; border-radius: 10px; color: var(--ob-text-3); text-decoration: none; transition: color var(--ob-dur-fast, 150ms) ease, background var(--ob-dur-fast, 150ms) ease, border-color var(--ob-dur-fast, 150ms) ease, box-shadow var(--ob-dur-fast, 150ms) ease; }
 .navItem:hover { color: var(--ob-peak); border-color: rgba(0, 229, 255, .18); background: rgba(0, 229, 255, .055); }
 .navItem:focus-visible, .collapseToggle:focus-visible, .quickGo:focus-visible { outline: 2px solid var(--ob-cyan); outline-offset: 2px; }
 .navItem.active { color: var(--ob-peak); border-color: rgba(0, 229, 255, .42); background: linear-gradient(90deg, rgba(0, 229, 255, .17), rgba(0, 229, 255, .045)); box-shadow: 0 0 18px rgba(0, 229, 255, .1), inset 2px 0 var(--ob-cyan); }
-.navIcon { display: grid; width: 18px; height: 18px; flex: 0 0 18px; place-items: center; color: var(--ob-sky); }
-.active .navIcon { color: var(--ob-cyan); filter: drop-shadow(0 0 5px rgba(0, 229, 255, .62)); }
-.navLabel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: opacity var(--ob-dur-fast, 150ms) ease, transform var(--ob-dur-fast, 150ms) ease; }
+.navIcon { position: relative; display: grid; width: 18px; height: 18px; flex: 0 0 18px; place-items: center; color: #fff; filter: drop-shadow(0 0 3px rgba(190, 228, 255, .32)); isolation: isolate; }
+.navIcon::after { position: absolute; inset: 0; border-radius: 5px; pointer-events: none; content: ''; background: linear-gradient(115deg, rgba(91, 242, 255, .9) 0%, rgba(147, 169, 255, .86) 34%, rgba(255, 157, 212, .8) 64%, rgba(151, 255, 207, .86) 100%); background-size: 300% 100%; background-position: 0% 50%; mix-blend-mode: screen; opacity: .18; animation: navIconHolographicShimmer 8s linear infinite; }
+.navItem:hover .navIcon { filter: drop-shadow(0 0 5px rgba(190, 228, 255, .5)); }
+.active .navIcon { color: #fff; filter: drop-shadow(0 0 7px rgba(190, 228, 255, .72)); }
+.navLabel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: max-width var(--ob-dur-fast, 150ms) ease, opacity var(--ob-dur-fast, 150ms) ease, transform var(--ob-dur-fast, 150ms) ease; }
+
+@keyframes navIconHolographicShimmer {
+  from { background-position: 0% 50%; }
+  to { background-position: 100% 50%; }
+}
 
 .crewSection { gap: 9px; }
 .crewList { display: grid; gap: 5px; }
-.crewItem { display: flex; min-height: 28px; align-items: center; gap: 8px; padding: 0 11px; color: var(--ob-text-2); font-size: 10px; }
+.crewItem { display: flex; min-height: 28px; align-items: center; justify-content: var(--sidebar-rail-row-justify); gap: 8px; padding: 0 var(--sidebar-rail-crew-padding); color: var(--ob-text-2); font-size: 10px; }
 .crewName { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.crewStatus { margin-left: auto; color: var(--ob-text-4); font-size: 8px; text-transform: uppercase; }
+.crewStatus { margin-left: var(--sidebar-rail-crew-status-margin, auto); color: var(--ob-text-4); font-size: 8px; text-transform: uppercase; }
 .statusDot { width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; background: var(--ob-text-4); }
 .status_active { background: var(--ob-success); box-shadow: 0 0 8px rgba(110, 231, 183, .72); }
 .status_standby { background: var(--ob-cyan); box-shadow: 0 0 7px rgba(0, 229, 255, .48); }
@@ -71,29 +135,34 @@
 .status_offline, .statusUnknown { background: var(--ob-text-4); }
 .spacer { flex: 1 1 auto; min-height: 16px; }
 
-.footer { display: grid; position: relative; z-index: 1; gap: 10px; padding-bottom: 30px; }
-.userBlock { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border: 1px solid rgba(0, 229, 255, .12); border-radius: 10px; background: rgba(0, 229, 255, .025); }
+.footer { display: grid; position: relative; z-index: 1; gap: 10px; justify-items: var(--sidebar-rail-footer-justify); padding-bottom: var(--sidebar-rail-footer-padding-bottom); }
+.userBlock { display: flex; width: var(--sidebar-rail-user-width); max-width: 100%; align-items: center; justify-content: var(--sidebar-rail-row-justify); gap: 9px; padding: 9px var(--sidebar-rail-user-padding); border: 1px solid rgba(0, 229, 255, .12); border-radius: 10px; background: rgba(0, 229, 255, .025); }
 .userAvatar { display: grid; width: 24px; height: 24px; place-items: center; border: 1px solid rgba(0, 229, 255, .42); border-radius: 50%; color: var(--ob-cyan); font-size: 12px; }
 .userCopy { display: grid; gap: 2px; min-width: 0; }
 .userCopy strong { color: var(--ob-text-2); font-size: 10px; font-weight: 500; }
 .userCopy small { color: var(--ob-text-4); font-size: 8px; letter-spacing: .16em; }
-.quickGo { width: 100%; min-height: 36px; }
-.quickGo kbd { margin-left: auto; padding: 2px 5px; border: 1px solid rgba(0, 0, 2, .28); border-radius: 4px; font: inherit; font-size: 8px; }
-.collapseToggle { position: absolute; right: 0; bottom: 0; display: grid; width: 24px; height: 24px; place-items: center; padding: 0; border: 1px solid var(--ob-border); border-radius: 6px; color: var(--ob-cyan); background: var(--ob-bg-1); cursor: pointer; }
+.quickGo { width: var(--sidebar-rail-quick-width); max-width: 100%; min-height: var(--sidebar-rail-quick-min-height); gap: var(--sidebar-rail-quick-gap); padding-inline: var(--sidebar-rail-quick-padding); }
+.quickGo kbd { margin-left: var(--sidebar-rail-kbd-margin-left); padding: 2px var(--sidebar-rail-kbd-padding-inline); border: var(--sidebar-rail-kbd-border-width) solid rgba(0, 0, 2, .28); border-radius: 4px; font: inherit; font-size: 8px; }
+.collapseToggle { position: var(--sidebar-rail-toggle-position); right: var(--sidebar-rail-toggle-right); bottom: var(--sidebar-rail-toggle-bottom); display: grid; width: var(--sidebar-rail-toggle-size); max-width: 100%; height: var(--sidebar-rail-toggle-size); place-items: center; padding: 0; border: 1px solid var(--ob-border); border-radius: 6px; color: var(--ob-cyan); background: var(--ob-bg-1); cursor: pointer; }
 
-.collapsed .brandCopy,
-.collapsed .sectionLabel,
-.collapsed .navLabel,
-.collapsed .crewName,
-.collapsed .crewStatus,
-.collapsed .userCopy,
-.collapsed .quickGoLabel,
-.collapsed .quickGo kbd { opacity: 0; pointer-events: none; transform: translateX(-5px); }
-.collapsed .navItem { justify-content: center; padding-inline: 0; }
-.collapsed .crewItem { justify-content: center; padding-inline: 0; }
-.collapsed .userBlock { justify-content: center; padding-inline: 0; }
-.collapsed .quickGo { justify-content: center; gap: 0; padding-inline: 0; }
-.collapsed .collapseToggle { right: 10px; }
+/* Collapse the hidden flex items themselves so the surviving icon/dot can centre. */
+.brandCopy,
+.sectionLabel,
+.navLabel,
+.crewName,
+.crewStatus,
+.userCopy,
+.quickGoLabel,
+.quickGo kbd {
+  max-width: var(--sidebar-rail-content-max-width);
+  flex-basis: var(--sidebar-rail-content-flex-basis);
+  min-width: var(--sidebar-rail-content-min-width);
+  overflow: hidden;
+  opacity: var(--sidebar-rail-content-opacity);
+  pointer-events: var(--sidebar-rail-content-pointer-events);
+  transform: var(--sidebar-rail-content-transform);
+  transition: max-width var(--ob-dur-fast, 150ms) ease, opacity var(--ob-dur-fast, 150ms) ease, transform var(--ob-dur-fast, 150ms) ease;
+}
 
 @media (max-width: 820px) {
   .sidebar { display: none; }
@@ -108,41 +177,50 @@
     display: flex;
     width: 64px;
     padding-inline: 10px;
+    --sidebar-rail-nav-min-height: 44px;
+    --sidebar-rail-quick-min-height: 44px;
+    --sidebar-rail-toggle-size: 44px;
   }
-  .sidebar:not(.collapsed) .brandCopy,
-  .sidebar:not(.collapsed) .sectionLabel,
-  .sidebar:not(.collapsed) .navLabel,
-  .sidebar:not(.collapsed) .crewName,
-  .sidebar:not(.collapsed) .crewStatus,
-  .sidebar:not(.collapsed) .userCopy,
-  .sidebar:not(.collapsed) .quickGoLabel,
-  .sidebar:not(.collapsed) .quickGo kbd {
-    opacity: 0;
-    pointer-events: none;
-    transform: translateX(-5px);
+  /* Set the same rail state before matchMedia adds .collapsed. */
+  .sidebar:not(.collapsed) {
+    --sidebar-rail-content-max-width: 0;
+    --sidebar-rail-content-flex-basis: 0;
+    --sidebar-rail-content-min-width: 0;
+    --sidebar-rail-content-opacity: 0;
+    --sidebar-rail-content-pointer-events: none;
+    --sidebar-rail-content-transform: translateX(-5px);
+    --sidebar-rail-row-justify: center;
+    --sidebar-rail-nav-padding: 0;
+    --sidebar-rail-crew-padding: 0;
+    --sidebar-rail-crew-status-margin: 0;
+    --sidebar-rail-section-padding: 0;
+    --sidebar-rail-user-padding: 0;
+    --sidebar-rail-user-width: 44px;
+    --sidebar-rail-quick-width: 44px;
+    --sidebar-rail-quick-gap: 0;
+    --sidebar-rail-quick-padding: 0;
+    --sidebar-rail-footer-padding-bottom: 0;
+    --sidebar-rail-footer-justify: center;
+    --sidebar-rail-toggle-position: static;
+    --sidebar-rail-toggle-right: auto;
+    --sidebar-rail-toggle-bottom: auto;
+    --sidebar-rail-kbd-margin-left: 0;
+    --sidebar-rail-kbd-padding-inline: 0;
+    --sidebar-rail-kbd-border-width: 0;
   }
-  .sidebar:not(.collapsed) .navItem,
-  .sidebar:not(.collapsed) .crewItem,
-  .sidebar:not(.collapsed) .userBlock {
-    justify-content: center;
-    padding-inline: 0;
-  }
-  .sidebar:not(.collapsed) .quickGo {
-    justify-content: center;
-    gap: 0;
-    padding-inline: 0;
-  }
-  .sidebar .navItem,
-  .sidebar .quickGo {
-    min-height: 44px;
-  }
-  .sidebar .collapseToggle {
-    width: 44px;
-    height: 44px;
-  }
-  .sidebar:not(.collapsed) .collapseToggle { right: 10px; }
+}
+
+/* A zero-width label is still a flex item, so the row's `gap` survives the
+   collapse and pushes the centred icon/dot a few pixels off-centre (measured:
+   icon at x=17-35 in a rail centred on 32). Zero the gap wherever a row is
+   collapsed; the selector outranks the per-row gap on .navItem/.crewItem/.userBlock. */
+.collapsed .navItem,
+.collapsed .crewItem,
+.collapsed .userBlock {
+  gap: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .sidebar, .brandCopy, .navItem, .navLabel { transition: none; }
+  .navIcon::after { animation: none; }
 }

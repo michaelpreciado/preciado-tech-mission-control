@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { PipelineData, PipelineLead, PipelineStage } from '@/lib/types'
+import type { PipelineData, PipelineLead, PipelineSentBucket, PipelineStage } from '@/lib/types'
 import { SkeletonPanel, fmtDate } from './ui'
 import { ClientDocsLink } from './VaultDocuments'
 import { apiFetch, apiUrl } from '@/lib/api-base'
@@ -163,6 +163,74 @@ function LeadCard({ lead, liveNote }: { lead: PipelineLead; liveNote?: string })
   )
 }
 
+function displayStat(value: number | undefined, hasSummary: boolean): number | string {
+  return hasSummary && typeof value === 'number' && Number.isFinite(value) ? value : '—'
+}
+
+function PipelineBarChart({ buckets, month = false }: { buckets: PipelineSentBucket[]; month?: boolean }) {
+  const safeBuckets = buckets.map(item => ({ ...item, count: Number.isFinite(item.count) ? Math.max(0, item.count) : 0 }))
+  const max = safeBuckets.reduce((highest, item) => Math.max(highest, item.count), 0)
+  return (
+    <div className={`mc-pipe-stat-chart ${month ? 'is-month' : 'is-week'}`} role="img"
+      aria-label={`${month ? 'Daily sends this month' : 'Daily sends this week'}; maximum ${max}`}
+      data-empty={safeBuckets.length === 0 ? 'true' : undefined}>
+      {safeBuckets.length === 0 && <span className="mc-pipe-stat-chart-empty">— no send activity yet</span>}
+      {safeBuckets.map(item => {
+        const height = max > 0 ? (item.count / max) * 100 : 0
+        return (
+          <div key={item.date} className="mc-pipe-stat-bar" title={`${item.date}: ${item.count} sent`} aria-label={`${item.date}: ${item.count} sent`}>
+            <span className="mc-pipe-stat-bar-value">{item.count}</span>
+            <span className="mc-pipe-stat-bar-track"><span style={{ height: `${height}%` }} /></span>
+            <span className="mc-pipe-stat-bar-label">{month ? item.date.slice(8) : item.label}</span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function PipelineStats({ summary }: { summary?: PipelineData['sentSummary'] }) {
+  const hasSummary = Boolean(summary)
+  const weekBuckets = summary?.byDayThisWeek ?? []
+  const monthBuckets = summary?.byDayThisMonth ?? []
+  return (
+    <section className="mc-pipe-stats" aria-label="Pipeline send summary">
+      <div className="mc-pipe-stat-hero is-sent">
+        <span className="mc-pipe-stat-label">WEBSITES SENT OUT</span>
+        <strong className="mc-pipe-stat-value">{displayStat(summary?.sentTotal, hasSummary)}</strong>
+        <span className="mc-pipe-stat-detail">ALL TIME · ACTUALLY SENT</span>
+      </div>
+      <div className="mc-pipe-stat-hero is-queue">
+        <span className="mc-pipe-stat-label">IN QUEUE</span>
+        <strong className="mc-pipe-stat-value">{displayStat(summary?.queuedTotal, hasSummary)}</strong>
+        <span className="mc-pipe-stat-detail">NOT-YET-SENT · FUNNEL ACTIVE</span>
+      </div>
+      <div className="mc-pipe-stat-period is-week">
+        <div className="mc-pipe-stat-head">
+          <div>
+            <span className="mc-pipe-stat-label">SENT THIS WEEK</span>
+            <span className="mc-pipe-stat-sub">WEEK OF {summary?.weekStart ?? '—'}</span>
+          </div>
+          <strong className="mc-pipe-stat-period-value">{displayStat(summary?.sentThisWeek, hasSummary)}</strong>
+        </div>
+        <PipelineBarChart buckets={weekBuckets} />
+        {!hasSummary && <span className="mc-pipe-stat-quiet">no send activity yet</span>}
+      </div>
+      <div className="mc-pipe-stat-period is-month">
+        <div className="mc-pipe-stat-head">
+          <div>
+            <span className="mc-pipe-stat-label">SENT THIS MONTH</span>
+            <span className="mc-pipe-stat-sub">{summary?.monthLabel ?? '—'} · LOCAL TIME</span>
+          </div>
+          <strong className="mc-pipe-stat-period-value">{displayStat(summary?.sentThisMonth, hasSummary)}</strong>
+        </div>
+        <PipelineBarChart buckets={monthBuckets} month />
+        {!hasSummary && <span className="mc-pipe-stat-quiet">no send activity yet</span>}
+      </div>
+    </section>
+  )
+}
+
 export function PipelineBoard() {
   const [data, setData] = useState<PipelineData | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -228,6 +296,7 @@ export function PipelineBoard() {
     <>
       {error && <div className="mc-pipe-error">⚠ pipeline store unreachable — {error}</div>}
       <div className="mc-kb-sync" role="status">{data ? `${data.leadsTotal} leads · updated ${fmtDate(data.generatedAt)}` : 'No snapshot'}{error ? ' · STALE' : ''}</div>
+      <PipelineStats summary={data?.sentSummary} />
       {data?.followups && data.followups.overdue + data.followups.upcoming > 0 && (
         <div className="mc-pipe-follow" role="status">
           FOLLOW-UPS

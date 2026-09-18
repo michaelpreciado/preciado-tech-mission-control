@@ -13,7 +13,7 @@
  */
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import type { PipelineData, PipelineEvent, PipelineLead, PipelineStage } from './types'
+import type { PipelineData, PipelineEvent, PipelineLead, PipelineSentBucket, PipelineSentSummary, PipelineStage } from './types'
 import type { CanonicalEvent, PipelineUpdatePayload } from './canonical-schema'
 import { logger } from './logger'
 
@@ -255,8 +255,145 @@ export async function upsertLead(input: UpsertLeadInput): Promise<UpsertLeadResu
 const LEADS_FOUND_CAP = 20
 const STAGE_CAP = 50
 
+const PIPELINE_TIME_ZONE = 'America/Los_Angeles'
+const localDateFormatter = new Intl.DateTimeFormat('en-CA', {
+  timeZone: PIPELINE_TIME_ZONE, year: 'numeric', month: '2-digit', day: '2-digit',
+})
+const monthLabelFormatter = new Intl.DateTimeFormat('en-US', {
+  timeZone: PIPELINE_TIME_ZONE, year: 'numeric', month: 'short',
+})
+const weekdayLabelFormatter = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'short' })
+const monthDayLabelFormatter = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric' })
+
+function localDateKey(value: Date): string | null {
+  if (!Number.isFinite(value.getTime())) return null
+  const parts = Object.fromEntries(localDateFormatter.formatToParts(value).map(part => [part.type, part.value]))
+  if (!parts.year || !parts.month || !parts.day) return null
+  return `${parts.year}-${parts.month}-${parts.day}`
+}
+
+function calendarKey(value: Date): string {
+  // This Date is a synthetic UTC-midnight calendar value created by the
+  // bucket builder, so its UTC fields are the intended date (no timezone
+  // conversion is appropriate here).
+  return `${value.getUTCFullYear()}-${String(value.getUTCMonth() + 1).padStart(2, '0')}-${String(value.getUTCDate()).padStart(2, '0')}`
+}
+
+function parsedDate(value: unknown): Date | null {
+  if (typeof value !== 'string' || !value.trim()) return null
+  const timestamp = Date.parse(value)
+  return Number.isFinite(timestamp) ? new Date(timestamp) : null
+}
+
+function calendarDate(value: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+  if (!match) return null
+  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])))
+  // Treat the key as a calendar date, not a UTC timestamp. Reject rollover
+  // so malformed input can never create a bucket with an accidental date.
+  if (date.getUTCFullYear() !== Number(match[1]) || date.getUTCMonth() !== Number(match[2]) - 1
+    || date.getUTCDate() !== Number(match[3])) return null
+  return date
+}
+
+function shiftCalendarDate(date: Date, days: number): Date {
+  const shifted = new Date(date)
+  shifted.setUTCDate(shifted.getUTCDate() + days)
+  return shifted
+}
+
+function sendTimestamp(lead: PipelineLead): string | null {
+  const outreach = lead.outreach
+  const completed = lead.completed
+  const history = lead.history ?? []
+
+  // SENT OUT means outreach.sent_at is valid OR outreach.status === "sent"
+  // OR completed.emailStatus === "sent". IN QUEUE is the complement: every
+  // lead with none of those send signals is still not-yet-sent.
+  // The signal and timestamp are intentionally separate: status === "sent"
+  // proves the send even when its timestamp is absent, while invalid dates
+  // must never enter a chart bucket.
+  const outreachSent = outreach?.status === 'sent' || parsedDate(outreach?.sent_at) !== null
+  const completedSent = completed?.emailStatus === 'sent'
+  if (!outreachSent && !completedSent) return null
+
+  const timestampCandidates: unknown[] = [
+    outreach?.sent_at,
+    completedSent ? completed?.signoffSentAt : undefined,
+  ]
+  for (let i = history.length - 1; i >= 0; i -= 1) {
+    if (history[i]?.stage === 'completed') timestampCandidates.push(history[i]?.ts)
+  }
+  for (const candidate of timestampCandidates) {
+    if (parsedDate(candidate)) return candidate as string
+  }
+  return ''
+}
+
+function bucket(date: Date, label: string, count = 0): PipelineSentBucket {
+  return { date: calendarKey(date), label, count }
+}
+
+/**
+ * Aggregate sends from the complete normalized lead list. This runs before
+ * the board's per-stage display caps so weekly/monthly totals cannot silently
+ * undercount the leads hidden from the UI.
+ */
+export function buildPipelineSentSummary(leads: PipelineLead[], now = new Date()): PipelineSentSummary {
+  const todayKey = localDateKey(now)
+  const today = todayKey ? calendarDate(todayKey) : null
+  if (!today || !todayKey) {
+    return { sentTotal: 0, queuedTotal: leads.length, sentThisWeek: 0, weekStart: '', sentThisMonth: 0, monthLabel: '', byDayThisWeek: [], byDayThisMonth: [] }
+  }
+
+  const mondayOffset = (today.getUTCDay() + 6) % 7
+  const weekStartDate = shiftCalendarDate(today, -mondayOffset)
+  const weekStart = calendarKey(weekStartDate)
+  const weekBuckets = Array.from({ length: 7 }, (_, index) => {
+    const date = shiftCalendarDate(weekStartDate, index)
+    return bucket(date, weekdayLabelFormatter.format(date))
+  })
+  const monthStartDate = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1))
+  const monthBuckets: PipelineSentBucket[] = []
+  for (let date = monthStartDate; date <= today; date = shiftCalendarDate(date, 1)) {
+    monthBuckets.push(bucket(date, monthDayLabelFormatter.format(date)))
+  }
+
+  let sentTotal = 0
+  let queuedTotal = 0
+  for (const lead of leads) {
+    const timestamp = sendTimestamp(lead)
+    if (timestamp === null) {
+      queuedTotal += 1
+      continue
+    }
+    sentTotal += 1
+    if (!timestamp) continue
+    const sentDate = parsedDate(timestamp)
+    const sentDay = sentDate ? localDateKey(sentDate) : null
+    if (!sentDay || sentDay > todayKey) continue
+
+    const weekIndex = weekBuckets.findIndex(item => item.date === sentDay)
+    if (weekIndex >= 0) weekBuckets[weekIndex].count += 1
+    const monthIndex = monthBuckets.findIndex(item => item.date === sentDay)
+    if (monthIndex >= 0) monthBuckets[monthIndex].count += 1
+  }
+
+  return {
+    sentTotal,
+    queuedTotal,
+    sentThisWeek: weekBuckets.reduce((total, item) => total + item.count, 0),
+    weekStart,
+    sentThisMonth: monthBuckets.reduce((total, item) => total + item.count, 0),
+    monthLabel: monthLabelFormatter.format(now),
+    byDayThisWeek: weekBuckets,
+    byDayThisMonth: monthBuckets,
+  }
+}
+
 export async function collectPipeline(revenue = false): Promise<PipelineData> {
   const [leads, events] = await Promise.all([readLeads(), readRecentEvents()])
+  const sentSummary = buildPipelineSentSummary(leads)
   const counts = Object.fromEntries(PIPELINE_STAGES.map(s => [s, 0])) as Record<PipelineStage, number>
   for (const lead of leads) counts[lead.stage] += 1
 
@@ -302,5 +439,6 @@ export async function collectPipeline(revenue = false): Promise<PipelineData> {
     leadsTotal: leads.length,
     followups,
     events,
+    sentSummary,
   }
 }

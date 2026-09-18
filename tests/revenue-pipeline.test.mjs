@@ -19,6 +19,7 @@ process.env.INTERNAL_API_SECRET = 'w3b-test-only'
 const { NextRequest } = await import('next/server.js')
 const { GET, POST } = await import('../app/api/pipeline/review/route.ts')
 const { GET: pipelineGET } = await import('../app/api/pipeline/route.ts')
+const { buildPipelineSentSummary } = await import('../lib/pipeline-data.ts')
 const storeFile = path.join(fixtureDir, 'pipeline.json')
 after(() => fs.rm(fixtureDir, { recursive: true, force: true }))
 const now = Date.parse('2026-09-10T12:00:00Z')
@@ -48,6 +49,54 @@ test('revenue selection groups stages, orders approvals oldest first and caps re
   ]
   assert.deepEqual(revenueLeads(leads).map(l => l.id), ['a1', 'a2', 'dev', 'c4', 'c3', 'c2'])
   assert.deepEqual(revenueLeads([]), [])
+})
+test('pipeline send summary buckets all sends in Los Angeles local time', () => {
+  const summary = buildPipelineSentSummary([
+    { id: 'same-1', stage: 'completed', businessName: 'Same 1', outreach: { sent_at: '2026-09-15T15:00:00Z' } },
+    { id: 'same-2', stage: 'completed', businessName: 'Same 2', outreach: { sent_at: '2026-09-15T23:00:00Z' } },
+    // 23:30 PDT is 06:30 UTC on the following date: it belongs to Sep 14
+    // locally, even though the raw UTC date is Sep 15.
+    { id: 'local-late', stage: 'completed', businessName: 'Local Late', outreach: { sent_at: '2026-09-15T06:30:00Z' } },
+    // Keep a 23:30 UTC fixture too; its correct LA local date is Sep 15.
+    { id: 'utc-late', stage: 'completed', businessName: 'UTC Late', outreach: { sent_at: '2026-09-15T23:30:00Z' } },
+    { id: 'completed-send', stage: 'completed', businessName: 'Completed Send', completed: { emailStatus: 'sent', signoffSentAt: '2026-09-16T18:00:00Z' } },
+    { id: 'double-signal', stage: 'completed', businessName: 'Double Signal', outreach: { status: 'sent', sent_at: '2026-09-16T15:00:00Z' }, completed: { emailStatus: 'sent', signoffSentAt: '2026-09-17T15:00:00Z' }, history: [{ stage: 'completed', ts: '2026-09-18T15:00:00Z' }] },
+    { id: 'sent-no-date', stage: 'completed', businessName: 'Sent No Date', outreach: { status: 'sent' } },
+    { id: 'no-timestamp', stage: 'in_development', businessName: 'No Timestamp' },
+    { id: 'bad-date', stage: 'awaiting_approval', businessName: 'Bad Date', outreach: { sent_at: 'not-a-date' } },
+  ], new Date('2026-09-16T12:00:00-07:00'))
+
+  assert.equal(summary.sentTotal, 7)
+  assert.equal(summary.queuedTotal, 2)
+  assert.equal(summary.weekStart, '2026-09-14')
+  assert.equal(summary.sentThisWeek, 6)
+  assert.equal(summary.sentThisMonth, 6)
+  assert.equal(summary.monthLabel, 'Sep 2026')
+  assert.deepEqual(summary.byDayThisWeek, [
+    { date: '2026-09-14', label: 'Mon', count: 1 },
+    { date: '2026-09-15', label: 'Tue', count: 3 },
+    { date: '2026-09-16', label: 'Wed', count: 2 },
+    { date: '2026-09-17', label: 'Thu', count: 0 },
+    { date: '2026-09-18', label: 'Fri', count: 0 },
+    { date: '2026-09-19', label: 'Sat', count: 0 },
+    { date: '2026-09-20', label: 'Sun', count: 0 },
+  ])
+  assert.equal(summary.byDayThisMonth.length, 16)
+  assert.equal(summary.byDayThisMonth.find(day => day.date === '2026-09-15').count, 3)
+  assert.equal(summary.byDayThisMonth.find(day => day.date === '2026-09-16').count, 2)
+  assert.ok(summary.byDayThisMonth.every(day => Number.isFinite(day.count)))
+})
+test('pipeline sent summary is computed before display caps', async () => {
+  const leads = Array.from({ length: 25 }, (_, n) => ({
+    id: `bulk-${n}`, business_name: `Bulk ${n}`, stage: 'leads_found',
+    outreach: { sent_at: '2026-09-15T15:00:00Z' },
+  }))
+  await fs.writeFile(storeFile, JSON.stringify({ leads }))
+  const board = await (await pipelineGET(new NextRequest('http://localhost/api/pipeline'))).json()
+  assert.equal(board.leads.length, 20)
+  assert.equal(board.counts.leads_found, 25)
+  assert.equal(board.sentSummary.sentTotal, 25)
+  assert.equal(board.sentSummary.sentThisWeek, 25)
 })
 test('real review handlers preserve stage and fields, persist decisions, and return individual records', async () => {
   assert.equal(typeof GET, 'function')

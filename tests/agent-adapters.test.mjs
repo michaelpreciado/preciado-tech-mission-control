@@ -13,7 +13,7 @@ test('adapter selection defaults only missing agent to Hermes and rejects unknow
   for (const bad of [null, '', 'bash', {}, 0]) assert.equal(selectAgent(bad), null)
   const input = { message: '$(touch /tmp/nope); --help', session: 'native-id' }
   assert.deepEqual(adapters.hermes.args(input), ['--continue', 'native-id', '-z', input.message, '--cli'])
-  assert.deepEqual(adapters.hermes.args({ ...input, profile: 'jarvis', createSession: true }), ['--profile', 'jarvis', 'chat', '--continue', 'native-id', '--create-if-missing', '-q', input.message, '--oneshot', '--cli', '-Q'])
+  assert.deepEqual(adapters.hermes.args({ ...input, profile: 'jarvis', createSession: true }), ['--profile', 'jarvis', 'chat', '--continue', 'native-id', '--create-if-missing', '-Q', '--query-file', '-'])
   assert.deepEqual(adapters.pi.args(input), ['--session-dir', piSessionDir(), '--session-id', 'native-id', '-p', '--', input.message])
   assert.deepEqual(adapters.codex.args(input), ['exec', '--', input.message])
   assert.equal(adapters.codex.continuity, false)
@@ -83,7 +83,21 @@ test('one-shot CLI closes stdin so Pi can finish reading redirected input', asyn
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mc-cli-test-'))
   try {
     const command = path.join(dir, 'cli.mjs')
-    fs.writeFileSync(command, '#!/usr/bin/env node\nprocess.stdin.resume(); process.stdin.on("end", () => console.log("OK"));\n', { mode: 0o700 })
+    fs.writeFileSync(command, '#!/bin/sh\ncat >/dev/null\nprintf OK\n', { mode: 0o700 })
     assert.equal(await sendAgent('pi', command, { message: 'hello', session: 'test' }, 3000), 'OK')
+  } finally { fs.rmSync(dir, { recursive: true, force: true }) }
+})
+
+test('Hermes query-file mode sends the message on stdin and preserves exact argv', async () => {
+  const { sendAgent } = await import('../lib/agent-adapters.ts')
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mc-hermes-cli-test-'))
+  try {
+    const command = path.join(dir, 'cli.mjs')
+    fs.writeFileSync(command, '#!/bin/sh\nprintf "args=%s\\nbody=" "$*"\ncat\n', { mode: 0o700 })
+    const reply = await sendAgent('hermes', command, {
+      message: 'say hi', session: 'first', createSession: true,
+      model: 'gemma4:12b', provider: 'ollama',
+    }, 3000)
+    assert.match(reply, /^args=-m gemma4:12b --provider ollama chat --continue first --create-if-missing -Q --query-file -\nbody=say hi$/)
   } finally { fs.rmSync(dir, { recursive: true, force: true }) }
 })

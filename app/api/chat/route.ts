@@ -30,6 +30,29 @@ const rateBucket = new Map<string, { count: number; resetAt: number }>()
 const RUN_TIMEOUT_MS = 180_000
 const MAX_MESSAGE_LEN = 4000
 const SESSION_RE = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,48}$/
+/** Same conservative id charsets the bot roster uses when it writes
+ *  `model.default` — letters, digits and . _ : / - only. */
+const MODEL_RE = /^[A-Za-z0-9][A-Za-z0-9._:/-]{1,119}$/
+const PROVIDER_RE = /^[a-z0-9][a-z0-9._-]{1,39}$/
+const CLI_ERROR_TAIL_MAX = 320
+const ANSI_ESCAPE_RE = /\u001b\[[0-?]*[ -\/]*[@-~]/g
+
+/** Keep child diagnostics useful without returning secrets or local paths. */
+export function sanitizeCliStderr(stderr: unknown): string {
+  if (typeof stderr !== 'string') return ''
+  const sanitized = stderr
+    .replace(ANSI_ESCAPE_RE, '')
+    .replace(/(?:https?|file):\/\/[^\s]+/gi, '[url]')
+    .replace(/\b(?:api[_-]?key|access[_-]?token|refresh[_-]?token|secret|password|authorization)\b\s*[:=]\s*[^\s]+/gi, '[credential redacted]')
+    .replace(/\b[A-Z][A-Z0-9_]{2,}\s*=\s*[^\s]+/g, '[environment value redacted]')
+    .replace(/(^|[\s("'`])(?:~\/|\/|[A-Za-z]:[\\/])[^\s\r\n"'`<>)]*/g, '$1[path redacted]')
+    .replace(/[\u0000-\u001f\u007f]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return sanitized.length > CLI_ERROR_TAIL_MAX
+    ? `…${sanitized.slice(-(CLI_ERROR_TAIL_MAX - 1))}`
+    : sanitized
+}
 
 const availability = new Map<string, boolean>()
 
@@ -83,7 +106,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
 
-  let body: { message?: unknown; session?: unknown; agent?: unknown; profile?: unknown; createSession?: unknown }
+  let body: { message?: unknown; session?: unknown; agent?: unknown; profile?: unknown; createSession?: unknown; model?: unknown; provider?: unknown }
   try {
     body = await req.json()
   } catch {
@@ -105,6 +128,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'session continuity unsupported' }, { status: 400 })
   }
   const profile = typeof body.profile === 'string' && /^[a-zA-Z0-9_-]{1,64}$/.test(body.profile) ? body.profile : undefined
+  /* Per-turn model override. Only Hermes accepts `-m/--provider`, so a model on
+     the other agents is a client bug worth surfacing rather than ignoring. */
+  const model = typeof body.model === 'string' ? body.model.trim() : ''
+  if (model && !MODEL_RE.test(model)) return NextResponse.json({ error: 'model id has an unexpected character (letters, digits, and . _ : / - only)' }, { status: 400 })
+  const provider = typeof body.provider === 'string' ? body.provider.trim().toLowerCase() : ''
+  if (provider && !PROVIDER_RE.test(provider)) return NextResponse.json({ error: 'provider id has an unexpected character' }, { status: 400 })
+  if ((model || provider) && agent !== 'hermes') {
+    return NextResponse.json({ error: 'model override is not supported for this agent' }, { status: 400 })
+  }
   const config = configuredAgents().find(a => a.id === agent)
   const command = config?.command || ''
   if (!config?.enabled || !command || !(await checkAvailable(command))) {
@@ -114,7 +146,7 @@ export async function POST(req: NextRequest) {
   if (continuity?.herdrPane) return NextResponse.json({ error: 'Session lives in Herdr. Use Continue in herdr to send to its pane.', continuity }, { status: 409 })
   const started = Date.now()
   try {
-    const result = await withAgentFlight(agent, () => sendAgent(agent, command, { message, session: continuity?.sessionName || session, profile, createSession: body.createSession === true, resumeById: continuity?.selector === 'id' }, RUN_TIMEOUT_MS))
+    const result = await withAgentFlight(agent, () => sendAgent(agent, command, { message, session: continuity?.sessionName || session, profile, createSession: body.createSession === true, resumeById: continuity?.selector === 'id', model: model || undefined, provider: provider || undefined }, RUN_TIMEOUT_MS))
     if (result.status === 409) return NextResponse.json({ error: result.error }, { status: 409 })
     invalidateConversationCache()
     if (continuity) {
@@ -131,10 +163,17 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json({ reply: result.value, continuity, elapsedMs: Date.now() - started, session: agent === 'codex' ? undefined : session, agent })
   } catch (err) {
-    logger.error('chat/run', err)
-    const timedOut = (err as { killed?: boolean }).killed
+    const failure = err as { killed?: boolean; stderr?: unknown }
+    const timedOut = failure.killed
+    const stderrTail = sanitizeCliStderr(failure.stderr)
+    const error = timedOut
+      ? `agent run exceeded ${RUN_TIMEOUT_MS / 1000}s and was stopped${stderrTail ? ` — ${stderrTail}` : ''}`
+      : `agent run failed — ${stderrTail || 'no CLI stderr was captured'}`
+    // Do not hand the logger a raw child-process Error: its message can carry
+    // a provider URL, local path, or another value from the child environment.
+    logger.error('chat/run', timedOut ? 'agent run timed out' : 'agent run failed', stderrTail ? { stderr: stderrTail } : undefined)
     return NextResponse.json(
-      { error: timedOut ? `agent run exceeded ${RUN_TIMEOUT_MS / 1000}s and was stopped` : 'agent run failed — check server logs' },
+      { error, ...(stderrTail ? { detail: stderrTail } : {}) },
       { status: 502 },
     )
   }

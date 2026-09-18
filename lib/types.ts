@@ -536,6 +536,23 @@ export type PipelineEvent = {
   detail?: string
 }
 
+export type PipelineSentBucket = {
+  date: string
+  label: string
+  count: number
+}
+
+export type PipelineSentSummary = {
+  sentTotal?: number
+  queuedTotal?: number
+  sentThisWeek?: number
+  weekStart?: string
+  sentThisMonth?: number
+  monthLabel?: string
+  byDayThisWeek?: PipelineSentBucket[]
+  byDayThisMonth?: PipelineSentBucket[]
+}
+
 export type PipelineData = {
   generatedAt: string
   source: string
@@ -547,6 +564,7 @@ export type PipelineData = {
   leadsTotal: number
   followups?: { overdue: number; upcoming: number; nextDue?: string }
   events: PipelineEvent[]
+  sentSummary?: PipelineSentSummary
 }
 
 /* ── Hermes kanban (read-only view of ~/.hermes/kanban.db) ── */

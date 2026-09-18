@@ -113,7 +113,7 @@
   .mc-commit .when { display: block; }
 }
 
-.w2l-chat-list-content { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.w2l-chat-list-content { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior-y: auto; }
 .w2l-chat-list-content .cc-list, .w2l-chat-list-content .mcl-list { overflow: visible; max-height: none; }
 @media (max-width: 900px) {
   .mc-main .cockpit-standalone { margin-bottom: 0; }

@@ -1,7 +1,9 @@
 /** Server-only: CLI invocations use execFile argv arrays, never shell commands. */
 import { execFile } from 'node:child_process'
+import path from 'node:path'
 import { promisify } from 'node:util'
 import { getConfig, resolveChatAgents, type AgentId } from './config'
+import { hermesDir } from './collectors/bots'
 import { piSessionDir, readPiSessions } from './pi-sessions'
 
 const execFileAsync = promisify(execFile)
@@ -12,15 +14,24 @@ export function configuredAgents() {
   const chat = getConfig().chat
   return resolveChatAgents(chat.agents, chat.command)
 }
-export type SendInput = { message: string; session: string; profile?: string; createSession?: boolean; resumeById?: boolean }
+export type SendInput = { message: string; session: string; profile?: string; createSession?: boolean; resumeById?: boolean; model?: string; provider?: string }
 const textReply = (stdout: string, stderr: string) => stdout.trim() || stderr.trim() || '(no output)'
 export const adapters = {
   hermes: {
     continuity: true,
-    args: ({ message, session, profile, createSession, resumeById }: SendInput) => [
+    args: ({ message, session, profile, createSession, resumeById, model, provider }: SendInput) => [
       ...(profile && profile !== 'default' ? ['--profile', profile] : []),
+      // Per-invocation model override. Verified against the installed CLI: `-m`
+      // and `--provider` are accepted by BOTH the top-level command and the
+      // `chat` subcommand, so a picked model applies to this turn only and
+      // config.yaml is never rewritten.
+      ...(model ? ['-m', model] : []),
+      ...(provider ? ['--provider', provider] : []),
       ...(createSession
-        ? ['chat', '--continue', session, '--create-if-missing', '-q', message, '--oneshot', '--cli', '-Q']
+        // Hermes' documented programmatic lane is `chat -Q --query-file`.
+        // The message is supplied on stdin by sendAgent below; keeping it out
+        // of argv also avoids the CLI's legacy -q/--oneshot/--cli combination.
+        ? ['chat', '--continue', session, '--create-if-missing', '-Q', '--query-file', '-']
         : [resumeById ? '--resume' : '--continue', session, '-z', message, '--cli']),
     ],
     parseReply: textReply,
@@ -56,12 +67,19 @@ export async function withAgentFlight<T>(agent: AgentId, run: () => Promise<T>):
 
 export async function sendAgent(agent: AgentId, command: string, input: SendInput, timeout: number) {
   const adapter = adapters[agent]
-  const run = execFileAsync(command, adapter.args(input), {
+  const args = adapter.args(input)
+  const root = hermesDir()
+  const hermesHome = input.profile && input.profile !== 'default' ? path.join(root, 'profiles', input.profile) : root
+  const run = execFileAsync(command, args, {
     timeout, maxBuffer: 8 * 1024 * 1024, cwd: process.cwd(),
+    // Hermes otherwise falls back to the default profile when HERMES_HOME is
+    // unset, so every child must inherit the active profile's Hermes root.
+    env: { ...process.env, HERMES_HOME: hermesHome },
   })
-  // Pi consumes redirected stdin before its prompt, even in print mode.
-  // execFile opens a pipe by default; EOF is required for a one-shot turn.
-  run.child.stdin?.end()
+  // Hermes' --query-file - path reads the complete prompt from stdin. Pi also
+  // consumes redirected stdin before its prompt; EOF is required for both.
+  if (agent === 'hermes' && args.includes('--query-file')) run.child.stdin?.end(input.message)
+  else run.child.stdin?.end()
   const { stdout, stderr } = await run
   return adapter.parseReply(stdout, stderr)
 }
