@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { apiFetch } from '@/lib/api-base'
 import type { PipelineData } from '@/lib/types'
 import { useLiveData } from './LiveDataProvider'
+import { Card, Chip } from './ui'
+import styles from './ui.module.css'
 
 export function BridgeStrip() {
   const { data } = useLiveData()
@@ -35,20 +37,20 @@ export function BridgeStrip() {
   const warningCount = data ? data.warnings.length + Object.keys(data.collectorErrors ?? {}).length : 0
 
   return (
-    <div className="mc-bridge" role="status" aria-live="polite">
-      <span className="mc-bridge-dot" aria-hidden="true" />
+    <Card className={styles.bridgeStrip} role="status" aria-live="polite">
+      <span className={styles.bridgeDot} aria-hidden="true" />
       {data ? (
         <>
-          <span className="mc-bridge-seg"><b>{data.kanban.runningTasks}</b> RUNNING</span>
-          <span className="mc-bridge-seg"><b>{data.kanban.openTasks}</b> OPEN</span>
-          {warningCount > 0 && <span className="mc-bridge-seg is-warn"><b>{warningCount}</b> WARN</span>}
+          <Chip tone="neutral"><b>{data.kanban.runningTasks}</b> RUNNING</Chip>
+          <Chip tone="neutral"><b>{data.kanban.openTasks}</b> OPEN</Chip>
+          {warningCount > 0 && <Chip tone="warn"><b>{warningCount}</b> WARN</Chip>}
           {followups && (followups.overdue > 0 ? (
-            <span className="mc-bridge-seg is-overdue"><b>{followups.overdue}</b> FOLLOW-UP{followups.overdue === 1 ? '' : 'S'} OVERDUE</span>
+            <Chip tone="bad"><b>{followups.overdue}</b> FOLLOW-UP{followups.overdue === 1 ? '' : 'S'} OVERDUE</Chip>
           ) : followups.upcoming > 0 ? (
-            <span className="mc-bridge-seg is-due"><b>{followups.upcoming}</b> FOLLOW-UPS{followups.nextDue && <> · NEXT <b>{followups.nextDue.slice(5, 10)}</b></>}</span>
+            <Chip tone="info"><b>{followups.upcoming}</b> FOLLOW-UPS{followups.nextDue && <> · NEXT <b>{followups.nextDue.slice(5, 10)}</b></>}</Chip>
           ) : null)}
         </>
-      ) : <span className="mc-bridge-seg is-quiet">CONNECTING</span>}
-    </div>
+      ) : <Chip tone="neutral">CONNECTING</Chip>}
+    </Card>
   )
 }

@@ -1,8 +1,10 @@
 'use client'
 
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState, useId } from 'react'
 import { createPortal } from 'react-dom'
 import { AsciiTerminalArt } from '@/app/vf/Ascii'
+import { Sparkline } from './Sparkline'
+import styles from './ui.module.css'
 
 export function fmtDate(value?: string) {
   if (!value) return '—'
@@ -373,3 +375,308 @@ export function SectionTitle({ title, right }: { title: string; right?: React.Re
 export function Badge({ children, tone = 'blue' }: { children: React.ReactNode; tone?: string }) {
   return <span className="mc-task-tag" data-tone={tone}>{children}</span>
 }
+
+/* ── Foundation primitives ────────────────────────────────────────────────
+   These are the component-owned surfaces and controls for new work. The
+   legacy exports above intentionally keep their existing class contracts. */
+
+export type CardTone = 'default' | 'raised' | 'sunken'
+export type CardPad = 'none' | 'sm' | 'md'
+export type CardProps = {
+  as?: 'div' | 'section' | 'article' | 'header'
+  tone?: CardTone
+  pad?: CardPad
+  className?: string
+  children?: React.ReactNode
+} & Omit<React.HTMLAttributes<HTMLElement>, 'className' | 'children'>
+
+export const Card = React.forwardRef<HTMLElement, CardProps>(function Card(
+  { as: Element = 'div', tone = 'default', pad = 'none', className = '', children, ...rest },
+  ref,
+) {
+  const toneClass = tone === 'raised' ? styles.cardRaised : tone === 'sunken' ? styles.cardSunken : ''
+  const padClass = pad === 'sm' ? styles.cardPadSm : pad === 'md' ? styles.cardPadMd : styles.cardPadNone
+  return React.createElement(Element, {
+    ...rest,
+    ref,
+    className: [styles.card, toneClass, padClass, className].filter(Boolean).join(' '),
+  }, children)
+})
+
+export type CardHeadProps = {
+  title: React.ReactNode
+  sub?: React.ReactNode
+  right?: React.ReactNode
+  className?: string
+}
+
+export const CardHead = React.forwardRef<HTMLDivElement, CardHeadProps>(function CardHead(
+  { title, sub, right, className = '' },
+  ref,
+) {
+  return (
+    <div ref={ref} className={[styles.cardHead, className].filter(Boolean).join(' ')}>
+      <div className={styles.cardHeadCopy}>
+        <h2 className={styles.cardTitle}>{title}</h2>
+        {sub ? <p className={styles.cardSub}>{sub}</p> : null}
+      </div>
+      {right ? <div className={styles.cardRight}>{right}</div> : null}
+    </div>
+  )
+})
+
+export type FieldProps = {
+  label: React.ReactNode
+  hint?: React.ReactNode
+  error?: React.ReactNode
+  className?: string
+  children: React.ReactNode
+}
+
+export const Field = React.forwardRef<HTMLDivElement, FieldProps>(function Field(
+  { label, hint, error, className = '', children },
+  ref,
+) {
+  const controlId = useId()
+  const child = React.isValidElement(children)
+    ? children as React.ReactElement<{ id?: string; 'aria-describedby'?: string; 'aria-invalid'?: boolean }>
+    : null
+  const childId = child?.props.id ?? controlId
+  const describedBy = [child?.props['aria-describedby'], hint ? `${controlId}-hint` : '', error ? `${controlId}-error` : ''].filter(Boolean).join(' ') || undefined
+  const control = child
+    ? React.cloneElement(child, { id: childId, 'aria-describedby': describedBy, 'aria-invalid': error ? true : child.props['aria-invalid'] })
+    : children
+  return (
+    <div ref={ref} className={[styles.field, className].filter(Boolean).join(' ')}>
+      <label className={styles.fieldLabel} htmlFor={childId}>{label}</label>
+      <div className={styles.fieldControl}>{control}</div>
+      {error ? <p className={styles.fieldError} id={`${controlId}-error`} role="alert">{error}</p> : hint ? <p className={styles.fieldHint} id={`${controlId}-hint`}>{hint}</p> : null}
+    </div>
+  )
+})
+
+export type InputProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'className'> & { className?: string }
+
+export const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input({ className = '', ...rest }, ref) {
+  return <input ref={ref} className={[styles.input, className].filter(Boolean).join(' ')} {...rest} />
+})
+
+export type TextAreaProps = Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'className'> & { className?: string }
+
+export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(function TextArea({ className = '', ...rest }, ref) {
+  return <textarea ref={ref} className={[styles.textArea, className].filter(Boolean).join(' ')} {...rest} />
+})
+
+export type SelectProps = Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'className'> & { className?: string }
+
+export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(function Select({ className = '', ...rest }, ref) {
+  return <select ref={ref} className={[styles.select, className].filter(Boolean).join(' ')} {...rest} />
+})
+
+export type SegmentedOption = { value: string; label: React.ReactNode }
+export type SegmentedProps = {
+  options: SegmentedOption[]
+  value: string
+  onChange: (value: string) => void
+  size?: 'sm' | 'md'
+  className?: string
+}
+
+export const Segmented = React.forwardRef<HTMLDivElement, SegmentedProps>(function Segmented(
+  { options, value, onChange, size = 'md', className = '' },
+  ref,
+) {
+  const itemRefs = useRef<Array<HTMLButtonElement | null>>([])
+  const selectedIndex = Math.max(0, options.findIndex(option => option.value === value))
+  const move = (index: number) => {
+    const next = options[index]
+    if (!next) return
+    onChange(next.value)
+    itemRefs.current[index]?.focus()
+  }
+  const onKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+    let nextIndex: number | null = null
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') nextIndex = (index + 1) % options.length
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') nextIndex = (index - 1 + options.length) % options.length
+    if (event.key === 'Home') nextIndex = 0
+    if (event.key === 'End') nextIndex = options.length - 1
+    if (nextIndex != null && options.length > 0) {
+      event.preventDefault()
+      move(nextIndex)
+    }
+  }
+  return (
+    <div ref={ref} className={[styles.segmented, size === 'sm' ? styles.segmentedSm : styles.segmentedMd, className].filter(Boolean).join(' ')} role="radiogroup">
+      {options.map((option, index) => {
+        const selected = option.value === value
+        return (
+          <button
+            key={option.value}
+            ref={node => { itemRefs.current[index] = node }}
+            type="button"
+            className={[styles.segmentedItem, selected ? styles.segmentedItemSelected : ''].filter(Boolean).join(' ')}
+            role="radio"
+            aria-checked={selected}
+            tabIndex={selected || (selectedIndex === 0 && index === 0) ? 0 : -1}
+            onClick={() => onChange(option.value)}
+            onKeyDown={event => onKeyDown(event, index)}
+          >
+            {option.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+})
+
+export type ChipTone = 'neutral' | 'info' | 'ok' | 'warn' | 'bad' | 'accent'
+export type ChipProps = {
+  tone?: ChipTone
+  icon?: React.ReactNode
+  children: React.ReactNode
+  className?: string
+}
+
+export const Chip = React.forwardRef<HTMLSpanElement, ChipProps>(function Chip(
+  { tone = 'neutral', icon, children, className = '' },
+  ref,
+) {
+  const toneClass = {
+    neutral: styles.chipNeutral,
+    info: styles.chipInfo,
+    ok: styles.chipOk,
+    warn: styles.chipWarn,
+    bad: styles.chipBad,
+    accent: styles.chipAccent,
+  }[tone]
+  return <span ref={ref} className={[styles.chip, toneClass, className].filter(Boolean).join(' ')} data-tone={tone}>{icon ? <span aria-hidden="true">{icon}</span> : null}{children}</span>
+})
+
+export type IconButtonProps = Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'className' | 'aria-label'> & {
+  'aria-label': string
+  className?: string
+  children?: React.ReactNode
+}
+
+export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
+  { className = '', type = 'button', children, ...rest },
+  ref,
+) {
+  return <button ref={ref} type={type} className={[styles.iconButton, className].filter(Boolean).join(' ')} {...rest}>{children}</button>
+})
+
+export type StatProps = {
+  label: React.ReactNode
+  value: React.ReactNode
+  sub?: React.ReactNode
+  tone?: ChipTone
+  size?: 'hero' | 'lg' | 'md'
+  series?: number[]
+  className?: string
+}
+
+export const Stat = React.forwardRef<HTMLDivElement, StatProps>(function Stat(
+  { label, value, sub, tone = 'neutral', size = 'md', series, className = '' },
+  ref,
+) {
+  const toneClass = tone === 'info' ? styles.statInfo : tone === 'ok' ? styles.statOk : tone === 'warn' ? styles.statWarn : tone === 'bad' ? styles.statBad : tone === 'accent' ? styles.statAccent : ''
+  const sparkColor = tone === 'ok' ? 'var(--pt-ok-ink)' : tone === 'warn' ? 'var(--pt-warn-ink)' : tone === 'bad' ? 'var(--pt-error-ink)' : tone === 'info' ? 'var(--pt-info-ink)' : 'var(--pt-neon)'
+  return (
+    <div ref={ref} className={[styles.stat, size === 'hero' ? styles.statHero : size === 'lg' ? styles.statLg : styles.statMd, toneClass, className].filter(Boolean).join(' ')}>
+      <span className={styles.statLabel}>{label}</span>
+      <strong className={styles.statValue}>{value}</strong>
+      {sub ? <span className={styles.statSub}>{sub}</span> : null}
+      {series ? <div className={styles.statSparkline}><Sparkline points={series} color={sparkColor} /></div> : null}
+    </div>
+  )
+})
+
+export type RowProps = {
+  leading?: React.ReactNode
+  title: React.ReactNode
+  sub?: React.ReactNode
+  trailing?: React.ReactNode
+  onClick?: React.MouseEventHandler<HTMLElement>
+  href?: string
+  className?: string
+} & Omit<React.HTMLAttributes<HTMLElement>, 'className' | 'children' | 'title' | 'onClick'>
+
+export const Row = React.forwardRef<HTMLElement, RowProps>(function Row(
+  { leading, title, sub, trailing, onClick, href, className = '', ...rest },
+  ref,
+) {
+  const content = (
+    <>
+      {leading ? <span className={styles.rowLeading}>{leading}</span> : null}
+      <span className={styles.rowBody}><span className={styles.rowTitle}>{title}</span>{sub ? <span className={styles.rowSub}>{sub}</span> : null}</span>
+      {trailing ? <span className={styles.rowTrailing}>{trailing}</span> : null}
+    </>
+  )
+  const rowClass = [styles.row, onClick || href ? styles.rowInteractive : '', className].filter(Boolean).join(' ')
+  if (href) return <a ref={ref as React.Ref<HTMLAnchorElement>} href={href} className={rowClass} onClick={onClick as React.MouseEventHandler<HTMLAnchorElement>} {...rest as React.AnchorHTMLAttributes<HTMLAnchorElement>}>{content}</a>
+  if (onClick) return <button ref={ref as React.Ref<HTMLButtonElement>} type="button" className={rowClass} onClick={onClick as React.MouseEventHandler<HTMLButtonElement>} {...rest as React.ButtonHTMLAttributes<HTMLButtonElement>}>{content}</button>
+  return <div ref={ref as React.Ref<HTMLDivElement>} className={rowClass} {...rest}>{content}</div>
+})
+
+export type SheetProps = {
+  open: boolean
+  onClose: () => void
+  title: React.ReactNode
+  children: React.ReactNode
+  size?: 'auto' | 'tall'
+}
+
+export const Sheet = React.forwardRef<HTMLDivElement, SheetProps>(function Sheet(
+  { open, onClose, title, children, size = 'auto' },
+  forwardedRef,
+) {
+  const sheetRef = useRef<HTMLDivElement>(null)
+  const titleId = useId()
+  const assignRef = useCallback((node: HTMLDivElement | null) => {
+    sheetRef.current = node
+    if (typeof forwardedRef === 'function') forwardedRef(node)
+    else if (forwardedRef) forwardedRef.current = node
+  }, [forwardedRef])
+
+  useEffect(() => {
+    if (!open) return
+    const previousFocus = document.activeElement as HTMLElement | null
+    const main = document.querySelector('main')
+    const wasInert = main?.inert ?? false
+    if (main) main.inert = true
+    const controls = () => Array.from(sheetRef.current?.querySelectorAll<HTMLElement>('button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])') ?? []).filter(control => !(control as HTMLButtonElement).disabled)
+    controls()[0]?.focus()
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { event.preventDefault(); onClose(); return }
+      if (event.key !== 'Tab') return
+      const items = controls()
+      const first = items[0]
+      const last = items[items.length - 1]
+      if (!first || !last) return
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      if (main) main.inert = wasInert
+      previousFocus?.focus({ preventScroll: true })
+    }
+  }, [open, onClose])
+
+  if (!open || typeof document === 'undefined') return null
+  return createPortal(
+    <div className={styles.sheetLayer}>
+      <div className={styles.sheetBackdrop} aria-hidden="true" onClick={onClose} />
+      <div ref={assignRef} className={[styles.sheet, size === 'tall' ? styles.sheetTall : ''].filter(Boolean).join(' ')} role="dialog" aria-modal="true" aria-labelledby={titleId}>
+        <div className={styles.sheetHandle} aria-hidden="true" />
+        <div className={styles.sheetHead}>
+          <h2 className={styles.sheetTitle} id={titleId}>{title}</h2>
+          <IconButton aria-label={`Close ${typeof title === 'string' ? title.toLowerCase() : 'sheet'}`} onClick={onClose}>×</IconButton>
+        </div>
+        <div className={styles.sheetBody}>{children}</div>
+      </div>
+    </div>,
+    document.body,
+  )
+})
