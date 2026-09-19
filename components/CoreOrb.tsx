@@ -61,7 +61,7 @@ function usePageVisible(): boolean {
 }
 
 const PLASMA_VERTEX = `varying vec2 vUv;
-void main(){vUv=uv;gl_Position=vec4(position,0.0,1.0);}`
+void main(){vUv=uv;gl_Position=vec4(position,1.0);}`
 const PLASMA_FRAGMENT = `precision highp float;
 uniform float uTime; uniform float uBloom; uniform vec3 uColor; varying vec2 vUv;
 float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
