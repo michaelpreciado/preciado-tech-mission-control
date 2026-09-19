@@ -13,7 +13,7 @@
   border-radius: var(--ob-radius-card);
   background: var(--ob-glass);
   box-shadow: var(--ob-surface-highlight);
-  color: var(--mc-ink); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  color: var(--mc-ink); backdrop-filter: blur(12px); }
 .uplink::after { content: none; }
 .grid { display: none; }
 .copy { z-index: 1; min-width: 0; }
@@ -23,7 +23,7 @@
 .copy h2 { margin: 12px 0 6px; font-size: clamp(22px, 3.2vw, 40px); font-weight: 500; letter-spacing: -.04em; line-height: 1.2; }
 .copy p { margin: 0; color: var(--mc-ink-mute); font-size: 11px; line-height: 1.6; }
 .metrics { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
-.metrics a { display: flex; align-items: center; gap: 9px; min-height: 44px; padding: 7px 12px; text-decoration: none; border: 1px solid var(--pt-btn-glass-line-base); border-radius: 8px; background: linear-gradient(180deg, var(--pt-btn-glass-neutral-top), var(--pt-btn-glass-neutral-bottom)) var(--pt-btn-glass-fill); color: var(--pt-btn-glass-ink); box-shadow: var(--pt-btn-glass-rim), var(--pt-btn-glass-shadow); backdrop-filter: var(--pt-btn-glass-blur); -webkit-backdrop-filter: var(--pt-btn-glass-blur); transition: background-color var(--pt-dur-std) var(--pt-btn-glass-ease), border-color var(--pt-dur-std) var(--pt-btn-glass-ease); }
+.metrics a { display: flex; align-items: center; gap: 9px; min-height: 44px; padding: 7px 12px; text-decoration: none; border: 1px solid var(--pt-btn-glass-line-base); border-radius: 8px; background: linear-gradient(180deg, var(--pt-btn-glass-neutral-top), var(--pt-btn-glass-neutral-bottom)) var(--pt-btn-glass-fill); color: var(--pt-btn-glass-ink); box-shadow: var(--pt-btn-glass-rim), var(--pt-btn-glass-shadow); backdrop-filter: var(--pt-btn-glass-blur); transition: background-color var(--pt-dur-std) var(--pt-btn-glass-ease), border-color var(--pt-dur-std) var(--pt-btn-glass-ease); }
 .metrics a:hover { background-color: var(--pt-btn-glass-fill-hover); border-color: var(--pt-btn-glass-line-strong); }
 .metrics a:focus-visible { outline: 2px solid var(--pt-btn-glass-focus); outline-offset: 3px; border-color: var(--pt-btn-glass-line-strong); }
 .metrics strong { font-size: 20px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--pt-btn-glass-ink); }
@@ -77,5 +77,5 @@
 
 /* Retain the material's fill and rim without touch-scroll backdrop work. */
 @media (pointer: coarse) {
-  .uplink, .metrics a { backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .uplink, .metrics a { backdrop-filter: none; }
 }
