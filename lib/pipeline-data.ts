@@ -397,14 +397,19 @@ export async function collectPipeline(revenue = false): Promise<PipelineData> {
   const counts = Object.fromEntries(PIPELINE_STAGES.map(s => [s, 0])) as Record<PipelineStage, number>
   for (const lead of leads) counts[lead.stage] += 1
 
-  const today = new Date().toISOString().slice(0, 10)
+  // Local calendar day, NOT UTC. `toISOString()` reports the UTC date, so every
+  // follow-up due "today" flipped to overdue at 17:00 Pacific — the moment UTC
+  // rolls to tomorrow — seven hours early, raising a false OVERDUE alarm every
+  // evening. localDateKey() already implements America/Los_Angeles and is what
+  // buildPipelineSentSummary uses above; this loop had simply missed it.
+  const today = localDateKey(new Date())
   const followups: NonNullable<PipelineData['followups']> = { overdue: 0, upcoming: 0 }
   for (const lead of leads) {
     const outreach = lead.outreach
     if (!outreach?.followup_due || outreach.status !== 'sent' || outreach.followup_sent_at
       || (outreach.reply != null && outreach.reply !== 'none recorded')) continue
     const due = outreach.followup_due
-    if (due.slice(0, 10) < today) {
+    if (today && due.slice(0, 10) < today) {
       followups.overdue += 1
     } else {
       followups.upcoming += 1
