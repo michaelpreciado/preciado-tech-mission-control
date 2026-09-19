@@ -9393,3 +9393,80 @@ html:root body :is(
   box-shadow: none;
   backdrop-filter: none;
 }
+
+/* H3: phone chrome only. Scope through the main/cockpit to outrank the
+   legacy phone grid in w2l.css, which is loaded after this stylesheet. */
+@media (max-width: 620px) {
+  html body .mc-main .mc-cockpit {
+    flex-shrink: 0;
+    min-height: 0;
+    padding: var(--pt-s-1) var(--pt-s-2);
+    margin-bottom: var(--pt-s-2);
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mc-main .mc-cockpit::-webkit-scrollbar { display: none; }
+  .mc-main .mc-cockpit .mc-cockpit-row {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: var(--pt-s-1);
+    min-height: var(--pt-s-8);
+  }
+  .mc-main .mc-cockpit .mc-hero-brand {
+    flex: 1 0 calc(var(--pt-s-12) + var(--pt-s-2));
+    min-width: 0;
+    padding: 0;
+    font-size: calc(var(--pt-fs-kicker) * 5 / 6);
+    line-height: var(--pt-lh-snug);
+    letter-spacing: 0;
+    white-space: normal;
+    overflow: visible;
+  }
+  .mc-main .mc-cockpit .mc-stats {
+    flex: 0 0 auto;
+    width: auto;
+    height: auto;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    gap: var(--pt-s-1);
+    flex-wrap: nowrap;
+    overflow: visible;
+    mask-image: none;
+  }
+  .mc-main .mc-cockpit .mc-stat {
+    flex: 0 0 auto;
+    height: var(--pt-s-8);
+    padding: var(--pt-s-1);
+    gap: var(--pt-s-1);
+    white-space: nowrap;
+  }
+  .mc-main .mc-cockpit .mc-stat-glyph {
+    font-size: calc(var(--pt-fs-kicker) * 5 / 6);
+  }
+  .mc-main .mc-cockpit .mc-stat-val {
+    font-size: var(--pt-fs-kicker);
+    line-height: var(--pt-lh-snug);
+    letter-spacing: 0;
+  }
+  .mc-main .mc-cockpit .mc-stats > .mc-cockpit-refresh {
+    flex: 0 0 auto;
+    width: var(--pt-s-8);
+    min-width: var(--pt-s-8);
+    height: var(--pt-s-8);
+    min-height: var(--pt-s-8);
+    margin: 0;
+    padding: 0;
+  }
+  .mc-main .mc-cockpit .mc-live-badge {
+    position: static;
+    flex: 0 0 auto;
+    gap: var(--pt-s-1);
+    padding: var(--pt-s-1);
+    font-size: calc(var(--pt-fs-kicker) * 5 / 6);
+    line-height: var(--pt-lh-snug);
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+}

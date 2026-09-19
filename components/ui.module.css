@@ -344,6 +344,35 @@
   .sheet { width: 100%; }
 }
 
+/* Phone chrome: preserve every bridge value in one scrollable row. */
+@media (max-width: 620px) {
+  .bridgeStrip {
+    flex-shrink: 0;
+    flex-wrap: nowrap;
+    gap: var(--pt-s-1);
+    margin-bottom: var(--pt-s-2);
+    padding: var(--pt-s-2);
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .bridgeStrip::-webkit-scrollbar { display: none; }
+  .bridgeStrip > .chip {
+    flex: 0 0 auto;
+    padding-inline: var(--pt-s-1);
+    font-size: var(--pt-fs-kicker);
+  }
+
+  .pageHeader {
+    flex-shrink: 0;
+    gap: var(--pt-s-2);
+    margin-bottom: var(--pt-s-2);
+    padding: var(--pt-s-3);
+  }
+  .pageHeaderEyebrow { margin-bottom: var(--pt-s-1); }
+  .pageHeader p { display: none; }
+}
+
 @media (pointer: coarse) {
   .card,
   .sheet { backdrop-filter: none; }
