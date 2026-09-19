@@ -226,6 +226,7 @@ export function HomeChat() {
             <span ref={picker} style={{ position: 'relative', display: 'block', width: 'min(190px, 100%)', minWidth: 0, flex: '0 1 190px' }}>
               <button
                 ref={pickerTrigger}
+                className={styles.modelPicker}
                 type="button"
                 disabled={pickerDisabled}
                 aria-haspopup="listbox"
@@ -257,12 +258,11 @@ export function HomeChat() {
                 style={{
                   display: 'flex', alignItems: 'center', gap: 8, width: '100%', minWidth: 0,
                   minHeight: 34, padding: '4px 8px',
-                  background: 'var(--pt-surface-2)', border: '1px solid var(--pt-border-dim)',
-                  borderRadius: 8, color: 'var(--pt-text)', font: 'inherit', fontSize: 11,
+                  borderRadius: 8, font: 'inherit', fontSize: 11,
                   textAlign: 'left', whiteSpace: 'nowrap', cursor: pickerDisabled ? 'default' : 'pointer',
                 }}
               >
-                <span aria-hidden="true" style={{ flex: '0 0 auto', color: 'var(--pt-text-dim)', fontSize: 9, letterSpacing: '.12em' }}>MODEL</span>
+                <span aria-hidden="true" style={{ flex: '0 0 auto', color: 'var(--mc-ink-dim)', fontSize: 9, letterSpacing: '.12em' }}>MODEL</span>
                 <span style={{ minWidth: 0, flex: '1 1 auto', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{picked?.id ?? 'agent default'}</span>
                 <span aria-hidden="true" style={{ flex: '0 0 auto', fontSize: 13, lineHeight: 1 }}>⌄</span>
               </button>
@@ -275,8 +275,8 @@ export function HomeChat() {
                     position: 'absolute', display: 'block', right: 0, bottom: 'calc(100% + 6px)', zIndex: 50,
                     width: '190px', maxWidth: 'calc(100vw - 24px)', maxHeight: 280,
                     overflowY: 'auto', overscrollBehaviorY: 'auto', boxSizing: 'border-box',
-                    padding: 6, background: 'var(--pt-surface-2, #07111d)',
-                    border: '1px solid var(--pt-border-dim)', borderRadius: 12,
+                    padding: 6, background: 'var(--pt-btn-glass-fill-disabled)',
+                    border: '1px solid var(--pt-btn-glass-line-base)', borderRadius: 12,
                     boxShadow: '0 12px 28px rgba(0, 0, 0, .35)', color: 'var(--pt-text)',
                     fontFamily: 'var(--pt-font-mono, monospace)', fontSize: 10,
                   }}
@@ -291,7 +291,7 @@ export function HomeChat() {
                     style={{
                       display: 'flex', alignItems: 'center', minHeight: 36, padding: '6px 8px',
                       borderRadius: 7, color: 'var(--pt-text)', cursor: 'pointer',
-                      background: highlightedIndex === 0 ? 'rgba(118, 118, 128, .22)' : 'transparent',
+                      background: highlightedIndex === 0 ? 'var(--pt-btn-glass-primary-bottom)' : 'transparent',
                     }}
                   >
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>agent default</span>
@@ -299,7 +299,7 @@ export function HomeChat() {
                   </span>
                   {groups.map((group, groupIndex) => (
                     <span key={group.label} style={{ display: 'block' }}>
-                      <span style={{ display: 'block', padding: groupIndex === 0 ? '9px 8px 4px' : '11px 8px 4px', color: 'var(--pt-text-dim)', fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase' }}>{group.label}</span>
+                      <span style={{ display: 'block', padding: groupIndex === 0 ? '9px 8px 4px' : '11px 8px 4px', color: 'var(--mc-ink-dim)', fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase' }}>{group.label}</span>
                       {group.models.map((model, modelIndex) => {
                         const key = optionKey(model)
                         const optionIndex = modelIndex + 1 + groups.slice(0, groupIndex).reduce((count, current) => count + current.models.length, 0)
@@ -314,7 +314,7 @@ export function HomeChat() {
                           style={{
                             display: 'flex', alignItems: 'center', minHeight: 36, padding: '6px 8px',
                             borderRadius: 7, color: 'var(--pt-text)', cursor: 'pointer',
-                            background: highlightedIndex === optionIndex ? 'rgba(118, 118, 128, .22)' : 'transparent',
+                            background: highlightedIndex === optionIndex ? 'var(--pt-btn-glass-primary-bottom)' : 'transparent',
                           }}
                         >
                           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{model.id}</span>

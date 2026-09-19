@@ -37,3 +37,17 @@ The shared button material is **Edge Light**, a dark translucent body with a lit
 `BUTTON_GLASS` in `lib/tokens.ts` emits the `--pt-btn-glass-*` material tokens. The final Lane D layer in `app/globals.css` owns shared and legacy button paint without changing layout. This is the explicitly authorized button-material exception to the globals ownership rule above. IconButton and Segmented retain their component-owned geometry.
 
 The [button study](/styleguide#button-glass) compares **A · Frosted Deck**, **B · Edge Light (installed)** and **C · Liquid Fill**, each in sm/md contexts on panel and ambient rain backgrounds. See [BUTTONS.md](./BUTTONS.md) for exact recipes, the winner decision, token inventory, contrast measurements and verification limits. Edge Light primary/ghost labels measure 11.73:1 / 16.81:1 on the panel; the conservative white-backdrop bounds are 5.83:1 / 6.85:1.
+
+## Home controls (H2)
+
+Home's composer, SEND, History/New chat, quick-prompt chips, header actions, model picker and Neural Uplink metric links consume the existing `--pt-btn-glass-*` Edge Light tokens in their CSS Modules. This preserves the existing native controls, event handlers, props and ARIA contract. Breakpoint rules own sizing only; a single module material group owns the Home control paint.
+
+The composer and secondary actions use neutral tinted gradients over the translucent glass fill, a 12px blur with 120% saturation (including the WebKit prefix), inner specular rim and soft shadow. SEND uses the dodger primary gradient and light ink. The former terminal-cyan SEND color is removed; restoring it would require an explicit, documented owner exception to the single-accent rule. Control hairlines use exactly `.06` for disabled/subtle, `.10` for base and `.18` for hover/focus. Existing card fills, borders and highlights remain on their protected `--ob-*` recipes.
+
+Feedback uses the existing 200ms duration and `cubic-bezier(.4,0,.2,1)`. Coarse pointers omit backdrop filters for these controls and the Home/Neural Uplink glass surfaces, retaining fill, gradient and rim. Reduced motion removes control transitions and press movement. Disabled controls retain defined fill and ink rather than whole-control opacity.
+
+At phone widths (≤600px), the empty hero targets `calc(100svh - 160px)` (684px minimum at 390×844; content may expand it), with 8px vertical welcome/message padding, a 180px ring, 16px composer top padding and 12px chip spacing. The four chips retain 44px touch targets. Greeting, rotating readouts, one-tap prompts, model picker, orb/dock, brackets and every mobile `order:` declaration remain intact.
+
+H2 token audit: HomeWorkspace raw hex occurrences **72 → 0**; system-gray declarations **8 → 0** (the earlier five-rule tally excluded hover/other occurrences). No tokens were added. Legacy colors now use existing surface, ink, semantic and glass roles. Both default and Friday inherit the same glass material.
+
+Contrast calculated from the canonical sRGB tokens and alpha compositing: composer/secondary label **6.85:1**, primary SEND label **5.83:1**, using a white backdrop and the brightest gradient stop as the conservative bound. On an opaque RGB(10,12,15) panel these are **17.02:1 / 11.90:1**. These are material calculations, not screenshot samples. Live 390px dimensions, first-section position and scrollWidth remain unverified in this lane because the execution sandbox denies both local server binding (`listen EPERM`) and Chromium startup (`setsockopt EPERM`).
