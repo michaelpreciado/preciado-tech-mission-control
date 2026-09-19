@@ -30,7 +30,10 @@ export async function collectKanbanActivity(): Promise<KanbanActivity> {
     let runningTasks = 0
     for (const row of taskRows) {
       const slot = touch(row.assignee)
-      const done = ['done', 'completed', 'closed'].includes(row.status)
+      // 'archived' is terminal too — an archived task has been filed away, not
+      // left open. Omitting it from this list made the home strip count all 15
+      // archived rows as open work and report "17 OPEN" against a board of 2.
+      const done = ['done', 'completed', 'closed', 'archived'].includes(row.status)
       if (!done) { slot.open += row.n; openTasks += row.n }
       if (['running', 'in_progress', 'claimed'].includes(row.status)) { slot.running += row.n; runningTasks += row.n }
       if (row.last_ts) {
