@@ -9135,3 +9135,271 @@ html[data-theme='friday'] .mc-tab.is-active::after { content: none; }
   .launch-seam { transform: scaleX(1); }
   .launch-chart-line { stroke-dashoffset: 0; }
 }
+
+/* ── Lane D · Blue Matrix Glass / B. Edge Light (installed winner) ──────
+   Material only: no height, padding, font, radius or layout declarations.
+   The toolbar arm of :is() matches the strongest legacy Friday recipe.
+   Old gray declarations remain intact under the additive gate, but this
+   final layer owns their computed material, including native legacy actions.
+   --glass-* are local recipe inputs; all values originate in lib/tokens.ts. */
+html:root body :is(
+  .mc-btn, .ob-btn, .mc-kb-toolbar .mc-btn.ob-btn,
+  .mc-win-float-btn, .mc-week-nav button, .mc-tab,
+  .mc-task-donebtn, .mc-task-replybar button, .mc-content-toggle,
+  .mc-proj-todo-toggle, .cc-newbtn, .cc-back, .cc-send, .cc-sendbtn,
+  .mc-mem-open, .mc-sheet-close,
+  button[class*="iconButton"], [class*="segmented"] > button[role="radio"]
+) {
+  --glass-top: var(--pt-btn-glass-neutral-top);
+  --glass-bottom: var(--pt-btn-glass-neutral-bottom);
+  --glass-ink: var(--pt-btn-glass-ink);
+  --glass-fill: var(--specimen-glass-fill, var(--pt-btn-glass-fill));
+  --glass-sheen: var(--specimen-glass-sheen, linear-gradient(transparent, transparent));
+  --glass-rim: var(--specimen-glass-rim, var(--pt-btn-glass-rim));
+  --glass-shadow: var(--specimen-glass-shadow, var(--pt-btn-glass-shadow));
+  --glass-blur: var(--specimen-glass-blur, var(--pt-btn-glass-blur));
+  --glass-angle: var(--specimen-glass-angle, 180deg);
+  background-color: var(--glass-fill);
+  background-image: var(--glass-sheen), linear-gradient(var(--glass-angle), var(--glass-top), var(--glass-bottom));
+  background-size: var(--specimen-glass-size, 100% 100%);
+  background-position: 0 0;
+  color: var(--glass-ink);
+  border-color: var(--pt-btn-glass-line-subtle);
+  box-shadow: var(--glass-rim), var(--glass-shadow);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  text-shadow: none;
+  opacity: 1;
+  transition: background-color var(--pt-dur-std) var(--pt-btn-glass-ease),
+    background-position var(--pt-dur-std) var(--pt-btn-glass-ease),
+    border-color var(--pt-dur-std) var(--pt-btn-glass-ease),
+    box-shadow var(--pt-dur-std) var(--pt-btn-glass-ease),
+    color var(--pt-dur-std) var(--pt-btn-glass-ease),
+    transform var(--pt-dur-std) var(--pt-btn-glass-ease);
+}
+
+html:root body :is(
+  .mc-btn, .ob-btn, .mc-kb-toolbar .mc-btn.ob-btn,
+  .mc-win-float-btn, .mc-week-nav button, .mc-tab,
+  .mc-task-donebtn, .mc-task-replybar button, .mc-content-toggle,
+  .mc-proj-todo-toggle, .cc-newbtn, .cc-back, .cc-send, .cc-sendbtn,
+  .mc-mem-open, .mc-sheet-close,
+  button[class*="iconButton"], [class*="segmented"] > button[role="radio"]
+):is(.mc-btn-primary, .ob-btn-primary, .cc-newbtn, .cc-send, .cc-sendbtn, .mc-task-replybar button) {
+  --glass-top: var(--specimen-primary-top, var(--pt-btn-glass-primary-top));
+  --glass-bottom: var(--specimen-primary-bottom, var(--pt-btn-glass-primary-bottom));
+}
+
+html:root body :is(
+  .mc-btn, .ob-btn, .mc-kb-toolbar .mc-btn.ob-btn,
+  .mc-win-float-btn, .mc-week-nav button, .mc-tab,
+  .mc-task-donebtn, .mc-task-replybar button, .mc-content-toggle,
+  .mc-proj-todo-toggle, .cc-newbtn, .cc-back, .cc-send, .cc-sendbtn,
+  .mc-mem-open, .mc-sheet-close,
+  button[class*="iconButton"], [class*="segmented"] > button[role="radio"]
+):is(.mc-btn-danger, .ob-btn-danger) {
+  --glass-top: var(--pt-btn-glass-danger-top);
+  --glass-bottom: var(--pt-btn-glass-danger-bottom);
+  --glass-ink: var(--pt-btn-glass-ink-danger);
+}
+
+html:root body :is(
+  .mc-btn, .ob-btn, .mc-kb-toolbar .mc-btn.ob-btn,
+  .mc-win-float-btn, .mc-week-nav button, .mc-tab,
+  .mc-task-donebtn, .mc-task-replybar button, .mc-content-toggle,
+  .mc-proj-todo-toggle, .cc-newbtn, .cc-back, .cc-send, .cc-sendbtn,
+  .mc-mem-open, .mc-sheet-close,
+  button[class*="iconButton"], [class*="segmented"] > button[role="radio"]
+):is(.mc-btn-confirm, .ob-btn-confirm, .mc-task-donebtn) {
+  --glass-top: var(--pt-btn-glass-confirm-top);
+  --glass-bottom: var(--pt-btn-glass-confirm-bottom);
+  --glass-ink: var(--pt-btn-glass-ink-confirm);
+}
+
+html:root body :is(
+  .mc-btn, .ob-btn, .mc-kb-toolbar .mc-btn.ob-btn,
+  .mc-win-float-btn, .mc-week-nav button, .mc-tab,
+  .mc-task-donebtn, .mc-task-replybar button, .mc-content-toggle,
+  .mc-proj-todo-toggle, .cc-newbtn, .cc-back, .cc-send, .cc-sendbtn,
+  .mc-mem-open, .mc-sheet-close,
+  button[class*="iconButton"], [class*="segmented"] > button[role="radio"]
+):is(.is-on, .is-active, [aria-pressed="true"], [aria-checked="true"]) {
+  border-color: var(--pt-btn-glass-line-strong);
+  box-shadow: var(--pt-btn-glass-rim-lit), var(--glass-shadow);
+}
+
+html:root body :is(
+  .mc-btn, .ob-btn, .mc-kb-toolbar .mc-btn.ob-btn,
+  .mc-win-float-btn, .mc-week-nav button, .mc-tab,
+  .mc-task-donebtn, .mc-task-replybar button, .mc-content-toggle,
+  .mc-proj-todo-toggle, .cc-newbtn, .cc-back, .cc-send, .cc-sendbtn,
+  .mc-mem-open, .mc-sheet-close,
+  button[class*="iconButton"], [class*="segmented"] > button[role="radio"]
+):is(.mc-btn-ghost.is-on, .ob-btn-ghost.is-on, .mc-tab.is-active, [aria-checked="true"]) {
+  --glass-top: var(--specimen-primary-top, var(--pt-btn-glass-primary-top));
+  --glass-bottom: var(--specimen-primary-bottom, var(--pt-btn-glass-primary-bottom));
+}
+
+@media (hover: hover) {
+html:root body :is(
+  .mc-btn, .ob-btn, .mc-kb-toolbar .mc-btn.ob-btn,
+  .mc-win-float-btn, .mc-week-nav button, .mc-tab,
+  .mc-task-donebtn, .mc-task-replybar button, .mc-content-toggle,
+  .mc-proj-todo-toggle, .cc-newbtn, .cc-back, .cc-send, .cc-sendbtn,
+  .mc-mem-open, .mc-sheet-close,
+  button[class*="iconButton"], [class*="segmented"] > button[role="radio"]
+):hover:not(:disabled):not([aria-disabled="true"]) {
+  background-color: var(--pt-btn-glass-fill-hover);
+  background-position: var(--specimen-glass-hover-position, 0 0);
+  border-color: var(--pt-btn-glass-line-strong);
+  box-shadow: var(--pt-btn-glass-rim-lit), var(--glass-shadow);
+}
+
+html:root body :is(
+  .mc-btn, .ob-btn, .mc-kb-toolbar .mc-btn.ob-btn,
+  .mc-win-float-btn, .mc-week-nav button, .mc-tab,
+  .mc-task-donebtn, .mc-task-replybar button, .mc-content-toggle,
+  .mc-proj-todo-toggle, .cc-newbtn, .cc-back, .cc-send, .cc-sendbtn,
+  .mc-mem-open, .mc-sheet-close,
+  button[class*="iconButton"], [class*="segmented"] > button[role="radio"]
+):where(.mc-btn-primary, .ob-btn-primary, .mc-btn-ghost, .ob-btn-ghost):hover:not(:disabled):not([aria-disabled="true"]) {
+  box-shadow: var(--pt-btn-glass-rim-lit), var(--glass-shadow), var(--pt-btn-glass-bloom);
+}
+
+}
+
+html:root body :is(
+  .mc-btn, .ob-btn, .mc-kb-toolbar .mc-btn.ob-btn,
+  .mc-win-float-btn, .mc-week-nav button, .mc-tab,
+  .mc-task-donebtn, .mc-task-replybar button, .mc-content-toggle,
+  .mc-proj-todo-toggle, .cc-newbtn, .cc-back, .cc-send, .cc-sendbtn,
+  .mc-mem-open, .mc-sheet-close,
+  button[class*="iconButton"], [class*="segmented"] > button[role="radio"]
+):focus-visible {
+  outline: 2px solid var(--pt-btn-glass-focus);
+  outline-offset: 3px;
+  border-color: var(--pt-btn-glass-line-strong);
+}
+
+html:root body :is(
+  .mc-btn, .ob-btn, .mc-kb-toolbar .mc-btn.ob-btn,
+  .mc-win-float-btn, .mc-week-nav button, .mc-tab,
+  .mc-task-donebtn, .mc-task-replybar button, .mc-content-toggle,
+  .mc-proj-todo-toggle, .cc-newbtn, .cc-back, .cc-send, .cc-sendbtn,
+  .mc-mem-open, .mc-sheet-close,
+  button[class*="iconButton"], [class*="segmented"] > button[role="radio"]
+):active:not(:disabled):not([aria-disabled="true"]) {
+  transform: scale(0.985);
+  background-color: var(--pt-btn-glass-fill-hover);
+  background-position: var(--specimen-glass-hover-position, 0 0);
+  box-shadow: var(--glass-rim), var(--pt-btn-glass-press-shadow);
+  opacity: 1;
+}
+
+html:root body :is(
+  .mc-btn, .ob-btn, .mc-kb-toolbar .mc-btn.ob-btn,
+  .mc-win-float-btn, .mc-week-nav button, .mc-tab,
+  .mc-task-donebtn, .mc-task-replybar button, .mc-content-toggle,
+  .mc-proj-todo-toggle, .cc-newbtn, .cc-back, .cc-send, .cc-sendbtn,
+  .mc-mem-open, .mc-sheet-close,
+  button[class*="iconButton"], [class*="segmented"] > button[role="radio"]
+):is(:disabled, [aria-disabled="true"]):not(.is-loading) {
+  --glass-top: var(--pt-btn-glass-neutral-top);
+  --glass-bottom: var(--pt-btn-glass-neutral-bottom);
+  background-color: var(--pt-btn-glass-fill-disabled);
+  color: var(--pt-btn-glass-ink-disabled);
+  border-color: var(--pt-btn-glass-line-subtle);
+  box-shadow: var(--pt-btn-glass-rim);
+  opacity: 1;
+  text-decoration: none;
+  cursor: not-allowed;
+}
+
+html:root body :is(
+  .mc-btn, .ob-btn, .mc-kb-toolbar .mc-btn.ob-btn,
+  .mc-win-float-btn, .mc-week-nav button, .mc-tab,
+  .mc-task-donebtn, .mc-task-replybar button, .mc-content-toggle,
+  .mc-proj-todo-toggle, .cc-newbtn, .cc-back, .cc-send, .cc-sendbtn,
+  .mc-mem-open, .mc-sheet-close,
+  button[class*="iconButton"], [class*="segmented"] > button[role="radio"]
+).is-loading {
+  border-color: var(--pt-btn-glass-line-base);
+  border-style: dashed;
+  opacity: 1;
+  cursor: progress;
+}
+
+/* Borderless primitives get an inset hairline without changing their boxes. */
+html:root body :is(button[class*="iconButton"], [class*="segmented"] > button[role="radio"]) {
+  outline: 1px solid var(--pt-btn-glass-line-subtle);
+  outline-offset: -1px;
+}
+html:root body :is(button[class*="iconButton"], [class*="segmented"] > button[role="radio"]):is(:hover, [aria-checked="true"]) {
+  outline-color: var(--pt-btn-glass-line-strong);
+}
+
+/* Component CSS Modules keep their existing geometry. Inset rims supply
+   the hairline on borderless IconButton / Segmented without adding pixels. */
+@media (pointer: coarse) {
+html:root body :is(
+  .mc-btn, .ob-btn, .mc-kb-toolbar .mc-btn.ob-btn,
+  .mc-win-float-btn, .mc-week-nav button, .mc-tab,
+  .mc-task-donebtn, .mc-task-replybar button, .mc-content-toggle,
+  .mc-proj-todo-toggle, .cc-newbtn, .cc-back, .cc-send, .cc-sendbtn,
+  .mc-mem-open, .mc-sheet-close,
+  button[class*="iconButton"], [class*="segmented"] > button[role="radio"]
+) {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+html:root body :is(
+  .mc-btn, .ob-btn, .mc-kb-toolbar .mc-btn.ob-btn,
+  .mc-win-float-btn, .mc-week-nav button, .mc-tab,
+  .mc-task-donebtn, .mc-task-replybar button, .mc-content-toggle,
+  .mc-proj-todo-toggle, .cc-newbtn, .cc-back, .cc-send, .cc-sendbtn,
+  .mc-mem-open, .mc-sheet-close,
+  button[class*="iconButton"], [class*="segmented"] > button[role="radio"]
+) {
+  transition: none;
+}
+
+html:root body :is(
+  .mc-btn, .ob-btn, .mc-kb-toolbar .mc-btn.ob-btn,
+  .mc-win-float-btn, .mc-week-nav button, .mc-tab,
+  .mc-task-donebtn, .mc-task-replybar button, .mc-content-toggle,
+  .mc-proj-todo-toggle, .cc-newbtn, .cc-back, .cc-send, .cc-sendbtn,
+  .mc-mem-open, .mc-sheet-close,
+  button[class*="iconButton"], [class*="segmented"] > button[role="radio"]
+):active:not(:disabled):not([aria-disabled="true"]) {
+  transform: none;
+}
+
+  .mc-btn.is-loading .mc-btn-spinner { animation: none; }
+}
+
+/* ── Lane D · correction: restore the disabled affordance ────────────────
+   The glass layer above sets `opacity: 1` on every button to defeat legacy
+   opacity drift, which also defeated the `.ob-btn:disabled { opacity: .4 }`
+   recipe — so disabled controls rendered at full strength and looked live.
+   Restore dimming with a rule that outranks the glass layer by source order
+   and an extra `:not()`. `.is-loading` is excluded: a loading control is
+   *in progress*, not unavailable, and keeps its dashed in-flight treatment. */
+html:root body :is(
+  .mc-btn, .ob-btn, .mc-kb-toolbar .mc-btn.ob-btn,
+  .mc-win-float-btn, .mc-week-nav button, .mc-tab,
+  .mc-task-donebtn, .mc-task-replybar button, .mc-content-toggle,
+  .mc-proj-todo-toggle, .cc-newbtn, .cc-back, .cc-send, .cc-sendbtn,
+  .mc-mem-open, .mc-sheet-close,
+  button[class*="iconButton"], [class*="segmented"] > button[role="radio"]
+):is(:disabled, [aria-disabled="true"]):not(.is-loading) {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}

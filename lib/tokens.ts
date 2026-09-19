@@ -116,8 +116,51 @@ export const DENSITY = {
   expanded: { py: '24px', px: '28px', gap: '12px' },
 } as const
 
+/* Button glass material only. Dodger is the sole decorative hue; red/green
+   retain their existing destructive/confirmation meaning. */
+export const BUTTON_GLASS = {
+  'fill': 'rgba(10,12,14,0.72)',
+  'fill-hover': 'rgba(10,12,14,0.84)',
+  'fill-disabled': 'rgba(10,12,14,0.88)',
+  'neutral-top': 'rgba(190,215,255,0.045)',
+  'neutral-bottom': 'rgba(190,215,255,0.01)',
+  'primary-top': 'rgba(30,144,255,0.30)',
+  'primary-bottom': 'rgba(30,144,255,0.12)',
+  'danger-top': 'rgba(255,95,87,0.18)',
+  'danger-bottom': 'rgba(255,95,87,0.06)',
+  'confirm-top': 'rgba(40,200,64,0.18)',
+  'confirm-bottom': 'rgba(40,200,64,0.06)',
+  'ink': '#f4f7fb',
+  'ink-danger': '#ffd4d1',
+  'ink-confirm': '#ccf5d2',
+  'ink-disabled': '#a5afbd',
+  'line-subtle': 'rgba(255,255,255,0.06)',
+  'line-base': 'rgba(255,255,255,0.10)',
+  'line-strong': 'rgba(255,255,255,0.18)',
+  'rim': 'inset 0 1px 0 rgba(190,215,255,0.18), inset 0 -1px 0 rgba(255,255,255,0.04)',
+  'rim-lit': 'inset 0 1px 0 rgba(190,215,255,0.32), inset 0 -1px 0 rgba(255,255,255,0.06)',
+  'shadow': '0 6px 16px rgba(0,0,0,0.24)',
+  'bloom': '0 0 30px rgba(30,144,255,0.07)',
+  'press-shadow': 'inset 0 2px 5px rgba(0,0,0,0.24)',
+  'blur': 'blur(12px) saturate(120%)',
+  'focus': '#1E90FF',
+  'ease': 'cubic-bezier(0.4,0,0.2,1)',
+  /* Comparison-only materials; the installed recipe is Edge Light. */
+  'frost-fill': 'rgba(10,12,14,0.84)',
+  'frost-sheen': 'linear-gradient(180deg, rgba(190,215,255,0.16), rgba(190,215,255,0.035) 48%, transparent)',
+  'frost-rim': 'inset 0 2px 0 rgba(190,215,255,0.30), inset 0 -1px 0 rgba(255,255,255,0.06)',
+  'frost-shadow': '0 8px 24px rgba(0,0,0,0.32)',
+  'frost-blur': 'blur(18px) saturate(120%)',
+  'liquid-fill': 'rgba(10,12,14,0.82)',
+  'liquid-primary-top': 'rgba(30,144,255,0.42)',
+  'liquid-primary-bottom': 'rgba(30,144,255,0.14)',
+  'liquid-sheen': 'linear-gradient(115deg, rgba(190,215,255,0.14), transparent 35%, rgba(190,215,255,0.07) 65%, transparent)',
+  'liquid-rim': 'inset 0 1px 0 rgba(190,215,255,0.12), inset 0 -1px 0 rgba(255,255,255,0.04)',
+  'liquid-blur': 'blur(8px) saturate(120%)',
+} as const
+
 export type DesignToken = typeof designTokens
-export const designTokens = { semantic: SEMANTIC, categorical: CATEGORICAL, font: FONT, typeScale: TYPE_SCALE, spacing: SPACING, radius: RADIUS, border: BORDER, surface: SURFACE, glow: GLOW, motion: MOTION, density: DENSITY }
+export const designTokens = { semantic: SEMANTIC, categorical: CATEGORICAL, font: FONT, typeScale: TYPE_SCALE, spacing: SPACING, radius: RADIUS, border: BORDER, surface: SURFACE, glow: GLOW, motion: MOTION, density: DENSITY, buttonGlass: BUTTON_GLASS }
 
 /**
  * Emit the canonical `:root { … }` custom-property block. This replaces the
@@ -126,6 +169,9 @@ export const designTokens = { semantic: SEMANTIC, categorical: CATEGORICAL, font
  */
 export function buildTokenCss(): string {
   return `:root {
+  /* Shared glass button material (also inherited by the Friday theme). */
+${Object.entries(BUTTON_GLASS).map(([name, value]) => `  --pt-btn-glass-${name}: ${value};`).join('\n')}
+
   /* gutter */
   --mc-gutter: 36px;
 

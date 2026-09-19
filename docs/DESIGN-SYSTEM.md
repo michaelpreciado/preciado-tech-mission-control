@@ -29,3 +29,11 @@ Component CSS consumes the `--pt-*` custom properties emitted by `lib/tokens.ts`
 ## CSS ownership
 
 `app/globals.css` is coordinator-owned. Feature work must not edit it. New component styling belongs in the component's CSS Module; page-only layout belongs in that page's CSS Module. The primitive layer is the only owner of new shared recipes.
+
+## Button material: Blue Matrix Glass
+
+The shared button material is **Edge Light**, a dark translucent body with a lit inner rim, hairline border and soft ambient depth. Primary uses dodger glass; ghost is neutral; danger is red and confirm is green. The existing sizing, capsule shapes, props and ARIA behavior are preserved. Loading retains readable variant ink; disabled gets a defined dark surface. Touch devices omit backdrop blur while retaining gradients and lighting. Reduced motion removes transitions and press scaling.
+
+`BUTTON_GLASS` in `lib/tokens.ts` emits the `--pt-btn-glass-*` material tokens. The final Lane D layer in `app/globals.css` owns shared and legacy button paint without changing layout. This is the explicitly authorized button-material exception to the globals ownership rule above. IconButton and Segmented retain their component-owned geometry.
+
+The [button study](/styleguide#button-glass) compares **A · Frosted Deck**, **B · Edge Light (installed)** and **C · Liquid Fill**, each in sm/md contexts on panel and ambient rain backgrounds. See [BUTTONS.md](./BUTTONS.md) for exact recipes, the winner decision, token inventory, contrast measurements and verification limits. Edge Light primary/ghost labels measure 11.73:1 / 16.81:1 on the panel; the conservative white-backdrop bounds are 5.83:1 / 6.85:1.

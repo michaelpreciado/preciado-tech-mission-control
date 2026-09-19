@@ -45,3 +45,61 @@
   .gridTwo,
   .chipGrid { grid-template-columns: 1fr; }
 }
+
+/* Standalone comparison blocks inherit the shared material mechanics. Only
+   A and C supply alternative material inputs; B uses production unchanged. */
+.glassIntro { max-width: 760px; }
+.glassTitle { margin: var(--pt-s-2) 0 var(--pt-s-3); font-size: var(--pt-fs-h2); color: var(--pt-text-high); letter-spacing: var(--pt-ls-tight); }
+.glassIntro p, .glassVerdict { margin: 0; color: var(--mc-ink-dim); font-size: var(--pt-fs-body); line-height: var(--pt-lh-body); }
+.conceptGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--pt-s-4); align-items: start; }
+.concept { min-width: 0; border-top: 1px solid var(--pt-btn-glass-line-base); }
+.conceptHead { min-height: 210px; padding: var(--pt-s-5) var(--pt-s-3); }
+.conceptIndex { font: 500 var(--pt-fs-xs)/var(--pt-lh-ui) var(--pt-font-mono); color: var(--mc-ink-dim); }
+.edge .conceptIndex { color: var(--pt-info-ink); }
+.conceptHead h3 { color: var(--pt-text-high); margin: var(--pt-s-3) 0 var(--pt-s-2); font-size: var(--pt-fs-h3); }
+.conceptHead p { margin: 0 0 var(--pt-s-3); color: var(--mc-ink-dim); font-size: var(--pt-fs-sm); line-height: var(--pt-lh-body); }
+.conceptDetail { font: var(--pt-fs-xs)/var(--pt-lh-ui) var(--pt-font-mono); color: var(--mc-ink-mute); }
+.panelStage, .rainStage { padding: var(--pt-s-4) var(--pt-s-3); border-radius: var(--pt-r-lg); }
+.panelStage { background: var(--pt-bg-terminal-solid); border: 1px solid var(--pt-btn-glass-line-base); }
+/* Transparent: uses the existing Shell MatrixRainBackground, no extra canvas,
+   opaque ancestor, opacity group or filter that would block the backdrop. */
+.rainStage { margin-top: var(--pt-s-4); background: transparent; border: 1px solid var(--pt-btn-glass-line-subtle); }
+.surfaceLabel, .matrixLabel { margin: 0 0 var(--pt-s-3); color: var(--mc-ink-dim); font: 500 var(--pt-fs-xs)/var(--pt-lh-ui) var(--pt-font-mono); }
+.matrixLabel { color: var(--mc-ink-mute); margin-top: var(--pt-s-4); }
+.glassMatrix + .glassMatrix { margin-top: var(--pt-s-4); padding-top: var(--pt-s-2); border-top: 1px solid var(--pt-btn-glass-line-subtle); }
+.glassControls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--pt-s-2); margin-bottom: var(--pt-s-3); }
+.glassControls > * { min-width: 0; }
+.iconSample { display: flex; align-items: center; gap: var(--pt-s-2); }
+.iconSample span { color: var(--mc-ink-dim); font-size: var(--pt-fs-xs); }
+.previewNotice { display: block; min-height: 1.5em; margin-top: var(--pt-s-2); color: var(--mc-ink-mute); font-size: var(--pt-fs-xs); }
+.wideGlassLink { display: flex; width: 100%; margin-top: var(--pt-s-4); }
+.glassVerdict { max-width: 900px; padding: var(--pt-s-4) 0; border-top: 1px solid var(--pt-btn-glass-line-base); }
+.glassVerdict strong { color: var(--pt-text-high); }
+.frost {
+  --specimen-glass-fill: var(--pt-btn-glass-frost-fill);
+  --specimen-glass-sheen: var(--pt-btn-glass-frost-sheen);
+  --specimen-glass-rim: var(--pt-btn-glass-frost-rim);
+  --specimen-glass-shadow: var(--pt-btn-glass-frost-shadow);
+  --specimen-glass-blur: var(--pt-btn-glass-frost-blur);
+}
+.liquid {
+  --specimen-glass-fill: var(--pt-btn-glass-liquid-fill);
+  --specimen-glass-sheen: var(--pt-btn-glass-liquid-sheen);
+  --specimen-glass-rim: var(--pt-btn-glass-liquid-rim);
+  --specimen-glass-blur: var(--pt-btn-glass-liquid-blur);
+  --specimen-primary-top: var(--pt-btn-glass-liquid-primary-top);
+  --specimen-primary-bottom: var(--pt-btn-glass-liquid-primary-bottom);
+  --specimen-glass-angle: 115deg;
+  --specimen-glass-size: 200% 100%;
+  --specimen-glass-hover-position: 100% 0;
+}
+@media (max-width: 1100px) {
+  .conceptGrid { grid-template-columns: 1fr; }
+  .concept { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--pt-s-3); }
+  .conceptHead { grid-column: 1 / -1; min-height: 0; }
+  .rainStage { margin-top: 0; }
+}
+@media (max-width: 560px) {
+  .concept { display: block; }
+  .rainStage { margin-top: var(--pt-s-4); }
+}
