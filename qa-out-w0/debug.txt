@@ -1,0 +1,12 @@
+CONSOLE ERR: Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+CONSOLE ERR: Refused to execute script from 'http://127.0.0.1:4176/_next/static/chunks/3ilx9425-vwaa.js' because its MIME type ('text/plain') is not executable, and strict M
+CONSOLE ERR: ChunkLoadError: Failed to load chunk /_next/static/chunks/3ilx9425-vwaa.js from module 36098
+    at http://127.0.0.1:4176/_next/static/chunks/turbopack-3gnpcjmo
+stage: undefined
+--- rows ---
+ button [30,441 172x45] boot-action :: [ RETRY CONNECTION → ]
+--- scrollers ---
+no row matching /All conversations/i
+stage after list tap: undefined
+--- rows in list stage ---
+ button [30,441 172x45] boot-action :: [ RETRY CONNECTION → ]

@@ -1,0 +1,9 @@
+thread: null
+--- ancestor chain ---
+{
+ "before": null,
+ "afterTouch": null,
+ "afterWheel": null,
+ "afterDirect": null,
+ "docY": 0
+}

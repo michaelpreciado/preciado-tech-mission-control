@@ -7,6 +7,7 @@ import './w2l.css'
 import { BootOverlay } from '@/components/boot/BootOverlay'
 import { Shell } from '@/components/Shell'
 import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister'
+import { ViewportSync } from '@/components/ViewportSync'
 import { getConfig } from '@/lib/config'
 import { buildAccentCss } from '@/lib/theme'
 import { buildTokenCss, buildFridayThemeCss, buildDensityCss } from '@/lib/tokens'
@@ -21,7 +22,11 @@ export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   title: `${config.appName} · Mission Control`,
   description: config.appTagline,
-  metadataBase: new URL('http://localhost:4176'),
+  // Absolute URLs in metadata (og:image, canonical) resolve against this. It is
+  // only used to build those URLs — set MC_PUBLIC_ORIGIN to the origin the
+  // dashboard is actually reached on (Tailscale name, LAN address, cloud host)
+  // so a phone opening /chat never gets localhost URLs. Unset = current default.
+  metadataBase: new URL(process.env.MC_PUBLIC_ORIGIN || 'http://localhost:4176'),
   icons: {
     icon: [{ url: '/icon-192.png', sizes: '192x192', type: 'image/png' }],
     apple: '/apple-touch-icon.png',
@@ -70,6 +75,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         {accentCss && <style id="friday-accent">{accentCss}</style>}
       </head>
       <body>
+        <ViewportSync />
         <Shell
           appName={config.appName}
           appTagline={config.appTagline}

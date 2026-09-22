@@ -16,6 +16,14 @@ export function configuredAgents() {
 }
 export type SendInput = { message: string; session: string; profile?: string; createSession?: boolean; resumeById?: boolean; model?: string; provider?: string }
 const textReply = (stdout: string, stderr: string) => stdout.trim() || stderr.trim() || '(no output)'
+const HERMES_NOTICE_RE = /^(?:Warning:|\[HERMES_HOME fallback\]|Session .* starting fresh\.?)/i
+function hermesReply(stdout: string, stderr: string): string {
+  const stripNotices = (text: string) => text.replace(/\u001b\[[0-?]*[ -\/]*[@-~]/g, '').split(/\r?\n/).reduce((lines, line) => {
+    if (lines.length === 0 && (!line.trim() || HERMES_NOTICE_RE.test(line.trim()))) return lines
+    return [...lines, line]
+  }, [] as string[]).join('\n').trim()
+  return stripNotices(stdout) || stripNotices(stderr) || '(no output)'
+}
 export const adapters = {
   hermes: {
     continuity: true,
@@ -34,7 +42,7 @@ export const adapters = {
         ? ['chat', '--continue', session, '--create-if-missing', '-Q', '--query-file', '-']
         : [resumeById ? '--resume' : '--continue', session, '-z', message, '--cli']),
     ],
-    parseReply: textReply,
+    parseReply: hermesReply,
     listSessions: async () => (await import('./conversations')).listConversations().filter(c => c.agent !== 'pi'),
   },
   pi: {

@@ -1,0 +1,6 @@
+event: start
+data: {"profile":"default","device":""}
+
+event: done
+data: {"ok":false,"error":"[HERMES_HOME fallback] HERMES_HOME is unset but active profile is 'jarvis'. Falling back to /home/mp/.hermes, which is the DEFAULT profile — not 'jarvis'. Any data this process writes will land in the wrong profile. The subprocess spawner should pass HERMES_HOME explicitly (see issue #18594).\nhermes -z: agent failed: session not found: does-not-exist-qa123"}
+

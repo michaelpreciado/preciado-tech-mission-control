@@ -25,6 +25,21 @@ function maskToken(token: string): string {
 type ActionResult = { ok: boolean; error?: string }
 type PostAction = (body: Record<string, unknown>) => Promise<ActionResult>
 
+type BotDisplayMetadata = { displayName: string; role: string }
+
+const BOT_DISPLAY_METADATA: Readonly<Record<string, BotDisplayMetadata>> = {
+  default: { displayName: 'Pepper', role: 'Legal' },
+  jarvis: { displayName: 'Jarvis', role: 'Orchestrator' },
+  friday: { displayName: 'Friday', role: 'System' },
+  'dum-e': { displayName: 'Debugger', role: 'QA' },
+  forge: { displayName: 'Forge', role: 'Lead Engineer' },
+  'tinker-engineer': { displayName: 'Tinker', role: 'Engineer' },
+  sage: { displayName: 'Sage', role: 'Librarian' },
+  scout: { displayName: 'Scout', role: 'Lead Assistant' },
+}
+
+const HIDDEN_BOT_PROFILES = new Set(['mctest', 'ui-probe', '.deleted'])
+
 function ConfirmAction({ label, actionLabel = label, word, disabled, danger, ready = true, children, onRun }: {
   label: string; actionLabel?: string; word?: string; disabled?: boolean; danger?: boolean; ready?: boolean
   children?: ReactNode; onRun: () => Promise<ActionResult>
@@ -130,7 +145,7 @@ function AddBot({ bots, onAction }: { bots: Bot[]; onAction: PostAction }) {
 }
 
 export function BotsPanel({ selected, onSelect, disabled, management, onManage, details }: {
-  selected: string; onSelect: (profile: string) => void; disabled: boolean
+  selected: string; onSelect: (profile: string, canonicalSessionId?: string | null) => void; disabled: boolean
   management: string | null; onManage: (name: string | null) => void; details?: ReactNode
 }) {
   const [data, setData] = useState<BotsSnapshot | null>(null)
@@ -168,21 +183,26 @@ export function BotsPanel({ selected, onSelect, disabled, management, onManage, 
     finally { actionBusy.current = false }
   }
   const bot = data?.bots.find(b => b.name === management)
+  const visibleBots = data?.bots.filter(b => !HIDDEN_BOT_PROFILES.has(b.name)) ?? []
   return <>
     <div className={styles.roster} aria-label="Bot roster">
       <div className={styles.sectionHead}><h2>Bots</h2><Button disabled={disabled} onClick={() => onManage('__add__')}>Add bot</Button></div>
       {error && <div role="alert" className={styles.notice}><p>{error}{data ? '. Showing the last received roster.' : ''}</p><Button onClick={() => setReload(v => v + 1)}>Retry</Button></div>}
       {!data && !error && <p className={styles.notice} role="status">Loading bots…</p>}
       <Button className={styles.allBots} active={!selected} disabled={disabled} onClick={() => onSelect('')}>All conversations <span aria-hidden="true">›</span></Button>
-      {data?.bots.map(b => <Row key={b.name} className={styles.botRow} title={<Button className={styles.botIdentity} active={selected === b.name} disabled={disabled} onClick={() => onSelect(b.name)} aria-label={`Conversations with ${b.name}, gateway ${b.gateway.status}`}>
-        <span className={styles.dot} role="img" data-status={b.gateway.status} title={`Gateway ${b.gateway.status}`} aria-label={`Gateway ${b.gateway.status}`} />
-        <span className={styles.botCopy}><strong>{b.name}</strong><span className={styles.botModel}>{b.model || 'No model'}</span><span className={styles.rowMeta}>{ago(b.lastActiveAt)}</span></span><span aria-hidden="true">›</span>
-      </Button>} trailing={<IconButton aria-label={`Manage ${b.name}`} disabled={disabled} onClick={() => onManage(b.name)}>⋯</IconButton>} />)}
-      {data?.bots.length === 0 && <p className={styles.notice}>No bot profiles found. Add a bot to get started.</p>}
+      {visibleBots.map(b => {
+        const display = BOT_DISPLAY_METADATA[b.name] ?? { displayName: b.name, role: '' }
+        const label = display.role ? `${display.displayName} (${display.role})` : display.displayName
+        return <Row key={b.name} className={styles.botRow} title={<Button className={styles.botIdentity} active={selected === b.name} disabled={disabled} onClick={() => onSelect(b.name, b.canonicalSessionId)} aria-label={`Conversations with ${label}, gateway ${b.gateway.status}`}>
+          <span className={styles.dot} role="img" data-status={b.gateway.status} title={`Gateway ${b.gateway.status}`} aria-label={`Gateway ${b.gateway.status}`} />
+          <span className={styles.botCopy}><strong>{display.displayName}</strong>{display.role && <span className={styles.rowMeta}>({display.role})</span>}<span className={styles.botModel}>{b.model || 'No model'}</span><span className={styles.rowMeta}>{ago(b.lastActiveAt)}</span></span><span aria-hidden="true">›</span>
+        </Button>} trailing={<IconButton aria-label={`Manage ${b.name}`} disabled={disabled} onClick={() => onManage(b.name)}>⋯</IconButton>} />
+      })}
+      {data && visibleBots.length === 0 && <p className={styles.notice}>No bot profiles found. Add a bot to get started.</p>}
     </div>
     <Sheet open={management !== null} onClose={close} title={management === '__add__' ? 'Add bot' : `Manage ${management || 'conversation'}`}>
       <div className={styles.management}>
-        {management === '__add__' ? <AddBot bots={data?.bots || []} onAction={postAction} /> : <>
+        {management === '__add__' ? <AddBot bots={visibleBots} onAction={postAction} /> : <>
           {bot && <BotDetails key={bot.name} bot={bot} bots={data?.bots || []} onAction={postAction} />}
           {!bot && <p className={styles.muted}>{error || 'No bot management data available for this profile.'}</p>}
           {details}

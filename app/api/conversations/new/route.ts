@@ -8,6 +8,8 @@ const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
 
 const MAX_MESSAGE_LEN = 8000
 const PROFILE_RE = /^[a-zA-Z0-9][a-zA-Z0-9\/_-]{0,63}$/
+const MODEL_RE = /^[A-Za-z0-9][A-Za-z0-9._:/-]{1,119}$/
+const PROVIDER_RE = /^[a-z0-9][a-z0-9._-]{1,39}$/
 
 function isAuthorized(req: NextRequest): boolean {
   const secret = process.env.INTERNAL_API_SECRET
@@ -33,7 +35,7 @@ export async function POST(req: NextRequest) {
   if (!rate(req)) return NextResponse.json({ error: 'rate limited' }, { status: 429 })
   if (!isAuthorized(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
-  let body: { message?: unknown; profile?: unknown; device?: unknown }
+  let body: { message?: unknown; profile?: unknown; device?: unknown; model?: unknown; provider?: unknown }
   try { body = await req.json() } catch { return NextResponse.json({ error: 'invalid JSON body' }, { status: 400 }) }
 
   const message = typeof body.message === 'string' ? body.message.trim() : ''
@@ -41,6 +43,10 @@ export async function POST(req: NextRequest) {
   if (message.length > MAX_MESSAGE_LEN) return NextResponse.json({ error: `message too long (max ${MAX_MESSAGE_LEN})` }, { status: 400 })
   const profile = typeof body.profile === 'string' && PROFILE_RE.test(body.profile) ? body.profile : 'default'
   const device = typeof body.device === 'string' ? body.device : ''
+  const model = typeof body.model === 'string' ? body.model.trim() : ''
+  const provider = typeof body.provider === 'string' ? body.provider.trim().toLowerCase() : ''
+  if (model && !MODEL_RE.test(model)) return NextResponse.json({ error: 'model id has an unexpected character' }, { status: 400 })
+  if (provider && !PROVIDER_RE.test(provider)) return NextResponse.json({ error: 'provider id has an unexpected character' }, { status: 400 })
 
   if (!checkAvailable(device)) {
     return NextResponse.json({ error: `the hermes agent CLI is not available${device ? ` on ${device}` : ''}` }, { status: 503 })
@@ -61,7 +67,7 @@ export async function POST(req: NextRequest) {
       }, 5000)
 
       try {
-        const result = await initiateConversation(message, { profile, device })
+        const result = await initiateConversation(message, { profile, device, model: model || undefined, provider: provider || undefined })
         if (!result.ok) {
           controller.enqueue(enc('done', { ok: false, error: result.error }))
         } else {

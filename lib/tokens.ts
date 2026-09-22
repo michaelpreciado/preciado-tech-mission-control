@@ -116,14 +116,16 @@ export const DENSITY = {
   expanded: { py: '24px', px: '28px', gap: '12px' },
 } as const
 
-/* Button glass material only. Dodger is the sole decorative hue; red/green
-   retain their existing destructive/confirmation meaning. */
+/* Blue Matrix Glass button material. Keep the fill translucent and the rim
+   restrained so the surface reads as glass without becoming a glossy card.
+   Dodger is the sole decorative hue; red/green retain their existing
+   destructive/confirmation meaning. */
 export const BUTTON_GLASS = {
-  'fill': 'rgba(10,12,14,0.72)',
-  'fill-hover': 'rgba(10,12,14,0.84)',
-  'fill-disabled': 'rgba(10,12,14,0.88)',
-  'neutral-top': 'rgba(190,215,255,0.045)',
-  'neutral-bottom': 'rgba(190,215,255,0.01)',
+  'fill': 'rgba(10,12,14,0.68)',
+  'fill-hover': 'rgba(10,12,14,0.78)',
+  'fill-disabled': 'rgba(10,12,14,0.84)',
+  'neutral-top': 'rgba(190,215,255,0.05)',
+  'neutral-bottom': 'rgba(190,215,255,0.012)',
   'primary-top': 'rgba(30,144,255,0.30)',
   'primary-bottom': 'rgba(30,144,255,0.12)',
   'danger-top': 'rgba(255,95,87,0.18)',
@@ -134,15 +136,15 @@ export const BUTTON_GLASS = {
   'ink-danger': '#ffd4d1',
   'ink-confirm': '#ccf5d2',
   'ink-disabled': '#a5afbd',
-  'line-subtle': 'rgba(255,255,255,0.06)',
-  'line-base': 'rgba(255,255,255,0.10)',
+  'line-subtle': 'rgba(255,255,255,0.08)',
+  'line-base': 'rgba(255,255,255,0.12)',
   'line-strong': 'rgba(255,255,255,0.18)',
   'rim': 'inset 0 1px 0 rgba(190,215,255,0.18), inset 0 -1px 0 rgba(255,255,255,0.04)',
   'rim-lit': 'inset 0 1px 0 rgba(190,215,255,0.32), inset 0 -1px 0 rgba(255,255,255,0.06)',
-  'shadow': '0 6px 16px rgba(0,0,0,0.24)',
-  'bloom': '0 0 30px rgba(30,144,255,0.07)',
+  'shadow': '0 5px 14px rgba(0,0,0,0.22)',
+  'bloom': '0 0 16px rgba(30,144,255,0.08)',
   'press-shadow': 'inset 0 2px 5px rgba(0,0,0,0.24)',
-  'blur': 'blur(12px) saturate(120%)',
+  'blur': 'blur(10px) saturate(115%)',
   'focus': '#1E90FF',
   'ease': 'cubic-bezier(0.4,0,0.2,1)',
   /* Comparison-only materials; the installed recipe is Edge Light. */

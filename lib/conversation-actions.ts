@@ -15,9 +15,13 @@ import { execFile, execFileSync } from 'node:child_process'
 import { promisify } from 'node:util'
 import { getConfig } from './config'
 import { logger } from './logger'
+import { hermesDir } from './collectors/bots'
+import { sanitizeCliFailure, sanitizeServerError } from './server-error-sanitizer'
 import type { FridayChatRemote } from './config'
 
 const execFileAsync = promisify(execFile)
+
+export type ModelOverride = { model?: string; provider?: string }
 
 export type ActionOutcome =
   | { ok: true; result: string; sessionId?: string }
@@ -36,24 +40,36 @@ function remoteFor(device: string): FridayChatRemote | null {
 }
 
 /** Build argv for the hermes CLI invocation, local or via ssh. */
-function build(
+export function build(
   args: string[],
-  opts: { device?: string; profile?: string; timeoutMs?: number },
+  opts: { device?: string; profile?: string; timeoutMs?: number } & ModelOverride,
 ): { argv: string[]; opts: object; remote: boolean } {
   const remote = remoteFor(opts.device ?? '')
   const profileArgs = opts.profile && opts.profile !== 'default' ? ['--profile', opts.profile] : []
+  const modelArgs = [
+    ...(opts.model ? ['-m', opts.model] : []),
+    ...(opts.provider ? ['--provider', opts.provider] : []),
+  ]
   const timeoutMs = opts.timeoutMs ?? 240_000
 
   if (!remote) {
+    const root = hermesDir()
+    const hermesHome = opts.profile && opts.profile !== 'default' ? path.join(root, 'profiles', opts.profile) : root
     return {
-      argv: ['hermes', ...profileArgs, ...args],
-      opts: { timeout: timeoutMs, stdio: 'pipe', maxBuffer: 16 * 1024 * 1024, cwd: process.cwd() },
+      argv: ['hermes', ...profileArgs, ...modelArgs, ...args],
+      opts: {
+        timeout: timeoutMs,
+        stdio: 'pipe',
+        maxBuffer: 16 * 1024 * 1024,
+        cwd: process.cwd(),
+        env: { ...process.env, HERMES_HOME: hermesHome },
+      },
       remote: false,
     }
   }
 
   const keyFile = expandHome(remote.keyFile ?? '~/.ssh/id_ed25519')
-  const remoteCmd = ['hermes', ...profileArgs, ...args].map(a => `'${String(a).replace(/'/g, `'\\''`)}'`).join(' ')
+  const remoteCmd = ['hermes', ...profileArgs, ...modelArgs, ...args].map(a => `'${String(a).replace(/'/g, `'\\''`)}'`).join(' ')
   return {
     argv: ['ssh', '-o', 'BatchMode=yes', '-o', 'StrictHostKeyChecking=accept-new',
       '-o', 'ConnectTimeout=6', '-i', keyFile,
@@ -65,7 +81,7 @@ function build(
 
 async function run(
   args: string[],
-  opts: { device?: string; profile?: string; timeoutMs?: number },
+  opts: { device?: string; profile?: string; timeoutMs?: number } & ModelOverride,
 ): Promise<ActionOutcome> {
   const { argv, opts: execOpts } = build(args, opts)
   try {
@@ -77,14 +93,14 @@ async function run(
     // On timeout the agent may already have written the reply to stdout before
     // dying — surface that text over a generic error when present.
     const stdout = e.stdout ? e.stdout.toString().trim() : ''
-    const detail = (e.stderr ? e.stderr.toString() : '') || stdout || e.message
+    const detail = sanitizeCliFailure(e.stderr, e.stdout, e.message)
     logger.warn('conversation-action', (e.killed ? '[timeout] ' : '') + detail.slice(0, 300))
     if (e.killed || e.timedOut) {
       return stdout
         ? { ok: true, result: stdout }
-        : { ok: false, error: `agent run exceeded the time limit and was stopped` }
+        : { ok: false, error: sanitizeServerError('agent run exceeded the time limit and was stopped') }
     }
-    return { ok: false, error: detail.trim().slice(0, 500) || 'agent run failed' }
+    return { ok: false, error: sanitizeServerError(detail, 500) || 'agent run failed' }
   }
 }
 
@@ -92,7 +108,7 @@ async function run(
 export async function continueConversation(
   sessionId: string,
   message: string,
-  opts: { profile?: string; device?: string },
+  opts: { profile?: string; device?: string } & ModelOverride,
 ): Promise<ActionOutcome> {
   return run(['--resume', sessionId, '-z', message, '--cli'], opts)
 }
@@ -100,7 +116,7 @@ export async function continueConversation(
 /** Initiate a brand-new conversation on a given profile/device. */
 export async function initiateConversation(
   message: string,
-  opts: { profile: string; device?: string },
+  opts: { profile: string; device?: string } & ModelOverride,
 ): Promise<ActionOutcome> {
   return run(['-z', message, '--cli'], opts)
 }

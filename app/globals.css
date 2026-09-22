@@ -18,22 +18,24 @@
 :root {
   --ob-bg-0: #000002;
   --ob-bg-1: #010407;
-  --ob-cyan: #1E90FF;
-  --ob-peak: #DCEBFF;
-  --ob-hierarchy: #9BC8FF;
+  /* Blue Matrix Glass (0800 Preciado Tech/Blue Matrix Glass Theme.md):
+     accent #00d4ff, void background, cyan glass, neon glow. */
+  --ob-cyan: #00d4ff;
+  --ob-peak: #E9FBFF;
+  --ob-hierarchy: #8FD4FF;
   --ob-sky: #38BDF8;
   --ob-azure: #0EA5E9;
-  --ob-text: #F4F7FA;
-  --ob-text-2: #B8C4CE;
-  --ob-text-3: #76889A;
-  --ob-text-4: #506473;
+  --ob-text: #EAF6FF;
+  --ob-text-2: #B8D4E8;
+  --ob-text-3: #7E9FBC;
+  --ob-text-4: #50647A;
   --ob-success: #6EE7B7;
   --ob-warn: #FCD34D;
   --ob-danger: #F87171;
-  --ob-glass: rgba(10,12,15,.9);
-  --ob-surface-highlight: inset 0 1px rgba(255,255,255,.05);
-  --ob-page-ambience: radial-gradient(ellipse 80% 60% at 50% 30%, rgba(30,144,255,.07), transparent 65%), radial-gradient(ellipse 60% 40% at 50% 105%, rgba(30,144,255,.04), transparent 60%);
-  --ob-border: rgba(30,144,255,.14);
+  --ob-glass: rgba(10,20,34,.78);
+  --ob-surface-highlight: inset 0 1px rgba(140,220,255,.06);
+  --ob-page-ambience: radial-gradient(ellipse 80% 60% at 50% 30%, rgba(0,212,255,.08), transparent 65%), radial-gradient(ellipse 60% 40% at 50% 105%, rgba(0,212,255,.05), transparent 60%);
+  --ob-border: rgba(0,212,255,.16);
   --ob-rain-speed: 1;
 }
 
@@ -518,14 +520,14 @@ body {
      fixed-unit shell instead of a collapsed grid; dvh wins where supported.
      Written as a @supports pair — a bare `height:100vh;height:100dvh`
      sequence gets deduped to dvh-only by the CSS minifier in builds. */
-  height: 100vh;
-  min-height: 100vh;
+  height: var(--mc-visual-height, 100vh);
+  min-height: var(--mc-visual-height, 100vh);
   overflow: hidden;
 }
 @supports (height: 100dvh) {
   .mc-shell {
-    height: 100dvh;
-    min-height: 100dvh;
+    height: var(--mc-visual-height, 100dvh);
+    min-height: var(--mc-visual-height, 100dvh);
   }
 }
 
@@ -1158,46 +1160,58 @@ body {
    durations/easings. */
 .mc-btn {
   display: inline-flex;
+  box-sizing: border-box;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border: 1px solid transparent;
+  gap: 8px;
+  min-height: 44px;
+  max-width: 100%;
+  min-width: 0;
+  padding: 10px 18px;
+  border: 1px solid var(--pt-btn-glass-line-base);
   border-radius: 999px;
-  background: rgba(118,118,128,.24);
-  color: var(--pt-text);
+  background-color: var(--pt-btn-glass-fill);
+  color: var(--pt-btn-glass-ink);
   font-family: var(--pt-font-sans);
-  font-size: 10px;
+  font-size: 12px;
+  line-height: 1.25;
   letter-spacing: 0;
   text-transform: none;
   text-decoration: none;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
   cursor: pointer;
+  box-shadow: var(--pt-btn-glass-rim), var(--pt-btn-glass-shadow);
+  backdrop-filter: var(--pt-btn-glass-blur);
   transition:
     transform var(--pt-dur-micro) var(--pt-ease-exit),
     box-shadow var(--pt-dur-std) var(--pt-ease-enter),
     border-color var(--pt-dur-std) var(--pt-ease-enter),
-    background var(--pt-dur-std) var(--pt-ease-enter),
-    color var(--pt-dur-std) var(--pt-ease-enter); box-shadow: none; }
-.mc-btn:hover { color: var(--pt-neon-bright); border-color: var(--pt-border-strong); box-shadow: var(--pt-glow-sm); }
+    background-color var(--pt-dur-std) var(--pt-ease-enter),
+    color var(--pt-dur-std) var(--pt-ease-enter);
+}
+.mc-btn:hover { color: var(--pt-neon-bright); border-color: var(--pt-btn-glass-line-strong); box-shadow: var(--pt-btn-glass-rim-lit), var(--pt-btn-glass-shadow), var(--pt-btn-glass-bloom); }
+.mc-btn:focus-visible { outline: 2px solid var(--pt-btn-glass-focus); outline-offset: 3px; border-color: var(--pt-btn-glass-line-strong); }
 .mc-btn:active { transform: translateY(1px); }
 .mc-btn:disabled,
 .mc-btn[aria-disabled="true"] { opacity: 0.45; cursor: default; pointer-events: none; }
 
 /* Primary — the one obvious next step (save, complete, send, create). */
-.mc-btn-primary { background: var(--pt-neon); color: #08010c; border-color: var(--pt-neon); text-shadow: none; }
-.mc-btn-primary:hover { background: var(--pt-neon-bright); border-color: var(--pt-neon-bright); box-shadow: var(--pt-glow-sm); }
+.mc-btn-primary { background-color: var(--pt-btn-glass-fill); color: var(--pt-btn-glass-ink); border-color: var(--pt-btn-glass-line-base); text-shadow: none; }
+.mc-btn-primary:hover { background-color: var(--pt-btn-glass-fill-hover); border-color: var(--pt-btn-glass-line-strong); box-shadow: var(--pt-btn-glass-rim-lit), var(--pt-btn-glass-shadow), var(--pt-btn-glass-bloom); }
 
 /* Ghost — default. Secondary actions, refresh, toggles. */
-.mc-btn-ghost.is-on { color: var(--pt-neon-bright); border-color: var(--pt-neon); box-shadow: var(--pt-glow-sm); }
+.mc-btn-ghost.is-on { color: var(--pt-neon-bright); border-color: var(--pt-btn-glass-line-strong); box-shadow: var(--pt-btn-glass-rim-lit), var(--pt-btn-glass-shadow); }
 
 /* Confirm — an affirming inline action that isn't the page's primary CTA
    (e.g. unblock). Green, same intensity language as GLOW.sm. */
-.mc-btn-confirm { color: #28c840; border-color: rgba(40,200,64,0.6); }
-.mc-btn-confirm:hover { color: #28c840; border-color: rgba(40,200,64,0.8); box-shadow: 0 0 6px rgba(40,200,64,0.45); }
+.mc-btn-confirm { color: var(--pt-btn-glass-ink-confirm); border-color: var(--pt-btn-glass-line-base); }
+.mc-btn-confirm:hover { color: var(--pt-btn-glass-ink-confirm); border-color: var(--pt-btn-glass-line-strong); box-shadow: var(--pt-btn-glass-rim-lit), var(--pt-btn-glass-shadow), var(--pt-btn-glass-bloom); }
 
 /* Danger — destructive/irreversible. Red is always semantic, never decorative. */
-.mc-btn-danger { color: #ff8a83; border-color: rgba(255,95,87,0.6); }
-.mc-btn-danger:hover { color: #ff8a83; border-color: rgba(255,95,87,0.8); box-shadow: 0 0 6px rgba(255,95,87,0.45); }
+.mc-btn-danger { color: var(--pt-btn-glass-ink-danger); border-color: var(--pt-btn-glass-line-base); }
+.mc-btn-danger:hover { color: var(--pt-btn-glass-ink-danger); border-color: var(--pt-btn-glass-line-strong); box-shadow: var(--pt-btn-glass-rim-lit), var(--pt-btn-glass-shadow), var(--pt-btn-glass-bloom); }
 
 /* Loading — inline spinner, carried forward from .mc-refresh-btn.spin svg. */
 .mc-btn-spinner { display: inline-flex; line-height: 1; }
@@ -8516,8 +8530,8 @@ body:has([role="dialog"], dialog[open]) .boot-overlay { visibility: hidden; }
   --ob-dur: 250ms;
   --ob-radius-control: 10px;
   --ob-radius-card: 12px;
-  --ob-border-strong: rgba(30, 144, 255, .52);
-  --ob-glow: none;
+  --ob-border-strong: rgba(0, 212, 255, .52);
+  --ob-glow: 0 0 12px rgba(0, 212, 255, .30);
 }
 
 /* Shared control language — J1 "Apple on the Bridge": filled capsules,
@@ -8525,58 +8539,52 @@ body:has([role="dialog"], dialog[open]) .boot-overlay { visibility: hidden; }
    remains on the shared Button primitive for compatibility; `.ob-btn` is
    the canonical surface. */
 .ob-btn {
-  --btn-h: 40px;
+  --btn-h: 44px;
   display: inline-flex;
   box-sizing: border-box;
   align-items: center;
   justify-content: center;
-  gap: 7px;
+  gap: 8px;
   min-height: var(--btn-h);
-  padding: 0 18px;
-  border: 1px solid transparent;
+  max-width: 100%;
+  min-width: 0;
+  padding: 10px 18px;
+  border: 1px solid var(--pt-btn-glass-line-base);
   border-radius: 999px;
-  background: rgba(118, 118, 128, .24);
-  color: #EAEDF2;
-  font: 590 15px/1.4 var(--pt-font-sans);
+  background-color: var(--pt-btn-glass-fill);
+  color: var(--pt-btn-glass-ink);
+  font: 500 12px/1.25 var(--pt-font-sans);
   letter-spacing: 0;
   text-transform: none;
   text-decoration: none;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  box-shadow: var(--pt-btn-glass-rim), var(--pt-btn-glass-shadow);
+  backdrop-filter: var(--pt-btn-glass-blur);
   cursor: pointer;
-  transition: background .15s ease, color .15s ease, transform .12s ease, opacity .15s ease;
+  transition: background-color var(--pt-dur-std) var(--pt-btn-glass-ease),
+    border-color var(--pt-dur-std) var(--pt-btn-glass-ease),
+    box-shadow var(--pt-dur-std) var(--pt-btn-glass-ease),
+    color var(--pt-dur-std) var(--pt-btn-glass-ease),
+    transform var(--pt-dur-micro) var(--pt-ease-exit);
 }
 .ob-btn::before { content: none; }
-.ob-btn:hover { background: rgba(118, 118, 128, .36); color: #fff; }
+.ob-btn:hover { background-color: var(--pt-btn-glass-fill-hover); color: var(--pt-neon-bright); border-color: var(--pt-btn-glass-line-strong); box-shadow: var(--pt-btn-glass-rim-lit), var(--pt-btn-glass-shadow), var(--pt-btn-glass-bloom); }
 .ob-btn:active { transform: scale(.97); opacity: .92; }
-.ob-btn:focus-visible { outline: 3px solid rgba(30, 144, 255, .35); outline-offset: 1px; }
+.ob-btn:focus-visible { outline: 2px solid var(--pt-btn-glass-focus); outline-offset: 3px; }
 .ob-btn:disabled, .ob-btn[aria-disabled='true'] { cursor: not-allowed; opacity: .4; pointer-events: none; }
-.ob-btn-primary {
-  background: #1E90FF;
-  color: #fff;
-  font-weight: 600;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, .3);
-}
+.ob-btn-primary { background-color: var(--pt-btn-glass-fill); color: var(--pt-btn-glass-ink); border-color: var(--pt-btn-glass-line-base); font-weight: 600; }
 .ob-btn-primary::after { content: none; }
-.ob-btn-primary:hover { background: #38A0FF; color: #fff; }
-.ob-btn-ghost {
-  background: transparent;
-  border-color: rgba(30, 144, 255, .55);
-  color: #6BA8FF;
-}
-.ob-btn-ghost:hover { background: rgba(30, 144, 255, .12); color: #8FC5FF; }
-.ob-btn-danger {
-  background: rgba(255, 69, 58, .16);
-  border-color: transparent;
-  color: #FF6961;
-}
-.ob-btn-danger:hover { background: rgba(255, 69, 58, .26); color: #FF8A8A; }
-.ob-btn-confirm {
-  background: rgba(30, 144, 255, .14);
-  border-color: transparent;
-  color: #8FC5FF;
-}
-.ob-btn-confirm:hover { background: rgba(30, 144, 255, .24); color: #A9D4FF; }
-.ob-btn-sm { --btn-h: 32px; padding: 0 13px; font-size: 13px; }
-.ob-btn-lg { --btn-h: 48px; padding: 0 22px; font-size: 16px; }
+.ob-btn-primary:hover { background-color: var(--pt-btn-glass-fill-hover); color: var(--pt-btn-glass-ink); }
+.ob-btn-ghost { background-color: var(--pt-btn-glass-fill); border-color: var(--pt-btn-glass-line-base); color: var(--pt-btn-glass-ink); }
+.ob-btn-ghost:hover { background-color: var(--pt-btn-glass-fill-hover); color: var(--pt-neon-bright); }
+.ob-btn-danger { background-color: var(--pt-btn-glass-fill); border-color: var(--pt-btn-glass-line-base); color: var(--pt-btn-glass-ink-danger); }
+.ob-btn-danger:hover { background-color: var(--pt-btn-glass-fill-hover); color: var(--pt-btn-glass-ink-danger); }
+.ob-btn-confirm { background-color: var(--pt-btn-glass-fill); border-color: var(--pt-btn-glass-line-base); color: var(--pt-btn-glass-ink-confirm); }
+.ob-btn-confirm:hover { background-color: var(--pt-btn-glass-fill-hover); color: var(--pt-btn-glass-ink-confirm); }
+.ob-btn-sm { --btn-h: 44px; padding: 10px 14px; font-size: 11px; }
+.ob-btn-lg { --btn-h: 48px; padding: 11px 22px; font-size: 12px; }
 
 /* Shared glass surfaces and the standard route header. */
 .ob-card {
@@ -9468,5 +9476,35 @@ html:root body :is(
     line-height: var(--pt-lh-snug);
     letter-spacing: 0;
     white-space: nowrap;
+  }
+}
+
+/* ── Phone ergonomics: roomier controls (owner feedback 2026-09-21) ─────
+   At phone widths buttons collapsed to a cramped 6–8px pad (and the cockpit
+   stat pills to 4px/8px), which read as squeezed. Give every control a
+   comfortable pad and a ≥44px target; the cockpit strip keeps its single-line
+   scroll but its pills regain horizontal breathing room. Selectors are
+   scoped through `html body` so they outrank both the base `.mc-btn` and the
+   CHAT console's `.console .mc-btn` module rule. */
+@media (max-width: 820px) {
+  html body :is(.mc-main, .mc-side) :is(.mc-btn, .ob-btn) {
+    min-height: 44px;
+    padding: 10px 18px;
+  }
+  html body :is(.mc-main, .mc-side) [class*="segmented"] > button[role="radio"] {
+    min-height: 40px;
+    padding: 8px 14px;
+  }
+  html body .mc-main .mc-stats > .mc-btn {
+    min-height: 36px;
+    height: auto;
+    padding: 6px 12px;
+  }
+  html body .mc-main .mc-stat {
+    padding: 6px 12px;
+  }
+  html body .mc-main [class*="chip"] {
+    min-height: 32px;
+    padding: 6px 14px;
   }
 }

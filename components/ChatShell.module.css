@@ -1,0 +1,219 @@
+/* Hermes desktop shell: the surface is glass, controls stay flat. */
+.shell {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  color: var(--ob-text);
+  font-family: var(--pt-font-sans);
+}
+
+.shell :global(button),
+.shell :global(input),
+.shell :global(textarea),
+.shell :global(select) {
+  font-family: var(--pt-font-sans);
+  letter-spacing: normal;
+  text-shadow: none;
+}
+
+.shell :global(label) { font: 10px/1.3 var(--pt-font-mono); letter-spacing: .08em; color: var(--ob-text-3); }
+
+.shell :global(.mc-btn) {
+  min-height: 44px;
+  border: 1px solid var(--ob-border);
+  border-radius: var(--ob-radius-card);
+  background: var(--ob-glass);
+  color: var(--ob-text-2);
+  box-shadow: none;
+  transition: border-color var(--ob-dur-fast) var(--ob-ease), background var(--ob-dur-fast) var(--ob-ease), color var(--ob-dur-fast) var(--ob-ease);
+}
+
+.shell :global(.mc-btn-primary) {
+  border-color: var(--ob-cyan);
+  background: var(--ob-cyan);
+  color: var(--ob-text);
+}
+
+.shell :global(.mc-btn:hover:not(:disabled)),
+.shell :global(.mc-btn.is-on) {
+  border-color: var(--ob-border-strong);
+  background: var(--ob-glass);
+  color: var(--ob-text);
+  box-shadow: none;
+  filter: none;
+}
+
+.shell :global(.mc-btn-primary:hover:not(:disabled)) {
+  background: var(--ob-cyan);
+  color: var(--ob-text);
+}
+
+.shell :global(.mc-btn):focus-visible,
+.shell :global(input):focus-visible,
+.shell :global(textarea):focus-visible,
+.shell :global(select):focus-visible {
+  outline: 2px solid var(--ob-cyan);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+.shell :global(input),
+.shell :global(textarea),
+.shell :global(select) {
+  min-height: 44px;
+  border: 1px solid var(--ob-border);
+  border-radius: var(--ob-radius-card);
+  background: var(--ob-glass);
+  color: var(--ob-text);
+}
+
+.shell :global(input)::placeholder,
+.shell :global(textarea)::placeholder { color: var(--ob-text-3); }
+
+.sidebar,
+.thread {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--ob-border);
+  border-radius: var(--ob-radius-card);
+  background: var(--ob-glass);
+  box-shadow: var(--ob-glow);
+}
+
+.sidebar { display: flex; flex-direction: column; }
+.sidebarTabs { display: flex; flex: 0 0 auto; gap: 4px; padding: 8px; border-bottom: 1px solid var(--ob-border); }
+.sidebarTab { display: inline-flex; flex: 1; align-items: center; justify-content: center; gap: 8px; padding: 8px 10px; font: 600 10px/1 var(--pt-font-mono); letter-spacing: .12em; }
+.sidebarTabIcon { color: var(--ob-cyan); font-size: 14px; line-height: 1; }
+.sidebarTab[aria-pressed='true'] { border-color: var(--ob-border-strong); color: var(--ob-text); }
+.railClose { display: none; }
+.sidebarBody { display: flex; flex: 1; min-width: 0; min-height: 0; overflow: hidden; }
+.botPane, .sessionPane { flex: 1; min-width: 0; min-height: 0; max-height: none; border: 0; overflow: hidden; }
+.botPane { overflow-y: auto; overscroll-behavior-y: auto; }
+.terminalLabel { display: block; color: var(--ob-cyan); font: 600 10px/1.3 var(--pt-font-mono); letter-spacing: .12em; text-transform: lowercase; }
+.botPane > .terminalLabel { padding: 14px 14px 0; }
+.botPane :global([class*='roster']) { padding-top: 4px; }
+.botPane :global([class*='sectionHead']) { padding: 10px 14px; }
+.botPane :global([class*='sectionHead'] h2) { color: var(--ob-text); font: 600 15px var(--pt-font-sans); }
+.botPane :global([class*='botRow']) { margin: 2px 8px; }
+.botPane :global([class*='botIdentity']) { padding: 10px; border: 1px solid transparent; border-radius: var(--ob-radius-card); }
+.botPane :global([class*='botIdentity'][aria-pressed='true']) { border-color: var(--ob-border-strong); background: var(--ob-glass); box-shadow: inset 2px 0 var(--ob-cyan); }
+.botPane :global([class*='botModel']), .botPane :global([class*='rowMeta']) { color: var(--ob-text-3); font: 10px/1.35 var(--pt-font-mono); }
+.botPane :global([class*='dot'][data-status='running']) { background: var(--ob-cyan); }
+
+.paneHead { padding: 14px; align-items: flex-end; }
+.paneHead h2 { margin-top: 5px; color: var(--ob-text); font-size: 16px; }
+.paneHead > div { min-width: 0; }
+.searchBar { padding: 0 14px 12px; }
+.searchBar :global(input) { min-width: 0; flex: 1; font: 12px var(--pt-font-mono); }
+.searchBar :global(button), .sessionPane :global([class*='filters']) :global(button) { font: 10px var(--pt-font-mono); }
+.sessionPane :global(.AgentConsole_filters) { max-height: 45%; }
+.sessionPane :global([class*='filters']) { border-top: 1px solid var(--ob-border); }
+.sessionPane :global([class*='conversationList']) { padding: 0 8px 12px; overflow-y: auto; overscroll-behavior-y: auto; }
+.sessionRow { margin: 2px 0; border: 0; }
+.sessionButton { gap: 5px; padding: 11px 12px; border: 1px solid transparent !important; border-radius: var(--ob-radius-card) !important; }
+.sessionButton[aria-pressed='true'] { border-color: var(--ob-border-strong) !important; background: var(--ob-glass) !important; box-shadow: inset 2px 0 var(--ob-cyan) !important; }
+.sessionButton:hover:not(:disabled) { border-color: var(--ob-border) !important; background: var(--ob-glass) !important; }
+.sessionButton strong { color: var(--ob-text); font-size: var(--chat-fs-sm, 13px); font-weight: 600; }
+.rowMarker { width: 10px; flex: 0 0 10px; color: var(--ob-cyan); font: 600 12px var(--pt-font-mono); }
+.sessionButton :global([class*='rowTop']) { display: flex; align-items: baseline; min-width: 0; }
+.sessionButton :global(.AgentConsole_rowMeta),
+.sessionButton :global([class*='rowMeta']) { color: var(--ob-text-3); font: 10px/1.35 var(--pt-font-mono); }
+.sessionButton :global([class*='rowTop'] [class*='rowMeta']) { margin-left: auto; text-align: right; }
+.sessionButton :global([class*='preview']) { color: var(--ob-text-2); font-size: 12px; line-height: 1.45; }
+
+.thread { display: flex; flex-direction: column; }
+.threadHeader { flex: 0 0 auto; border-bottom: 1px solid var(--ob-border); }
+.threadHeader h2 { color: var(--ob-text); font-size: var(--chat-fs-h2, 17px); }
+.identityLine { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; margin-top: 6px; color: var(--ob-text-2); font: var(--chat-fs-xs, 11px) var(--pt-font-mono); }
+.avatarDot { width: 8px; height: 8px; flex: 0 0 8px; border: 1px solid var(--ob-cyan); border-radius: 50%; background: var(--ob-cyan); }
+/* The header dot is the bot's live state: cyan while it is answering,
+   green when it is simply available, dimmed when the agent is down. */
+.avatarDot[data-status='busy'] { animation: shellPulse 1.4s var(--ob-ease) infinite; box-shadow: var(--ob-glow); }
+.avatarDot[data-status='stopped'] { border-color: var(--ob-border-strong); background: transparent; }
+@keyframes shellPulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+.modelPicker { display: inline-flex; min-width: 0; max-width: min(42vw, 260px); min-height: 30px !important; align-items: center; padding: 4px 26px 4px 8px !important; border: 1px solid var(--ob-border) !important; border-radius: var(--ob-radius-card) !important; background: var(--ob-glass) !important; color: var(--ob-cyan) !important; font: 10px var(--pt-font-mono) !important; }
+.modelPicker:disabled { cursor: not-allowed; opacity: .7; }
+.messageStream { padding: 18px 22px; overscroll-behavior-y: auto; }
+.messageCard { max-width: min(68ch, 92%); padding: 12px 14px; border: 1px solid var(--ob-border); border-radius: var(--ob-radius-card); font-size: var(--chat-fs-body, 15px); }
+.messageCard :global(.mc-markdown) { color: var(--ob-text); }
+.messageCard :global(pre) { border-color: var(--ob-border); background: var(--ob-glass); }
+.messageCard :global([class*='messageMeta']) { color: var(--ob-text-3); font: var(--chat-fs-xs, 10px) var(--pt-font-mono); }
+.toolChip { min-height: 32px !important; padding: 5px 9px !important; border-radius: var(--ob-radius-card) !important; color: var(--ob-cyan) !important; font: 10px var(--pt-font-mono) !important; }
+
+.latestJump { align-self: center; min-height: 36px !important; padding: 6px 12px !important; color: var(--ob-cyan) !important; font: 10px var(--pt-font-mono) !important; }
+.composerBar { padding: 10px 14px max(14px, env(safe-area-inset-bottom)); border-top: 1px solid var(--ob-border); background: var(--ob-glass); }
+.composerTools { min-height: 44px; }
+.composerTools > :first-child { font: 10px var(--pt-font-mono); }
+/* Live send state, in the composer where it is always on screen — never
+   below the fold in the message stream. */
+.busyChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  padding: 3px 9px;
+  border: 1px solid var(--ob-border-strong);
+  border-radius: var(--ob-radius-card);
+  color: var(--ob-cyan);
+  font: 10px/1.3 var(--pt-font-mono);
+  box-shadow: var(--ob-glow);
+}
+.modeToggle :global(button),
+.composerBar :global([role='radiogroup']) :global(button) { min-height: 36px; padding: 6px 10px; border-radius: var(--ob-radius-card); font: 10px var(--pt-font-mono); }
+.composerRow { align-items: stretch; }
+.composerRow :global(textarea) { min-height: 52px; padding: 12px; font: var(--chat-fs-body, 12px)/1.45 var(--pt-font-mono); }
+.composerAffordance { min-width: 44px !important; padding-inline: 8px !important; color: var(--ob-cyan) !important; font: 16px var(--pt-font-mono) !important; }
+/* The `>` gutter — the composer reads as one terminal line. */
+.composerPrompt {
+  display: inline-flex;
+  align-items: flex-end;
+  flex: 0 0 auto;
+  padding-bottom: 16px;
+  color: var(--ob-cyan);
+  font: 12px/1 var(--pt-font-mono);
+  user-select: none;
+}
+.composerRow > :global(button:last-child) { min-width: 76px; }
+.composerBar :global(p), .composerBar :global([role='alert']) { color: var(--ob-text-3); font-size: 11px; }
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .shell { grid-template-columns: 68px minmax(0, 1fr); gap: 8px; }
+  .sidebarTabs { flex-direction: column; padding: 6px; }
+  .sidebarTab { flex: 0 0 52px; padding: 8px 4px; }
+  .sidebarTabLabel { display: none; }
+  .sidebarBody { display: none; }
+  .railClose { display: inline-flex; flex: 0 0 44px; padding: 4px; }
+  /* The collapse control only exists once the rail is actually expanded. */
+  .sidebar .railClose { display: none; }
+  .sidebarExpanded .railClose { display: inline-flex; }
+  .sidebarExpanded { position: relative; z-index: 3; }
+  .shell:has(.sidebarExpanded) { grid-template-columns: minmax(280px, 360px) minmax(0, 1fr); }
+  .sidebarExpanded .sidebarBody { display: flex; }
+  .shell[data-stage='roster'] .thread,
+  .shell[data-stage='conversations'] .thread,
+  .shell[data-stage='thread'] .thread { display: flex !important; }
+  /* The console's narrow-screen rules hide the rail at 899px. At tablet
+     widths the icon rail (or its expanded two-pane form) remains part of the
+     layout while a thread is open, so the user can still switch sessions or
+     bots without losing the thread. */
+  .shell[data-stage='thread'] .sidebar { display: flex !important; }
+}
+
+@media (max-width: 767px) {
+  .shell { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .sidebar, .thread { border-radius: var(--ob-radius-card); box-shadow: none; }
+  .shell[data-stage='roster'] .thread,
+  .shell[data-stage='conversations'] .thread,
+  .shell[data-stage='thread'] .sidebar { display: none; }
+  .sidebarTabs { min-height: 60px; }
+  .messageStream { padding: 14px; }
+  .messageCard { max-width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell :global(*) { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}

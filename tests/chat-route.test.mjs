@@ -96,7 +96,7 @@ test('502 exposes a bounded sanitized CLI stderr tail', async () => {
   process.env.FRIDAY_CHAT_COMMAND = command
   resetConfigCache()
   try {
-    const response = await POST(request({ message: 'hello', session: 'chat-failure-test' }))
+    const response = await POST(request({ message: 'hello', session: 'chat-failure-test', createSession: true }))
     assert.equal(response.status, 502)
     const body = await response.json()
     assert.match(body.error, /provider refused request/)

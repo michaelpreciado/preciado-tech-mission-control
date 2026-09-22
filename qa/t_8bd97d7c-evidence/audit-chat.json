@@ -1,0 +1,1764 @@
+{
+  "base": "http://127.0.0.1:4176",
+  "ranAt": "2026-09-22T02:40:37.717Z",
+  "viewports": [
+    {
+      "name": "phone-412",
+      "width": 412,
+      "height": 915,
+      "touch": true,
+      "list": {
+        "stage": "roster",
+        "main": {
+          "scrollWidth": 412,
+          "clientWidth": 412,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "ui-module__n3kDja__card ui-module__n3kDja__cardPadNone ui-mo",
+            "canY": false,
+            "canX": true,
+            "scrollTop": 0,
+            "clientH": 48,
+            "scrollH": 48,
+            "rect": {
+              "top": 12,
+              "bottom": 62
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 0,
+            "clientH": 620,
+            "scrollH": 630,
+            "rect": {
+              "top": 205,
+              "bottom": 825
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__rosterPane",
+          "scrollTop": 0,
+          "scrollHeight": 630,
+          "clientHeight": 620,
+          "rect": {
+            "top": 205,
+            "bottom": 825
+          }
+        },
+        "composer": null,
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 384,
+            "left": 14
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane",
+            "w": 384,
+            "left": 14
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 346
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 346
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 346
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 346
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 346
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 346
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 346
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 346
+          }
+        ]
+      },
+      "thread": {
+        "stage": "thread",
+        "main": {
+          "scrollWidth": 412,
+          "clientWidth": 412,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "ui-module__n3kDja__card ui-module__n3kDja__cardPadNone ui-mo",
+            "canY": false,
+            "canX": true,
+            "scrollTop": 0,
+            "clientH": 48,
+            "scrollH": 48,
+            "rect": {
+              "top": 12,
+              "bottom": 62
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__messages",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 426780,
+            "clientH": 399,
+            "scrollH": 427179,
+            "rect": {
+              "top": 278,
+              "bottom": 676
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__messages",
+          "scrollTop": 426780,
+          "scrollHeight": 427179,
+          "clientHeight": 399,
+          "rect": {
+            "top": 278,
+            "bottom": 676
+          }
+        },
+        "composer": {
+          "tag": "textarea",
+          "rect": {
+            "top": 741,
+            "bottom": 813,
+            "left": 26,
+            "right": 305,
+            "h": 72
+          },
+          "inViewport": true,
+          "reachable": true,
+          "hitTag": "textarea.ui-module__n3kDja__textArea"
+        },
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 384,
+            "left": 14
+          }
+        ]
+      },
+      "consoleErrors": [],
+      "steps": [],
+      "listAfterGesture": {
+        "stage": "roster",
+        "main": {
+          "scrollWidth": 412,
+          "clientWidth": 412,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "ui-module__n3kDja__card ui-module__n3kDja__cardPadNone ui-mo",
+            "canY": false,
+            "canX": true,
+            "scrollTop": 0,
+            "clientH": 48,
+            "scrollH": 48,
+            "rect": {
+              "top": 12,
+              "bottom": 62
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 10,
+            "clientH": 620,
+            "scrollH": 630,
+            "rect": {
+              "top": 205,
+              "bottom": 825
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__rosterPane",
+          "scrollTop": 10,
+          "scrollHeight": 630,
+          "clientHeight": 620,
+          "rect": {
+            "top": 205,
+            "bottom": 825
+          }
+        },
+        "composer": null,
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 384,
+            "left": 14
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane",
+            "w": 384,
+            "left": 14
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 346
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 346
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 346
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 346
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 346
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 346
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 346
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 346
+          }
+        ]
+      },
+      "openedThread": true,
+      "threadAfterGesture": {
+        "stage": "thread",
+        "main": {
+          "scrollWidth": 412,
+          "clientWidth": 412,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "ui-module__n3kDja__card ui-module__n3kDja__cardPadNone ui-mo",
+            "canY": false,
+            "canX": true,
+            "scrollTop": 0,
+            "clientH": 48,
+            "scrollH": 48,
+            "rect": {
+              "top": 12,
+              "bottom": 62
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__messages",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 426337,
+            "clientH": 355,
+            "scrollH": 427179,
+            "rect": {
+              "top": 278,
+              "bottom": 632
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__messages",
+          "scrollTop": 426337,
+          "scrollHeight": 427179,
+          "clientHeight": 355,
+          "rect": {
+            "top": 278,
+            "bottom": 632
+          }
+        },
+        "composer": {
+          "tag": "textarea",
+          "rect": {
+            "top": 741,
+            "bottom": 813,
+            "left": 26,
+            "right": 305,
+            "h": 72
+          },
+          "inViewport": true,
+          "reachable": true,
+          "hitTag": "textarea.ui-module__n3kDja__textArea"
+        },
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 384,
+            "left": 14
+          }
+        ]
+      },
+      "gestureScrolled": true,
+      "longThread": {
+        "scrollHeight": 437556,
+        "clientHeight": 355,
+        "appendMs": 1
+      },
+      "longThreadFps": 40,
+      "longAfter": {
+        "stage": "thread",
+        "main": {
+          "scrollWidth": 412,
+          "clientWidth": 412,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "ui-module__n3kDja__card ui-module__n3kDja__cardPadNone ui-mo",
+            "canY": false,
+            "canX": true,
+            "scrollTop": 0,
+            "clientH": 48,
+            "scrollH": 48,
+            "rect": {
+              "top": 12,
+              "bottom": 62
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__messages",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 424979,
+            "clientH": 355,
+            "scrollH": 437556,
+            "rect": {
+              "top": 278,
+              "bottom": 632
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__messages",
+          "scrollTop": 424979,
+          "scrollHeight": 437556,
+          "clientHeight": 355,
+          "rect": {
+            "top": 278,
+            "bottom": 632
+          }
+        },
+        "composer": {
+          "tag": "textarea",
+          "rect": {
+            "top": 741,
+            "bottom": 813,
+            "left": 26,
+            "right": 305,
+            "h": 72
+          },
+          "inViewport": true,
+          "reachable": true,
+          "hitTag": "textarea.ui-module__n3kDja__textArea"
+        },
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 384,
+            "left": 14
+          }
+        ]
+      }
+    },
+    {
+      "name": "tablet-768",
+      "width": 768,
+      "height": 1024,
+      "touch": true,
+      "list": {
+        "stage": "roster",
+        "main": {
+          "scrollWidth": 704,
+          "clientWidth": 704,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [],
+        "thread": null,
+        "composer": null,
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 680,
+            "left": 76
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane",
+            "w": 680,
+            "left": 76
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 704
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 704
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 704
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 704
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 704
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 704
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 704
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 704
+          }
+        ]
+      },
+      "thread": {
+        "stage": "thread",
+        "main": {
+          "scrollWidth": 704,
+          "clientWidth": 704,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "AgentConsole-module__7zBJoa__messages",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 299011,
+            "clientH": 451,
+            "scrollH": 299462,
+            "rect": {
+              "top": 416,
+              "bottom": 867
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__messages",
+          "scrollTop": 299011,
+          "scrollHeight": 299462,
+          "clientHeight": 451,
+          "rect": {
+            "top": 416,
+            "bottom": 867
+          }
+        },
+        "composer": {
+          "tag": "textarea",
+          "rect": {
+            "top": 932,
+            "bottom": 1004,
+            "left": 88,
+            "right": 663,
+            "h": 72
+          },
+          "inViewport": true,
+          "reachable": true,
+          "hitTag": "textarea.ui-module__n3kDja__textArea"
+        },
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 680,
+            "left": 76
+          }
+        ]
+      },
+      "consoleErrors": [],
+      "steps": [],
+      "listAfterGesture": {
+        "stage": "roster",
+        "main": {
+          "scrollWidth": 704,
+          "clientWidth": 704,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [],
+        "thread": null,
+        "composer": null,
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 680,
+            "left": 76
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane",
+            "w": 680,
+            "left": 76
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 704
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 704
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 704
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 704
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 704
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 704
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 704
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 704
+          }
+        ]
+      },
+      "openedThread": true,
+      "threadAfterGesture": {
+        "stage": "thread",
+        "main": {
+          "scrollWidth": 704,
+          "clientWidth": 704,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "AgentConsole-module__7zBJoa__messages",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 298720,
+            "clientH": 407,
+            "scrollH": 299640,
+            "rect": {
+              "top": 416,
+              "bottom": 823
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__messages",
+          "scrollTop": 298720,
+          "scrollHeight": 299640,
+          "clientHeight": 407,
+          "rect": {
+            "top": 416,
+            "bottom": 823
+          }
+        },
+        "composer": {
+          "tag": "textarea",
+          "rect": {
+            "top": 932,
+            "bottom": 1004,
+            "left": 88,
+            "right": 663,
+            "h": 72
+          },
+          "inViewport": true,
+          "reachable": true,
+          "hitTag": "textarea.ui-module__n3kDja__textArea"
+        },
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 680,
+            "left": 76
+          }
+        ]
+      },
+      "gestureScrolled": true,
+      "longThread": {
+        "scrollHeight": 309840,
+        "clientHeight": 407,
+        "appendMs": 1
+      },
+      "longThreadFps": 37,
+      "longAfter": {
+        "stage": "thread",
+        "main": {
+          "scrollWidth": 704,
+          "clientWidth": 704,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "AgentConsole-module__7zBJoa__messages",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 297199,
+            "clientH": 407,
+            "scrollH": 310017,
+            "rect": {
+              "top": 416,
+              "bottom": 823
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__messages",
+          "scrollTop": 297199,
+          "scrollHeight": 310017,
+          "clientHeight": 407,
+          "rect": {
+            "top": 416,
+            "bottom": 823
+          }
+        },
+        "composer": {
+          "tag": "textarea",
+          "rect": {
+            "top": 932,
+            "bottom": 1004,
+            "left": 88,
+            "right": 663,
+            "h": 72
+          },
+          "inViewport": true,
+          "reachable": true,
+          "hitTag": "textarea.ui-module__n3kDja__textArea"
+        },
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 680,
+            "left": 76
+          }
+        ]
+      }
+    },
+    {
+      "name": "phone-375",
+      "width": 375,
+      "height": 812,
+      "touch": true,
+      "list": {
+        "stage": "roster",
+        "main": {
+          "scrollWidth": 375,
+          "clientWidth": 375,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "ui-module__n3kDja__card ui-module__n3kDja__cardPadNone ui-mo",
+            "canY": false,
+            "canX": true,
+            "scrollTop": 0,
+            "clientH": 48,
+            "scrollH": 48,
+            "rect": {
+              "top": 12,
+              "bottom": 62
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 0,
+            "clientH": 522,
+            "scrollH": 630,
+            "rect": {
+              "top": 205,
+              "bottom": 726
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__rosterPane",
+          "scrollTop": 0,
+          "scrollHeight": 630,
+          "clientHeight": 522,
+          "rect": {
+            "top": 205,
+            "bottom": 726
+          }
+        },
+        "composer": null,
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 347,
+            "left": 14
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane",
+            "w": 347,
+            "left": 14
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 309
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 309
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 309
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 309
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 309
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 309
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 309
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 309
+          }
+        ]
+      },
+      "thread": {
+        "stage": "conversations",
+        "main": {
+          "scrollWidth": 375,
+          "clientWidth": 375,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "ui-module__n3kDja__card ui-module__n3kDja__cardPadNone ui-mo",
+            "canY": false,
+            "canX": true,
+            "scrollTop": 0,
+            "clientH": 48,
+            "scrollH": 48,
+            "rect": {
+              "top": 12,
+              "bottom": 62
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__conversationList",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 0,
+            "clientH": 338,
+            "scrollH": 829,
+            "rect": {
+              "top": 329,
+              "bottom": 666
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__conversationList",
+          "scrollTop": 0,
+          "scrollHeight": 829,
+          "clientHeight": 338,
+          "rect": {
+            "top": 329,
+            "bottom": 666
+          }
+        },
+        "composer": null,
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 347,
+            "left": 14
+          }
+        ]
+      },
+      "consoleErrors": [],
+      "steps": [],
+      "listAfterGesture": {
+        "stage": "roster",
+        "main": {
+          "scrollWidth": 375,
+          "clientWidth": 375,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "ui-module__n3kDja__card ui-module__n3kDja__cardPadNone ui-mo",
+            "canY": false,
+            "canX": true,
+            "scrollTop": 0,
+            "clientH": 48,
+            "scrollH": 48,
+            "rect": {
+              "top": 12,
+              "bottom": 62
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 108,
+            "clientH": 522,
+            "scrollH": 630,
+            "rect": {
+              "top": 205,
+              "bottom": 726
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__rosterPane",
+          "scrollTop": 108,
+          "scrollHeight": 630,
+          "clientHeight": 522,
+          "rect": {
+            "top": 205,
+            "bottom": 726
+          }
+        },
+        "composer": null,
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 347,
+            "left": 14
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane",
+            "w": 347,
+            "left": 14
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 309
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 309
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 309
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 309
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 309
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 309
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 309
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 309
+          }
+        ]
+      },
+      "openedThread": false,
+      "threadAfterGesture": {
+        "stage": "conversations",
+        "main": {
+          "scrollWidth": 375,
+          "clientWidth": 375,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "ui-module__n3kDja__card ui-module__n3kDja__cardPadNone ui-mo",
+            "canY": false,
+            "canX": true,
+            "scrollTop": 0,
+            "clientH": 48,
+            "scrollH": 48,
+            "rect": {
+              "top": 12,
+              "bottom": 62
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__conversationList",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 391,
+            "clientH": 338,
+            "scrollH": 829,
+            "rect": {
+              "top": 329,
+              "bottom": 666
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__conversationList",
+          "scrollTop": 391,
+          "scrollHeight": 829,
+          "clientHeight": 338,
+          "rect": {
+            "top": 329,
+            "bottom": 666
+          }
+        },
+        "composer": null,
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 347,
+            "left": 14
+          }
+        ]
+      },
+      "gestureScrolled": true,
+      "longThread": {
+        "scrollHeight": 11031,
+        "clientHeight": 338,
+        "appendMs": 1
+      },
+      "longThreadFps": 1,
+      "longAfter": {
+        "stage": "conversations",
+        "main": {
+          "scrollWidth": 375,
+          "clientWidth": 375,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "ui-module__n3kDja__card ui-module__n3kDja__cardPadNone ui-mo",
+            "canY": false,
+            "canX": true,
+            "scrollTop": 0,
+            "clientH": 48,
+            "scrollH": 48,
+            "rect": {
+              "top": 12,
+              "bottom": 62
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__conversationList",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 0,
+            "clientH": 338,
+            "scrollH": 11031,
+            "rect": {
+              "top": 329,
+              "bottom": 666
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__conversationList",
+          "scrollTop": 0,
+          "scrollHeight": 11031,
+          "clientHeight": 338,
+          "rect": {
+            "top": 329,
+            "bottom": 666
+          }
+        },
+        "composer": null,
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 347,
+            "left": 14
+          }
+        ]
+      }
+    },
+    {
+      "name": "desktop-1440",
+      "width": 1440,
+      "height": 900,
+      "touch": false,
+      "list": {
+        "stage": "roster",
+        "main": {
+          "scrollWidth": 1204,
+          "clientWidth": 1204,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 0,
+            "clientH": 248,
+            "scrollH": 865,
+            "rect": {
+              "top": 297,
+              "bottom": 546
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__conversationList",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 0,
+            "clientH": 220,
+            "scrollH": 6299,
+            "rect": {
+              "top": 670,
+              "bottom": 889
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__conversationList",
+          "scrollTop": 0,
+          "scrollHeight": 6299,
+          "clientHeight": 220,
+          "rect": {
+            "top": 670,
+            "bottom": 889
+          }
+        },
+        "composer": null,
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 385,
+            "left": 272
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane",
+            "w": 385,
+            "left": 272
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 735,
+            "left": 669
+          }
+        ]
+      },
+      "thread": {
+        "stage": "thread",
+        "main": {
+          "scrollWidth": 1204,
+          "clientWidth": 1204,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 0,
+            "clientH": 248,
+            "scrollH": 865,
+            "rect": {
+              "top": 297,
+              "bottom": 546
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__conversationList",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 0,
+            "clientH": 220,
+            "scrollH": 6299,
+            "rect": {
+              "top": 670,
+              "bottom": 889
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__messages",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 34946,
+            "clientH": 375,
+            "scrollH": 35321,
+            "rect": {
+              "top": 370,
+              "bottom": 745
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__messages",
+          "scrollTop": 34946,
+          "scrollHeight": 35321,
+          "clientHeight": 375,
+          "rect": {
+            "top": 370,
+            "bottom": 745
+          }
+        },
+        "composer": {
+          "tag": "textarea",
+          "rect": {
+            "top": 806,
+            "bottom": 877,
+            "left": 681,
+            "right": 1315,
+            "h": 72
+          },
+          "inViewport": true,
+          "reachable": true,
+          "hitTag": "textarea.ui-module__n3kDja__textArea"
+        },
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 385,
+            "left": 272
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane",
+            "w": 385,
+            "left": 272
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 735,
+            "left": 669
+          }
+        ]
+      },
+      "consoleErrors": [],
+      "steps": [],
+      "listAfterGesture": {
+        "stage": "roster",
+        "main": {
+          "scrollWidth": 1204,
+          "clientWidth": 1204,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 0,
+            "clientH": 248,
+            "scrollH": 865,
+            "rect": {
+              "top": 297,
+              "bottom": 546
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__conversationList",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 0,
+            "clientH": 220,
+            "scrollH": 6299,
+            "rect": {
+              "top": 670,
+              "bottom": 889
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__conversationList",
+          "scrollTop": 0,
+          "scrollHeight": 6299,
+          "clientHeight": 220,
+          "rect": {
+            "top": 670,
+            "bottom": 889
+          }
+        },
+        "composer": null,
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 385,
+            "left": 272
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane",
+            "w": 385,
+            "left": 272
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 735,
+            "left": 669
+          }
+        ]
+      },
+      "openedThread": true,
+      "threadAfterGesture": {
+        "stage": "thread",
+        "main": {
+          "scrollWidth": 1204,
+          "clientWidth": 1204,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 0,
+            "clientH": 248,
+            "scrollH": 865,
+            "rect": {
+              "top": 297,
+              "bottom": 546
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__conversationList",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 0,
+            "clientH": 220,
+            "scrollH": 6299,
+            "rect": {
+              "top": 670,
+              "bottom": 889
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__messages",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 34496,
+            "clientH": 331,
+            "scrollH": 35321,
+            "rect": {
+              "top": 370,
+              "bottom": 701
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__messages",
+          "scrollTop": 34496,
+          "scrollHeight": 35321,
+          "clientHeight": 331,
+          "rect": {
+            "top": 370,
+            "bottom": 701
+          }
+        },
+        "composer": {
+          "tag": "textarea",
+          "rect": {
+            "top": 806,
+            "bottom": 877,
+            "left": 681,
+            "right": 1315,
+            "h": 72
+          },
+          "inViewport": true,
+          "reachable": true,
+          "hitTag": "textarea.ui-module__n3kDja__textArea"
+        },
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 385,
+            "left": 272
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane",
+            "w": 385,
+            "left": 272
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 735,
+            "left": 669
+          }
+        ]
+      },
+      "gestureScrolled": true,
+      "longThread": {
+        "scrollHeight": 45521,
+        "clientHeight": 331,
+        "appendMs": 1
+      },
+      "longThreadFps": 24,
+      "longAfter": {
+        "stage": "thread",
+        "main": {
+          "scrollWidth": 1204,
+          "clientWidth": 1204,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 0,
+            "clientH": 248,
+            "scrollH": 865,
+            "rect": {
+              "top": 297,
+              "bottom": 546
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__conversationList",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 0,
+            "clientH": 220,
+            "scrollH": 6299,
+            "rect": {
+              "top": 670,
+              "bottom": 889
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__messages",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 33146,
+            "clientH": 331,
+            "scrollH": 45521,
+            "rect": {
+              "top": 370,
+              "bottom": 701
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__messages",
+          "scrollTop": 33146,
+          "scrollHeight": 45521,
+          "clientHeight": 331,
+          "rect": {
+            "top": 370,
+            "bottom": 701
+          }
+        },
+        "composer": {
+          "tag": "textarea",
+          "rect": {
+            "top": 806,
+            "bottom": 877,
+            "left": 681,
+            "right": 1315,
+            "h": 72
+          },
+          "inViewport": true,
+          "reachable": true,
+          "hitTag": "textarea.ui-module__n3kDja__textArea"
+        },
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 385,
+            "left": 272
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane",
+            "w": 385,
+            "left": 272
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 605
+          },
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 735,
+            "left": 669
+          }
+        ]
+      }
+    }
+  ],
+  "findings": [
+    {
+      "viewport": "tablet-768",
+      "id": "LONG-THREAD-FPS",
+      "severity": "medium",
+      "what": "rAF rate during a 300-message thread scroll: 37/s",
+      "evidence": {
+        "frames": 37
+      }
+    },
+    {
+      "viewport": "phone-375",
+      "id": "THREAD-UNREACHABLE",
+      "severity": "medium",
+      "what": "could not open a conversation from the list with a real tap",
+      "evidence": {
+        "stage": "conversations",
+        "panes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 347,
+            "left": 14
+          }
+        ]
+      }
+    },
+    {
+      "viewport": "phone-375",
+      "id": "LONG-THREAD-FPS",
+      "severity": "medium",
+      "what": "rAF rate during a 300-message thread scroll: 1/s",
+      "evidence": {
+        "frames": 1
+      }
+    },
+    {
+      "viewport": "desktop-1440",
+      "id": "LONG-THREAD-FPS",
+      "severity": "medium",
+      "what": "rAF rate during a 300-message thread scroll: 24/s",
+      "evidence": {
+        "frames": 24
+      }
+    }
+  ],
+  "summary": {
+    "viewports": 4,
+    "findings": 4,
+    "bySeverity": {
+      "medium": 4
+    },
+    "openedThreads": 3,
+    "consoleErrors": 0
+  }
+}

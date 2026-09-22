@@ -54,14 +54,39 @@
 .task > div { flex: 1; min-width: 0; }
 .task strong { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; font-size: 13px; line-height: 1.55; font-weight: 500; }
 .task div span { display: block; margin-top: 6px; font-size: 11px; color: var(--mc-ink-mute); overflow-wrap: anywhere; }
-.task[data-state='running'] { border-left-color: var(--pt-info); background: color-mix(in srgb, var(--pt-info) 10%, var(--pt-bg-terminal-solid)); }
+.task[data-state='running'] { position: relative; isolation: isolate; overflow: hidden; border-left-color: var(--pt-info); background: color-mix(in srgb, var(--pt-info) 10%, var(--pt-bg-terminal-solid)); box-shadow: inset 2px 0 0 var(--pt-info), var(--ob-surface-highlight), 0 0 14px rgba(var(--pt-neon-rgb), .08); }
+.task[data-state='running']::before { position: absolute; z-index: 0; inset: 0 0 auto; height: 34%; content: ''; pointer-events: none; background: linear-gradient(180deg, transparent, rgba(var(--pt-neon-rgb), .14), transparent); opacity: .7; transform: translateY(-170%); animation: taskScanline 3.8s linear infinite; }
+.task[data-state='running'] > * { position: relative; z-index: 1; }
 .task[data-state='running'] div span { color: var(--pt-info); }
 .task[data-state='attention'] { border-left-color: var(--pt-warn); }
 .task[data-state='queued'] { opacity: 0.75; }
-.taskDot { flex: 0 0 6px; height: 6px; background: var(--pt-info-ink); border-radius: 50%; }
+.taskDot { position: relative; flex: 0 0 6px; height: 6px; background: var(--pt-info-ink); border-radius: 50%; }
 .taskDot[data-attention='true'] { background: var(--pt-warn); }
-.taskDot[data-running='true'] { background: var(--pt-info); animation: taskPulse 2s ease-in-out infinite; }
+.taskDot[data-running='true'] { background: var(--pt-info); box-shadow: 0 0 0 1px rgba(var(--pt-neon-rgb), .22), 0 0 8px rgba(var(--pt-neon-rgb), .5); animation: taskPulse 2s ease-in-out infinite; }
+.taskDot[data-running='true']::after { position: absolute; inset: -4px; content: ''; border: 1px solid var(--pt-info); border-radius: 50%; opacity: .65; pointer-events: none; animation: taskRing 2s ease-in-out infinite; }
+@keyframes taskScanline { from { transform: translateY(-170%); } to { transform: translateY(420%); } }
 @keyframes taskPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+@keyframes taskRing { 0%, 100% { opacity: .45; transform: scale(.85); } 50% { opacity: .95; transform: scale(1.2); } }
+@media (prefers-reduced-motion: reduce) {
+  .task[data-state='running']::before { animation: none; opacity: 0; transform: translateY(0); }
+  .taskDot[data-running='true'] { animation: none; opacity: 1; }
+  .taskDot[data-running='true']::after { animation: none; opacity: 0; transform: scale(1); }
+}
+
+/* The app motion toggle is the low-power/static convention used by the VF lanes. */
+html[data-motion='reduced'] .task[data-state='running']::before,
+html[data-motion='off'] .task[data-state='running']::before,
+html[data-motion='reduced'] .taskDot[data-running='true']::after,
+html[data-motion='off'] .taskDot[data-running='true']::after {
+  animation: none;
+  opacity: 0;
+  transform: translateY(0) scale(1);
+}
+html[data-motion='reduced'] .taskDot[data-running='true'],
+html[data-motion='off'] .taskDot[data-running='true'] {
+  animation: none;
+  opacity: 1;
+}
 .moreTasks { display: inline-flex; min-height: 44px; align-items: center; margin-top: 10px; color: var(--pt-info-ink); font-size: 12px; text-decoration: none; }
 .live { font-size: 11px; color: var(--pt-info-ink); text-align: right; }
 .live[data-stale='true'] { color: var(--pt-warn-ink); }

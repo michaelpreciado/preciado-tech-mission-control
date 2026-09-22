@@ -101,3 +101,11 @@ test('Hermes query-file mode sends the message on stdin and preserves exact argv
     assert.match(reply, /^args=-m gemma4:12b --provider ollama chat --continue first --create-if-missing -Q --query-file -\nbody=say hi$/)
   } finally { fs.rmSync(dir, { recursive: true, force: true }) }
 })
+
+test('Hermes parser strips leading CLI notices but preserves the agent answer', () => {
+  assert.equal(
+    adapters.hermes.parseReply('Warning: using fallback\n[HERMES_HOME fallback]\nSession demo starting fresh.\n\nActual answer', ''),
+    'Actual answer',
+  )
+  assert.equal(adapters.hermes.parseReply('Actual answer\nWarning: this is part of the answer', ''), 'Actual answer\nWarning: this is part of the answer')
+})

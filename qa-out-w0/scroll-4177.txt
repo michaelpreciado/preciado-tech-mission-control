@@ -1,0 +1,16 @@
+opening: Bot ChatJust nowThe second Friday follow
+thread: {"rect":{"top":306,"bottom":643},"scrollTop":45782,"scrollH":51333,"clientH":337}
+--- ancestor chain ---
+ AgentConsole-module__7zBJoa__messages.ChatSh overflowY=auto touch-action=auto overscrollY=auto pos=static h=336.797px st=45782/51333/337
+ ui-module__n3kDja__card.ui-module__n3kDja__c overflowY=hidden touch-action=auto overscrollY=auto pos=relative h=621.891px st=0/620/620
+ AgentConsole-module__7zBJoa__console.ChatShe overflowY=visible touch-action=auto overscrollY=auto pos=static h=621.891px st=0/622/622
+ AgentConsole-module__7zBJoa__page overflowY=visible touch-action=auto overscrollY=auto pos=static h=757px st=0/757/757
+ mc-main overflowY=hidden touch-action=auto overscrollY=contain pos=relative h=915px st=0/915/915
+ mc-shell overflowY=hidden touch-action=auto overscrollY=auto pos=relative h=915px st=0/915/915
+{
+ "before": 45782,
+ "afterTouch": 45782,
+ "afterWheel": 45686,
+ "afterDirect": 45386,
+ "docY": 0
+}

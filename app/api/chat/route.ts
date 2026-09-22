@@ -21,6 +21,7 @@ import { invalidateConversationCache, listConversations, listDevices } from '@/l
 import {getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv, checkRateLimit, assertSameOrigin } from '@/lib/mission-api'
 import { chatContinuity, continuityStore } from '@/lib/chat-continuity'
 import { logger } from '@/lib/logger'
+import { sanitizeCliFailure, sanitizeServerError } from '@/lib/server-error-sanitizer'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,26 +35,6 @@ const SESSION_RE = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,48}$/
  *  `model.default` — letters, digits and . _ : / - only. */
 const MODEL_RE = /^[A-Za-z0-9][A-Za-z0-9._:/-]{1,119}$/
 const PROVIDER_RE = /^[a-z0-9][a-z0-9._-]{1,39}$/
-const CLI_ERROR_TAIL_MAX = 320
-const ANSI_ESCAPE_RE = /\u001b\[[0-?]*[ -\/]*[@-~]/g
-
-/** Keep child diagnostics useful without returning secrets or local paths. */
-export function sanitizeCliStderr(stderr: unknown): string {
-  if (typeof stderr !== 'string') return ''
-  const sanitized = stderr
-    .replace(ANSI_ESCAPE_RE, '')
-    .replace(/(?:https?|file):\/\/[^\s]+/gi, '[url]')
-    .replace(/\b(?:api[_-]?key|access[_-]?token|refresh[_-]?token|secret|password|authorization)\b\s*[:=]\s*[^\s]+/gi, '[credential redacted]')
-    .replace(/\b[A-Z][A-Z0-9_]{2,}\s*=\s*[^\s]+/g, '[environment value redacted]')
-    .replace(/(^|[\s("'`])(?:~\/|\/|[A-Za-z]:[\\/])[^\s\r\n"'`<>)]*/g, '$1[path redacted]')
-    .replace(/[\u0000-\u001f\u007f]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-  return sanitized.length > CLI_ERROR_TAIL_MAX
-    ? `…${sanitized.slice(-(CLI_ERROR_TAIL_MAX - 1))}`
-    : sanitized
-}
-
 const availability = new Map<string, boolean>()
 
 function isAuthorized(req: NextRequest): boolean {
@@ -142,6 +123,26 @@ export async function POST(req: NextRequest) {
   if (!config?.enabled || !command || !(await checkAvailable(command))) {
     return NextResponse.json({ error: `agent CLI "${command || '(unset)'}" is not available on this machine` }, { status: 503 })
   }
+
+  // An omitted session keeps the historical friday-dashboard fallback. For an
+  // explicit Hermes session, distinguish a missing continuation from a CLI
+  // failure before spawning the agent. Creation is name-based; continuation
+  // with createSession:false is the native Hermes id-based lane.
+  if (agent === 'hermes' && typeof body.session === 'string') {
+    const local = listDevices().find(d => d.isLocal)?.name
+    const sessions = listConversations({ profile: profile || 'default' }).filter(c =>
+      c.agent !== 'pi' && c.device === local,
+    )
+    const selector = body.createSession === false ? 'id' : 'name'
+    const existing = sessions.find(c => selector === 'id' ? c.id === session : c.title === session)
+    if (!existing && body.createSession !== true) {
+      return NextResponse.json({ error: 'session not found' }, { status: 404 })
+    }
+    if (existing && body.createSession === true && existing.messageCount === 0) {
+      return NextResponse.json({ error: 'session already exists' }, { status: 409 })
+    }
+  }
+
   let continuity = agent === 'hermes' ? chatContinuity(profile || 'default', session, body.createSession === false ? 'id' : 'name') : undefined
   if (continuity?.herdrPane) return NextResponse.json({ error: 'Session lives in Herdr. Use Continue in herdr to send to its pane.', continuity }, { status: 409 })
   const started = Date.now()
@@ -163,9 +164,9 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json({ reply: result.value, continuity, elapsedMs: Date.now() - started, session: agent === 'codex' ? undefined : session, agent })
   } catch (err) {
-    const failure = err as { killed?: boolean; stderr?: unknown }
+    const failure = err as { killed?: boolean; stderr?: unknown; stdout?: unknown; message?: unknown }
     const timedOut = failure.killed
-    const stderrTail = sanitizeCliStderr(failure.stderr)
+    const stderrTail = sanitizeCliFailure(failure.stderr, failure.stdout, failure.message)
     const error = timedOut
       ? `agent run exceeded ${RUN_TIMEOUT_MS / 1000}s and was stopped${stderrTail ? ` — ${stderrTail}` : ''}`
       : `agent run failed — ${stderrTail || 'no CLI stderr was captured'}`
@@ -173,7 +174,7 @@ export async function POST(req: NextRequest) {
     // a provider URL, local path, or another value from the child environment.
     logger.error('chat/run', timedOut ? 'agent run timed out' : 'agent run failed', stderrTail ? { stderr: stderrTail } : undefined)
     return NextResponse.json(
-      { error, ...(stderrTail ? { detail: stderrTail } : {}) },
+      { error: sanitizeServerError(error, 380), ...(stderrTail ? { detail: sanitizeServerError(stderrTail) } : {}) },
       { status: 502 },
     )
   }

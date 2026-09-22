@@ -1,0 +1,1867 @@
+{
+  "base": "http://127.0.0.1:4175",
+  "ranAt": "2026-09-22T03:57:15.058Z",
+  "viewports": [
+    {
+      "name": "phone-412",
+      "width": 412,
+      "height": 915,
+      "touch": true,
+      "list": {
+        "stage": "roster",
+        "main": {
+          "scrollWidth": 412,
+          "clientWidth": 412,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "ui-module__n3kDja__card ui-module__n3kDja__cardPadNone ui-mo",
+            "canY": false,
+            "canX": true,
+            "scrollTop": 0,
+            "clientH": 48,
+            "scrollH": 48,
+            "rect": {
+              "top": 12,
+              "bottom": 62
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane ChatShell-module__Wy",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 0,
+            "clientH": 565,
+            "scrollH": 656,
+            "rect": {
+              "top": 259,
+              "bottom": 824
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__rosterPane ChatShell-module__Wy",
+          "scrollTop": 0,
+          "scrollHeight": 656,
+          "clientHeight": 565,
+          "rect": {
+            "top": 259,
+            "bottom": 824
+          }
+        },
+        "composer": null,
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 384,
+            "left": 14
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabs",
+            "w": 382,
+            "left": 15
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 181,
+            "left": 23
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 181,
+            "left": 208
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarBody",
+            "w": 382,
+            "left": 15
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane.ChatShell-",
+            "w": 382,
+            "left": 15
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 353
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 353
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 353
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 353
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 353
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 353
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 353
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 353
+          }
+        ]
+      },
+      "thread": {
+        "stage": "thread",
+        "main": {
+          "scrollWidth": 412,
+          "clientWidth": 412,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "ui-module__n3kDja__card ui-module__n3kDja__cardPadNone ui-mo",
+            "canY": false,
+            "canX": true,
+            "scrollTop": 0,
+            "clientH": 48,
+            "scrollH": 48,
+            "rect": {
+              "top": 12,
+              "bottom": 62
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__messages ChatShell-module__WyNv",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 14268,
+            "clientH": 316,
+            "scrollH": 14584,
+            "rect": {
+              "top": 333,
+              "bottom": 649
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__messages ChatShell-module__WyNv",
+          "scrollTop": 14268,
+          "scrollHeight": 14584,
+          "clientHeight": 316,
+          "rect": {
+            "top": 333,
+            "bottom": 649
+          }
+        },
+        "composer": {
+          "tag": "textarea",
+          "rect": {
+            "top": 740,
+            "bottom": 810,
+            "left": 44,
+            "right": 247,
+            "h": 70
+          },
+          "inViewport": true,
+          "reachable": true,
+          "hitTag": "textarea.ui-module__n3kDja__textArea"
+        },
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 384,
+            "left": 14
+          }
+        ]
+      },
+      "consoleErrors": [],
+      "steps": [],
+      "listAfterGesture": {
+        "stage": "roster",
+        "main": {
+          "scrollWidth": 412,
+          "clientWidth": 412,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "ui-module__n3kDja__card ui-module__n3kDja__cardPadNone ui-mo",
+            "canY": false,
+            "canX": true,
+            "scrollTop": 0,
+            "clientH": 48,
+            "scrollH": 48,
+            "rect": {
+              "top": 12,
+              "bottom": 62
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane ChatShell-module__Wy",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 91,
+            "clientH": 565,
+            "scrollH": 656,
+            "rect": {
+              "top": 259,
+              "bottom": 824
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__rosterPane ChatShell-module__Wy",
+          "scrollTop": 91,
+          "scrollHeight": 656,
+          "clientHeight": 565,
+          "rect": {
+            "top": 259,
+            "bottom": 824
+          }
+        },
+        "composer": null,
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 384,
+            "left": 14
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabs",
+            "w": 382,
+            "left": 15
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 181,
+            "left": 23
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 181,
+            "left": 208
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarBody",
+            "w": 382,
+            "left": 15
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane.ChatShell-",
+            "w": 382,
+            "left": 15
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 353
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 353
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 353
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 353
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 353
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 353
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 353
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 353
+          }
+        ]
+      },
+      "openedThread": true,
+      "threadAfterGesture": {
+        "stage": "thread",
+        "main": {
+          "scrollWidth": 412,
+          "clientWidth": 412,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "ui-module__n3kDja__card ui-module__n3kDja__cardPadNone ui-mo",
+            "canY": false,
+            "canX": true,
+            "scrollTop": 0,
+            "clientH": 48,
+            "scrollH": 48,
+            "rect": {
+              "top": 12,
+              "bottom": 62
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__messages ChatShell-module__WyNv",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 13371,
+            "clientH": 280,
+            "scrollH": 14130,
+            "rect": {
+              "top": 333,
+              "bottom": 613
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__messages ChatShell-module__WyNv",
+          "scrollTop": 13371,
+          "scrollHeight": 14130,
+          "clientHeight": 280,
+          "rect": {
+            "top": 333,
+            "bottom": 613
+          }
+        },
+        "composer": {
+          "tag": "textarea",
+          "rect": {
+            "top": 740,
+            "bottom": 810,
+            "left": 44,
+            "right": 247,
+            "h": 70
+          },
+          "inViewport": true,
+          "reachable": true,
+          "hitTag": "textarea.ui-module__n3kDja__textArea"
+        },
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 384,
+            "left": 14
+          }
+        ]
+      },
+      "gestureScrolled": true,
+      "longThread": {
+        "scrollHeight": 24869,
+        "clientHeight": 280,
+        "appendMs": 1
+      },
+      "longThreadFps": 62,
+      "longAfter": {
+        "stage": "thread",
+        "main": {
+          "scrollWidth": 412,
+          "clientWidth": 412,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "ui-module__n3kDja__card ui-module__n3kDja__cardPadNone ui-mo",
+            "canY": false,
+            "canX": true,
+            "scrollTop": 0,
+            "clientH": 48,
+            "scrollH": 48,
+            "rect": {
+              "top": 12,
+              "bottom": 62
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__messages ChatShell-module__WyNv",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 10573,
+            "clientH": 280,
+            "scrollH": 23429,
+            "rect": {
+              "top": 333,
+              "bottom": 613
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__messages ChatShell-module__WyNv",
+          "scrollTop": 10573,
+          "scrollHeight": 23429,
+          "clientHeight": 280,
+          "rect": {
+            "top": 333,
+            "bottom": 613
+          }
+        },
+        "composer": {
+          "tag": "textarea",
+          "rect": {
+            "top": 740,
+            "bottom": 810,
+            "left": 44,
+            "right": 247,
+            "h": 70
+          },
+          "inViewport": true,
+          "reachable": true,
+          "hitTag": "textarea.ui-module__n3kDja__textArea"
+        },
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 384,
+            "left": 14
+          }
+        ]
+      }
+    },
+    {
+      "name": "tablet-768",
+      "width": 768,
+      "height": 1024,
+      "touch": true,
+      "list": {
+        "stage": "roster",
+        "main": {
+          "scrollWidth": 704,
+          "clientWidth": 704,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [],
+        "thread": null,
+        "composer": null,
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 68,
+            "left": 76
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabs",
+            "w": 66,
+            "left": 77
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 54,
+            "left": 83
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 54,
+            "left": 83
+          },
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 604,
+            "left": 152
+          }
+        ]
+      },
+      "thread": {
+        "stage": "roster",
+        "main": {
+          "scrollWidth": 704,
+          "clientWidth": 704,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [],
+        "thread": null,
+        "composer": null,
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 68,
+            "left": 76
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabs",
+            "w": 66,
+            "left": 77
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 54,
+            "left": 83
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 54,
+            "left": 83
+          },
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 604,
+            "left": 152
+          }
+        ]
+      },
+      "consoleErrors": [],
+      "steps": [],
+      "listAfterGesture": {
+        "stage": "roster",
+        "main": {
+          "scrollWidth": 704,
+          "clientWidth": 704,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [],
+        "thread": null,
+        "composer": null,
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 68,
+            "left": 76
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabs",
+            "w": 66,
+            "left": 77
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 54,
+            "left": 83
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 54,
+            "left": 83
+          },
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 604,
+            "left": 152
+          }
+        ]
+      },
+      "openedThread": false,
+      "threadAfterGesture": {
+        "stage": "roster",
+        "main": {
+          "scrollWidth": 704,
+          "clientWidth": 704,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [],
+        "thread": null,
+        "composer": null,
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 68,
+            "left": 76
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabs",
+            "w": 66,
+            "left": 77
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 54,
+            "left": 83
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 54,
+            "left": 83
+          },
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 604,
+            "left": 152
+          }
+        ]
+      },
+      "gestureScrolled": false
+    },
+    {
+      "name": "phone-375",
+      "width": 375,
+      "height": 812,
+      "touch": true,
+      "list": {
+        "stage": "roster",
+        "main": {
+          "scrollWidth": 375,
+          "clientWidth": 375,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "ui-module__n3kDja__card ui-module__n3kDja__cardPadNone ui-mo",
+            "canY": false,
+            "canX": true,
+            "scrollTop": 0,
+            "clientH": 48,
+            "scrollH": 48,
+            "rect": {
+              "top": 12,
+              "bottom": 62
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane ChatShell-module__Wy",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 0,
+            "clientH": 470,
+            "scrollH": 655,
+            "rect": {
+              "top": 259,
+              "bottom": 729
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__rosterPane ChatShell-module__Wy",
+          "scrollTop": 0,
+          "scrollHeight": 655,
+          "clientHeight": 470,
+          "rect": {
+            "top": 259,
+            "bottom": 729
+          }
+        },
+        "composer": null,
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 347,
+            "left": 14
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabs",
+            "w": 345,
+            "left": 15
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 163,
+            "left": 23
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 163,
+            "left": 190
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarBody",
+            "w": 345,
+            "left": 15
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane.ChatShell-",
+            "w": 345,
+            "left": 15
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 316
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 316
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 316
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 316
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 316
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 316
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 316
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 316
+          }
+        ]
+      },
+      "thread": {
+        "stage": "conversations",
+        "main": {
+          "scrollWidth": 375,
+          "clientWidth": 375,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "ui-module__n3kDja__card ui-module__n3kDja__cardPadNone ui-mo",
+            "canY": false,
+            "canX": true,
+            "scrollTop": 0,
+            "clientH": 48,
+            "scrollH": 48,
+            "rect": {
+              "top": 12,
+              "bottom": 62
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__conversationList",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 0,
+            "clientH": 282,
+            "scrollH": 4729,
+            "rect": {
+              "top": 387,
+              "bottom": 669
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__conversationList",
+          "scrollTop": 0,
+          "scrollHeight": 4729,
+          "clientHeight": 282,
+          "rect": {
+            "top": 387,
+            "bottom": 669
+          }
+        },
+        "composer": null,
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 347,
+            "left": 14
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabs",
+            "w": 345,
+            "left": 15
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 163,
+            "left": 23
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 163,
+            "left": 190
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarBody",
+            "w": 345,
+            "left": 15
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__conversations.ChatShe",
+            "w": 345,
+            "left": 15
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__sectionHead.ChatShell",
+            "w": 345,
+            "left": 15
+          }
+        ]
+      },
+      "consoleErrors": [],
+      "steps": [],
+      "listAfterGesture": {
+        "stage": "roster",
+        "main": {
+          "scrollWidth": 375,
+          "clientWidth": 375,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "ui-module__n3kDja__card ui-module__n3kDja__cardPadNone ui-mo",
+            "canY": false,
+            "canX": true,
+            "scrollTop": 0,
+            "clientH": 48,
+            "scrollH": 48,
+            "rect": {
+              "top": 12,
+              "bottom": 62
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane ChatShell-module__Wy",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 185,
+            "clientH": 470,
+            "scrollH": 655,
+            "rect": {
+              "top": 259,
+              "bottom": 729
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__rosterPane ChatShell-module__Wy",
+          "scrollTop": 185,
+          "scrollHeight": 655,
+          "clientHeight": 470,
+          "rect": {
+            "top": 259,
+            "bottom": 729
+          }
+        },
+        "composer": null,
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 347,
+            "left": 14
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabs",
+            "w": 345,
+            "left": 15
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 163,
+            "left": 23
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 163,
+            "left": 190
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarBody",
+            "w": 345,
+            "left": 15
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane.ChatShell-",
+            "w": 345,
+            "left": 15
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 316
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 316
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 316
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 316
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 316
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 316
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 316
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 316
+          }
+        ]
+      },
+      "openedThread": false,
+      "threadAfterGesture": {
+        "stage": "conversations",
+        "main": {
+          "scrollWidth": 375,
+          "clientWidth": 375,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "ui-module__n3kDja__card ui-module__n3kDja__cardPadNone ui-mo",
+            "canY": false,
+            "canX": true,
+            "scrollTop": 0,
+            "clientH": 48,
+            "scrollH": 48,
+            "rect": {
+              "top": 12,
+              "bottom": 62
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__conversationList",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 0,
+            "clientH": 282,
+            "scrollH": 4729,
+            "rect": {
+              "top": 387,
+              "bottom": 669
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__conversationList",
+          "scrollTop": 0,
+          "scrollHeight": 4729,
+          "clientHeight": 282,
+          "rect": {
+            "top": 387,
+            "bottom": 669
+          }
+        },
+        "composer": null,
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 347,
+            "left": 14
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabs",
+            "w": 345,
+            "left": 15
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 163,
+            "left": 23
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 163,
+            "left": 190
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarBody",
+            "w": 345,
+            "left": 15
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__conversations.ChatShe",
+            "w": 345,
+            "left": 15
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__sectionHead.ChatShell",
+            "w": 345,
+            "left": 15
+          }
+        ]
+      },
+      "gestureScrolled": false,
+      "longThread": {
+        "scrollHeight": 15470,
+        "clientHeight": 282,
+        "appendMs": 1
+      },
+      "longThreadFps": 27,
+      "longAfter": {
+        "stage": "conversations",
+        "main": {
+          "scrollWidth": 375,
+          "clientWidth": 375,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "ui-module__n3kDja__card ui-module__n3kDja__cardPadNone ui-mo",
+            "canY": false,
+            "canX": true,
+            "scrollTop": 0,
+            "clientH": 48,
+            "scrollH": 48,
+            "rect": {
+              "top": 12,
+              "bottom": 62
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__conversationList",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 0,
+            "clientH": 282,
+            "scrollH": 15470,
+            "rect": {
+              "top": 387,
+              "bottom": 669
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__conversationList",
+          "scrollTop": 0,
+          "scrollHeight": 15470,
+          "clientHeight": 282,
+          "rect": {
+            "top": 387,
+            "bottom": 669
+          }
+        },
+        "composer": null,
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 347,
+            "left": 14
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabs",
+            "w": 345,
+            "left": 15
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 163,
+            "left": 23
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 163,
+            "left": 190
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarBody",
+            "w": 345,
+            "left": 15
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__conversations.ChatShe",
+            "w": 345,
+            "left": 15
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__sectionHead.ChatShell",
+            "w": 345,
+            "left": 15
+          }
+        ]
+      }
+    },
+    {
+      "name": "desktop-1440",
+      "width": 1440,
+      "height": 900,
+      "touch": false,
+      "list": {
+        "stage": "roster",
+        "main": {
+          "scrollWidth": 1204,
+          "clientWidth": 1204,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane ChatShell-module__Wy",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 0,
+            "clientH": 538,
+            "scrollH": 832,
+            "rect": {
+              "top": 352,
+              "bottom": 890
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__rosterPane ChatShell-module__Wy",
+          "scrollTop": 0,
+          "scrollHeight": 832,
+          "clientHeight": 538,
+          "rect": {
+            "top": 352,
+            "bottom": 890
+          }
+        },
+        "composer": null,
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 360,
+            "left": 272
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabs",
+            "w": 358,
+            "left": 273
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 169,
+            "left": 281
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabLabel",
+            "w": 87,
+            "left": 330
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 169,
+            "left": 454
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabLabel",
+            "w": 47,
+            "left": 523
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarBody",
+            "w": 358,
+            "left": 273
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane.ChatShell-",
+            "w": 358,
+            "left": 273
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 587
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 587
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 587
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 587
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 587
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 587
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 587
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 587
+          },
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 760,
+            "left": 644
+          }
+        ]
+      },
+      "thread": {
+        "stage": "thread",
+        "main": {
+          "scrollWidth": 1204,
+          "clientWidth": 1204,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "AgentConsole-module__7zBJoa__conversationList",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 0,
+            "clientH": 410,
+            "scrollH": 5029,
+            "rect": {
+              "top": 480,
+              "bottom": 890
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__messages ChatShell-module__WyNv",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 14547,
+            "clientH": 279,
+            "scrollH": 14826,
+            "rect": {
+              "top": 434,
+              "bottom": 714
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__messages ChatShell-module__WyNv",
+          "scrollTop": 14547,
+          "scrollHeight": 14826,
+          "clientHeight": 279,
+          "rect": {
+            "top": 434,
+            "bottom": 714
+          }
+        },
+        "composer": {
+          "tag": "textarea",
+          "rect": {
+            "top": 801,
+            "bottom": 876,
+            "left": 674,
+            "right": 1253,
+            "h": 75
+          },
+          "inViewport": true,
+          "reachable": true,
+          "hitTag": "textarea.ui-module__n3kDja__textArea"
+        },
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 360,
+            "left": 272
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabs",
+            "w": 358,
+            "left": 273
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 169,
+            "left": 281
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabLabel",
+            "w": 87,
+            "left": 330
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 169,
+            "left": 454
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabLabel",
+            "w": 47,
+            "left": 523
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarBody",
+            "w": 358,
+            "left": 273
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__conversations.ChatShe",
+            "w": 358,
+            "left": 273
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__sectionHead.ChatShell",
+            "w": 358,
+            "left": 273
+          },
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 760,
+            "left": 644
+          }
+        ]
+      },
+      "consoleErrors": [],
+      "steps": [],
+      "listAfterGesture": {
+        "stage": "roster",
+        "main": {
+          "scrollWidth": 1204,
+          "clientWidth": 1204,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane ChatShell-module__Wy",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 0,
+            "clientH": 538,
+            "scrollH": 832,
+            "rect": {
+              "top": 352,
+              "bottom": 890
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__rosterPane ChatShell-module__Wy",
+          "scrollTop": 0,
+          "scrollHeight": 832,
+          "clientHeight": 538,
+          "rect": {
+            "top": 352,
+            "bottom": 890
+          }
+        },
+        "composer": null,
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 360,
+            "left": 272
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabs",
+            "w": 358,
+            "left": 273
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 169,
+            "left": 281
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabLabel",
+            "w": 87,
+            "left": 330
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 169,
+            "left": 454
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabLabel",
+            "w": 47,
+            "left": 523
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarBody",
+            "w": 358,
+            "left": 273
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__rosterPane.ChatShell-",
+            "w": 358,
+            "left": 273
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 587
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 587
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 587
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 587
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 587
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 587
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 587
+          },
+          {
+            "cls": "ui-module__n3kDja__rowTrailing",
+            "w": 44,
+            "left": 587
+          },
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 760,
+            "left": 644
+          }
+        ]
+      },
+      "openedThread": true,
+      "threadAfterGesture": {
+        "stage": "thread",
+        "main": {
+          "scrollWidth": 1204,
+          "clientWidth": 1204,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "AgentConsole-module__7zBJoa__conversationList",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 0,
+            "clientH": 410,
+            "scrollH": 5029,
+            "rect": {
+              "top": 480,
+              "bottom": 890
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__messages ChatShell-module__WyNv",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 12948,
+            "clientH": 243,
+            "scrollH": 14037,
+            "rect": {
+              "top": 434,
+              "bottom": 678
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__messages ChatShell-module__WyNv",
+          "scrollTop": 12948,
+          "scrollHeight": 14037,
+          "clientHeight": 243,
+          "rect": {
+            "top": 434,
+            "bottom": 678
+          }
+        },
+        "composer": {
+          "tag": "textarea",
+          "rect": {
+            "top": 801,
+            "bottom": 876,
+            "left": 674,
+            "right": 1253,
+            "h": 75
+          },
+          "inViewport": true,
+          "reachable": true,
+          "hitTag": "textarea.ui-module__n3kDja__textArea"
+        },
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 360,
+            "left": 272
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabs",
+            "w": 358,
+            "left": 273
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 169,
+            "left": 281
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabLabel",
+            "w": 87,
+            "left": 330
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 169,
+            "left": 454
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabLabel",
+            "w": 47,
+            "left": 523
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarBody",
+            "w": 358,
+            "left": 273
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__conversations.ChatShe",
+            "w": 358,
+            "left": 273
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__sectionHead.ChatShell",
+            "w": 358,
+            "left": 273
+          },
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 760,
+            "left": 644
+          }
+        ]
+      },
+      "gestureScrolled": true,
+      "longThread": {
+        "scrollHeight": 24776,
+        "clientHeight": 243,
+        "appendMs": 1
+      },
+      "longThreadFps": 19,
+      "longAfter": {
+        "stage": "thread",
+        "main": {
+          "scrollWidth": 1204,
+          "clientWidth": 1204,
+          "overflowX": null
+        },
+        "clipped": [],
+        "scrollers": [
+          {
+            "cls": "AgentConsole-module__7zBJoa__conversationList",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 0,
+            "clientH": 410,
+            "scrollH": 5029,
+            "rect": {
+              "top": 480,
+              "bottom": 890
+            }
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__messages ChatShell-module__WyNv",
+            "canY": true,
+            "canX": false,
+            "scrollTop": 10328,
+            "clientH": 243,
+            "scrollH": 23506,
+            "rect": {
+              "top": 434,
+              "bottom": 678
+            }
+          }
+        ],
+        "thread": {
+          "cls": "AgentConsole-module__7zBJoa__messages ChatShell-module__WyNv",
+          "scrollTop": 10328,
+          "scrollHeight": 23506,
+          "clientHeight": 243,
+          "rect": {
+            "top": 434,
+            "bottom": 678
+          }
+        },
+        "composer": {
+          "tag": "textarea",
+          "rect": {
+            "top": 801,
+            "bottom": 876,
+            "left": 674,
+            "right": 1253,
+            "h": 75
+          },
+          "inViewport": true,
+          "reachable": true,
+          "hitTag": "textarea.ui-module__n3kDja__textArea"
+        },
+        "navOccluded": [],
+        "visiblePanes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 360,
+            "left": 272
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabs",
+            "w": 358,
+            "left": 273
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 169,
+            "left": 281
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabLabel",
+            "w": 87,
+            "left": 330
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 169,
+            "left": 454
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabLabel",
+            "w": 47,
+            "left": 523
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarBody",
+            "w": 358,
+            "left": 273
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__conversations.ChatShe",
+            "w": 358,
+            "left": 273
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__sectionHead.ChatShell",
+            "w": 358,
+            "left": 273
+          },
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 760,
+            "left": 644
+          }
+        ]
+      }
+    }
+  ],
+  "findings": [
+    {
+      "viewport": "tablet-768",
+      "id": "THREAD-UNREACHABLE",
+      "severity": "medium",
+      "what": "could not open a conversation from the list with a real tap",
+      "evidence": {
+        "stage": "roster",
+        "panes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 68,
+            "left": 76
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabs",
+            "w": 66,
+            "left": 77
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 54,
+            "left": 83
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 54,
+            "left": 83
+          },
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 604,
+            "left": 152
+          }
+        ]
+      }
+    },
+    {
+      "viewport": "phone-375",
+      "id": "THREAD-UNREACHABLE",
+      "severity": "medium",
+      "what": "could not open a conversation from the list with a real tap",
+      "evidence": {
+        "stage": "conversations",
+        "panes": [
+          {
+            "cls": "ui-module__n3kDja__card.ui-module__n3kDja__cardPad",
+            "w": 347,
+            "left": 14
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarTabs",
+            "w": 345,
+            "left": 15
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 163,
+            "left": 23
+          },
+          {
+            "cls": "mc-btn.mc-btn-ghost",
+            "w": 163,
+            "left": 190
+          },
+          {
+            "cls": "ChatShell-module__WyNvnq__sidebarBody",
+            "w": 345,
+            "left": 15
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__conversations.ChatShe",
+            "w": 345,
+            "left": 15
+          },
+          {
+            "cls": "AgentConsole-module__7zBJoa__sectionHead.ChatShell",
+            "w": 345,
+            "left": 15
+          }
+        ]
+      }
+    },
+    {
+      "viewport": "phone-375",
+      "id": "GESTURE-NO-SCROLL",
+      "severity": "high",
+      "what": "a real touch/wheel gesture over the thread did not move the thread scroller",
+      "evidence": {
+        "before": {
+          "cls": "AgentConsole-module__7zBJoa__conversationList",
+          "scrollTop": 0,
+          "scrollHeight": 4729,
+          "clientHeight": 282,
+          "rect": {
+            "top": 387,
+            "bottom": 669
+          }
+        },
+        "after": {
+          "cls": "AgentConsole-module__7zBJoa__conversationList",
+          "scrollTop": 0,
+          "scrollHeight": 4729,
+          "clientHeight": 282,
+          "rect": {
+            "top": 387,
+            "bottom": 669
+          }
+        }
+      }
+    },
+    {
+      "viewport": "phone-375",
+      "id": "LONG-THREAD-FPS",
+      "severity": "medium",
+      "what": "rAF rate during a 300-message thread scroll: 27/s",
+      "evidence": {
+        "frames": 27
+      }
+    },
+    {
+      "viewport": "desktop-1440",
+      "id": "LONG-THREAD-FPS",
+      "severity": "medium",
+      "what": "rAF rate during a 300-message thread scroll: 19/s",
+      "evidence": {
+        "frames": 19
+      }
+    }
+  ],
+  "summary": {
+    "viewports": 4,
+    "findings": 5,
+    "bySeverity": {
+      "medium": 4,
+      "high": 1
+    },
+    "openedThreads": 2,
+    "consoleErrors": 0
+  }
+}

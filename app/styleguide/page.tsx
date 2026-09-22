@@ -98,7 +98,7 @@ function GlassConcepts() {
           </article>
         ))}
       </div>
-      <p className={styles.glassVerdict}><strong>B · Edge Light is installed.</strong> Its dark body keeps labels clear, its rim carries the material at every width, and its depth survives the touch version without blur. Red and green are reserved for danger and confirmation. Touch keeps the gradients and rim; reduced motion removes transitions.</p>
+      <p className={styles.glassVerdict}><strong>B · Edge Light is installed.</strong> Production buttons use the glass fill, gradient and rim shown above. Red and green are reserved for danger and confirmation. Touch retains the gradient and rim without blur; reduced motion removes transitions.</p>
     </section>
   )
 }

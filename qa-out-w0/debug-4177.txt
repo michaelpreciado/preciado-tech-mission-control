@@ -1,0 +1,103 @@
+stage: roster
+--- rows ---
+ button [308,76 32x32] mc-btn :: 
+ button [23,206 181x44] mc-btn :: ◈SESSIONS
+ button [208,206 181x44] mc-btn :: ◎BOTS
+ button [280,300 95x44] mc-btn :: Add bot
+ button [23,354 366x44] mc-btn :: All conversations ›
+ button [31,400 318x79] mc-btn :: Friday(System)gpt-5.5Just now›
+ button [353,418 44x44] ui-module__n3kDja__iconButton :: ⋯
+ button [31,481 318x79] mc-btn :: Jarvis(Orchestrator)gpt-5.6-solJust now›
+ button [353,498 44x44] ui-module__n3kDja__iconButton :: ⋯
+ button [31,562 318x79] mc-btn :: Pepper(Legal)hf.co/unsloth/Qwen3.8-27B-GGUF:UD-I
+ button [353,579 44x44] ui-module__n3kDja__iconButton :: ⋯
+ button [31,643 318x79] mc-btn :: Tinker(Engineer)qwen3.8-27b-exl34m ago›
+ button [353,660 44x44] ui-module__n3kDja__iconButton :: ⋯
+ button [31,724 318x79] mc-btn :: Forge(Lead Engineer)gpt-5.6-luna8m ago›
+ button [353,741 44x44] ui-module__n3kDja__iconButton :: ⋯
+ button [31,805 318x79] mc-btn :: Sage(Librarian)gpt-5.6-luna24m ago›
+ button [353,822 44x44] ui-module__n3kDja__iconButton :: ⋯
+ button [31,886 318x79] mc-btn :: Debugger(QA)gpt-5.6-luna30m ago›
+ button [353,903 44x44] ui-module__n3kDja__iconButton :: ⋯
+ button [31,966 318x79] mc-btn :: Scout(Lead Assistant)gpt-5.6-luna31m ago›
+ button [353,984 44x44] ui-module__n3kDja__iconButton :: ⋯
+--- scrollers ---
+ AgentConsole-module__7zBJoa__rosterPane 796/559 overscrollY=auto touch-action=auto
+tap -> All conversations ›
+stage after list tap: conversations
+--- rows in list stage ---
+ button [308,76 32x32] mc-btn :: 
+ button [23,206 181x44] mc-btn :: ◈SESSIONS
+ button [208,206 181x44] mc-btn :: ◎BOTS
+ button [279,273 104x44] mc-btn :: New chat
+ button [315,331 68x44] mc-btn :: Filters
+ button [23,389 366x97] mc-btn :: Bot ChatJust nowThe second Friday follow-up also
+ button [23,488 366x97] mc-btn :: Bot Chat1m agoJarvis confirmed: Pepper is parked
+ button [23,588 366x97] mc-btn :: Bot Chat4m agoJarvis accepted the audit and inco
+ button [23,687 366x97] mc-btn :: friday-dashboard4m agoYour request was not proce
+ button [23,786 366x97] mc-btn :: Bot Chat5m ago[CONTEXT COMPACTION — REFERENCE ON
+ button [23,886 366x97] mc-btn :: vault-daily-sync · Sep 21 23:158m ago⚠️ **Skill(
+ button [23,985 366x97] mc-btn :: Bot Chat9m agoJarvis’s acknowledgment delivery r
+ button [23,1084 366x97] mc-btn :: Bot Chat24m agoThe acknowledgment was queued for
+ button [23,1183 366x97] mc-btn :: Bot Chat30m agoCorrection accepted: `components/
+ button [23,1283 366x97] mc-btn :: Bot Chat31m agoBusiness usefulness review The Li
+ button [23,1382 366x97] mc-btn :: Configure qwen3.8-27b-exl3 in Hermes1h agoThe co
+ button [23,1481 366x97] mc-btn :: Read-only fault-injection design audit for Herme
+ button [23,1580 366x97] mc-btn :: Design Preciado tech ASCII wallpaper1h agoConfir
+ button [23,1680 366x97] mc-btn :: Read-only reliability audit of the active Hermes
+ button [23,1779 366x80] mc-btn :: Reply with exactly: OK.1h agoOK.friday · friday-
+ button [23,1861 366x80] mc-btn :: Reply with exactly RECOVERY_OK1h agoRECOVERY_OKf
+ button [23,1943 366x80] mc-btn :: Reply with exactly FAULT_FALLBACK_OK1h agoReply 
+ button [23,2025 366x80] mc-btn :: Use the terminal tool to print exactly…1h agoHER
+ button [23,2107 366x80] mc-btn :: Reply with exactly HERMES_REPEAT_OK1h agoHERMES_
+ button [23,2189 366x80] mc-btn :: Reply with exactly HERMES_DEEP_OK1h agoHERMES_DE
+ button [23,2270 366x80] mc-btn :: Reply with exactly HERMES_CODE_OK1h agoReply wit
+ button [23,2352 366x97] mc-btn :: Fix final chat QA regressions: keyboard, tablet 
+ button [23,2452 366x97] mc-btn :: Fix final chat QA regressions: keyboard, tablet 
+ button [23,2551 366x80] mc-btn :: Reply with exactly LOCAL_OK2h agoLOCAL_OKfriday 
+ button [23,2633 366x97] mc-btn :: Inspect the active Friday Hermes profile and det
+ button [23,2732 366x97] mc-btn :: Independently investigate the local serving stac
+ button [23,2831 366x97] mc-btn :: Hi2h agoThis turn did not complete. Some actions
+ button [23,2914 366x97] mc-btn :: Chat backend fixes: error-surface hygiene + HERM
+ button [23,2980 366x97] mc-btn :: Friendly greeting #32h ago**Wave 9 status, 20:35
+ button [23,3046 366x97] mc-btn :: Chat UI: cap thread rendering in ChatConsole so 
+ button [23,3112 366x97] mc-btn :: Chat UI: adversarial QA + debug (dum-e + codex) 
+ button [23,3178 366x97] mc-btn :: Chat UI: adaptive typography + responsive smooth
+ button [23,3253 366x80] mc-btn :: Reply with exactly: QWEN_EXL3_PROFILE_OK3h agoQW
+ button [23,3310 366x97] mc-btn :: Chat UI: Hermes-style two-pane shell (desktop/ta
+ button [23,3385 366x80] mc-btn :: Reply with exactly: LOCAL_QWEN_OK3h agoLOCAL_QWE
+ button [23,3442 366x97] mc-btn :: Chat UI: adversarial QA + debug (dum-e + codex)3
+ button [23,3508 366x97] mc-btn :: Chat UI: adaptive typography + responsive smooth
+ button [23,3574 366x97] mc-btn :: Chat UI: adaptive typography + responsive smooth
+ button [23,3640 366x97] mc-btn :: Chat UI: Android-app future compatibility + API 
+ button [23,3706 366x97] mc-btn :: Chat UI: single-window mobile view4h agoCard t_2
+ button [23,3781 366x80] mc-btn :: qa-busy-a4h agoOK.jarvis · friday-linux
+ button [23,3838 366x97] mc-btn :: qa-cli-probe-1902404h agoYour request was not pr
+ button [23,3904 366x97] mc-btn :: qa-argv-1858474h agoYour request was not process
+ button [23,3970 366x97] mc-btn :: qa-argv-proof4h agoYour request was not processe
+ button [23,4045 366x80] mc-btn :: qa-model-e2e4h agoPONGjarvis · friday-linux
+ button [23,4102 366x97] mc-btn :: Wave 9 client previews: 10 homepage pitches4h ag
+ button [23,4168 366x97] mc-btn :: mc-probe-f26h agoHi, sir. Jarvis here, systems g
+ button [23,4234 366x97] mc-btn :: mc-probe-f16h agoGood day, sir. The systems are 
+ button [23,4300 366x97] mc-btn :: Easy single-component hardware upgrade8h ago[Sys
+ button [23,4375 366x80] mc-btn :: AI model identification question #213h ago{ "tag
+ button [23,4432 366x97] mc-btn :: AI model identification question13h ago{"follow_
+ button [23,4498 366x97] mc-btn :: Identify AI model in use13h agoI'm running on Qw
+ button [23,4573 366x80] mc-btn :: New conversation #313h ago{ "title": "AI Model I
+ button [23,4630 366x97] mc-btn :: New conversation #213h ago{"title": "Roman Empir
+ button [23,4705 366x80] mc-btn :: Random fun fact about Roman Empire13h agoSirjarv
+ button [23,4762 366x97] mc-btn :: outreach-followup-check · Sep 21 10:1413h agoI s
+ button [23,4837 366x80] mc-btn :: vault-daily-sync · Sep 20 21:001d ago⚠️ Skill(s)
+ button [23,4903 366x80] mc-btn :: General1d ago{ "tags": ["General"] } ⚙ via qwen3
+ button [23,4960 366x97] mc-btn :: Introducing Jarvis business partner persona1d ag
+ button [23,5026 366x97] mc-btn :: Ask about assistant identity1d agoJarvis, sir. B
+ button [23,5109 226x44] mc-btn :: Show more conversations
+ button [23,766 81x44] mc-btn :: ‹ Bots
+opening conversation: ◈SESSIONS
+after opening: {
+ "stage": "conversations",
+ "hasInput": false,
+ "inputs": [
+  "input.ui-module__n3kDja__input:{\"x\":29,\"y\":331.109375,\"width\":277.984375,\"height\":44,\"top\":331.109375,\"right\":306.984375,\"bottom\":375.109375,\"left\":29}"
+ ]
+}

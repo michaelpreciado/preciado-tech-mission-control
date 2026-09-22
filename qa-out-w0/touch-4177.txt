@@ -1,0 +1,18 @@
+opened: Bot ChatJust nowThe second Friday fo
+{
+ "manualTouchDrag_thread": {
+  "before": 45782,
+  "after": 45741,
+  "moved": true
+ },
+ "manualTouchDrag_control": {
+  "before": 0,
+  "after": 0,
+  "moved": false
+ },
+ "syntheticGesture_control": {
+  "before": 0,
+  "after": 0,
+  "moved": false
+ }
+}
