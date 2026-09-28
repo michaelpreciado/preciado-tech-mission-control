@@ -832,6 +832,27 @@ function LocalAI({ costs, now }: { costs: CostDashboard; now: number | null }) {
   const weeks = heatmapWeeks(lc.daily, now)
   const spark = lc.dailyThroughput.map(d => d.avgTokensPerSec)
   const rate = lc.blendedApiRatePerMTokens
+  const dailyBurn = useMemo(() => {
+    const byDate = new Map((lc.daily ?? []).map(day => [day.date, day]))
+    const today = new Date()
+    const end = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())
+    return Array.from({ length: 14 }, (_, i) => {
+      const date = new Date(end - (13 - i) * 86_400_000).toISOString().slice(0, 10)
+      const day = byDate.get(date)
+      const tokens = day?.tokens ?? 0
+      return { date, tokens, requests: day?.requests ?? 0, avoided: rate != null ? tokens * rate / 1_000_000 : null }
+    })
+  }, [lc.daily, rate])
+  const maxDailyTokens = Math.max(1, ...dailyBurn.map(day => day.tokens))
+  const todayBurn = dailyBurn[dailyBurn.length - 1]
+  const last7 = dailyBurn.slice(-7)
+  const weekTokens = last7.reduce((sum, day) => sum + day.tokens, 0)
+  const weekAvoided = rate != null ? weekTokens * rate / 1_000_000 : null
+  const last24 = lc.last24Hours ?? []
+  const last24Tokens = last24.reduce((sum, hour) => sum + hour.tokens, 0)
+  const last24Requests = last24.reduce((sum, hour) => sum + hour.requests, 0)
+  const last24Avoided = rate != null ? last24Tokens * rate / 1_000_000 : null
+  const maxHourlyTokens = Math.max(1, ...last24.map(hour => hour.tokens))
 
   return (
     <>
@@ -860,6 +881,73 @@ function LocalAI({ costs, now }: { costs: CostDashboard; now: number | null }) {
           HANDFUL OF CPU-BOUND TURNS NEAR 0.2 TOK/S DRAG THE MEAN WELL BELOW WHAT THE RIG USUALLY DOES.
           {lc.cloudRouted.tokens > 0 && ` EXCLUDES ${lc.cloudRouted.models.join(', ')} (${tok(lc.cloudRouted.tokens)} TOKENS) — CLOUD-ROUTED, NOT THIS RIG.`}
         </Note>
+      </Window>
+
+      <SectionRule label="DAILY LOCAL AI BURN · LAST 14 DAYS" />
+      <Window title="ON THIS RIG · TOKENS & API VALUE AVOIDED" meta="local inference · daily">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(150px, 100%), 1fr))', gap: 12, padding: '14px 16px 4px' }}>
+          <Stat value={tok(todayBurn.tokens)} label="TODAY · LOCAL TOKENS" size="lg" color={CATEGORICAL[6]}
+            sub={`${count(todayBurn.requests)} requests`} />
+          <Stat value={tok(weekTokens)} label="7-DAY LOCAL TOKENS" size="lg" color={CATEGORICAL[6]} />
+          <Stat value={weekAvoided != null ? money(weekAvoided) : '—'} label="7-DAY API COST AVOIDED · EST." size="lg" color={CATEGORICAL[2]}
+            sub={rate != null ? `at ${money(rate)}/M metered rate` : 'no metered rate to compare'} />
+        </div>
+        <div className="cp-burn2d" style={{ paddingTop: 4 }}>
+          <svg viewBox="0 0 720 190" role="img" aria-label="Daily local AI tokens over the last 14 days">
+            {[0, 1, 2, 3].map(level => {
+              const y = 148 - level * 42
+              return <g key={level}><line x1="42" y1={y} x2="710" y2={y} stroke="var(--pt-border-dim)" strokeWidth="1" strokeDasharray={level ? '2 4' : undefined} /><text x="36" y={y + 3} textAnchor="end" className="cp-burn2d-tick">{tok(maxDailyTokens * level / 3)}</text></g>
+            })}
+            {dailyBurn.map((day, i) => {
+              const x = 50 + i * 47
+              const h = day.tokens ? Math.max(2, day.tokens / maxDailyTokens * 126) : 2
+              const y = 148 - h
+              return <g key={day.date}>
+                <title>{`${day.date}: ${count(day.tokens)} local tokens · ${count(day.requests)} requests${day.avoided != null ? ` · ${money(day.avoided)} estimated API cost avoided` : ''}`}</title>
+                <rect x={x} y={y} width="28" height={h} rx="2" fill={day.tokens ? 'url(#localBurnGradient)' : 'rgba(255,255,255,0.10)'} />
+                {i % 2 === 0 && <text x={x + 14} y="168" textAnchor="middle" className="cp-burn2d-day">{day.date.slice(5)}</text>}
+              </g>
+            })}
+            <defs><linearGradient id="localBurnGradient" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor={CATEGORICAL[2]} /><stop offset="100%" stopColor={CATEGORICAL[6]} stopOpacity="0.45" /></linearGradient></defs>
+          </svg>
+          <div className="mc-heatmap-legend" style={{ padding: '0 4px 10px' }}>
+            <span>DAILY LOCAL TOKENS</span><span style={{ marginLeft: 'auto' }}>{rate != null ? `EST. 7D AVOIDED · ${money(weekAvoided)}` : 'DOLLAR VALUE UNAVAILABLE · NO METERED BASELINE'}</span>
+          </div>
+        </div>
+        <Note>API VALUE IS A COUNTERFACTUAL ESTIMATE, NOT CASH SAVED OR AVOIDED ELECTRICITY COST. IT PRICES LOCAL TOKENS AT THE LOG-DERIVED METERED RATE; SUBSCRIPTION USAGE IS EXCLUDED. POWER / ENERGY COST IS NOT INCLUDED.</Note>
+      </Window>
+
+      <SectionRule label="LOCAL AI BURN · ROLLING 24 HOURS" />
+      <Window title="LAST 24 HOURS · HOURLY LOCAL USAGE" meta="rolling window · this rig only">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(150px, 100%), 1fr))', gap: 12, padding: '14px 16px 4px' }}>
+          <Stat value={tok(last24Tokens)} label="LOCAL TOKENS · 24H" size="lg" color={CATEGORICAL[6]} />
+          <Stat value={count(last24Requests)} label="REQUESTS · 24H" size="lg" color={CATEGORICAL[6]} />
+          <Stat value={last24Avoided != null ? money(last24Avoided) : '—'} label="API VALUE · EST. 24H" size="lg" color={CATEGORICAL[2]}
+            sub={rate != null ? `at ${money(rate)}/M metered rate` : 'no metered rate to compare'} />
+        </div>
+        <div className="cp-burn2d" style={{ paddingTop: 4 }}>
+          <svg viewBox="0 0 720 190" role="img" aria-label="Local AI tokens by hour over the rolling last 24 hours">
+            {[0, 1, 2, 3].map(level => {
+              const y = 148 - level * 42
+              return <g key={level}><line x1="42" y1={y} x2="710" y2={y} stroke="var(--pt-border-dim)" strokeWidth="1" strokeDasharray={level ? '2 4' : undefined} /><text x="36" y={y + 3} textAnchor="end" className="cp-burn2d-tick">{tok(maxHourlyTokens * level / 3)}</text></g>
+            })}
+            {last24.map((hour, i) => {
+              const x = 50 + i * (660 / Math.max(1, last24.length - 1))
+              const h = hour.tokens ? Math.max(2, hour.tokens / maxHourlyTokens * 126) : 2
+              const y = 148 - h
+              return <g key={hour.hour}>
+                <title>{`${new Date(hour.hour).toISOString().slice(0, 13)}:00 UTC: ${count(hour.tokens)} local tokens · ${count(hour.requests)} requests`}</title>
+                <rect x={x} y={y} width="18" height={h} rx="2" fill={hour.tokens ? 'url(#localBurn24Gradient)' : 'rgba(255,255,255,0.10)'} />
+                {i % 3 === 0 && <text x={x + 9} y="168" textAnchor="middle" className="cp-burn2d-day">{hour.hour.slice(11, 13)}</text>}
+              </g>
+            })}
+            <defs><linearGradient id="localBurn24Gradient" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor={CATEGORICAL[2]} /><stop offset="100%" stopColor={CATEGORICAL[6]} stopOpacity="0.45" /></linearGradient></defs>
+          </svg>
+          <div className="mc-heatmap-legend" style={{ padding: '0 4px 10px' }}>
+            <span>UTC HOUR · LAST 24 HOURS</span><span style={{ marginLeft: 'auto' }}>{last24Avoided != null ? `EST. API VALUE · ${money(last24Avoided)}` : 'DOLLAR VALUE UNAVAILABLE · NO METERED BASELINE'}</span>
+          </div>
+        </div>
+        <Note>ROLLING 24 HOURS FROM LOGGED LOCAL INFERENCE TIMESTAMPS, GROUPED BY UTC HOUR. API VALUE IS A COUNTERFACTUAL ESTIMATE, NOT CASH SAVED; EXCLUDES SUBSCRIPTION USE AND ELECTRICITY COST.</Note>
       </Window>
 
       <div className="mc-viz-grid" style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(min(360px, 100%), 1fr))' }}>

@@ -412,11 +412,32 @@ export async function collectCosts(): Promise<CostDashboard> {
   const localTotalTokens = localModels.reduce((s, m) => s + m.totalTokens, 0)
   const localTotalRequests = localModels.reduce((s, m) => s + m.requests, 0)
   const localTokensThisMonth = billing[0]?.localTokens ?? 0
+  const nowMs = Date.now()
+  const hourMs = 60 * 60 * 1000
+  const cutoffMs = nowMs - 24 * hourMs
+  const hourlyLocal = new Map<number, { tokens: number; requests: number }>()
+  for (const record of records.values()) {
+    if (!isLocalModel(record.provider, record.model)) continue
+    const timestamp = Date.parse(record.timestamp)
+    if (!Number.isFinite(timestamp) || timestamp < cutoffMs || timestamp > nowMs) continue
+    const hour = Math.floor(timestamp / hourMs) * hourMs
+    const bucket = hourlyLocal.get(hour) ?? { tokens: 0, requests: 0 }
+    bucket.tokens += record.total
+    bucket.requests += 1
+    hourlyLocal.set(hour, bucket)
+  }
+  const last24Hours = Array.from({ length: 25 }, (_, index) => {
+    // Rolling 24h can straddle 25 clock-hour labels; edge buckets are partial.
+    const hourMsStart = Math.floor(cutoffMs / hourMs) * hourMs + index * hourMs
+    const bucket = hourlyLocal.get(hourMsStart)
+    return { hour: new Date(hourMsStart).toISOString(), tokens: bucket?.tokens ?? 0, requests: bucket?.requests ?? 0 }
+  })
 
   const localCompute: CostDashboard['localCompute'] = localModels.length ? {
     totalTokens: localTotalTokens,
     totalRequests: localTotalRequests,
     daily: localDailyWindowed,
+    last24Hours,
     models: localModelRows,
     avgTokensPerSec: avgOf(throughputSamples),
     medianTokensPerSec: pctlOf(throughputSamples, 0.5),

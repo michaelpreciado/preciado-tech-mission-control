@@ -270,6 +270,8 @@ export type CostDashboard = {
     totalTokens: number
     totalRequests: number
     daily: { date: string; tokens: number; requests: number }[]
+    /** Rolling 24-hour local usage, grouped into UTC hour buckets. */
+    last24Hours: { hour: string; tokens: number; requests: number }[]
     models: { model: string; tokens: number; requests: number; avgTokensPerSec: number | null }[]
     avgTokensPerSec: number | null
     /** Median and 95th-percentile tok/s. The mean is dragged around by a
