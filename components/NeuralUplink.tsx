@@ -2,34 +2,18 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import { useLiveData } from './LiveDataProvider'
 import styles from './NeuralUplink.module.css'
 
-/** Decorative orbital geometry surrounds real, actionable mission telemetry. */
+/** A single compositor-only scan sweep decorates real, actionable mission telemetry. */
 export function NeuralUplink({ portraitArt }: { portraitArt?: ReactNode }) {
   const { data, isLive } = useLiveData()
-  const root = useRef<HTMLElement>(null)
-  const [moving, setMoving] = useState(false)
-  useEffect(() => {
-    let visible = false
-    const sync = () => setMoving(visible && !document.hidden)
-    const observer = new IntersectionObserver(([entry]) => {
-      visible = entry.isIntersecting
-      sync()
-    })
-    if (root.current) observer.observe(root.current)
-    document.addEventListener('visibilitychange', sync)
-    return () => {
-      observer.disconnect()
-      document.removeEventListener('visibilitychange', sync)
-    }
-  }, [])
   const active = data?.crew?.filter(agent => agent.status === 'active').length
   const tasks = data?.kanban?.openTasks ?? data?.counts.openTasks
 
   return (
-    <section ref={root} className={styles.uplink} data-moving={moving} aria-label="Neural uplink">
+    <section className={styles.uplink} data-motion-widget aria-label="Neural uplink">
       <Image className={styles.art} src="/visuals/neural-reactor.webp" alt="" fill sizes="(max-width: 1180px) 100vw, 1180px" priority />
       <div className={styles.grid} aria-hidden="true" />
       <div className={styles.copy}>
@@ -48,7 +32,6 @@ export function NeuralUplink({ portraitArt }: { portraitArt?: ReactNode }) {
           <source media="(max-width: 820px)" srcSet="/brand/michael-profile.jpg" />
           <Image src="/brand/mp.jpeg" alt="Michael Preciado" width={160} height={160} priority />
         </picture>
-        <div className={styles.orbit} aria-hidden="true"><b /><b /><b /></div>
         <div className={styles.scan} aria-hidden="true" />
         <span className={styles.caption}>{isLive ? 'SIGNAL CONNECTED' : 'SIGNAL STANDBY'}</span>
       </div>

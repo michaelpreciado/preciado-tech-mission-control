@@ -155,7 +155,7 @@ function OrbRuntime({ placement }: { placement: Placement }) {
   const params = deriveOrbVisual(visual.state)
   const hostLoad = sample ? `${Math.round(Math.min(1, orbLoadIntensity(sample)) * 100)}%` : '—'
   return (
-    <div ref={renderRef} className={`mc-core-orb mc-core-orb-${placement}`} data-orb-state={visual.state} aria-hidden="true">
+    <div ref={renderRef} className={`mc-core-orb mc-core-orb-${placement}`} data-motion-widget data-orb-state={visual.state} aria-hidden="true">
       {webglAvailable && !webglFailed && (
         <WebGLErrorBoundary onError={markWebGLFailed}>
           <Canvas

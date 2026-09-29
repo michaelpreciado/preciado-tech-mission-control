@@ -119,8 +119,8 @@
 .navLabel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: max-width var(--ob-dur-fast, 150ms) ease, opacity var(--ob-dur-fast, 150ms) ease, transform var(--ob-dur-fast, 150ms) ease; }
 
 @keyframes navIconHolographicShimmer {
-  from { background-position: 0% 50%; }
-  to { background-position: 100% 50%; }
+  0%, 100% { opacity: .12; }
+  50% { opacity: .26; }
 }
 
 .crewSection { gap: 9px; }

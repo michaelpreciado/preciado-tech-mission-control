@@ -29,7 +29,7 @@ function normalizeChart(series: number[]) {
 
 export function LaunchFilm() {
   const [data, setData] = useState<LaunchData | null>(null)
-  const [failed, setFailed] = useState(false)
+  const [status, setStatus] = useState<'loading' | 'ready' | 'failed'>('loading')
 
   useEffect(() => {
     const controller = new AbortController()
@@ -38,19 +38,23 @@ export function LaunchFilm() {
       try {
         const response = await apiFetch('/api/mission-control', { signal })
         if (!response.ok) {
-          if (!signal.aborted) setFailed(true)
+          if (!signal.aborted) setStatus('failed')
           return
         }
         const d: LaunchData | null = await response.json()
-        if (!signal.aborted) setData(d)
+        if (!signal.aborted) {
+          setData(d)
+          setStatus('ready')
+        }
       } catch {
-        if (!signal.aborted) setFailed(true)
+        if (!signal.aborted) setStatus('failed')
       }
     }
     void load()
     return () => controller.abort()
   }, [])
 
+  const failed = status === 'failed'
   const d = data
   const crewCount = Array.isArray(d?.crew) ? d.crew.length : 0
   const openTasks = Number(d?.kanban?.openTasks ?? d?.counts?.openTasks ?? 0)
@@ -60,7 +64,7 @@ export function LaunchFilm() {
   const { chartPoints, last } = normalizeChart(series)
 
   return (
-    <div className="launch-film" role="status" aria-label="Mission Control launch sequence">
+    <div className="launch-film" data-state={status} role="status" aria-label="Mission Control launch sequence">
       <div className="launch-seam" aria-hidden="true" />
       <svg className="boot-draw launch-mark" viewBox="0 0 140 44" aria-hidden="true">
         <path className="boot-draw-path" d="M4 30 H136" />

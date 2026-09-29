@@ -176,7 +176,7 @@ html[data-motion='off'] .taskDot[data-running='true'] {
 .ob-home > .chat[data-empty='true'] { min-height: clamp(520px, calc(100svh - 180px), 740px); margin-top: 18px; }
 .obGrid { display: grid; grid-template-columns: minmax(210px, 270px) minmax(0, 1fr) minmax(250px, 320px); gap: 15px; min-height: calc(100dvh - 124px); margin-top: 15px; }
 .obRail, .obCenter { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-.obCard { position: relative; min-width: 0; overflow: hidden; border: 1px solid var(--ob-border); border-radius: var(--ob-radius-card); background: var(--ob-glass); backdrop-filter: blur(12px); box-shadow: var(--ob-surface-highlight); }
+.obCard { position: relative; min-width: 0; overflow: hidden; contain: layout paint; border: 1px solid var(--ob-border); border-radius: var(--ob-radius-card); background: var(--ob-glass); backdrop-filter: blur(12px); box-shadow: var(--ob-surface-highlight); }
 .obCard::before, .obCard::after { position: absolute; z-index: 3; width: 14px; height: 14px; content: ''; pointer-events: none; }
 .obCard::before { top: -1px; left: -1px; border-top: 1px solid var(--pt-btn-glass-line-base); border-left: 1px solid var(--pt-btn-glass-line-base); }
 .obCard::after { right: -1px; bottom: -1px; border-right: 1px solid var(--pt-btn-glass-line-base); border-bottom: 1px solid var(--pt-btn-glass-line-base); }

@@ -155,7 +155,7 @@ export default function HoloHud3D({ nodes, selectedId }: { nodes: AgentNode[]; s
     return [...unique.filter(n => n.id === 'hermes' || n.id === 'jarvis'), ...unique.filter(n => n.id !== 'hermes' && n.id !== 'jarvis')].slice(0, HOLO_NODE_CAP)
   }, [nodes])
   const staticMotion = reduced || motion === 'reduced' || motion === 'off'
-  return <div ref={host} className="mc-hud3d" aria-hidden="true">
+  return <div ref={host} className="mc-hud3d" data-motion-widget aria-hidden="true">
     <BracketFrame />
     {visible && inView && elements3d.teamGraph && <HoloBoundary>
       <Canvas dpr={[1, 1.25]} frameloop={staticMotion ? 'demand' : 'always'} camera={{ position: [0, 0, 16], fov: 40 }} gl={{ alpha: true, antialias: !coarse }} fallback={<p>3D unavailable. Use the roster below.</p>}>

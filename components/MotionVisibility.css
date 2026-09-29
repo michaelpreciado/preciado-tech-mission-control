@@ -1,0 +1,20 @@
+/* A single shell observer pauses CSS motion on hidden heavy widgets. */
+html:root body [data-motion-visible='false'],
+html:root body [data-motion-visible='false'] *,
+html:root body [data-motion-visible='false']::before,
+html:root body [data-motion-visible='false']::after,
+html:root body [data-motion-visible='false'] *::before,
+html:root body [data-motion-visible='false'] *::after,
+html[data-page-hidden='true'] *,
+html[data-page-hidden='true'] *::before,
+html[data-page-hidden='true'] *::after {
+  animation-play-state: paused !important;
+}
+html[data-motion='reduced'] *, html[data-motion='off'] *,
+html[data-motion='reduced'] *::before, html[data-motion='off'] *::before,
+html[data-motion='reduced'] *::after, html[data-motion='off'] *::after {
+  animation: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  html:root body *, html:root body *::before, html:root body *::after { animation: none !important; }
+}

@@ -10,6 +10,7 @@ import { Button } from './ui'
 import { Icon, type IconName } from './icons'
 import { FOLD_INNER_MEDIA_QUERY, Sidebar as OmniBridgeSidebar } from './Sidebar'
 import { MatrixRainBackground } from './MatrixRainBackground'
+import { MotionVisibility } from './MotionVisibility'
 import { UiSettingsContext, DEFAULT_UI_SETTINGS, useUiSettings, type UiSettings } from './ui-settings'
 import { NAV, PINNED_TAB_IDS } from '@/lib/nav-tabs'
 
@@ -371,6 +372,7 @@ export function Shell({ appName, appTagline, ui, children }: { appName: string; 
       </a>
       <div className="mc-bg" />
       <MatrixRainBackground />
+      <MotionVisibility />
       <div className="mc-scanlines" aria-hidden="true" />
       <div className="mc-vignette" aria-hidden="true" />
 

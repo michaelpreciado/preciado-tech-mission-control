@@ -124,7 +124,7 @@ export function HomeDeck() {
         <CrewCard />
         <div className={`${styles.obCard} ${styles.obSystemCard}`}><HomeSystem /></div>
         <div className={`${styles.obCard} ${styles.obTasksCard}`}><HomeTasks /></div>
-        <div className={styles.obUplink}><NeuralUplink portraitArt={<AsciiPortrait />} /></div>
+        <div className={styles.obUplink} data-motion-widget><NeuralUplink portraitArt={<AsciiPortrait />} /></div>
         <div className={styles.obOrbDock}>
           <div className={styles.obOrbStage}><BracketFrame /><HomeCoreOrb placement="desktop" /></div>
           <span className={styles.obOrbLabel}>NEURAL CORE</span>

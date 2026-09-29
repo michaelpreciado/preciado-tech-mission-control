@@ -732,7 +732,7 @@ body {
   font-size: var(--vg-fs-min);
   letter-spacing: 0.04em;
   cursor: pointer;
-  transition: all var(--pt-dur-fast) var(--pt-ease);
+  transition: color var(--pt-dur-fast) var(--pt-ease), background-color var(--pt-dur-fast) var(--pt-ease), border-color var(--pt-dur-fast) var(--pt-ease), transform var(--pt-dur-fast) var(--pt-ease), opacity var(--pt-dur-fast) var(--pt-ease);
   background: transparent;
   font-family: var(--pt-font-sans);
   text-align: left; width: 100%;
@@ -952,7 +952,7 @@ body {
   font-size: var(--vg-fs-min); letter-spacing: 0.16em; text-transform: uppercase;
   color: var(--pt-text-mute); opacity: 0.6; text-decoration: none;
   padding: 2px 4px; border-radius: var(--pt-r-sm); align-self: flex-start;
-  border: 1px dashed transparent; transition: all var(--pt-dur-fast) var(--pt-ease);
+  border: 1px dashed transparent; transition: color var(--pt-dur-fast) var(--pt-ease), background-color var(--pt-dur-fast) var(--pt-ease), border-color var(--pt-dur-fast) var(--pt-ease), transform var(--pt-dur-fast) var(--pt-ease), opacity var(--pt-dur-fast) var(--pt-ease);
 }
 .mc-week-add:hover { opacity: 1; color: var(--pt-neon-bright); border-color: var(--pt-border-strong); }
 .mc-week-task {
@@ -1352,8 +1352,8 @@ body {
 .mc-led.blue { background: var(--pt-info); box-shadow: 0 0 6px rgba(var(--pt-glow-rgb),0.6), 0 0 12px rgba(var(--pt-glow-rgb),0.25); }
 .mc-led.dim { animation: none; opacity: 0.45; }
 @keyframes led-pulse {
-  0%, 100% { transform: scale(1); filter: brightness(1); }
-  50% { transform: scale(1.15); filter: brightness(1.4); }
+  0%, 100% { transform: scale(1); opacity: .75; }
+  50% { transform: scale(1.15); opacity: 1; }
 }
 
 /* ── Tab strip ────────────────────────────────────────── */
@@ -1370,7 +1370,7 @@ body {
   border: 1px solid transparent;
   border-radius: 999px;
   cursor: pointer;
-  transition: all var(--pt-dur-fast) var(--pt-ease);
+  transition: color var(--pt-dur-fast) var(--pt-ease), background-color var(--pt-dur-fast) var(--pt-ease), border-color var(--pt-dur-fast) var(--pt-ease), transform var(--pt-dur-fast) var(--pt-ease), opacity var(--pt-dur-fast) var(--pt-ease);
   background: rgba(118,118,128,.24);
   color: inherit;
   font-family: var(--pt-font-sans);
@@ -1482,7 +1482,7 @@ body {
   padding: 12px 14px;
   background: var(--ob-glass);
   position: relative;
-  transition: all var(--pt-dur-fast) var(--pt-ease);
+  transition: color var(--pt-dur-fast) var(--pt-ease), background-color var(--pt-dur-fast) var(--pt-ease), border-color var(--pt-dur-fast) var(--pt-ease), transform var(--pt-dur-fast) var(--pt-ease), opacity var(--pt-dur-fast) var(--pt-ease);
   cursor: pointer; box-shadow: var(--ob-surface-highlight); backdrop-filter: none; }
 .mc-task:hover {
   border-color: var(--pt-border);
@@ -1549,7 +1549,7 @@ body {
   text-transform: uppercase;
   text-align: center;
   cursor: pointer;
-  transition: all var(--pt-dur-fast) var(--pt-ease);
+  transition: color var(--pt-dur-fast) var(--pt-ease), background-color var(--pt-dur-fast) var(--pt-ease), border-color var(--pt-dur-fast) var(--pt-ease), transform var(--pt-dur-fast) var(--pt-ease), opacity var(--pt-dur-fast) var(--pt-ease);
 }
 .mc-task-dispatch:hover { background: var(--pt-neon); color: #08010c; text-shadow: none; }
 
@@ -1651,7 +1651,7 @@ body {
   padding: 12px 14px;
   background: rgba(14,17,23,0.7);
   display: flex; gap: 12px;
-  transition: all var(--pt-dur-fast) var(--pt-ease);
+  transition: color var(--pt-dur-fast) var(--pt-ease), background-color var(--pt-dur-fast) var(--pt-ease), border-color var(--pt-dur-fast) var(--pt-ease), transform var(--pt-dur-fast) var(--pt-ease), opacity var(--pt-dur-fast) var(--pt-ease);
   cursor: pointer;
 }
 .mc-agent-card:hover {
@@ -1706,7 +1706,7 @@ body {
   margin-bottom: 12px;
   background: var(--ob-glass);
   position: relative;
-  transition: all var(--pt-dur-fast) var(--pt-ease); box-shadow: var(--ob-surface-highlight); backdrop-filter: none; }
+  transition: color var(--pt-dur-fast) var(--pt-ease), background-color var(--pt-dur-fast) var(--pt-ease), border-color var(--pt-dur-fast) var(--pt-ease), transform var(--pt-dur-fast) var(--pt-ease), opacity var(--pt-dur-fast) var(--pt-ease); box-shadow: var(--ob-surface-highlight); backdrop-filter: none; }
 .mc-cal-card:hover { border-color: var(--pt-border); box-shadow: var(--pt-glow-sm); }
 .mc-cal-card-head {
   display: flex; align-items: center; gap: 10px;
@@ -1973,13 +1973,13 @@ h1 {
 /* ── Terminal tree ───────────────────────────────────── */
 
 /* ── Agent office cool-up: grid, radar, links, hub rings, pulses ─ */
-@keyframes floor-pan { from { background-position: 0 0; } to { background-position: 0 48px; } }
+@keyframes floor-pan { from { transform: translateY(-48px); } to { transform: translateY(0); } }
 @keyframes radar-spin { to { transform: rotate(360deg); } }
 @keyframes office-scan {
   0%   { transform: translateY(-100%); }
   100% { transform: translateY(380%); }
 }
-@keyframes link-dash { to { stroke-dashoffset: -12; } }
+@keyframes link-dash { 50% { opacity: .45; } }
 @keyframes hub-ring {
   0%   { transform: scale(0.6); opacity: 0.8; }
   100% { transform: scale(2.2); opacity: 0; }
@@ -2216,9 +2216,9 @@ h1 {
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
+    animation-duration: 0s !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-duration: 0s !important;
     scroll-behavior: auto !important;
   }
   .mc-rain { display: none !important; }
@@ -3766,14 +3766,14 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   animation: sub-flow 0.7s linear infinite;
 }
 @keyframes sub-flow {
-  to { stroke-dashoffset: -11; }
+  50% { opacity: .45; }
 }
 
 /* Active pulse (working) */
 .mc-sub-node.state-working .mc-sub-node-shape { animation: sub-pulse 1.6s ease-in-out infinite; }
 @keyframes sub-pulse {
-  0%, 100% { filter: brightness(1); }
-  50% { filter: brightness(1.5); }
+  0%, 100% { opacity: .65; }
+  50% { opacity: 1; }
 }
 
 /* Errored — loudest thing on screen */
@@ -3781,7 +3781,7 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   animation: sub-flash 0.9s steps(2) infinite;
 }
 @keyframes sub-flash {
-  50% { filter: brightness(1.6) saturate(1.4); }
+  50% { opacity: .5; }
 }
 
 /* Stale — desaturated */
@@ -3932,8 +3932,8 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   opacity: 0.5;
 }
 @keyframes mc-hud-drift {
-  from { background-position: 0 0, 0 0; }
-  to   { background-position: 26px 26px, 26px 26px; }
+  from { transform: translate(-26px, -26px); }
+  to   { transform: translate(0, 0); }
 }
 
 .mc-hud-svg {
@@ -3987,7 +3987,7 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   stroke: #ff5f57; stroke-width: 2.2;
   animation: mc-hud-beam 0.25s linear infinite, sub-flash 0.9s steps(2) infinite;
 }
-@keyframes mc-hud-beam { to { stroke-dashoffset: -24; } }
+@keyframes mc-hud-beam { 50% { opacity: .45; } }
 
 /* orbital nodes */
 .mc-hud-node { cursor: pointer; outline: none; }
@@ -4078,7 +4078,7 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   box-shadow: var(--pt-glow-sm);
   animation: mc-hud-marquee 1.2s linear infinite;
 }
-@keyframes mc-hud-marquee { to { background-position: 8px 0; } }
+@keyframes mc-hud-marquee { 50% { opacity: .55; } }
 .mc-hud-progress-lbl { font-size: var(--vg-fs-min); letter-spacing: 0.14em; color: var(--pt-text-mute); text-transform: uppercase; }
 
 /* idle state */
@@ -4298,7 +4298,7 @@ html[data-theme="friday"] .mc-repo-private { border-radius: 0; }
   padding: 10px 16px;
   min-height: 40px;
   border-radius: 999px;
-  transition: all 200ms var(--pt-ease); border: 1px solid transparent; background: rgba(118,118,128,.24); box-shadow: none; font-family: var(--pt-font-sans); text-transform: none; letter-spacing: 0; }
+  transition: color 200ms var(--pt-ease), background-color 200ms var(--pt-ease), border-color 200ms var(--pt-ease), transform 200ms var(--pt-ease); border: 1px solid transparent; background: rgba(118,118,128,.24); box-shadow: none; font-family: var(--pt-font-sans); text-transform: none; letter-spacing: 0; }
 .mc-tab.is-active {
   border-color: var(--pt-neon);
   background: rgba(var(--pt-neon-rgb),0.12);
@@ -7868,8 +7868,8 @@ body {
   animation: hud-hero-breathe 6s ease-in-out infinite;
 }
 @keyframes hud-hero-breathe {
-  0%, 100% { box-shadow: 0 0 24px rgba(var(--pt-glow-rgb),0.12); }
-  50%      { box-shadow: 0 0 34px rgba(var(--pt-glow-rgb),0.28); }
+  0%, 100% { opacity: .94; }
+  50%      { opacity: 1; }
 }
 
 /* Hero power core — rotating conic arc ring behind the glyph, on the wrapper
@@ -8520,6 +8520,7 @@ html[data-motion="off"] .mc-studio-cursor { animation: none; }
   .boot-line { opacity: .78; }
   .boot-overlay { display: none; transition: none; }
 }
+html[data-motion='reduced'] .boot-line, html[data-motion='off'] .boot-line { opacity: .78; }
 /* Dialogs can live inside the shell's own stacking context. Yield the
    decorative overlay entirely while one is open, including native dialogs. */
 body:has([role="dialog"], dialog[open]) .boot-overlay { visibility: hidden; }
@@ -9133,7 +9134,7 @@ html[data-theme='friday'] .mc-tab.is-active::after { content: none; }
   background-size: 200% 100%;
   animation: mc-skel-sweep 1.8s ease-in-out infinite;
 }
-@keyframes mc-skel-sweep { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@keyframes mc-skel-sweep { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
 .mc-skel-label {
   display: block; padding: 0 14px 14px;
   color: var(--pt-text-dim); font-size: var(--vg-fs-min); letter-spacing: 0.14em;
@@ -9160,6 +9161,7 @@ html[data-theme='friday'] .mc-tab.is-active::after { content: none; }
   .boot-draw-path { animation: none; stroke-dashoffset: 0; }
   .mc-empty { animation: none; }
 }
+html[data-motion='reduced'] .boot-draw-path, html[data-motion='off'] .boot-draw-path { animation: none; stroke-dashoffset: 0; }
 
 /* ── V3 · LAUNCH FILM — the cinematic (global boot, replayable) ───────── */
 .launch-film {
@@ -9207,6 +9209,7 @@ html[data-theme='friday'] .mc-tab.is-active::after { content: none; }
 }
 .launch-data {
   display: flex; align-items: flex-end; justify-content: center; gap: clamp(16px, 4vw, 34px);
+  flex-wrap: wrap; row-gap: 12px; max-width: 100%;
   margin: 0 0 20px; opacity: 0; animation: launch-fade 700ms ease 2400ms both;
 }
 .launch-stat { display: flex; flex-direction: column; gap: 4px; }
@@ -9215,7 +9218,7 @@ html[data-theme='friday'] .mc-tab.is-active::after { content: none; }
   font-variant-numeric: tabular-nums; text-shadow: 0 0 18px rgba(var(--pt-glow-rgb), 0.45);
 }
 .launch-stat span { font-size: var(--vg-fs-min); letter-spacing: 0.2em; color: var(--pt-text-dim); }
-.launch-chart { width: min(320px, 68vw); height: 64px; overflow: visible; }
+.launch-chart { width: min(320px, 68vw); max-width: 100%; height: 64px; overflow: visible; }
 .launch-chart-line {
   fill: none; stroke: rgb(var(--pt-neon-rgb)); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
   stroke-dasharray: 1; stroke-dashoffset: 1;
@@ -9242,6 +9245,8 @@ html[data-theme='friday'] .mc-tab.is-active::after { content: none; }
   }
 }
 
+/* Static end state for the launch film. The blanket `animation: none` for data-motion reduced/off
+   (MotionVisibility.css) would otherwise strand these elements at their opacity:0 / undrawn start. */
 @media (prefers-reduced-motion: reduce) {
   .launch-ring { display: none; }
   .launch-seam, .launch-letter, .launch-sub, .launch-meta, .launch-data,
@@ -9251,6 +9256,13 @@ html[data-theme='friday'] .mc-tab.is-active::after { content: none; }
   .launch-seam { transform: scaleX(1); }
   .launch-chart-line { stroke-dashoffset: 0; }
 }
+html[data-motion='reduced'] .launch-ring, html[data-motion='off'] .launch-ring { display: none; }
+html[data-motion='reduced'] :is(.launch-seam, .launch-letter, .launch-sub, .launch-meta, .launch-data, .launch-chart-line, .launch-chart-dot, .launch-final),
+html[data-motion='off'] :is(.launch-seam, .launch-letter, .launch-sub, .launch-meta, .launch-data, .launch-chart-line, .launch-chart-dot, .launch-final) {
+  animation: none; opacity: 1; translate: none; transform: none;
+}
+html[data-motion='reduced'] .launch-seam, html[data-motion='off'] .launch-seam { transform: scaleX(1); }
+html[data-motion='reduced'] .launch-chart-line, html[data-motion='off'] .launch-chart-line { stroke-dashoffset: 0; }
 
 /* ── Lane D · Blue Matrix Glass / B. Edge Light (installed winner) ──────
    Material only: no height, padding, font, radius or layout declarations.
@@ -9760,3 +9772,18 @@ html:root :is(a, button, [role="button"], input, select, textarea, summary):focu
 }
 html[data-motion='reduced'] .ob-pagehead-eyebrow::after,
 html[data-motion='off'] .ob-pagehead-eyebrow::after { animation: none; }
+
+/* VG-6: only T1 cockpit may sample the animated backdrop persistently.
+   Existing fills, highlights and rims remain the glass material everywhere else. */
+html:root body *:not(.mc-cockpit):not(.mc-drawer):not(.mc-login-card):not(.cmdp):not(.mc-modal),
+html:root body *::before, html:root body *::after {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+@media (pointer: fine) and (prefers-reduced-motion: no-preference) and (prefers-reduced-transparency: no-preference) {
+  html:not([data-motion='reduced']):not([data-motion='off']) .mc-cockpit { backdrop-filter: var(--glass-1-blur); }
+}
+@media (pointer: coarse), (max-width: 820px) {
+  html:root body .mc-cockpit { backdrop-filter: none !important; }
+}
+.mc-hud3d { contain: layout paint; }

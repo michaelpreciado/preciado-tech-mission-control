@@ -8,10 +8,13 @@
   const sweep = main?.querySelector('.v4-scanline');
   if (!main || !sweep) return;
   const mobile = matchMedia('(max-width: 820px)');
+  const osReduce = matchMedia('(prefers-reduced-motion: reduce)');
   let stop = () => {};
   function start() {
     stop();
-    if (document.documentElement.dataset.motion === 'off') return;
+    // Reduced, off and OS reduce are static: no observers, listeners or transform.
+    const mode = document.documentElement.dataset.motion;
+    if (mode === 'off' || mode === 'reduced' || osReduce.matches) return;
     const selector = mobile.matches ? '.v4-entry, .v4-group' : '.v4-entry, .v4-group > :not(.mc-ascii-head):not(.v4-divider):not(.is-floating)';
     const seen = new WeakSet();
     const io = !nativeEntry && 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
@@ -72,6 +75,7 @@
     };
   }
   mobile.addEventListener('change', start);
+  osReduce.addEventListener('change', start);
   new MutationObserver(start).observe(document.documentElement, { attributes: true, attributeFilter: ['data-motion'] });
   start();
 })();
