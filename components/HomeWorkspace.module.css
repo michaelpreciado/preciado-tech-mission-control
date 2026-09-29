@@ -549,3 +549,13 @@ html[data-motion='reduced'] .holoPixelReduced, html[data-motion='off'] .holoPixe
 @media (min-width: 1900px) {
   .home.ob-home { max-width: 1720px; margin-inline: auto; }
 }
+
+/* Compact home chat: a bounded panel inside the calm overview, not a full-height hero. */
+.chat.chatCompact,
+.chat.chatCompact[data-empty='true'] { height: auto; min-height: 0; max-height: none; margin: 0; border: 1px solid var(--mbg-edge); border-radius: 8px; background: var(--mbg-glass-1); box-shadow: var(--mbg-inset); -webkit-backdrop-filter: none; backdrop-filter: none; overflow: visible; }
+.chat.chatCompact .messages { max-height: 420px; padding: 12px 16px; }
+.chat.chatCompact[data-empty='true'] .messages { display: block; overflow: visible; max-height: none; padding: 12px 16px 16px; }
+.chatCompact .compactWelcome { display: grid; gap: 4px; }
+.chatCompact .compactWelcome .composer { width: 100%; max-width: none; padding: 0; }
+.chatCompact .suggestions { justify-content: flex-start; margin-top: 8px; }
+.chatCompact .suggestions button { min-height: 44px; }

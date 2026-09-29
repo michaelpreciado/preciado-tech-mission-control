@@ -1,224 +1,67 @@
+/* Chrome glass (tier 2): translucent rail, 12px blur, cyan gradient edge. */
 .sidebar {
-  --sidebar-width: 236px;
-  /* Keep rail geometry in one state so Fold can opt in before the class lands. */
-  --sidebar-rail-content-max-width: 100%;
-  --sidebar-rail-content-flex-basis: auto;
-  --sidebar-rail-content-min-width: 0;
-  --sidebar-rail-content-opacity: 1;
-  --sidebar-rail-content-pointer-events: auto;
-  --sidebar-rail-content-transform: none;
-  --sidebar-rail-row-justify: flex-start;
-  --sidebar-rail-nav-padding: 11px;
-  --sidebar-rail-nav-min-height: 38px;
-  --sidebar-rail-crew-padding: 11px;
-  --sidebar-rail-crew-status-margin: auto;
-  --sidebar-rail-section-padding: 10px;
-  --sidebar-rail-user-padding: 10px;
-  --sidebar-rail-user-width: auto;
-  --sidebar-rail-quick-width: 100%;
-  --sidebar-rail-quick-min-height: 36px;
-  --sidebar-rail-quick-gap: 7px;
-  --sidebar-rail-quick-padding: 18px;
-  --sidebar-rail-footer-padding-bottom: 30px;
-  --sidebar-rail-footer-justify: stretch;
-  --sidebar-rail-toggle-position: absolute;
-  --sidebar-rail-toggle-right: 0;
-  --sidebar-rail-toggle-bottom: 0;
-  --sidebar-rail-toggle-size: 24px;
-  --sidebar-rail-kbd-margin-left: auto;
-  --sidebar-rail-kbd-padding-inline: 5px;
-  --sidebar-rail-kbd-border-width: 1px;
   position: fixed;
   inset: 0 auto 0 0;
   z-index: 20;
   display: flex;
-  width: var(--sidebar-width);
-  height: 100vh;
-  min-height: 100vh;
-  box-sizing: border-box;
   flex-direction: column;
-  gap: 24px;
-  padding: 22px 14px 14px;
+  gap: 16px;
+  width: 232px;
+  height: 100vh;
+  padding: 20px 12px 12px;
+  box-sizing: border-box;
   overflow: hidden auto;
-  border-right: 1px solid var(--ob-border);
-  background: linear-gradient(180deg, rgba(11, 13, 18, .96), rgba(7, 8, 11, .92));
-  box-shadow: 10px 0 34px rgba(0, 0, 0, .24), inset -1px 0 rgba(157, 180, 236, .04);
-  transition: width var(--ob-dur, 250ms) var(--ob-ease, ease-out), padding var(--ob-dur, 250ms) var(--ob-ease, ease-out);
+  overscroll-behavior: contain;
+  background: var(--mbg-glass-2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  backdrop-filter: blur(12px) saturate(1.2);
+  border-right: 1px solid transparent;
+  border-image: linear-gradient(180deg, rgba(79, 216, 255, .85), rgba(30, 144, 255, .35) 35%, rgba(30, 144, 255, .12)) 1;
+  box-shadow: 1px 0 24px -8px rgba(30, 144, 255, .45);
+  font-family: var(--mbg-sans);
 }
+@supports (height: 100dvh) { .sidebar { height: 100dvh; } }
+.collapsed { width: 64px; padding-inline: 8px; }
 
-@supports (height: 100dvh) {
-  .sidebar { height: 100dvh; min-height: 100dvh; }
+.mark { display: flex; align-items: center; gap: 10px; min-height: var(--mbg-tap); padding: 0 8px; color: var(--mbg-ink); font-weight: 600; letter-spacing: -.01em; text-decoration: none; }
+.mark svg { flex: none; color: var(--mbg-cyan); filter: drop-shadow(0 0 6px rgba(79, 216, 255, .45)); }
+
+.nav { display: flex; flex-direction: column; gap: 4px; }
+.group { display: flex; flex-direction: column; gap: 2px; }
+.groupLabel { margin: 12px 8px 4px; color: var(--mbg-ink-3); font-size: var(--mbg-t-xs); }
+.group:first-child .groupLabel { margin-top: 0; }
+
+.link { position: relative; display: flex; align-items: center; gap: 12px; min-height: var(--mbg-tap); padding: 0 8px; border-radius: 6px; color: var(--mbg-ink-2); font-size: var(--mbg-t-md); text-decoration: none; }
+.link svg { flex: none; opacity: .85; }
+.link:hover { color: var(--mbg-ink); background: rgba(30, 144, 255, .08); }
+.link.active { color: var(--mbg-ink); background: linear-gradient(90deg, rgba(30, 144, 255, .20), rgba(30, 144, 255, .04)); box-shadow: inset 0 0 0 1px rgba(94, 178, 255, .18); }
+.link.active::before { content: ""; position: absolute; left: -12px; top: 12px; bottom: 12px; width: 3px; border-radius: 0 2px 2px 0; background: var(--mbg-cyan); box-shadow: 0 0 10px rgba(79, 216, 255, .7); }
+.count { margin-left: auto; min-width: 22px; padding: 1px 6px; border-radius: 9px; background: var(--mbg-amber); color: #1a1204; font-size: var(--mbg-t-xs); font-weight: 700; line-height: 1.4; text-align: center; }
+
+.foot { margin-top: auto; display: grid; gap: 8px; }
+.palette { display: flex; align-items: center; gap: 10px; min-height: var(--mbg-tap); padding: 0 12px; border: 1px solid var(--mbg-edge); border-radius: 6px; background: var(--mbg-glass-1); box-shadow: var(--mbg-inset); color: var(--mbg-ink-2); font: inherit; cursor: pointer; }
+.palette:hover { color: var(--mbg-ink); border-color: var(--mbg-edge-hi); }
+.palette kbd { margin-left: auto; padding: 3px 5px; border: 1px solid var(--mbg-rule-strong); border-radius: 3px; font: 500 var(--mbg-t-xs)/1 var(--mbg-mono); }
+.toggle { display: grid; place-items: center; width: var(--mbg-tap); height: var(--mbg-tap); justify-self: end; border: 1px solid var(--mbg-edge); border-radius: 6px; background: transparent; color: var(--mbg-ink-2); font-size: 18px; cursor: pointer; }
+.toggle:hover { color: var(--mbg-ink); border-color: var(--mbg-edge-hi); }
+
+/* Icon rail: labels, groups and counts collapse away, every link stays a 44px+ target. */
+.collapsed .label, .collapsed .groupLabel { display: none; }
+.collapsed .link, .collapsed .palette, .collapsed .mark { justify-content: center; padding: 0; }
+.collapsed .count { position: absolute; top: 4px; right: 2px; min-width: 16px; padding: 0 4px; font-size: 10px; }
+.collapsed .link.active::before { left: -8px; }
+.collapsed .toggle { justify-self: center; }
+
+@media (min-width: 720px) and (max-width: 1100px), (min-width: 720px) and (max-width: 1400px) and (pointer: coarse) {
+  .sidebar { width: 72px; padding-inline: 8px; }
+  .toggle { display: none; }
 }
-
-.sidebar::before {
-  position: absolute;
-  inset: 0 0 auto;
-  height: 140px;
-  pointer-events: none;
-  content: '';
-  background: radial-gradient(ellipse at 30% 0%, rgba(157, 180, 236, .1), transparent 70%);
-}
-
-.collapsed {
-  width: 64px;
-  padding-inline: 10px;
-  --sidebar-rail-content-max-width: 0;
-  --sidebar-rail-content-flex-basis: 0;
-  --sidebar-rail-content-min-width: 0;
-  --sidebar-rail-content-opacity: 0;
-  --sidebar-rail-content-pointer-events: none;
-  --sidebar-rail-content-transform: translateX(-5px);
-  --sidebar-rail-row-justify: center;
-  --sidebar-rail-nav-padding: 0;
-  --sidebar-rail-crew-padding: 0;
-  --sidebar-rail-crew-status-margin: 0;
-  --sidebar-rail-section-padding: 0;
-  --sidebar-rail-user-padding: 0;
-  --sidebar-rail-user-width: 44px;
-  --sidebar-rail-quick-width: 44px;
-  --sidebar-rail-quick-min-height: 44px;
-  --sidebar-rail-quick-gap: 0;
-  --sidebar-rail-quick-padding: 0;
-  --sidebar-rail-footer-padding-bottom: 0;
-  --sidebar-rail-footer-justify: center;
-  --sidebar-rail-toggle-position: static;
-  --sidebar-rail-toggle-right: auto;
-  --sidebar-rail-toggle-bottom: auto;
-  --sidebar-rail-toggle-size: 44px;
-  --sidebar-rail-kbd-margin-left: 0;
-  --sidebar-rail-kbd-padding-inline: 0;
-  --sidebar-rail-kbd-border-width: 0;
-}
-
-.brandBlock,
-.userBlock,
-.navItem,
-.crewItem,
-.quickGo,
-.collapseToggle { position: relative; z-index: 1; }
-
-.brandBlock { display: flex; align-items: center; gap: 10px; min-height: 38px; }
-.brandMark { display: grid; width: 32px; height: 32px; flex: 0 0 32px; place-items: center; border: 1px solid var(--ob-border); border-radius: 8px; color: var(--ob-brand); background: rgba(157, 180, 236, .06); box-shadow: 0 0 18px rgba(157, 180, 236, .12); }
-.brandCopy { min-width: 0; overflow: hidden; transition: max-width var(--ob-dur-fast, 150ms) ease, opacity var(--ob-dur-fast, 150ms) ease, transform var(--ob-dur-fast, 150ms) ease; }
-.wordmark { color: var(--ob-text); font-size: 11.5px; font-weight: 700; letter-spacing: .14em; white-space: nowrap; }
-.wordmark span { margin-left: .4em; color: #9db4ec; text-shadow: 0 0 10px rgba(157, 180, 236, .38); }
-.buildTag, .sectionLabel { color: var(--ob-text-4); font-size: 11.5px; letter-spacing: .18em; text-transform: uppercase; white-space: nowrap; }
-.buildTag { margin-top: 5px; }
-
-.section { display: grid; gap: 8px; }
-.sectionLabel { padding: 0 var(--sidebar-rail-section-padding); color: var(--ob-text-4); }
-.section nav { display: grid; gap: 3px; }
-.navItem { display: flex; min-height: var(--sidebar-rail-nav-min-height); align-items: center; justify-content: var(--sidebar-rail-row-justify); gap: 11px; padding: 0 var(--sidebar-rail-nav-padding); overflow: hidden; border: 1px solid transparent; border-radius: 10px; color: var(--ob-text-3); text-decoration: none; transition: color var(--ob-dur-fast, 150ms) ease, background var(--ob-dur-fast, 150ms) ease, border-color var(--ob-dur-fast, 150ms) ease, box-shadow var(--ob-dur-fast, 150ms) ease; }
-.navItem:hover { color: var(--ob-peak); border-color: rgba(157, 180, 236, .18); background: rgba(157, 180, 236, .055); }
-.navItem:focus-visible, .collapseToggle:focus-visible, .quickGo:focus-visible { outline: 2px solid var(--ob-action); outline-offset: 2px; }
-.navItem.active { color: var(--ob-peak); border-color: rgba(157, 180, 236, .72); background: linear-gradient(90deg, rgba(157, 180, 236, .17), rgba(157, 180, 236, .045)); box-shadow: 0 0 18px rgba(157, 180, 236, .1), inset 2px 0 var(--ob-brand); }
-.navIcon { position: relative; display: grid; width: 18px; height: 18px; flex: 0 0 18px; place-items: center; color: #fff; filter: drop-shadow(0 0 3px rgba(190, 228, 255, .32)); isolation: isolate; }
-.navIcon::after { position: absolute; inset: 0; border-radius: 5px; pointer-events: none; content: ''; background: linear-gradient(115deg, rgba(117, 185, 255, .9) 0%, rgba(147, 169, 255, .86) 34%, rgba(255, 157, 212, .8) 64%, rgba(151, 255, 207, .86) 100%); background-size: 300% 100%; background-position: 0% 50%; mix-blend-mode: screen; opacity: .18; animation: navIconHolographicShimmer 8s linear infinite; }
-.navItem:hover .navIcon { filter: drop-shadow(0 0 5px rgba(190, 228, 255, .5)); }
-.active .navIcon { color: #fff; filter: drop-shadow(0 0 7px rgba(190, 228, 255, .72)); }
-.navLabel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: max-width var(--ob-dur-fast, 150ms) ease, opacity var(--ob-dur-fast, 150ms) ease, transform var(--ob-dur-fast, 150ms) ease; }
-
-@keyframes navIconHolographicShimmer {
-  0%, 100% { opacity: .12; }
-  50% { opacity: .26; }
-}
-
-.crewSection { gap: 9px; }
-.crewList { display: grid; gap: 5px; }
-.crewItem { display: flex; min-height: 28px; align-items: center; justify-content: var(--sidebar-rail-row-justify); gap: 8px; padding: 0 var(--sidebar-rail-crew-padding); color: var(--ob-text-2); font-size: 11.5px; }
-.crewName { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.crewStatus { margin-left: var(--sidebar-rail-crew-status-margin, auto); color: var(--ob-text-4); font-size: 11.5px; text-transform: uppercase; }
-.statusDot { width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; background: var(--ob-text-4); }
-.status_active { background: var(--ob-success); box-shadow: 0 0 8px rgba(110, 231, 183, .72); }
-.status_standby { background: var(--ob-neon); box-shadow: 0 0 7px rgba(30, 144, 255, .48); }
-.status_attention { background: var(--ob-warn); box-shadow: 0 0 7px rgba(252, 211, 77, .56); }
-.status_offline, .statusUnknown { background: var(--ob-text-4); }
-.spacer { flex: 1 1 auto; min-height: 16px; }
-
-.footer { display: grid; position: relative; z-index: 1; gap: 10px; justify-items: var(--sidebar-rail-footer-justify); padding-bottom: var(--sidebar-rail-footer-padding-bottom); }
-.userBlock { display: flex; width: var(--sidebar-rail-user-width); max-width: 100%; align-items: center; justify-content: var(--sidebar-rail-row-justify); gap: 9px; padding: 9px var(--sidebar-rail-user-padding); border: 1px solid rgba(157, 180, 236, .12); border-radius: 10px; background: rgba(157, 180, 236, .025); }
-.userAvatar { display: grid; width: 24px; height: 24px; place-items: center; border: 1px solid rgba(157, 180, 236, .42); border-radius: 50%; color: var(--ob-brand); font-size: 12px; }
-.userCopy { display: grid; gap: 2px; min-width: 0; }
-.userCopy strong { color: var(--ob-text-2); font-size: 11.5px; font-weight: 500; }
-.userCopy small { color: var(--ob-text-4); font-size: 11.5px; letter-spacing: .16em; }
-.quickGo { width: var(--sidebar-rail-quick-width); max-width: 100%; min-height: var(--sidebar-rail-quick-min-height); gap: var(--sidebar-rail-quick-gap); padding-inline: var(--sidebar-rail-quick-padding); }
-.quickGo kbd { margin-left: var(--sidebar-rail-kbd-margin-left); padding: 2px var(--sidebar-rail-kbd-padding-inline); border: var(--sidebar-rail-kbd-border-width) solid rgba(0, 0, 2, .28); border-radius: 4px; font: inherit; font-size: 11.5px; }
-.collapseToggle { position: var(--sidebar-rail-toggle-position); right: var(--sidebar-rail-toggle-right); bottom: var(--sidebar-rail-toggle-bottom); display: grid; width: var(--sidebar-rail-toggle-size); max-width: 100%; height: var(--sidebar-rail-toggle-size); place-items: center; padding: 0; border: 1px solid var(--ob-border); border-radius: 6px; color: var(--ob-brand); background: var(--ob-bg-1); cursor: pointer; }
-
-/* Collapse the hidden flex items themselves so the surviving icon/dot can centre. */
-.brandCopy,
-.sectionLabel,
-.navLabel,
-.crewName,
-.crewStatus,
-.userCopy,
-.quickGoLabel,
-.quickGo kbd {
-  max-width: var(--sidebar-rail-content-max-width);
-  flex-basis: var(--sidebar-rail-content-flex-basis);
-  min-width: var(--sidebar-rail-content-min-width);
-  overflow: hidden;
-  opacity: var(--sidebar-rail-content-opacity);
-  pointer-events: var(--sidebar-rail-content-pointer-events);
-  transform: var(--sidebar-rail-content-transform);
-  transition: max-width var(--ob-dur-fast, 150ms) ease, opacity var(--ob-dur-fast, 150ms) ease, transform var(--ob-dur-fast, 150ms) ease;
-}
-
 @media (max-width: 719px) {
   .sidebar { display: none; }
 }
-
-/* Tablet / unfolded inner display: always a 72px icon rail, decided purely by
-   CSS so folding and unfolding never waits on JS. Keep this query in sync with
-   FOLD_INNER_MEDIA_QUERY in Sidebar.tsx and app/styles/fold.css. */
-@media (min-width: 720px) and (max-width: 1100px), (min-width: 720px) and (max-width: 1400px) and (pointer: coarse) {
-  .sidebar {
-    display: flex;
-    width: 72px;
-    padding-inline: 12px;
-    --sidebar-rail-nav-min-height: 48px;
-    --sidebar-rail-quick-min-height: 48px;
-    --sidebar-rail-user-width: 48px;
-    --sidebar-rail-quick-width: 48px;
-    --sidebar-rail-content-max-width: 0;
-    --sidebar-rail-content-flex-basis: 0;
-    --sidebar-rail-content-min-width: 0;
-    --sidebar-rail-content-opacity: 0;
-    --sidebar-rail-content-pointer-events: none;
-    --sidebar-rail-content-transform: translateX(-5px);
-    --sidebar-rail-row-justify: center;
-    --sidebar-rail-nav-padding: 0;
-    --sidebar-rail-crew-padding: 0;
-    --sidebar-rail-crew-status-margin: 0;
-    --sidebar-rail-section-padding: 0;
-    --sidebar-rail-user-padding: 0;
-    --sidebar-rail-quick-gap: 0;
-    --sidebar-rail-quick-padding: 0;
-    --sidebar-rail-footer-padding-bottom: 0;
-    --sidebar-rail-footer-justify: center;
-    --sidebar-rail-kbd-margin-left: 0;
-    --sidebar-rail-kbd-padding-inline: 0;
-    --sidebar-rail-kbd-border-width: 0;
-    padding-bottom: max(14px, env(safe-area-inset-bottom));
-    padding-top: max(22px, env(safe-area-inset-top));
-  }
-  .sidebar .navItem, .sidebar .crewItem, .sidebar .userBlock { gap: 0; }
-  .sidebar .collapseToggle { display: none; }
-  .sidebar .brandBlock { justify-content: center; }
-  .sidebar .navItem { width: 48px; }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .sidebar { background: #060d18; }
 }
-
-/* A zero-width label is still a flex item, so the row's `gap` survives the
-   collapse and pushes the centred icon/dot a few pixels off-centre (measured:
-   icon at x=17-35 in a rail centred on 32). Zero the gap wherever a row is
-   collapsed; the selector outranks the per-row gap on .navItem/.crewItem/.userBlock. */
-.collapsed .navItem,
-.collapsed .crewItem,
-.collapsed .userBlock {
-  gap: 0;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .sidebar, .brandCopy, .navItem, .navLabel { transition: none; }
-  .navIcon::after { animation: none; }
+@media (prefers-reduced-transparency: reduce) {
+  .sidebar { background: #08101c; -webkit-backdrop-filter: none; backdrop-filter: none; }
 }

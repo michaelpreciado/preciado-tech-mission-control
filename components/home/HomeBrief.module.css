@@ -1,0 +1,61 @@
+.home { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; font-family: var(--mbg-sans); color: var(--mbg-ink); }
+
+.brief { padding: 16px 0 32px; margin-bottom: 32px; border-bottom: 1px solid transparent; border-image: var(--mbg-sheen) 1; }
+.when { margin: 0 0 12px; color: var(--mbg-ink-3); font-size: var(--mbg-t-sm); }
+.brief h1 { margin: 0; max-width: 24ch; font-size: var(--mbg-t-2xl); font-weight: 500; line-height: 1.18; letter-spacing: -.025em; text-wrap: balance; }
+.nRun, .nYou { font-weight: 650; }
+.nRun { color: var(--mbg-dodger-ink); text-shadow: 0 0 18px rgba(30, 144, 255, .45); }
+.nYou { color: var(--mbg-amber); text-shadow: 0 0 18px rgba(242, 181, 75, .30); }
+.err { margin: 12px 0 0; color: #ff8f8f; font-size: var(--mbg-t-sm); }
+
+.answers {
+  position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0 0 32px;
+  border: 1px solid var(--mbg-edge); border-radius: 8px; overflow: hidden;
+  background: var(--mbg-glass-2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2); backdrop-filter: blur(12px) saturate(1.2);
+  box-shadow: var(--mbg-inset), 0 18px 48px -24px rgba(30, 144, 255, .35);
+}
+.answers::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: var(--mbg-sheen); }
+.answer { display: grid; gap: 2px; align-content: center; padding: 16px; min-height: 76px; text-decoration: none; color: inherit; border-right: 1px solid rgba(94, 178, 255, .12); }
+.answer:last-child { border-right: 0; }
+.answer:hover { background: rgba(30, 144, 255, .08); }
+.q { color: var(--mbg-ink-2); font-size: var(--mbg-t-sm); }
+.a { font-size: var(--mbg-t-lg); font-weight: 600; }
+.sub { color: var(--mbg-ink-3); font-size: var(--mbg-t-xs); }
+.answer[data-tone="run"] .a { color: var(--mbg-dodger-ink); }
+.answer[data-tone="you"] .a { color: var(--mbg-amber); }
+
+.grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 32px 48px; }
+.col { display: grid; gap: 32px; align-content: start; min-width: 0; }
+.blockHead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.blockHead h2 { margin: 0; font-size: var(--mbg-t-md); font-weight: 600; }
+.more { display: inline-flex; align-items: center; min-height: var(--mbg-tap); color: var(--mbg-dodger-ink); font-size: var(--mbg-t-sm); text-decoration: none; }
+.more:hover { text-decoration: underline; }
+
+.crew { display: grid; margin: 0; padding: 0; list-style: none; }
+.crew li { display: grid; grid-template-columns: 10px 92px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid rgba(94, 178, 255, .12); font-size: var(--mbg-t-sm); }
+.crew li:last-child { border-bottom: 0; }
+.who { font-family: var(--mbg-mono); color: var(--mbg-ink); overflow: hidden; text-overflow: ellipsis; }
+.doing { color: var(--mbg-ink-2); overflow-wrap: anywhere; }
+.dot { width: 8px; height: 8px; border-radius: 50%; align-self: center; background: var(--mbg-ink-3); }
+li[data-state="working"] .dot { background: var(--mbg-dodger); box-shadow: 0 0 8px var(--mbg-dodger); }
+li[data-state="attention"] .dot { background: var(--mbg-amber); box-shadow: 0 0 8px var(--mbg-amber); }
+li[data-state="degraded"] .dot, li[data-state="offline"] .dot { background: var(--mbg-red); }
+
+.alert { position: relative; list-style: none; }
+.alert > div { padding-right: 44px; }
+.dismiss { position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: var(--mbg-tap); height: var(--mbg-tap); border: 0; background: none; color: var(--mbg-ink-2); font-size: 20px; cursor: pointer; }
+.dismiss:hover { color: var(--mbg-ink); }
+
+@media (max-width: 1023px) { .grid { grid-template-columns: 1fr; } }
+@media (max-width: 719px) {
+  .brief { padding: 0 0 20px; margin-bottom: 20px; }
+  .answers { grid-template-columns: 1fr; margin-bottom: 24px; }
+  .answer { grid-template-columns: 1fr auto; align-items: center; min-height: 52px; padding: 10px 16px; border-right: 0; border-bottom: 1px solid rgba(94, 178, 255, .12); }
+  .answer:last-child { border-bottom: 0; }
+  .sub { grid-column: 1 / -1; }
+  .grid { gap: 24px; }
+  .col { gap: 24px; }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .answers { background: #060d18; } }
+@media (prefers-reduced-transparency: reduce) { .answers { background: #08101c; -webkit-backdrop-filter: none; backdrop-filter: none; } }

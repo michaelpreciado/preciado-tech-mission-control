@@ -1,0 +1,121 @@
+/* Matrix Blue Glass — production tokens and page-level material.
+   Imported last so it wins over the legacy layers. Component surfaces live in
+   their own CSS modules and read these tokens.
+   Glass tiers:
+     0 page     blue-black gradient + one static masked SVG texture (no animation)
+     1 content  translucent, no blur (strips, cards, tiles)
+     2 chrome   translucent + 12px blur (rail, lane headers, answers)
+     3 overlay  >=.94 alpha + 16px blur; opaque when blur is unsupported */
+
+:root {
+  --mbg-void: #03060b;
+  --mbg-deck: #0b1017;
+  --mbg-deck-2: #111824;
+  --mbg-rule: #1b2431;
+  --mbg-rule-strong: #2a3647;
+  --mbg-ink: #e9eef6;
+  --mbg-ink-2: #a3aec0;
+  --mbg-ink-3: #8390a4;
+  --mbg-dodger: #1e90ff;
+  --mbg-dodger-ink: #6cb4ff;
+  --mbg-amber: #f2b54b;
+  --mbg-red: #ff6e6e;
+  --mbg-green: #45d08c;
+  --mbg-cyan: #4fd8ff;
+  --mbg-edge: rgba(94, 178, 255, .20);
+  --mbg-edge-hi: rgba(79, 216, 255, .55);
+  --mbg-sheen: linear-gradient(90deg, transparent, rgba(79, 216, 255, .45) 35%, rgba(30, 144, 255, .25) 70%, transparent);
+  --mbg-glass-1: rgba(8, 16, 28, .76);
+  --mbg-glass-1-hover: rgba(12, 24, 42, .86);
+  --mbg-glass-2: rgba(6, 12, 22, .72);
+  --mbg-glass-3: rgba(7, 13, 23, .95);
+  --mbg-solid-3: #070d17;
+  --mbg-inset: inset 0 1px 0 rgba(140, 210, 255, .08), inset 0 0 0 1px rgba(255, 255, 255, .015);
+  --mbg-tap: 44px;
+  --mbg-rail-w: 232px;
+  --mbg-tabbar-h: 60px;
+  --mbg-t-xs: .75rem;
+  --mbg-t-sm: .8125rem;
+  --mbg-t-md: .9375rem;
+  --mbg-t-lg: 1.125rem;
+  --mbg-t-xl: 1.5rem;
+  --mbg-t-2xl: clamp(1.75rem, 1.2rem + 1.8vw, 2.5rem);
+  --mbg-sans: var(--mbg-font-sans, "Instrument Sans"), "Noto Sans", system-ui, sans-serif;
+  --mbg-mono: var(--mbg-font-mono, "JetBrains Mono"), ui-monospace, monospace;
+}
+
+/* Page: gradient plus texture. The texture is a fixed static layer, mounted by Shell. */
+html[data-theme="friday"], html[data-theme="friday"] body {
+  background-color: var(--mbg-void);
+}
+html[data-theme="friday"] body {
+  background-image:
+    radial-gradient(1100px 560px at 72% -12%, rgba(30, 144, 255, .17), transparent 62%),
+    radial-gradient(800px 520px at -8% 108%, rgba(79, 216, 255, .08), transparent 60%),
+    linear-gradient(180deg, #040911 0%, var(--mbg-void) 60%);
+  background-attachment: fixed;
+  font-family: var(--mbg-sans);
+}
+.mbg-texture {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: url("/matrix-blue/matrix-texture.svg") 0 0 / 960px 960px repeat;
+  opacity: .9;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, .75) 20%, rgba(0, 0, 0, .45) 55%, rgba(0, 0, 0, .55) 100%), linear-gradient(90deg, rgba(0, 0, 0, .75) 0%, rgba(0, 0, 0, .3) 18%, rgba(0, 0, 0, .3) 50%, #000 100%);
+  -webkit-mask-composite: source-in;
+          mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, .75) 20%, rgba(0, 0, 0, .45) 55%, rgba(0, 0, 0, .55) 100%), linear-gradient(90deg, rgba(0, 0, 0, .75) 0%, rgba(0, 0, 0, .3) 18%, rgba(0, 0, 0, .3) 50%, #000 100%);
+          mask-composite: intersect;
+}
+
+/* The legacy CRT treatment (filter on the shell, flicker on main, scanline and
+   vignette layers) would defeat backdrop-filter and add motion. Neutralised here;
+   the components themselves are left intact. */
+html[data-theme="friday"] body .mc-shell { filter: none; }
+html[data-theme="friday"] body .mc-shell .mc-main { animation: none; }
+html[data-theme="friday"] body .v4-scanline,
+html[data-theme="friday"] body .mc-scanlines,
+html[data-theme="friday"] body .mc-vignette { display: none; }
+
+html[data-theme="friday"] body :focus-visible { outline: 2px solid var(--mbg-cyan); outline-offset: 2px; }
+
+/* Main column: keep content clear of the mobile tab bar (safe-area aware). */
+@media (max-width: 719px) {
+  html body .mc-shell .mc-main {
+    padding-bottom: calc(var(--mbg-tabbar-h) + 28px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .mbg-texture { opacity: .25; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="friday"] body *, html[data-theme="friday"] body *::before, html[data-theme="friday"] body *::after {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Legacy screen-blend overlay would tint composited text. */
+html body .mc-main::after, html[data-theme="friday"] .mc-main::after { display: none; }
+
+/* Task drawer: the primary action is always solid and never dimmed, and the action row stays in view. */
+[role="dialog"] [aria-label="Task actions"] {
+  position: sticky; top: 0; z-index: 2; padding-block: 8px;
+  background: var(--mbg-solid-3, rgb(7, 13, 23));
+}
+[role="dialog"] button.mc-btn.mc-btn-primary,
+[role="dialog"] button.mc-btn.mc-btn-primary:disabled,
+[role="dialog"] button.mc-btn.mc-btn-primary[aria-busy="true"] {
+  opacity: 1; background: var(--mbg-dodger, #1e90ff); color: #04101c;
+  border-color: #7cc4ff; min-height: var(--mbg-tap, 44px); font-weight: 600;
+  text-shadow: none; filter: none;
+}
+[role="dialog"] button.mc-btn.mc-btn-primary:disabled { background: #14497f; color: #eaf4ff; }
+
+/* No perpetual loops on work surfaces: static caret instead of a blink. */
+html body .aprompt-empty { animation: none; opacity: 1; }
+
+@media (max-width: 719px) {
+  html body .mc-main button:not([class*="iconButton"]) { min-height: var(--mbg-tap, 44px) !important; }
+}
+
+/* Palette secondary text: lifted so composited contrast clears 4.5:1. */
+html body .cmdp-sub { color: var(--mbg-ink-2, #b8c9da); }

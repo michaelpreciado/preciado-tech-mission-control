@@ -5,13 +5,27 @@ import './styles/fold.css'
 import './vf/v4-lane.css'
 import './vf/cyberpunk.css'
 import './w2l.css'
-import { BootOverlay } from '@/components/boot/BootOverlay'
+import './styles/matrix-blue.css'
+import localFont from 'next/font/local'
 import { Shell } from '@/components/Shell'
 import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister'
 import { ViewportSync } from '@/components/ViewportSync'
 import { getConfig } from '@/lib/config'
 import { buildAccentCss } from '@/lib/theme'
 import { buildTokenCss, buildFridayThemeCss, buildDensityCss } from '@/lib/tokens'
+
+const sans = localFont({
+  src: './fonts/instrument-sans-latin-wght-normal.woff2',
+  weight: '400 700',
+  variable: '--mbg-font-sans',
+  display: 'swap',
+})
+const mono = localFont({
+  src: './fonts/jetbrains-mono-latin-wght-normal.woff2',
+  weight: '400 700',
+  variable: '--mbg-font-mono',
+  display: 'swap',
+})
 
 const config = getConfig()
 
@@ -62,7 +76,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   const appearance = getConfig().appearance
   const accentCss = buildAccentCss(appearance.accentColor)
   return (
-    <html lang="en" data-theme="friday" data-density={appearance.density} data-motion={appearance.motion}>
+    <html lang="en" className={`${sans.variable} ${mono.variable}`} data-theme="friday" data-density={appearance.density} data-motion={appearance.motion}>
       <head>
         <link rel="manifest" href="/manifest.json" />
         {/* Runtime API base for portable/cloud mode (MC_API_BASE env): lets one
@@ -82,10 +96,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           appTagline={config.appTagline}
           ui={{ motion: appearance.motion, density: appearance.density, hiddenTabs: appearance.hiddenTabs, tabOrder: appearance.tabOrder, elements3d: appearance.elements3d }}
         >
-          <span className="v4-scanline" aria-hidden="true" />
           {children}
         </Shell>
-        <BootOverlay />
         <Script src="/v4-scroll.js" strategy="afterInteractive" />
         <ServiceWorkerRegister />
       </body>

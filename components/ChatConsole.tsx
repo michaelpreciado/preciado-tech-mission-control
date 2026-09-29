@@ -214,7 +214,7 @@ export default function ChatConsole() {
         // fitted to visualViewport.
         const pageHeader = page.querySelector<HTMLElement>('[class*="pageHeader"]')
         if (pageHeader) pageHeader.style.display = keyboardOpen ? 'none' : ''
-        const nav = document.querySelector<HTMLElement>('.mc-mobile-nav')
+        const nav = document.querySelector<HTMLElement>('[data-mobile-nav]')
         const navRect = nav?.getBoundingClientRect()
         const reserve = nav && navRect && getComputedStyle(nav).display !== 'none' && navRect.top < bottom
           ? Math.min(bottom - navRect.top, navRect.height)
@@ -230,7 +230,7 @@ export default function ChatConsole() {
     window.visualViewport?.addEventListener('resize', fit)
     window.visualViewport?.addEventListener('scroll', fit)
     const observer = new ResizeObserver(fit)
-    const nav = document.querySelector('.mc-mobile-nav')
+    const nav = document.querySelector('[data-mobile-nav]')
     if (nav) observer.observe(nav)
     return () => {
       if (frame) window.cancelAnimationFrame(frame)

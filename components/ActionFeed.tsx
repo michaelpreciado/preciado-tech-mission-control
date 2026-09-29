@@ -33,7 +33,7 @@ function persistDismissals(entries: Dismissal[]) {
   }
 }
 
-type FeedRow = {
+export type FeedRow = {
   id: string
   tone: 'urgent' | 'warn' | 'note'
   glyph: string
@@ -68,28 +68,20 @@ function eventRow(event: BusEvent): FeedRow {
     tone,
     glyph: tone === 'urgent' ? '✕' : tone === 'warn' ? '⚠' : '·',
     text: `${eventTime(event.ts)} · ${agent.toUpperCase()} · ${kind} · ${task}`,
-    href: event.type === 'agent.status' ? '/bots' : '/kanban',
+    href: event.type === 'agent.status' ? '/crew' : '/kanban',
     eventTs: typeof event.ts === 'number'
       ? (event.ts < 10_000_000_000 ? event.ts * 1000 : event.ts)
       : NaN,
   }
 }
 
-/**
- * Needs-my-action strip — the first thing on the Deck (and on mobile, the
- * first thing on screen): down services, agents/tasks in trouble (both the
- * markdown-sourced attention tasks and live Hermes kanban.db blocked/failing
- * tasks), data warnings. Everything taps through to its tab.
- */
-export function ActionFeed({ compact = false }: { compact?: boolean }) {
-  const { data, events, eventStream } = useLiveData()
-  const [health, setHealth] = useState<SystemHealthData | null>(null)
-  const [blockedTasks, setBlockedTasks] = useState<HermesTask[]>([])
+/** Persisted alert dismissals (localStorage, swept after 72h). `now` advances on each poll so aged-out alerts drop. */
+export function useAlertDismissals(enabled = true) {
   const [dismissed, setDismissed] = useState<Dismissal[]>([])
   const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => {
-    if (!compact) return
+    if (!enabled) return
     const loadedAt = Date.now()
     let entries: Dismissal[] = []
     try {
@@ -100,15 +92,32 @@ export function ActionFeed({ compact = false }: { compact?: boolean }) {
     persistDismissals(entries)
     const timer = window.setInterval(() => setNow(Date.now()), POLL_MS)
     return () => window.clearInterval(timer)
-  }, [compact])
+  }, [enabled])
 
-  function dismissAlert(id: string) {
+  function dismiss(id: string) {
     const at = Date.now()
     const entries = sweepDismissals([...dismissed, { id, at }], at)
     setDismissed(entries)
     setNow(at)
     persistDismissals(entries)
   }
+
+  const dismissedIds = new Set(sweepDismissals(dismissed, now).map(entry => entry.id))
+  return { dismissedIds, dismiss, now }
+}
+
+/** True when an alert row is fresh enough to show: untimestamped live-state rows always are; events must be recent and not in the future. */
+export function isFreshAlert(row: FeedRow, now: number): boolean {
+  return (row.tone === 'urgent' || row.tone === 'warn')
+    && (row.eventTs === undefined || (Number.isFinite(row.eventTs) && row.eventTs > 0
+      && row.eventTs <= now && now - row.eventTs <= ALERT_MAX_AGE_MS))
+}
+
+/** Every derived feed row: bus events, service health, crew, tasks, warnings, collector errors. */
+export function useFeedRows() {
+  const { data, events, eventStream } = useLiveData()
+  const [health, setHealth] = useState<SystemHealthData | null>(null)
+  const [blockedTasks, setBlockedTasks] = useState<HermesTask[]>([])
 
   const refresh = useCallback(async () => {
     const [h, b] = await Promise.allSettled([
@@ -128,7 +137,6 @@ export function ActionFeed({ compact = false }: { compact?: boolean }) {
   }, [refresh])
 
   const rows: FeedRow[] = events.map(eventRow)
-
   for (const svc of health?.services ?? []) {
     // Store-freshness probes (pipeline store, cron jobs.json) are telemetry, not
     // actions — a 16h-old store shouldn't read as "needs you". Only surface real
@@ -140,7 +148,7 @@ export function ActionFeed({ compact = false }: { compact?: boolean }) {
   }
   for (const member of data?.crew ?? []) {
     if (member.status === 'attention') {
-      rows.push({ id: `crew:${member.id}`, tone: 'warn', glyph: '⌬', text: `${member.name} needs attention — ${member.signal}`, href: '/bots' })
+      rows.push({ id: `crew:${member.id}`, tone: 'warn', glyph: '⌬', text: `${member.name} needs attention — ${member.signal}`, href: '/crew' })
     }
   }
   for (const task of (data?.tasks ?? []).filter(t => t.status === 'attention').slice(0, 3)) {
@@ -155,15 +163,21 @@ export function ActionFeed({ compact = false }: { compact?: boolean }) {
   for (const task of blockedTasks.slice(0, 3)) {
     rows.push({ id: `hermes:${task.id}`, tone: 'warn', glyph: '⚠', text: `Hermes task ${task.status} — ${task.title}`, href: '/kanban' })
   }
+  return { rows, health, data, events, eventStream }
+}
+
+/**
+ * Needs-my-action strip — the first thing on the Deck (and on mobile, the
+ * first thing on screen): down services, agents/tasks in trouble (both the
+ * markdown-sourced attention tasks and live Hermes kanban.db blocked/failing
+ * tasks), data warnings. Everything taps through to its tab.
+ */
+export function ActionFeed({ compact = false }: { compact?: boolean }) {
+  const { rows, health, data, events, eventStream } = useFeedRows()
+  const { dismissedIds, dismiss: dismissAlert, now } = useAlertDismissals(compact)
 
   if (compact) {
-    const dismissedIds = new Set(sweepDismissals(dismissed, now).map(entry => entry.id))
-    // Only events have an occurrence time. Keep untimestamped live-state rows;
-    // invalid/future event times cannot establish that an event is fresh now.
-    const alerts = rows.filter(row => (row.tone === 'urgent' || row.tone === 'warn')
-      && !dismissedIds.has(row.id)
-      && (row.eventTs === undefined || (Number.isFinite(row.eventTs) && row.eventTs > 0
-        && row.eventTs <= now && now - row.eventTs <= ALERT_MAX_AGE_MS)))
+    const alerts = rows.filter(row => !dismissedIds.has(row.id) && isFreshAlert(row, now))
       .sort((a, b) => Number(b.tone === 'urgent') - Number(a.tone === 'urgent'))
     return <details className="mc-urgent-strip">
       <summary><span className="mc-urgent-dot" data-alert={alerts.length > 0} aria-hidden="true" /><span className="mc-urgent-label"><span className="mc-urgent-eyebrow">NEEDS ATTENTION</span><strong>{alerts.length ? `${alerts.length} need attention` : !health ? 'Checking notifications…' : 'No urgent notifications'}</strong></span><span className="mc-urgent-preview">{alerts[0]?.text || (events[0] ? eventRow(events[0]).text : health ? 'No urgent notifications' : 'Checking notifications…')}</span><span className="mc-urgent-toggle" aria-hidden="true">⌄</span></summary>

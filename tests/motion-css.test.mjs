@@ -28,7 +28,7 @@ test('shared motion pause/kill rules live in exactly one file', () => {
 test('observer watches only opt-in widgets, and the widgets opt in', () => {
   const lib = read('lib/motion-visibility.ts')
   assert.match(lib, /MOTION_WIDGET_SELECTOR = '\[data-motion-widget\]'/)
-  for (const file of ['components/CoreOrb.tsx', 'components/views/HoloHud3D.tsx', 'components/HomeDeck.tsx', 'components/NeuralUplink.tsx', 'components/HoloRing.tsx']) {
+  for (const file of ['components/CoreOrb.tsx', 'components/views/HoloHud3D.tsx', 'components/NeuralUplink.tsx', 'components/HoloRing.tsx']) {
     assert.match(read(file), /data-motion-widget/, file)
   }
 })

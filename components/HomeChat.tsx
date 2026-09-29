@@ -52,7 +52,7 @@ const randomIntroIndex = (current?: number) => {
  *  can exist on two providers. */
 const optionKey = (model: ModelOption) => `${model.provider ?? ''}::${model.id}`
 
-export function HomeChat() {
+export function HomeChat({ compact = false }: { compact?: boolean } = {}) {
   const [messages, setMessages] = useState<Message[]>([])
   const [draft, setDraft] = useState('')
   const [session, setSession] = useState('')
@@ -333,7 +333,9 @@ export function HomeChat() {
     </form>
   )
 
-  return <section className={`${styles.chat} amsg-surface amsg-container`} data-empty={messages.length === 0} aria-label="Mission Control chat">
+  const suggestions = <div className={styles.suggestions} aria-label="Quick prompts">{QUICK_PROMPTS.map(text => <button type="button" key={text} disabled={busy || !ready || available === false} onClick={() => void send(text)}>{text}</button>)}</div>
+
+  return <section className={`${styles.chat} ${compact ? styles.chatCompact : ''} amsg-surface amsg-container`} data-empty={messages.length === 0} data-home-chat={compact ? '' : undefined} aria-label="Mission Control chat">
     {messages.length > 0 && <header className={`${styles.chatHeader} srule-home-header`}>
       <SectionRule label="MISSION CONTROL" index={1} />
       <div><span className={styles.connection}><span className={styles.connectionDot} data-status={available === false ? 'unavailable' : available ? 'connected' : 'connecting'} aria-hidden="true" />{available === false ? 'Agent unavailable' : available ? 'Agent connected' : 'Connecting…'}</span></div>
@@ -343,7 +345,11 @@ export function HomeChat() {
       const el = log.current
       if (el) following.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80
     }}>
-      {messages.length === 0 && <div className={styles.welcome}>
+      {messages.length === 0 && compact && <div className={styles.compactWelcome}>
+        {composerForm}
+        {suggestions}
+      </div>}
+      {messages.length === 0 && !compact && <div className={styles.welcome}>
         <HoloRing />
         <span className={styles.kicker}>PRECIADO TECH · MISSION CONTROL</span>
         <div className={styles.greetingGlow}>
@@ -353,7 +359,7 @@ export function HomeChat() {
         <p className={styles.dateLine}>{dateLine}</p>
         <p>{WELCOME_INTROS[welcomeIntro ?? 0]}</p>
         {composerForm}
-        <div className={styles.suggestions} aria-label="Quick prompts">{QUICK_PROMPTS.map(text => <button type="button" key={text} disabled={busy || !ready || available === false} onClick={() => void send(text)}>{text}</button>)}</div>
+        {suggestions}
       </div>}
       {messages.map((message, i) => <AsciiMsg key={i} compact who={message.role === 'user' ? 'MICHAEL' : 'AGENT'} side={message.role === 'user' ? 'user' : 'agent'} idx={i + 1} ts={message.timestamp ? new Date(message.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : undefined}><Markdown text={message.content} /></AsciiMsg>)}
       {busy && <AsciiMsg who="SYS" side="system" compact><p role="status">Working on your message…</p></AsciiMsg>}
