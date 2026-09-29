@@ -1,0 +1,70 @@
+/* VG-L4 — fold + wide-desktop shell layer. Loaded after globals.css.
+   TABLET query must stay in sync with FOLD_INNER_MEDIA_QUERY (Sidebar.tsx)
+   and Sidebar.module.css. */
+
+:root { --mc-fold-rail: 72px; --mc-readable-max: 1720px; }
+
+/* ── Tablet / unfolded inner: 72px icon rail + content, no phone chrome ── */
+@media (min-width: 720px) and (max-width: 1100px), (min-width: 720px) and (max-width: 1400px) and (pointer: coarse) {
+  html body .mc-shell { display: block; }
+  html body .mc-shell .mc-main,
+  html body .mc-shell:has(.ob-sidebar--collapsed) .mc-main,
+  html body .mc-shell:has(.ob-sidebar) .mc-main {
+    width: calc(100% - var(--mc-fold-rail));
+    margin-left: var(--mc-fold-rail);
+    box-sizing: border-box;
+    padding-bottom: 28px;
+    padding-right: max(var(--mc-gutter), env(safe-area-inset-right));
+  }
+  html body .mc-mobile-nav { display: none; }
+  html body .ob-wordmark-banner.cyber-wordmark { display: none !important; }
+  html body .ob-sidebar { transition: none; }
+  html[data-theme='friday'] body .mc-shell .mc-main:not(:has(.ob-home)) { --mc-gutter: 18px; }
+}
+
+/* ── Fold cover / phones: chrome ≤ 15% of the first viewport ── */
+@media (max-width: 719px) and (pointer: coarse) {
+  html body .mc-main > [role='status']:first-child {
+    flex-wrap: nowrap;
+    overflow: hidden;
+    min-height: 0;
+    margin-bottom: 8px;
+    padding: 4px 10px;
+    gap: 6px;
+  }
+  html body .mc-main > [role='status']:first-child > * { flex: 0 0 auto; white-space: nowrap; }
+}
+
+@media (max-width: 480px) and (pointer: coarse) {
+  html body .mc-shell .mc-main {
+    padding-top: max(6px, env(safe-area-inset-top));
+  }
+  html body .mc-mobile-nav {
+    padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+  }
+  html body .mc-mobile-nav-inner { height: 56px; min-height: 56px; padding: 3px; border-radius: 20px; }
+  html body .mc-mobile-item,
+  html body .mc-more-btn { height: 48px; min-height: 48px; min-width: 48px; }
+  html body .mc-mobile-pill { top: 3px; bottom: 3px; }
+  html body .mc-main { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+  /* Brand is already in the home header; the ASCII banner costs ~15% of the cover. */
+  html body .ob-wordmark-banner.cyber-wordmark { display: none !important; }
+}
+
+/* ── Wide desktop / 4K: readable column, sidebar unchanged ── */
+@media (min-width: 1900px) {
+  html[data-theme='friday'] body .mc-shell .mc-main:not(:has(.ob-home)) {
+    --mc-gutter: max(14px, calc((100vw - 236px - var(--mc-readable-max)) / 2));
+  }
+  html body .mc-shell:has(.ob-sidebar--collapsed) .mc-main:not(:has(.ob-home)) {
+    --mc-gutter: max(14px, calc((100vw - 64px - var(--mc-readable-max)) / 2));
+  }
+  html body .ob-wordmark-banner { max-width: var(--mc-readable-max); margin-inline: auto; }
+}
+
+/* ── Progressive enhancement: keep content off the hinge (book posture) ── */
+@media (horizontal-viewport-segments: 2) and (min-width: 720px) and (max-width: 1400px) {
+  html body .mc-shell .mc-main > *:not(.ob-home):not(.ob-wordmark-banner):not(.v4-scanline) {
+    max-width: calc(env(viewport-segment-right 0 0, 100vw) - var(--mc-fold-rail) - 2 * var(--mc-gutter));
+  }
+}

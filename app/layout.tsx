@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import Script from 'next/script'
 import './globals.css'
+import './styles/fold.css'
 import './vf/v4-lane.css'
 import './vf/cyberpunk.css'
 import './w2l.css'

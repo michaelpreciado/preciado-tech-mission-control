@@ -244,7 +244,7 @@ function MobileNav() {
 
   // A sheet opened on the cover must not linger over the desktop shell.
   useEffect(() => {
-    const mobileChrome = window.matchMedia('(max-width: 820px)')
+    const mobileChrome = window.matchMedia('(max-width: 719px)')
     const foldInner = window.matchMedia(FOLD_INNER_MEDIA_QUERY)
     const closeOnLayoutChange = () => {
       if (!mobileChrome.matches || foldInner.matches) setMoreOpen(false)

@@ -498,3 +498,48 @@ html[data-motion='off'] .taskDot[data-running='true'] {
     transform: none !important;
   }
 }
+
+/* ── VG-L4 fold + desktop shell ─────────────────────────────────────────── */
+
+/* Tablet / unfolded inner (same query as Sidebar.module.css): two panes, never
+   the phone stack. Primary column = mission feed + metrics, secondary = rails. */
+@media (min-width: 720px) and (max-width: 1100px), (min-width: 720px) and (max-width: 1400px) and (pointer: coarse) {
+  .home.ob-home { padding: 16px 16px 40px; }
+  .obGrid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(220px, 1fr); grid-template-rows: auto auto 1fr; gap: 14px; align-items: start; min-height: 0; }
+  .obRail, .obCenter { display: flex; }
+  .obMetricRow { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .obCenter { grid-column: 1; grid-row: 1 / span 3; }
+  .obRail:first-child { grid-column: 2; grid-row: 1; }
+  .obRail:last-child { grid-column: 2; grid-row: 2; }
+  .obGrid :is(.obMissionCard, .obTasksCard, .obSystemCard, .obTelemetryCard, .obFinanceCard, .obUplink, .obOrbDock, .obPipelineCard, .obGithubCard, .obDatastream, .obCrewCard) { order: 0; grid-column: auto; grid-row: auto; }
+  .obJumps { display: none; }
+  .obHeader { flex-wrap: wrap; }
+  .obHeaderStatus button { min-height: 44px; }
+}
+
+/* Hinge-aware book posture (two side-by-side viewport segments): primary pane
+   in the left segment, rails in the right one, nothing under the fold seam. */
+@media (horizontal-viewport-segments: 2) and (min-width: 720px) and (max-width: 1400px) {
+  .obGrid {
+    grid-template-columns: minmax(0, calc(env(viewport-segment-right 0 0, 50vw) - 72px - 16px)) calc(env(viewport-segment-left 1 0, 50vw) - env(viewport-segment-right 0 0, 50vw)) minmax(0, 1fr);
+    column-gap: 0;
+  }
+  .obCenter { grid-column: 1; }
+  .obRail:first-child, .obRail:last-child { grid-column: 3; }
+}
+
+/* Fold cover: compact one-glance header, 44px targets. */
+@media (max-width: 480px) and (pointer: coarse) {
+  .home.ob-home { padding-top: 6px; }
+  .obHeader { min-height: 0; gap: 6px 10px; padding: 8px 10px; flex-wrap: wrap; }
+  .obHeaderBrand b { font-size: 11px; letter-spacing: .22em; }
+  .obHeaderStatus { order: 3; width: 100%; gap: 8px; justify-content: space-between; }
+  .obHeaderStatus button { min-height: 44px; padding: 6px 10px; }
+  .home :global(.mc-urgent-strip summary) { min-height: 44px; padding-block: 4px; }
+  .ob-home > .chat[data-empty='true'] { margin-top: 8px; min-height: clamp(420px, calc(100svh - 240px), 700px); }
+}
+
+/* Desktop / 4K: readable column. */
+@media (min-width: 1900px) {
+  .home.ob-home { max-width: 1720px; margin-inline: auto; }
+}

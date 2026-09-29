@@ -32,8 +32,8 @@ const CREW_NAV = [
 ] as const
 
 const SIDEBAR_STORAGE_KEY = 'omniBridge.sidebar.collapsed'
-/** Inner Fold heuristic: wide enough to be tablet-like, but not a short cover landscape window. */
-export const FOLD_INNER_MEDIA_QUERY = '(min-width: 601px) and (max-width: 1000px) and (min-height: 500px) and (pointer: coarse)'
+/** Tablet / unfolded-inner band: icon rail instead of the phone layout. Mirrored verbatim in app/styles/fold.css and Sidebar.module.css. */
+export const FOLD_INNER_MEDIA_QUERY = '(min-width: 720px) and (max-width: 1100px), (min-width: 720px) and (max-width: 1400px) and (pointer: coarse)'
 
 function isRouteActive(pathname: string, href: string) {
   return href === '/' ? pathname === '/' : pathname.startsWith(href)
@@ -88,7 +88,7 @@ export function Sidebar() {
       <div className={styles.brandBlock}>
         <div className={styles.brandMark} aria-hidden="true"><Icon name="brand" size={18} /></div>
         <div className={styles.brandCopy}>
-          <div className={styles.wordmark}>PRECIADO<span>**TECH**</span></div>
+          <div className={styles.wordmark}>PRECIADO<span>TECH</span></div>
           <div className={styles.buildTag}>BUILD // OMNIBRIDGE</div>
         </div>
       </div>
