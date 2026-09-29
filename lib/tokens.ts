@@ -24,7 +24,7 @@
 
 /** ── Raw token values (the canonical numbers) ─────────────────────── */
 
-export const ACCENT_DEFAULT = '#9db4ec'
+export const ACCENT_DEFAULT = '#1e90ff'
 
 /* Semantic status palette — the four states, reserved meaning. never reused
    as a categorical slot, never decorative. */
