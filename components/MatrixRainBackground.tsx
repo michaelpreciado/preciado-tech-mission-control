@@ -15,9 +15,19 @@ const SNOWFALL_SCALE = 0.5
 const BRIGHTNESS_EASE = 1 - Math.exp(-STEP / 0.7)
 const BASE_SPEED = 0.045 * 1000 * BASE_FONT_SIZE
 const STREAK = 48
-const TRAIL_TIP = 'rgba(30,144,255,0.24)'
-const TRAIL_END = 'rgba(30,144,255,0)'
-const GLOW_RGB = '30,144,255'
+const TRAIL_TIP_ALPHA = 0.24
+type Rgb = [number, number, number]
+const FALLBACK_RGB: Rgb = [30, 144, 255]
+const FONT_FAMILY = 'ui-monospace, SFMono-Regular, monospace'
+/** Backing-store budget (~4K) and the tighter one used on weak devices. */
+const PIXEL_BUDGET = 8.3e6
+const LOW_POWER_PIXEL_BUDGET = 2.1e6
+const MAX_DPR = 3
+const LOW_POWER_MAX_DPR = 1.5
+const FRAME_MS_STRONG = 1000 / 60
+const FRAME_MS_LOW = 1000 / 30
+const SLOW_FRAME_MS = 20
+const SLOW_FRAMES_BEFORE_DOWNSHIFT = 60
 
 /**
  * Depth tiers, farthest first. A tier owns everything that changes with
@@ -46,21 +56,59 @@ type Drop = { y: number; previousY: number; speed: number; seed: number; tier: n
 
 type Reflection = { left: number; top: number; width: number; height: number; gradient: CanvasGradient; level: number }
 
-/** Pre-rendered radial glow for one tier. Built in the resize path only. */
-function buildGlowSprite(radius: number): HTMLCanvasElement | null {
-  if (radius <= 0) return null
-  const size = Math.ceil(radius * 2)
-  const sprite = document.createElement('canvas')
-  sprite.width = size
-  sprite.height = size
-  const context = sprite.getContext('2d')
-  if (!context) return null
-  const gradient = context.createRadialGradient(radius, radius, 0, radius, radius, radius)
-  gradient.addColorStop(0, `rgba(${GLOW_RGB},0.5)`)
-  gradient.addColorStop(0.45, `rgba(${GLOW_RGB},0.16)`)
-  gradient.addColorStop(1, `rgba(${GLOW_RGB},0)`)
+type Atlas = { canvas: HTMLCanvasElement; cellW: number; cellH: number; pad: number; base: number }
+
+function makeCanvas(width: number, height: number): [HTMLCanvasElement, CanvasRenderingContext2D] | null {
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.max(1, width)
+  canvas.height = Math.max(1, height)
+  const context = canvas.getContext('2d')
+  return context ? [canvas, context] : null
+}
+
+/** Every glyph pre-rendered once in device pixels, so the frame loop only blits. */
+function buildAtlas(deviceFont: number, color: string): Atlas | null {
+  const cellW = Math.ceil(deviceFont * 1.25)
+  const cellH = Math.ceil(deviceFont * 1.3)
+  const pad = Math.round(deviceFont * 0.1)
+  const base = Math.round(deviceFont * 1.0)
+  const made = makeCanvas(cellW * GLYPHS.length, cellH)
+  if (!made) return null
+  const [canvas, context] = made
+  context.font = `${deviceFont}px ${FONT_FAMILY}`
+  context.fillStyle = color
+  context.textBaseline = 'alphabetic'
+  for (let index = 0; index < GLYPHS.length; index += 1) context.fillText(GLYPHS[index], index * cellW + pad, base)
+  return { canvas, cellW, cellH, pad, base }
+}
+
+function buildGlowSprite(radiusDevice: number, rgb: Rgb): HTMLCanvasElement | null {
+  if (radiusDevice <= 0) return null
+  const size = Math.ceil(radiusDevice * 2)
+  const made = makeCanvas(size, size)
+  if (!made) return null
+  const [sprite, context] = made
+  const c = `${rgb[0]},${rgb[1]},${rgb[2]}`
+  const gradient = context.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2)
+  gradient.addColorStop(0, `rgba(${c},0.5)`)
+  gradient.addColorStop(0.45, `rgba(${c},0.16)`)
+  gradient.addColorStop(1, `rgba(${c},0)`)
   context.fillStyle = gradient
   context.fillRect(0, 0, size, size)
+  return sprite
+}
+
+/** Vertical fade, transparent at the top and brightest at the head (bottom). */
+function buildStreakSprite(width: number, height: number, span: number, rgb: Rgb): HTMLCanvasElement | null {
+  const made = makeCanvas(width, height)
+  if (!made) return null
+  const [sprite, context] = made
+  const c = `${rgb[0]},${rgb[1]},${rgb[2]}`
+  const gradient = context.createLinearGradient(0, height - span, 0, height)
+  gradient.addColorStop(0, `rgba(${c},0)`)
+  gradient.addColorStop(1, `rgba(${c},${TRAIL_TIP_ALPHA})`)
+  context.fillStyle = gradient
+  context.fillRect(0, 0, width, height)
   return sprite
 }
 
@@ -80,6 +128,14 @@ export function MatrixRainBackground() {
     if (!canvas) return
     const context = canvas.getContext('2d')
     if (!context) return
+    const root = document.documentElement
+
+    const nav = navigator as Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } }
+    const lowPower =
+      (nav.hardwareConcurrency || 8) <= 4 ||
+      (nav.deviceMemory ?? 8) <= 4 ||
+      nav.connection?.saveData === true ||
+      window.matchMedia('(pointer: coarse)').matches
 
     let width = 0
     let height = 0
@@ -91,71 +147,119 @@ export function MatrixRainBackground() {
     let simulationTime = 0
     let brightness = 0.84
     let previousBrightness = brightness
-    let reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    let state = document.documentElement.dataset.obOrbState
-    let cssSpeed = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ob-rain-speed')) || speedForState(state)
+    const motion = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const isReduced = () => motion.matches || root.dataset.motion === 'reduced' || root.dataset.motion === 'off'
+    let reduced = isReduced()
+    let state = root.dataset.obOrbState
+    let cssSpeed = Number.parseFloat(getComputedStyle(root).getPropertyValue('--ob-rain-speed')) || speedForState(state)
     // Reuse the shooting drop's storage; timers count visible simulation time.
     let shotColumn = -1
     let shotY = 0
     let shotPreviousY = 0
     let shotDelay = 12 + Math.random() * 13
 
-    // Per-tier caches — rebuilt only when the canvas resizes.
-    const fonts: string[] = []
-    const headColors: string[] = []
-    const streaks: (CanvasGradient | null)[] = []
-    const glows: (HTMLCanvasElement | null)[] = []
+    // Frame budget: 60 on capable hardware, 30 on weak hardware or after sustained slow frames.
+    let frameInterval = lowPower ? FRAME_MS_LOW : FRAME_MS_STRONG
+    let slowFrames = 0
+
+    // Palette, read from :root custom properties with the original blue as fallback.
+    let headRgb = FALLBACK_RGB
+    let trailRgb = FALLBACK_RGB
+    let glowRgb = FALLBACK_RGB
+    const probe = document.createElement('canvas')
+    probe.width = probe.height = 1
+    const probeContext = probe.getContext('2d', { willReadFrequently: true })
+    const parseColor = (value: string, fallback: Rgb): Rgb => {
+      const text = value.trim()
+      if (!text || !probeContext) return fallback
+      probeContext.fillStyle = '#010203'
+      probeContext.fillStyle = text
+      if (probeContext.fillStyle === '#010203') return fallback
+      probeContext.clearRect(0, 0, 1, 1)
+      probeContext.fillRect(0, 0, 1, 1)
+      const [r, g, b, a] = probeContext.getImageData(0, 0, 1, 1).data
+      return a ? [r, g, b] : fallback
+    }
+    const readPalette = () => {
+      const style = getComputedStyle(root)
+      headRgb = parseColor(style.getPropertyValue('--mc-rain-head'), FALLBACK_RGB)
+      trailRgb = parseColor(style.getPropertyValue('--mc-rain-trail'), FALLBACK_RGB)
+      glowRgb = parseColor(style.getPropertyValue('--mc-rain-glow'), FALLBACK_RGB)
+    }
+    readPalette()
+
+    // Per-tier sprites, in device pixels — rebuilt on resize, DPR or palette change.
+    type TierSprites = {
+      atlas: Atlas | null
+      glow: HTMLCanvasElement | null
+      streak: HTMLCanvasElement | null
+      streakX: number
+      shotStreak: HTMLCanvasElement | null
+    }
+    let sprites: TierSprites[] = []
+    let shotAtlas: Atlas | null = null
     let reflections: Reflection[] = []
     let reflectionsAt = 0
     let reflectionFrame = 0
+
+    const buildSprites = () => {
+      sprites = TIERS.map((tier) => {
+        const scale = tier.font / BASE_FONT_SIZE
+        const deviceFont = Math.max(4, Math.round(tier.font * scale * dpr))
+        const head = `rgba(${headRgb[0]},${headRgb[1]},${headRgb[2]},${Math.min(1, tier.alpha)})`
+        const streakW = Math.max(1, Math.round(tier.width * scale * dpr))
+        const streakH = Math.max(1, Math.round(STREAK * tier.trail * scale * dpr))
+        const shotW = Math.max(1, Math.round(2.5 * dpr))
+        const shotH = Math.max(1, Math.round(STREAK * 3 * dpr))
+        return {
+          atlas: buildAtlas(deviceFont, head),
+          glow: buildGlowSprite(tier.glow * scale * dpr, glowRgb),
+          streak: buildStreakSprite(streakW, streakH, streakH, trailRgb),
+          streakX: Math.round((tier.font * scale * dpr) / 2),
+          shotStreak: buildStreakSprite(shotW, shotH, Math.min(shotH, shotH * tier.trail), trailRgb),
+        }
+      })
+      shotAtlas = buildAtlas(Math.max(4, Math.round(BASE_FONT_SIZE * dpr)), '#bedeff')
+    }
 
     /** Re-read the panel rects the rain reflects off. Runs on resize and at
      *  most once a second — never inside the frame loop. */
     const refreshReflections = () => {
       const next: Reflection[] = []
       const seen = new Set<Element>()
+      const glow = `${glowRgb[0]},${glowRgb[1]},${glowRgb[2]}`
       for (const selector of REFLECTION_SELECTORS.split(',')) {
         for (const node of Array.from(document.querySelectorAll(selector.trim()))) {
           if (next.length >= REFLECTION_MAX || seen.has(node)) continue
           const rect = node.getBoundingClientRect()
           if (rect.width < 24 || rect.height < 24 || rect.bottom < 0 || rect.top > height) continue
           seen.add(node)
-          // Anchored to the top edge — the edge the rain actually crosses. The
-          // gradient is built in LOCAL space because canvas gradients are
-          // transformed by the CTM at fill time, and the draw call translates
-          // to the panel's own rect.
+          // Gradient built in LOCAL space: the draw call translates to the panel's rect.
           const depth = Math.min(rect.height, REFLECTION_BAND)
           const gradient = context.createLinearGradient(0, 0, 0, depth)
-          gradient.addColorStop(0, `rgba(${GLOW_RGB},0.16)`)
-          gradient.addColorStop(1, `rgba(${GLOW_RGB},0)`)
+          gradient.addColorStop(0, `rgba(${glow},0.16)`)
+          gradient.addColorStop(1, `rgba(${glow},0)`)
           next.push({ left: rect.left, top: rect.top, width: rect.width, height: rect.height, gradient, level: 0 })
         }
       }
       reflections = next
     }
 
+    const chooseDpr = () => {
+      const native = window.devicePixelRatio || 1
+      const budget = lowPower ? LOW_POWER_PIXEL_BUDGET : PIXEL_BUDGET
+      const cap = lowPower ? LOW_POWER_MAX_DPR : MAX_DPR
+      return Math.max(0.5, Math.min(native, cap, Math.sqrt(budget / (width * height))))
+    }
+
     const resize = () => {
       const rect = canvas.getBoundingClientRect()
       width = Math.max(1, rect.width)
       height = Math.max(1, rect.height)
-      dpr = Math.min(2, window.devicePixelRatio || 1)
+      dpr = chooseDpr()
       canvas.width = Math.round(width * dpr)
       canvas.height = Math.round(height * dpr)
-      context.setTransform(dpr, 0, 0, dpr, 0, 0)
-
-      fonts.length = 0
-      headColors.length = 0
-      streaks.length = 0
-      glows.length = 0
-      for (const tier of TIERS) {
-        fonts.push(`${tier.font}px ui-monospace, SFMono-Regular, monospace`)
-        headColors.push(`rgba(${GLOW_RGB},${Math.min(1, tier.alpha)})`)
-        const trail = context.createLinearGradient(0, -STREAK * tier.trail, 0, 0)
-        trail.addColorStop(0, TRAIL_END)
-        trail.addColorStop(1, TRAIL_TIP)
-        streaks.push(trail)
-        glows.push(buildGlowSprite(tier.glow))
-      }
+      buildSprites()
 
       const count = Math.ceil(width / BASE_FONT_SIZE)
       columns = Array.from({ length: count }, (_, index) => {
@@ -223,50 +327,48 @@ export function MatrixRainBackground() {
     }
 
     const render = () => {
-      if (!width || !height) return
+      if (!width || !height || !sprites.length) return
       const blend = accumulator / STEP
       const alpha = reduced ? 0.84 : previousBrightness + (brightness - previousBrightness) * blend
       const glyphTick = Math.floor(simulationTime / 0.18)
-      context.setTransform(dpr, 0, 0, dpr, 0, 0)
-      context.clearRect(0, 0, width, height)
+      // Everything below draws in device pixels with integer blits: no per-glyph
+      // transforms, no fillText, and 1:1 texels keep the glyphs sharp.
+      context.setTransform(1, 0, 0, 1, 0, 0)
+      context.clearRect(0, 0, canvas.width, canvas.height)
       context.globalAlpha = alpha
       for (let index = 0; index < columns.length; index += 1) {
         const drop = columns[index]
         const tier = TIERS[drop.tier]
+        const sprite = sprites[drop.tier]
         const y = reduced ? drop.y : drop.previousY + (drop.y - drop.previousY) * blend
-        const scale = tier.font / BASE_FONT_SIZE
-        // Cached local-space gradients travel with the head, with no new paths
-        // or gradient/color/font allocations in the frame loop.
-        context.setTransform(dpr * scale, 0, 0, dpr * scale, index * BASE_FONT_SIZE * dpr, y * dpr)
-        const glow = glows[drop.tier]
+        const x = Math.round(index * BASE_FONT_SIZE * dpr)
+        const yDevice = Math.round(y * dpr)
+        const glow = sprite.glow
         if (glow) {
           // Depth reads as light: near heads carry a halo, far ones do not.
-          const radius = tier.glow
           context.globalAlpha = alpha * tier.alpha * 0.5
-          context.drawImage(glow, -radius, -radius, radius * 2, radius * 2)
+          context.drawImage(glow, x - (glow.width >> 1), yDevice - (glow.height >> 1))
           context.globalAlpha = alpha
         }
-        const streak = streaks[drop.tier]
-        if (streak) {
-          context.fillStyle = streak
-          context.fillRect(tier.font / 2, -STREAK * tier.trail, tier.width, STREAK * tier.trail)
+        const streak = sprite.streak
+        if (streak) context.drawImage(streak, x + sprite.streakX, yDevice - streak.height)
+        const atlas = sprite.atlas
+        if (atlas) {
+          const glyph = (glyphTick + drop.seed) % GLYPHS.length
+          context.drawImage(atlas.canvas, glyph * atlas.cellW, 0, atlas.cellW, atlas.cellH, x - atlas.pad, yDevice - atlas.base, atlas.cellW, atlas.cellH)
         }
-        context.font = fonts[drop.tier]
-        context.fillStyle = headColors[drop.tier]
-        context.fillText(GLYPHS[(glyphTick + drop.seed) % GLYPHS.length], 0, 0)
       }
       if (!reduced && shotColumn >= 0) {
         const y = shotPreviousY + (shotY - shotPreviousY) * blend
+        const x = Math.round(shotColumn * BASE_FONT_SIZE * dpr)
+        const yDevice = Math.round(y * dpr)
         context.globalAlpha = Math.max(0, Math.min(1, (height + STREAK * 3 - y) / (STREAK * 3)))
-        context.setTransform(dpr, 0, 0, dpr * 3, shotColumn * BASE_FONT_SIZE * dpr, y * dpr)
-        const streak = streaks[columns[shotColumn].tier]
-        if (streak) {
-          context.fillStyle = streak
-          context.fillRect(BASE_FONT_SIZE / 2, -STREAK, 2.5, STREAK)
+        const streak = sprites[columns[shotColumn].tier].shotStreak
+        if (streak) context.drawImage(streak, x + Math.round((BASE_FONT_SIZE / 2) * dpr), yDevice - streak.height)
+        if (shotAtlas) {
+          const glyph = columns[shotColumn].seed % GLYPHS.length
+          context.drawImage(shotAtlas.canvas, glyph * shotAtlas.cellW, 0, shotAtlas.cellW, shotAtlas.cellH, x - shotAtlas.pad, yDevice - shotAtlas.base, shotAtlas.cellW, shotAtlas.cellH)
         }
-        context.setTransform(dpr, 0, 0, dpr, shotColumn * BASE_FONT_SIZE * dpr, y * dpr)
-        context.fillStyle = '#bedeff'
-        context.fillText(GLYPHS[columns[shotColumn].seed % GLYPHS.length], 0, 0)
       }
       // Panels catch the light: additive edge glow proportional to the drops
       // crossing them, which is why it breathes with the fall instead of
@@ -284,12 +386,23 @@ export function MatrixRainBackground() {
         }
         context.globalCompositeOperation = restore
       }
+      context.setTransform(1, 0, 0, 1, 0, 0)
       context.globalAlpha = 1
     }
 
-    const draw = (elapsed: number) => {
+    const draw = (elapsed: number, force = false) => {
+      const since = elapsed - previous
+      // Frame cap: skip rAF ticks that arrive early (120/144 Hz panels, 30 fps mode).
+      if (!force && since < frameInterval - 2) {
+        if (!reduced && document.visibilityState === 'visible') frame = requestAnimationFrame(draw)
+        return
+      }
+      if (!force && frameInterval < SLOW_FRAME_MS) {
+        slowFrames = since > SLOW_FRAME_MS ? slowFrames + 1 : Math.max(0, slowFrames - 2)
+        if (slowFrames > SLOW_FRAMES_BEFORE_DOWNSHIFT) frameInterval = FRAME_MS_LOW
+      }
       // Bound catch-up work after stalls while carrying fractional time forward.
-      accumulator += Math.min(STEP * MAX_STEPS, Math.max(0, (elapsed - previous) / 1000))
+      accumulator += Math.min(STEP * MAX_STEPS, Math.max(0, since / 1000))
       previous = elapsed
       let steps = 0
       while (!reduced && accumulator >= STEP && steps < MAX_STEPS) {
@@ -313,24 +426,51 @@ export function MatrixRainBackground() {
       if (frame) cancelAnimationFrame(frame)
       previous = performance.now()
       if (reduced) { accumulator = 0; shotColumn = -1 }
-      draw(previous)
+      draw(previous, true)
     }
     const visibility = () => {
       if (document.visibilityState === 'visible') restart()
       else if (frame) cancelAnimationFrame(frame)
     }
-    const motion = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const onMotion = () => { reduced = motion.matches; restart() }
+    const onMotion = () => { reduced = isReduced(); restart() }
     const observer = new MutationObserver(() => {
-      const next = document.documentElement.dataset.obOrbState
-      const nextSpeed = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ob-rain-speed')) || speedForState(next)
-      if (next !== state || nextSpeed !== cssSpeed) { state = next; cssSpeed = nextSpeed; restart() }
+      const next = root.dataset.obOrbState
+      const nextSpeed = Number.parseFloat(getComputedStyle(root).getPropertyValue('--ob-rain-speed')) || speedForState(next)
+      const nextReduced = isReduced()
+      if (next !== state || nextSpeed !== cssSpeed || nextReduced !== reduced) {
+        state = next
+        cssSpeed = nextSpeed
+        reduced = nextReduced
+        restart()
+      }
     })
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-ob-orb-state', 'style'] })
+    observer.observe(root, { attributes: true, attributeFilter: ['data-ob-orb-state', 'data-motion', 'style'] })
     const resizeObserver = new ResizeObserver(resize)
     resizeObserver.observe(canvas)
+
+    const onTheme = () => {
+      readPalette()
+      buildSprites()
+      refreshReflections()
+      render()
+    }
+
+    // A DPR change (monitor move, browser zoom) is not a canvas resize, so listen for it directly.
+    let dprQuery: MediaQueryList | null = null
+    const onDprChange = () => {
+      watchDpr()
+      resize()
+    }
+    const watchDpr = () => {
+      dprQuery?.removeEventListener('change', onDprChange)
+      dprQuery = window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`)
+      dprQuery.addEventListener('change', onDprChange)
+    }
+    watchDpr()
+
     motion.addEventListener('change', onMotion)
     document.addEventListener('visibilitychange', visibility)
+    window.addEventListener('mc-theme-change', onTheme)
     resize()
     restart()
 
@@ -338,8 +478,10 @@ export function MatrixRainBackground() {
       if (frame) cancelAnimationFrame(frame)
       observer.disconnect()
       resizeObserver.disconnect()
+      dprQuery?.removeEventListener('change', onDprChange)
       motion.removeEventListener('change', onMotion)
       document.removeEventListener('visibilitychange', visibility)
+      window.removeEventListener('mc-theme-change', onTheme)
     }
   }, [])
 
