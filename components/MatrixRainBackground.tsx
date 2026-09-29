@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { FrameBudget, rainDpr } from '@/lib/frame-budget'
 
 const GLYPHS = Array.from('アィウエオカキクケコサシスセソタチツテトナニヌネノ01<>[]{}+=*')
 /** Reference column pitch. Per-depth glyph sizes live in TIERS. */
@@ -19,15 +20,6 @@ const TRAIL_TIP_ALPHA = 0.24
 type Rgb = [number, number, number]
 const FALLBACK_RGB: Rgb = [30, 144, 255]
 const FONT_FAMILY = 'ui-monospace, SFMono-Regular, monospace'
-/** Backing-store budget (~4K) and the tighter one used on weak devices. */
-const PIXEL_BUDGET = 8.3e6
-const LOW_POWER_PIXEL_BUDGET = 2.1e6
-const MAX_DPR = 3
-const LOW_POWER_MAX_DPR = 1.5
-const FRAME_MS_STRONG = 1000 / 60
-const FRAME_MS_LOW = 1000 / 30
-const SLOW_FRAME_MS = 20
-const SLOW_FRAMES_BEFORE_DOWNSHIFT = 60
 
 /**
  * Depth tiers, farthest first. A tier owns everything that changes with
@@ -158,9 +150,8 @@ export function MatrixRainBackground() {
     let shotPreviousY = 0
     let shotDelay = 12 + Math.random() * 13
 
-    // Frame budget: 60 on capable hardware, 30 on weak hardware or after sustained slow frames.
-    let frameInterval = lowPower ? FRAME_MS_LOW : FRAME_MS_STRONG
-    let slowFrames = 0
+    // Follow the panel cadence; adapt only when the moving p95 draw cost exceeds budget.
+    const budget = new FrameBudget()
 
     // Palette, read from :root custom properties with the original blue as fallback.
     let headRgb = FALLBACK_RGB
@@ -245,12 +236,7 @@ export function MatrixRainBackground() {
       reflections = next
     }
 
-    const chooseDpr = () => {
-      const native = window.devicePixelRatio || 1
-      const budget = lowPower ? LOW_POWER_PIXEL_BUDGET : PIXEL_BUDGET
-      const cap = lowPower ? LOW_POWER_MAX_DPR : MAX_DPR
-      return Math.max(0.5, Math.min(native, cap, Math.sqrt(budget / (width * height))))
-    }
+    const chooseDpr = () => rainDpr(width, height, window.devicePixelRatio || 1, lowPower)
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect()
@@ -341,6 +327,8 @@ export function MatrixRainBackground() {
         const tier = TIERS[drop.tier]
         const sprite = sprites[drop.tier]
         const y = reduced ? drop.y : drop.previousY + (drop.y - drop.previousY) * blend
+        // Offscreen columns need simulation, not three transparent sprite blits.
+        if (y < -tier.glow * 2 || y > height + STREAK * tier.trail * 2) continue
         const x = Math.round(index * BASE_FONT_SIZE * dpr)
         const yDevice = Math.round(y * dpr)
         const glow = sprite.glow
@@ -392,15 +380,13 @@ export function MatrixRainBackground() {
 
     const draw = (elapsed: number, force = false) => {
       const since = elapsed - previous
-      // Frame cap: skip rAF ticks that arrive early (120/144 Hz panels, 30 fps mode).
-      if (!force && since < frameInterval - 2) {
+      budget.sample(elapsed)
+      // Tiny tolerance avoids alternating skipped frames on real 120/144 Hz displays.
+      if (!force && since < budget.interval - 0.5) {
         if (!reduced && document.visibilityState === 'visible') frame = requestAnimationFrame(draw)
         return
       }
-      if (!force && frameInterval < SLOW_FRAME_MS) {
-        slowFrames = since > SLOW_FRAME_MS ? slowFrames + 1 : Math.max(0, slowFrames - 2)
-        if (slowFrames > SLOW_FRAMES_BEFORE_DOWNSHIFT) frameInterval = FRAME_MS_LOW
-      }
+      const started = performance.now()
       // Bound catch-up work after stalls while carrying fractional time forward.
       accumulator += Math.min(STEP * MAX_STEPS, Math.max(0, since / 1000))
       previous = elapsed
@@ -419,11 +405,13 @@ export function MatrixRainBackground() {
         }
       }
       render()
+      budget.record(performance.now() - started)
       if (!reduced && document.visibilityState === 'visible') frame = requestAnimationFrame(draw)
     }
 
     const restart = () => {
       if (frame) cancelAnimationFrame(frame)
+      budget.reset()
       previous = performance.now()
       if (reduced) { accumulator = 0; shotColumn = -1 }
       draw(previous, true)
