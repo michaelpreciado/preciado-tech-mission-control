@@ -374,7 +374,9 @@ html[data-motion='off'] .taskDot[data-running='true'] {
 .obFinanceBody > strong { font-size: 30px; font-variant-numeric: tabular-nums; }
 
 /* The hero ring stays inside the welcome column so the HUD can breathe on small screens. */
-.holoRing { display: block; flex-shrink: 0; width: min(240px, 62vw); max-width: 100%; height: auto; aspect-ratio: 1; margin: 0 0 16px; overflow: visible; color: var(--ob-brand); filter: drop-shadow(0 0 3px rgba(var(--pt-glow-rgb),.35)); }
+.holoRing { position: relative; isolation: isolate; display: block; flex-shrink: 0; width: min(240px, 62vw); max-width: 100%; height: auto; aspect-ratio: 1; margin: 0 0 16px; overflow: visible; color: var(--ob-brand); }
+.holoRing .holoLayer { position: absolute; inset: 0; transform-origin: 50% 50%; transform-box: border-box; }
+.holoLayer > svg { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 3px rgba(var(--pt-glow-rgb),.35)); }
 .holoRing circle, .holoRing line, .holoRing rect { fill: none; stroke: currentColor; }
 .holoParticles { fill: currentColor; stroke: none; transform-box: view-box; transform-origin: 100px 100px; animation: holoParticleDrift 60s linear infinite reverse, holoParticlePulse 7s ease-in-out infinite alternate; }
 .holoParticles circle { fill: currentColor; stroke: none; }
@@ -391,8 +393,9 @@ html[data-motion='off'] .taskDot[data-running='true'] {
 .holoInnerGlow { stroke-width: 2.5; opacity: .7; }
 .holoRing .holoWell { fill: var(--pt-bg-terminal-solid); fill-opacity: .78; stroke: none; }
 .holoRing .holoInner { stroke: var(--ob-peak, var(--pt-text-high)); stroke-width: .8; opacity: .92; }
-.holoBinary { pointer-events: none; shape-rendering: crispEdges; }
-.holoBinaryColumn { fill: rgba(var(--pt-neon-rgb),.72); stroke: none; font: 5px/1 var(--pt-font-mono, monospace); letter-spacing: 0; text-anchor: middle; animation: holoBinaryFall 5s linear infinite; }
+.holoBinary, .holoPixels { position: absolute; inset: 0; clip-path: circle(25.5% at 50% 50%); pointer-events: none; }
+.holoBinaryColumn { animation: holoBinaryFall 5s linear infinite; }
+.holoBinaryColumn text { fill: rgba(var(--pt-neon-rgb),.72); stroke: none; font: 5px/1 var(--pt-font-mono, monospace); letter-spacing: 0; text-anchor: middle; }
 .holoPixels { color: var(--pt-info); pointer-events: none; opacity: .86; }
 .holoPixelFrames, .holoPixelFrame, .holoPixelReduced { shape-rendering: crispEdges; }
 .holoPixelFrame { opacity: 0; }
@@ -419,11 +422,14 @@ html[data-motion='off'] .taskDot[data-running='true'] {
 @keyframes holoRotateReverse { to { transform: rotate(-360deg); } }
 @keyframes holoParticleDrift { to { transform: rotate(-360deg); } }
 @keyframes holoParticlePulse { to { opacity: .48; } }
-@keyframes holoBinaryFall { from { transform: translateY(-18px); } to { transform: translateY(58px); } }
+@keyframes holoBinaryFall { from { transform: translateY(-9%); } to { transform: translateY(29%); } }
 @keyframes holoPixelFour { 0%, 24.999% { opacity: 1; } 25%, 100% { opacity: 0; } }
 @keyframes holoPixelFive { 0%, 19.999% { opacity: 1; } 20%, 100% { opacity: 0; } }
 @keyframes holoPixelTwo { 0%, 49.999% { opacity: 1; } 50%, 100% { opacity: 0; } }
 @keyframes holoPixelThree { 0%, 33.332% { opacity: 1; } 33.333%, 100% { opacity: 0; } }
+html[data-motion='reduced'] .holoRing *, html[data-motion='off'] .holoRing * { animation: none !important; }
+html[data-motion='reduced'] .holoPixelFrames, html[data-motion='off'] .holoPixelFrames { display: none; }
+html[data-motion='reduced'] .holoPixelReduced, html[data-motion='off'] .holoPixelReduced { display: block; opacity: .86; }
 @media (prefers-reduced-motion: reduce) {
   .holoRing, .holoRing * { animation: none !important; }
   .holoPixels .holoPixelFrames { display: none; }

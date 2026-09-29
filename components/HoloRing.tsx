@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, type CSSProperties } from 'react'
+import { useRef, type CSSProperties, type ReactNode } from 'react'
 import { useLiveData } from './LiveDataProvider'
 import styles from './HomeWorkspace.module.css'
 
@@ -335,6 +335,11 @@ function renderPixelCells(frame: PixelFrame, frameIndex: number) {
   }))
 }
 
+/** Animate HTML layers, not SVG groups: Chrome can composite the cached SVG texture. */
+function RingLayer({ className = '', style, children }: { className?: string; style?: CSSProperties; children: ReactNode }) {
+  return <div className={`${styles.holoLayer} ${className}`} style={style}><svg viewBox="0 0 200 200" aria-hidden="true" focusable="false">{children}</svg></div>
+}
+
 export function HoloRing() {
   const { data } = useLiveData()
   const activityHistory = useRef<{ calmSince: number | null; lastBusyAt: number | null }>({
@@ -392,31 +397,30 @@ export function HoloRing() {
   const binarySpeed = emote === 'building' ? 1.8 : emote === 'sleeping' ? 0.28 : 1
 
   return (
-    <svg className={styles.holoRing} viewBox="0 0 200 200" role="img" aria-hidden="true" focusable="false">
+    <div className={styles.holoRing} data-motion-widget aria-hidden="true">
+      <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
       <defs>
         <filter id="holo-ring-blur" x="-40%" y="-40%" width="180%" height="180%">
           <feGaussianBlur stdDeviation={1.8 + activity * 1.8} />
         </filter>
-        <clipPath id="holo-well-clip">
-          <circle cx={CENTER} cy={CENTER} r="51" />
-        </clipPath>
       </defs>
-      <g className={styles.holoParticles} style={{ animationDuration: particleDuration, opacity: opacity(0.28, 0.72) }}>
+      </svg>
+      <RingLayer className={styles.holoParticles} style={{ animationDuration: particleDuration, opacity: opacity(0.28, 0.72) }}>
         {Array.from({ length: 40 }, (_, index) => {
           const point = polar(94 + (index % 7) * 1.05, index * 9 + (index % 4) * 1.8)
           return <circle key={index} cx={point.x} cy={point.y} r={0.45 + (index % 3) * 0.16} opacity={0.1 + (index % 5) * 0.035} />
         })}
-      </g>
-      <g className={styles.holoOuterA} style={{ animationDuration: duration(28), opacity: opacity(0.38, 0.72) }}>
+      </RingLayer>
+      <RingLayer className={styles.holoOuterA} style={{ animationDuration: duration(28), opacity: opacity(0.38, 0.72) }}>
         <circle r="92" cx={CENTER} cy={CENTER} strokeDasharray="66 12 28 18 52 32" />
-      </g>
-      <g className={styles.holoOuterB} style={{ animationDuration: duration(44), opacity: opacity(0.28, 0.58) }}>
+      </RingLayer>
+      <RingLayer className={styles.holoOuterB} style={{ animationDuration: duration(44), opacity: opacity(0.28, 0.58) }}>
         <circle r="87" cx={CENTER} cy={CENTER} strokeDasharray="24 9 70 18 38 13" />
-      </g>
-      <g className={styles.holoOuterC} style={{ animationDuration: duration(36), opacity: opacity(0.22, 0.46) }}>
+      </RingLayer>
+      <RingLayer className={styles.holoOuterC} style={{ animationDuration: duration(36), opacity: opacity(0.22, 0.46) }}>
         <circle r="81" cx={CENTER} cy={CENTER} strokeDasharray="6 12 44 8 18 22" />
-      </g>
-      <g className={styles.holoTicks} style={{ opacity: opacity(0.56, 0.9) }}>
+      </RingLayer>
+      <RingLayer className={styles.holoTicks} style={{ opacity: opacity(0.56, 0.9) }}>
         {Array.from({ length: 60 }, (_, index) => {
           const major = index % 5 === 0
           const angle = index * 6
@@ -424,55 +428,58 @@ export function HoloRing() {
           const outer = polar(77, angle)
           return <line key={index} x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y} strokeWidth={major ? 1.15 : 0.55} opacity={major ? 0.85 : 0.48} />
         })}
-      </g>
-      <g className={styles.holoTrack} style={{ animationDuration: duration(22), opacity: opacity(0.3, 0.68) }}>
+      </RingLayer>
+      <RingLayer className={styles.holoTrack} style={{ animationDuration: duration(22), opacity: opacity(0.3, 0.68) }}>
         {Array.from({ length: 24 }, (_, index) => {
           const point = polar(82.5, index * 15)
           const width = index % 4 === 0 ? 5 : 3
           return <rect key={index} x={point.x - width / 2} y={point.y - 0.9} width={width} height="1.8" rx="0.6" transform={`rotate(${index * 15} ${point.x} ${point.y})`} opacity={index % 4 === 0 ? 0.72 : 0.42} />
         })}
-      </g>
-      <g className={styles.holoSweepGroup} style={{ animationDuration: duration(9), opacity: opacity(0.56, 0.94) }}>
+      </RingLayer>
+      <RingLayer className={styles.holoSweepGroup} style={{ animationDuration: duration(9), opacity: opacity(0.56, 0.94) }}>
         <circle className={styles.holoSweepGlow} cx={CENTER} cy={CENTER} r="67" strokeWidth={2.2 + activity * 1.8} strokeDasharray="117 304" strokeDashoffset="-9" filter="url(#holo-ring-blur)" style={{ opacity: opacity(0.34, 0.82) }} />
         <circle className={styles.holoSweep} cx={CENTER} cy={CENTER} r="67" strokeWidth={1.15 + activity * 0.85} strokeDasharray="117 304" strokeDashoffset="-9" style={{ opacity: opacity(0.72, 1) }} />
-      </g>
+      </RingLayer>
+      <RingLayer>
       <circle className={styles.holoInnerGlow} cx={CENTER} cy={CENTER} r="51" filter="url(#holo-ring-blur)" style={{ opacity: opacity(0.42, 0.82) }} />
       <circle className={styles.holoWell} cx={CENTER} cy={CENTER} r="51" />
-      <g className={styles.holoBinary} clipPath="url(#holo-well-clip)" aria-hidden="true">
+      </RingLayer>
+      <div className={styles.holoBinary} aria-hidden="true">
         {BINARY_COLUMNS.map(column => (
-          <text
+          <RingLayer
             className={styles.holoBinaryColumn}
             key={column.x}
-            x={column.x}
-            y={column.startY}
-            style={{ animationDuration: `${column.duration / binarySpeed}s`, animationDelay: column.delay, opacity: column.opacity } as CSSProperties}
+            style={{ animationDuration: `${column.duration / binarySpeed}s`, animationDelay: column.delay, opacity: column.opacity }}
           >
-            {column.run.split('').map((digit, index) => <tspan key={index} x={column.x} dy={index === 0 ? 0 : 6}>{digit}</tspan>)}
-          </text>
+            <text x={column.x} y={column.startY}>
+              {column.run.split('').map((digit, index) => <tspan key={index} x={column.x} dy={index === 0 ? 0 : 6}>{digit}</tspan>)}
+            </text>
+          </RingLayer>
         ))}
-      </g>
-      <g
+      </div>
+      <div
         className={styles.holoPixels}
         data-emote={emote}
-        clipPath="url(#holo-well-clip)"
         aria-hidden="true"
         style={{
           '--holo-pixel-cycle': duration(emote === 'alert' ? 1.4 : emote === 'sleeping' ? 4.8 : 2.8),
           '--holo-pixel-step': duration((emote === 'alert' ? 1.4 : emote === 'sleeping' ? 4.8 : 2.8) / PIXEL_FRAMES[emote].length),
         } as CSSProperties}
       >
-        <g className={styles.holoPixelFrames}>
+        <div className={styles.holoPixelFrames}>
           {PIXEL_FRAMES[emote].map((frame, frameIndex) => (
-            <g className={styles.holoPixelFrame} data-frame={frameIndex} key={frameIndex} shapeRendering="crispEdges">
+            <RingLayer className={styles.holoPixelFrame} key={frameIndex}>
               {renderPixelCells(frame, frameIndex)}
-            </g>
+            </RingLayer>
           ))}
-        </g>
-        <g className={styles.holoPixelReduced} shapeRendering="crispEdges">
+        </div>
+        <RingLayer className={styles.holoPixelReduced}>
           {renderPixelCells(IDLE_PIXEL_FRAMES[0], 0)}
-        </g>
-      </g>
-      <circle className={styles.holoInner} cx={CENTER} cy={CENTER} r="51" />
-    </svg>
+        </RingLayer>
+      </div>
+      <RingLayer>
+        <circle className={styles.holoInner} cx={CENTER} cy={CENTER} r="51" />
+      </RingLayer>
+    </div>
   )
 }
