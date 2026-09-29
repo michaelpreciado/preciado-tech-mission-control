@@ -105,17 +105,17 @@ export function NeuralOrbCanvas({ state, intensity, overlay, staticMotion, visib
       const rect = canvas.getBoundingClientRect()
       width = Math.max(1, rect.width)
       height = Math.max(1, rect.height)
-      dpr = Math.min(2, window.devicePixelRatio || 1)
+      dpr = Math.min(1.25, window.devicePixelRatio || 1)
       canvas.width = Math.round(width * dpr)
       canvas.height = Math.round(height * dpr)
       context.setTransform(dpr, 0, 0, dpr, 0, 0)
       scale = Math.min(width, height) / SIZE
-      draw(performance.now())
+      // ResizeObserver also fires on mount: never fork a second animation chain.
+      if (frame) cancelAnimationFrame(frame)
+      previous = performance.now()
+      draw(previous)
     }
-    const point = (node: Node, now: number) => ({
-      x: (node.x + Math.cos(now * 0.0005 + node.phase) * (node.shell ? 1.5 : 0)) * scale + (width - SIZE * scale) / 2,
-      y: (node.y + Math.sin(now * 0.0007 + node.phase) * (node.shell ? 1.5 : 0)) * scale + (height - SIZE * scale) / 2,
-    })
+    const currentNodes = network.nodes.map(() => ({ x: 0, y: 0 }))
     const draw = (now: number) => {
       if (!width || !height || !visible) return
       const delta = Math.min(48, now - previous)
@@ -143,14 +143,21 @@ export function NeuralOrbCanvas({ state, intensity, overlay, staticMotion, visib
       context.save()
       context.globalCompositeOperation = 'lighter'
 
-      const currentNodes = network.nodes.map(node => point(node, now))
+      for (let index = 0; index < network.nodes.length; index++) {
+        const node = network.nodes[index]
+        const target = currentNodes[index]
+        target.x = (node.x + Math.cos(now * 0.0005 + node.phase) * (node.shell ? 1.5 : 0)) * scale + (width - SIZE * scale) / 2
+        target.y = (node.y + Math.sin(now * 0.0007 + node.phase) * (node.shell ? 1.5 : 0)) * scale + (height - SIZE * scale) / 2
+      }
       context.lineWidth = Math.max(0.7, scale)
+      context.strokeStyle = rgba(color, 0.16 + visual.bloom * 0.08)
+      context.beginPath()
       for (const edge of network.edges) {
         const from = currentNodes[edge.from]
         const to = currentNodes[edge.to]
-        context.strokeStyle = rgba(color, 0.16 + visual.bloom * 0.08)
-        context.beginPath(); context.moveTo(from.x, from.y); context.lineTo(to.x, to.y); context.stroke()
+        context.moveTo(from.x, from.y); context.lineTo(to.x, to.y)
       }
+      context.stroke()
       const spawnRate = (overlayVisual?.pulseRate ?? visual.pulseRate) * (0.35 + intensityRef.current * 0.9)
       if (!staticMotion && Math.random() < spawnRate * delta * 0.004 && network.edges.length) {
         const edge = network.edges[Math.floor(Math.random() * network.edges.length)]

@@ -6,6 +6,7 @@ import * as THREE from 'three'
 import { Icon } from './icons'
 import { useOrbActivity } from './LiveDataProvider'
 import { useUiSettings } from './ui-settings'
+import { useRenderVisibility } from './use-render-visibility'
 import OrbitalKanbanRing from './OrbitalKanbanRing'
 import PipelineOrbit, { PipelineKanbanFit } from './PipelineOrbit'
 import { NeuralOrbCanvas } from './NeuralOrbCanvas'
@@ -50,16 +51,6 @@ function useMedia(query: string): boolean {
   return matches
 }
 
-function usePageVisible(): boolean {
-  const [visible, setVisible] = useState(true)
-  useEffect(() => {
-    const update = () => setVisible(document.visibilityState === 'visible')
-    update(); document.addEventListener('visibilitychange', update)
-    return () => document.removeEventListener('visibilitychange', update)
-  }, [])
-  return visible
-}
-
 const PLASMA_VERTEX = `varying vec2 vUv;
 void main(){vUv=uv;gl_Position=vec4(position,1.0);}`
 const PLASMA_FRAGMENT = `precision highp float;
@@ -75,12 +66,10 @@ function OrbScene({ visual, overlay, staticMotion, expanded }: { visual: VisualS
     uTime: { value: 0 }, uBloom: { value: 0.55 }, uColor: { value: new THREE.Color(ACCENT_DEFAULT) },
   }), [])
   const currentColor = useRef(new THREE.Color(ACCENT_DEFAULT))
+  const overlayVisual = useMemo(() => overlay ? deriveOrbOverlayVisual(overlay.kind) : null, [overlay])
+  const target = useMemo(() => new THREE.Color(overlayVisual?.palette.hex ?? (visual.state === 'hot' ? SEMANTIC.error.hex : visual.state === 'idle' ? ACCENT_DEFAULT : '#c4d2f5')), [overlayVisual, visual.state])
   useEffect(() => { invalidate() }, [invalidate, visual, overlay])
   useFrame((frame, delta) => {
-    const overlayVisual = overlay ? deriveOrbOverlayVisual(overlay.kind) : null
-    const target = overlayVisual
-      ? new THREE.Color(overlayVisual.palette.hex)
-      : visual.state === 'hot' ? new THREE.Color(SEMANTIC.error.hex) : new THREE.Color(visual.state === 'idle' ? ACCENT_DEFAULT : '#c4d2f5')
     if (staticMotion) currentColor.current.copy(target)
     else currentColor.current.lerp(target, Math.min(1, delta / (visual.state === 'hot' ? 1.5 : 3)))
     uniforms.uColor.value.copy(currentColor.current)
@@ -100,7 +89,8 @@ function OrbRuntime({ placement }: { placement: Placement }) {
   const showOrbit = elements3d.coreOrb && density !== 'compact' && ringViewport && elements3d.pipelineOrbit
   const activity = useOrbActivity()
   const activityRef = useRef(activity)
-  const visible = usePageVisible()
+  const { ref: renderRef, visible } = useRenderVisibility<HTMLDivElement>()
+  const coarse = useMedia('(pointer: coarse)')
   const osReduced = useMedia('(prefers-reduced-motion: reduce)')
   const staticMotion = osReduced || motion === 'reduced' || motion === 'off'
   const sampleRef = useRef<HostSample | null>(null)
@@ -165,15 +155,15 @@ function OrbRuntime({ placement }: { placement: Placement }) {
   const params = deriveOrbVisual(visual.state)
   const hostLoad = sample ? `${Math.round(Math.min(1, orbLoadIntensity(sample)) * 100)}%` : '—'
   return (
-    <div className={`mc-core-orb mc-core-orb-${placement}`} data-orb-state={visual.state} aria-hidden="true">
+    <div ref={renderRef} className={`mc-core-orb mc-core-orb-${placement}`} data-orb-state={visual.state} aria-hidden="true">
       {webglAvailable && !webglFailed && (
         <WebGLErrorBoundary onError={markWebGLFailed}>
           <Canvas
             key={`orb-ring-${showRing}-pipeline-${showOrbit}`}
-            dpr={[1, 1.5]}
+            dpr={[1, 1.25]}
             camera={{ position: [0, 0, showRing || showOrbit ? 8.5 : 3.35], fov: 45 }}
             frameloop={staticMotion || !visible ? 'demand' : 'always'}
-            gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
+            gl={{ alpha: true, antialias: !coarse, powerPreference: 'high-performance' }}
             style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
           >
             <OrbScene visual={visual} overlay={activity.overlay} staticMotion={staticMotion} expanded={showRing || showOrbit} />

@@ -129,8 +129,13 @@ export default function HoloHud3D({ nodes, selectedId }: { nodes: AgentNode[]; s
   const [visible, setVisible] = useState(false)
   const [inView, setInView] = useState(false)
   const [reduced, setReduced] = useState(true)
+  const [coarse, setCoarse] = useState(true)
   useEffect(() => {
     const media = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const pointer = window.matchMedia('(pointer: coarse)')
+    const updatePointer = () => setCoarse(pointer.matches)
+    updatePointer()
+    pointer.addEventListener('change', updatePointer)
     const updateMotion = () => setReduced(media.matches)
     const updateVisibility = () => setVisible(document.visibilityState === 'visible')
     updateMotion(); updateVisibility()
@@ -140,6 +145,7 @@ export default function HoloHud3D({ nodes, selectedId }: { nodes: AgentNode[]; s
     if (host.current) observer.observe(host.current)
     return () => {
       observer.disconnect()
+      pointer.removeEventListener('change', updatePointer)
       media.removeEventListener('change', updateMotion)
       document.removeEventListener('visibilitychange', updateVisibility)
     }
@@ -152,7 +158,7 @@ export default function HoloHud3D({ nodes, selectedId }: { nodes: AgentNode[]; s
   return <div ref={host} className="mc-hud3d" aria-hidden="true">
     <BracketFrame />
     {visible && inView && elements3d.teamGraph && <HoloBoundary>
-      <Canvas dpr={[1, 1.5]} frameloop={staticMotion ? 'demand' : 'always'} camera={{ position: [0, 0, 16], fov: 40 }} gl={{ alpha: true, antialias: true }} fallback={<p>3D unavailable. Use the roster below.</p>}>
+      <Canvas dpr={[1, 1.25]} frameloop={staticMotion ? 'demand' : 'always'} camera={{ position: [0, 0, 16], fov: 40 }} gl={{ alpha: true, antialias: !coarse }} fallback={<p>3D unavailable. Use the roster below.</p>}>
         <Scene nodes={bounded} selectedId={selectedId} staticMotion={staticMotion} />
       </Canvas>
     </HoloBoundary>}
