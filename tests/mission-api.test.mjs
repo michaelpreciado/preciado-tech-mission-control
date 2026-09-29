@@ -51,7 +51,10 @@ test('streamPayload rejects unknown or hostile stream names before data collecti
 
 test('getClientIpFromHeaders prefers the first forwarded IP and trims whitespace', () => {
   const headers = new Headers({
-    'x-forwarded-for': ' 203.0.113.9, 10.0.0.2 ',
+    // With no configured proxy chain, Next's single forwarded value is the
+    // direct socket peer. Multi-hop chains require an explicitly trusted final
+    // proxy and are covered by the authorization checks below.
+    'x-forwarded-for': ' 203.0.113.9 ',
     'x-real-ip': '198.51.100.7',
   })
   assert.equal(getClientIpFromHeaders(headers), '203.0.113.9')

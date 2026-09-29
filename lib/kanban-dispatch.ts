@@ -111,17 +111,20 @@ function newestMiseClaudeBin(home: string, exists: (p: string) => boolean): stri
   return null
 }
 
-/** MC_CLAUDE_BIN → cached mise resolution → newest mise install → fallback. */
+/** Explicit override → cached mise resolution → newest mise install → PATH. */
 export function resolveClaudeBin(
   env: NodeJS.ProcessEnv = process.env,
   exists: (p: string) => boolean = fs.existsSync,
 ): string {
-  const override = env.MC_CLAUDE_BIN?.trim()
+  // CLAUDE_CODE_BIN is the worker's established override; retain the MC_ name
+  // as a project-specific alias for existing deployments.
+  const override = (env.CLAUDE_CODE_BIN || env.MC_CLAUDE_BIN)?.trim()
   if (override) return override
   if (MISE_CLAUDE_BIN && exists(MISE_CLAUDE_BIN)) return MISE_CLAUDE_BIN
   const newest = newestMiseClaudeBin(env.HOME?.trim() || os.homedir(), exists)
   if (newest) return newest
-  return DIRECT_CLAUDE_BIN
+  if (exists(DIRECT_CLAUDE_BIN)) return DIRECT_CLAUDE_BIN
+  return 'claude'
 }
 
 /** Fixed headless argv (everything but the binary). Prompt is passed as one arg. */
