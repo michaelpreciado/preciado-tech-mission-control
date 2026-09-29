@@ -15,7 +15,7 @@
  *      ui       = monospace, for all prose, body & card content
  *    Mono is the terminal identity for IDs, paths, cron, numbers, labels, and
  *    prose on the Blue Matrix Glass home surface.
- *  - COLOR · one accent + four semantic states (info=cyan, warn=amber,
+ *  - COLOR · one accent + four semantic states (info=action blue, warn=amber,
  *    error=red, ok=green). Red is ALWAYS semantic, never decorative.
  *  - SPACING · 8px scale. One radius. One border color. Two surfaces.
  *    Two glow intensities max per page.
@@ -24,7 +24,14 @@
 
 /** ── Raw token values (the canonical numbers) ─────────────────────── */
 
-export const ACCENT_DEFAULT = '#1e90ff'
+/* Brand periwinkle — the personal-site accent (michael-preciado.com). Borders,
+   headings, active nav, brand rims. Keep ACCENT_RGB in sync. */
+export const ACCENT_DEFAULT = '#9db4ec'
+/* Action blue — links, focus rings, primary buttons. */
+export const ACTION_DEFAULT = '#75b9ff'
+export const ACTION_RGB = '117,185,255'
+/* Dodger blue — glows, halos, the rain, live/streaming indicators ONLY. */
+export const NEON_DEFAULT = '#1e90ff'
 
 /* Semantic status palette — the four states, reserved meaning. never reused
    as a categorical slot, never decorative. */
@@ -32,7 +39,7 @@ export const SEMANTIC = {
   ok:    { hex: '#28c840', ink: '#2be36b' },   // green
   warn:  { hex: '#febc2e', ink: '#ffc857' },   // amber
   error: { hex: '#ff5f57', ink: '#ff8a83' },   // red — semantic ONLY
-  info:  { hex: '#1E90FF', ink: '#9BC8FF' },   // dodger
+  info:  { hex: '#75b9ff', ink: '#a9d2ff' },   // action blue
 } as const
 
 /* Categorical chart palette — fixed, never cycled, validated against the dark
@@ -40,29 +47,31 @@ export const SEMANTIC = {
    These are NOT status colors; do not use them for ok/warn/error/info. */
 export const CATEGORICAL = {
   cat1: '#1e90ff', cat2: '#db2777', cat3: '#65a30d', cat4: '#7c3aed',
-  cat5: '#0d9488', cat6: '#c2410c', cat7: '#0891b2', cat8: '#e11d48',
+  cat5: '#6366f1', cat6: '#c2410c', cat7: '#9db4ec', cat8: '#e11d48',
   seq1: '#bae0ff', seq2: '#7cc0ff', seq3: '#3b9dff', seq4: '#1e90ff',
   seq5: '#0b7fe8', seq6: '#0369a1', seq7: '#075985',
 } as const
 
 /* Accent RGB triplets (for rgba() use). Keep in sync with ACCENT_DEFAULT. */
-export const ACCENT_RGB = '30,144,255'
-export const ACCENT_BRIGHT_RGB = '125,190,255'
+export const ACCENT_RGB = '157,180,236'
+export const ACCENT_BRIGHT_RGB = '196,210,245'
+export const NEON_RGB = '30,144,255'
 
 /* ── Type roles ───────────────────────────────────────────────────── */
 export const FONT = {
   display: 'var(--pt-font-sans)',
-  mono: 'ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace',
-  ui: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif',
+  mono: '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace',
+  ui: '"Geist Sans", "Geist", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif',
 } as const
 
 export const TYPE_SCALE = {
-  display: 'clamp(2.2rem, 5.5vw, 4.25rem)',
-  h2:      'clamp(1.5rem, 3.2vw, 2.15rem)',
-  h3:      '1.05rem',
-  body:    '0.95rem',
-  sm:      '0.85rem',
-  xs:      '0.78rem',
+  display: 'clamp(25px, 4vw, 55px)',
+  h2:      'clamp(23px, 3.1vw, 40px)',
+  h3:      'clamp(16px, 1.35vw, 19px)',
+  body:    '1rem',
+  sm:      '0.875rem',
+  xs:      '0.78125rem',
+  '2xs':   '0.71875rem',
   kicker:  '0.75rem',
 } as const
 
@@ -81,32 +90,32 @@ export const SPACING = {
 export const RADIUS = { sm: '4px', md: '8px', lg: '12px', pill: '999px' } as const
 
 /* ── Borders — one color family (accent-derived). */
-export const BORDER = { dim: 0.15, base: 0.35, strong: 0.65, rule: 0.22 } as const
+export const BORDER = { dim: 0.15, base: 0.35, strong: 0.7, rule: 0.22 } as const
 
 /* ── Surfaces — PT cinematic near-black ramp. */
 export const SURFACE = {
   bg:         '#07080b',
   bgSoft:     '#0b0d12',
-  surface:    'rgba(16,19,24,0.6)',
-  surface2:   'rgba(22,27,34,0.72)',
+  surface:    'rgba(16,19,24,0.82)',
+  surface2:   'rgba(16,19,24,0.9)',
   terminal:   'rgba(14,17,23,0.78)',
   glassProse: 'rgba(14,17,23,0.96)',
 } as const
 
 /* ── Glow — two intensities max on any page (sm for interactive, md for hero). */
 export const GLOW = {
-  sm: '0 0 6px rgba(var(--pt-neon-rgb),0.45)',
-  md: '0 0 14px rgba(var(--pt-neon-rgb),0.55), 0 0 2px rgba(var(--pt-neon-rgb),0.9)',
-  text: '0 0 6px rgba(var(--pt-neon-bright-rgb),0.65), 0 0 14px rgba(var(--pt-neon-rgb),0.45)',
+  sm: '0 0 6px rgba(var(--pt-glow-rgb),0.45)',
+  md: '0 0 14px rgba(var(--pt-glow-rgb),0.5), 0 0 2px rgba(var(--pt-glow-rgb),0.8)',
+  text: '0 0 6px rgba(var(--pt-neon-bright-rgb),0.5), 0 0 14px rgba(var(--pt-glow-rgb),0.4)',
 } as const
 
 /* ── Motion — declared now, consumed by Phase 2. Never linear except loops. */
 export const MOTION = {
-  durMicro: '120ms',   // hover / button feedback
-  durStd:   '200ms',   // standard transitions
-  durComplex: '320ms', // panel / card / kanban
+  durMicro: '140ms',   // hover / button feedback
+  durStd:   '220ms',   // standard transitions
+  durComplex: '380ms', // panel / card / kanban
   durAmbient: '800ms', // ambient loops only, min
-  easeEnter: 'cubic-bezier(0.2,0,0,1)',
+  easeEnter: 'cubic-bezier(0.4,0,0.2,1)',
   easeExit:  'cubic-bezier(0.4,0,1,1)',
 } as const
 
@@ -126,8 +135,8 @@ export const BUTTON_GLASS = {
   'fill-disabled': 'rgba(10,12,14,0.84)',
   'neutral-top': 'rgba(190,215,255,0.05)',
   'neutral-bottom': 'rgba(190,215,255,0.012)',
-  'primary-top': 'rgba(30,144,255,0.30)',
-  'primary-bottom': 'rgba(30,144,255,0.12)',
+  'primary-top': 'rgba(117,185,255,0.30)',
+  'primary-bottom': 'rgba(117,185,255,0.12)',
   'danger-top': 'rgba(255,95,87,0.18)',
   'danger-bottom': 'rgba(255,95,87,0.06)',
   'confirm-top': 'rgba(40,200,64,0.18)',
@@ -145,7 +154,7 @@ export const BUTTON_GLASS = {
   'bloom': '0 0 16px rgba(30,144,255,0.08)',
   'press-shadow': 'inset 0 2px 5px rgba(0,0,0,0.24)',
   'blur': 'blur(10px) saturate(115%)',
-  'focus': '#1E90FF',
+  'focus': '#75b9ff',
   'ease': 'cubic-bezier(0.4,0,0.2,1)',
   /* Comparison-only materials; the installed recipe is Edge Light. */
   'frost-fill': 'rgba(10,12,14,0.84)',
@@ -197,6 +206,10 @@ ${Object.entries(BUTTON_GLASS).map(([name, value]) => `  --pt-btn-glass-${name}:
   --pt-info: ${SEMANTIC.info.hex}; --pt-info-ink: ${SEMANTIC.info.ink};
 
   --pt-neon-rgb: ${ACCENT_RGB}; --pt-neon-bright-rgb: ${ACCENT_BRIGHT_RGB};
+  /* dodger blue: glows/halos/rain/live only. Borders+text use the periwinkle accent. */
+  --pt-glow-rgb: ${NEON_RGB};
+  --pt-action: ${ACTION_DEFAULT}; --pt-action-rgb: ${ACTION_RGB};
+  --pt-dodger: ${NEON_DEFAULT};
   --pt-text-rgb: 244,247,251;
   --pt-bg-tint: #0a0d16;
 
@@ -211,15 +224,15 @@ ${Object.entries(BUTTON_GLASS).map(([name, value]) => `  --pt-btn-glass-${name}:
   /* text */
   --pt-text: #f4f7fb;
   --pt-text-high: #ffffff;
-  --pt-text-dim: rgba(var(--pt-text-rgb),0.55);
-  --pt-text-mute: rgba(var(--pt-text-rgb),0.35);
+  --pt-text-dim: #99a3b2;   /* site ink-mute, 7:1 on bg */
+  --pt-text-mute: #7f8998;  /* >=4.5:1 on card; site ink-faint #6f7886 is meta-only (--mp-ink-faint) */
 
   /* accent (overridden at runtime by buildAccentCss when custom) */
   --pt-neon: ${ACCENT_DEFAULT};
-  --pt-neon-bright: #bcd0ff;
+  --pt-neon-bright: #c4d2f5;
   --pt-neon-deep: #4f6bb0;
-  --pt-neon-glow: rgba(var(--pt-neon-rgb),0.55);
-  --pt-neon-glow-soft: rgba(var(--pt-neon-rgb),0.18);
+  --pt-neon-glow: rgba(var(--pt-glow-rgb),0.55);
+  --pt-neon-glow-soft: rgba(var(--pt-glow-rgb),0.18);
   --pt-neon-wash: rgba(var(--pt-neon-rgb),0.08);
 
   /* ── mc-* aliases (DESIGN-SPEC §2) — stable names the tab lanes (V1/V2/V3)
@@ -235,10 +248,10 @@ ${Object.entries(BUTTON_GLASS).map(([name, value]) => `  --pt-btn-glass-${name}:
   --mc-ink-mute: #99a3b2;
   --mc-ink-faint: #6f7886;
   --mc-line: rgba(255,255,255,0.08);
-  --mc-line-2: rgba(255,255,255,0.12);
+  --mc-line-2: rgba(255,255,255,0.16);
   --mc-neon: var(--pt-neon);
   --mc-neon-bright: var(--pt-neon-bright);
-  --mc-neon-2: #6f8ede;
+  --mc-neon-2: #75b9ff;
   --mc-neon-deep: var(--pt-neon-deep);
   --mc-neon-rgb: var(--pt-neon-rgb);
   --mc-bg-tint: var(--pt-bg-tint);
@@ -255,19 +268,19 @@ ${Object.entries(BUTTON_GLASS).map(([name, value]) => `  --pt-btn-glass-${name}:
   --pt-border-strong: rgba(var(--pt-neon-rgb),${BORDER.strong});
   --pt-border-dim: rgba(var(--pt-neon-rgb),${BORDER.dim});
   --pt-rule: rgba(var(--pt-neon-rgb),${BORDER.rule});
-  --pt-card-border: rgba(90,140,255,0.14);
-  --pt-card-bg: linear-gradient(180deg, rgba(13,20,34,0.55), rgba(7,11,20,0.85));
+  --pt-card-border: rgba(255,255,255,0.08);
+  --pt-card-bg: rgba(16,19,24,0.82);
 
   /* glow / shadow — two intensities + text */
   --pt-glow-sm: ${GLOW.sm};
   --pt-glow-md: ${GLOW.md};
-  --pt-glow-lg: 0 0 28px rgba(var(--pt-neon-rgb),0.55), 0 0 6px rgba(var(--pt-neon-rgb),0.75), inset 0 0 18px rgba(var(--pt-neon-rgb),0.08);
+  --pt-glow-lg: 0 0 28px rgba(var(--pt-glow-rgb),0.5), 0 0 6px rgba(var(--pt-glow-rgb),0.7), inset 0 0 18px rgba(var(--pt-glow-rgb),0.08);
   --pt-glow-text: ${GLOW.text};
-  --pt-shadow-window: 0 24px 80px rgba(0,0,0,0.8), 0 0 24px rgba(var(--pt-neon-rgb),0.35);
+  --pt-shadow-window: 0 24px 80px rgba(0,0,0,0.8), 0 0 24px rgba(var(--pt-glow-rgb),0.3);
 
   /* bg gradient */
   --pt-bg-gradient:
-    radial-gradient(ellipse at top, rgba(var(--pt-neon-rgb),0.1), transparent 55%),
+    radial-gradient(ellipse at top, rgba(var(--pt-glow-rgb),0.1), transparent 55%),
     linear-gradient(180deg, #07080b 0%, #0b0d12 100%);
 
   /* radii — one family */
@@ -291,7 +304,13 @@ ${Object.entries(BUTTON_GLASS).map(([name, value]) => `  --pt-btn-glass-${name}:
   --pt-fs-display: ${TYPE_SCALE.display};
   --pt-fs-h2: ${TYPE_SCALE.h2}; --pt-fs-h3: ${TYPE_SCALE.h3};
   --pt-fs-body: ${TYPE_SCALE.body}; --pt-fs-sm: ${TYPE_SCALE.sm};
-  --pt-fs-xs: ${TYPE_SCALE.xs}; --pt-fs-kicker: ${TYPE_SCALE.kicker};
+  --pt-fs-xs: ${TYPE_SCALE.xs}; --pt-fs-2xs: ${TYPE_SCALE['2xs']}; --pt-fs-kicker: ${TYPE_SCALE.kicker};
+
+  /* personal-site (michael-preciado.com) aliases — mapped onto the pt/mc system */
+  --mp-bg: ${SURFACE.bg}; --mp-raised: ${SURFACE.bgSoft}; --mp-card: #101318;
+  --mp-ink: #f4f7fb; --mp-ink-dim: #c7ced8; --mp-ink-mute: #99a3b2; --mp-ink-faint: #6f7886;
+  --mp-line: rgba(255,255,255,0.08); --mp-line-2: rgba(255,255,255,0.16);
+  --mp-accent: ${ACCENT_DEFAULT}; --mp-accent-rgb: ${ACCENT_RGB};
 
   --pt-lh-tight: ${LINE_HEIGHT.tight}; --pt-lh-snug: ${LINE_HEIGHT.snug};
   --pt-lh-body: ${LINE_HEIGHT.body}; --pt-lh-ui: ${LINE_HEIGHT.ui};
@@ -301,7 +320,8 @@ ${Object.entries(BUTTON_GLASS).map(([name, value]) => `  --pt-btn-glass-${name}:
   --pt-ls-prompt: ${LETTER_SPACING.prompt};
 
   /* motion */
-  --pt-ease: cubic-bezier(0.2,0.7,0.2,1);
+  --pt-ease: cubic-bezier(0.4,0,0.2,1);
+  --pt-dur-slow: 380ms;
   --pt-dur-fast: ${MOTION.durMicro};
   --pt-dur-med: ${MOTION.durStd};
   /* Full MOTION token set (lib/tokens.ts) — durations named after their role
@@ -322,10 +342,9 @@ ${Object.entries(BUTTON_GLASS).map(([name, value]) => `  --pt-btn-glass-${name}:
   --mc-density-px: ${DENSITY.compact.px};
   --mc-density-gap: ${DENSITY.compact.gap};
 
-  --pt-scanline:
-    repeating-linear-gradient(to bottom,
-      rgba(var(--pt-neon-rgb),0.04) 0px, rgba(var(--pt-neon-rgb),0.04) 1px,
-      transparent 1px, transparent 3px);
+  /* site scanlines — apply at ~.35 opacity on hero/brand surfaces only */
+  --pt-scanline: repeating-linear-gradient(to bottom, rgba(0,0,0,.22) 0 1px, transparent 1px 3px);
+  --pt-scanline-opacity: .35;
 }
 `
 }
@@ -346,31 +365,29 @@ export function buildDensityCss(): string {
 export function buildFridayThemeCss(): string {
   return `html[data-theme="friday"] {
   --pt-neon-rgb: ${ACCENT_RGB};
+  --pt-glow-rgb: ${NEON_RGB};
   --pt-neon-bright-rgb: ${ACCENT_BRIGHT_RGB};
   --pt-text-rgb: 244,247,251;
   --pt-bg-tint: #0a0d16;
   --pt-text: #f4f7fb;
   --pt-text-high: #ffffff;
   --pt-neon: ${ACCENT_DEFAULT};
-  --pt-neon-bright: #bcd0ff;
+  --pt-neon-bright: #c4d2f5;
   --pt-neon-deep: #4f6bb0;
-  --pt-neon-glow: rgba(var(--pt-neon-rgb),0.6);
-  --pt-neon-glow-soft: rgba(var(--pt-neon-rgb),0.2);
+  --pt-neon-glow: rgba(var(--pt-glow-rgb),0.6);
+  --pt-neon-glow-soft: rgba(var(--pt-glow-rgb),0.2);
   --pt-neon-wash: rgba(var(--pt-neon-rgb),0.08);
   --pt-border: rgba(var(--pt-neon-rgb),0.55);
-  --pt-border-strong: rgba(var(--pt-neon-rgb),0.85);
+  --pt-border-strong: rgba(var(--pt-neon-rgb),0.8);
   --pt-border-dim: rgba(var(--pt-neon-rgb),0.28);
   --pt-rule: rgba(var(--pt-neon-rgb),0.35);
   --pt-bg: #07080b;
   --pt-bg-soft: #0b0d12;
   --pt-bg-terminal: rgba(14,17,23,0.96);
-  --pt-glow-sm: 0 0 6px rgba(var(--pt-neon-rgb),0.65);
-  --pt-glow-md: 0 0 14px rgba(var(--pt-neon-rgb),0.6), 0 0 2px rgba(var(--pt-neon-rgb),0.95);
-  --pt-glow-text: 0 0 6px rgba(var(--pt-neon-bright-rgb),0.75), 0 0 14px rgba(var(--pt-neon-rgb),0.55);
-  --pt-scanline:
-    repeating-linear-gradient(to bottom,
-      rgba(var(--pt-neon-rgb),0.10) 0px, rgba(var(--pt-neon-rgb),0.10) 1px,
-      transparent 1px, transparent 3px);
+  --pt-glow-sm: 0 0 6px rgba(var(--pt-glow-rgb),0.55);
+  --pt-glow-md: 0 0 14px rgba(var(--pt-glow-rgb),0.5), 0 0 2px rgba(var(--pt-glow-rgb),0.85);
+  --pt-glow-text: 0 0 6px rgba(var(--pt-neon-bright-rgb),0.6), 0 0 14px rgba(var(--pt-glow-rgb),0.45);
+  --pt-scanline: repeating-linear-gradient(to bottom, rgba(0,0,0,.22) 0 1px, transparent 1px 3px);
   font-feature-settings: "ss01","zero";
 }
 `

@@ -80,7 +80,7 @@ function OrbScene({ visual, overlay, staticMotion, expanded }: { visual: VisualS
     const overlayVisual = overlay ? deriveOrbOverlayVisual(overlay.kind) : null
     const target = overlayVisual
       ? new THREE.Color(overlayVisual.palette.hex)
-      : visual.state === 'hot' ? new THREE.Color(SEMANTIC.error.hex) : new THREE.Color(visual.state === 'idle' ? ACCENT_DEFAULT : '#7DEFFF')
+      : visual.state === 'hot' ? new THREE.Color(SEMANTIC.error.hex) : new THREE.Color(visual.state === 'idle' ? ACCENT_DEFAULT : '#c4d2f5')
     if (staticMotion) currentColor.current.copy(target)
     else currentColor.current.lerp(target, Math.min(1, delta / (visual.state === 'hot' ? 1.5 : 3)))
     uniforms.uColor.value.copy(currentColor.current)

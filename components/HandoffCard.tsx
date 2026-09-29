@@ -11,7 +11,7 @@ export type HandoffMessage = {
 
 export function HandoffCard({ message }: { message: HandoffMessage }) {
   return <section className="cc-handoff" role="status" aria-label="handoff result" data-handoff-state={message.state}
-    style={{ margin: 12, padding: 16, border: '1px solid var(--pt-border-dim)', borderLeft: '3px solid #00E5FF', borderRadius: 8, overflowWrap: 'anywhere' }}>
+    style={{ margin: 12, padding: 16, border: '1px solid var(--pt-border-dim)', borderLeft: '3px solid #9db4ec', borderRadius: 8, overflowWrap: 'anywhere' }}>
     <strong>Handoff result · Codex · {message.state}</strong>
     <p>New agent context seeded with a brief from this conversation. This is not a resumed session.</p>
     <p>{message.task}</p>

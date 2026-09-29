@@ -24,9 +24,9 @@ export const CATEGORICAL = [
   '#db2777', // magenta
   '#65a30d', // lime
   '#7c3aed', // violet
-  '#0d9488', // teal
+  '#6366f1', // indigo
   '#c2410c', // orange
-  '#0891b2', // sky
+  '#9db4ec', // periwinkle
   '#e11d48', // red
 ] as const
 

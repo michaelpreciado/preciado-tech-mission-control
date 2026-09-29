@@ -39,7 +39,7 @@
 .aprompt-empty { visibility: visible; animation: aprompt-blink 1s steps(1, end) infinite; }
 .aprompt-line.aprompt-line textarea { flex: 1; width: 0; min-width: 0; min-height: 56px; max-height: 160px; resize: vertical; padding: 7px 0; border: 0; border-radius: 0; outline: none; box-shadow: none; background: transparent; color: rgba(157,180,236,.85); font: 16px/1.5 var(--pt-font-sans); }
 .aprompt-line textarea::placeholder { color: rgba(157,180,236,.30); }
-.aprompt-line .aprompt-send { flex-shrink: 0; min-height: 44px; padding: 4px 8px; border: 0; border-radius: 999px; background: #1E90FF; color: #fff; font: 11px var(--pt-font-sans); cursor: pointer; box-shadow: none; }
+.aprompt-line .aprompt-send { flex-shrink: 0; min-height: 44px; padding: 4px 8px; border: 0; border-radius: 999px; background: #75b9ff; color: #07080b; font: 11px var(--pt-font-sans); cursor: pointer; box-shadow: none; }
 .aprompt-line .aprompt-send:disabled { opacity: .35; cursor: default; }
 .aprompt-line .aprompt-send:focus-visible { outline: 1px solid rgba(157,180,236,.85); outline-offset: 2px; }
 @keyframes aprompt-blink { 50% { opacity: 0; } }

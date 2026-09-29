@@ -52,11 +52,11 @@ export type RosterAgent = {
 
 export const MESH_ROSTER: RosterAgent[] = [
   { id: 'hermes', name: 'HERMES', role: 'Orchestrator · pub/sub', host: 'friday-linux', accent: '#1e90ff' },
-  { id: 'jarvis', name: 'JARVIS', role: 'Business partner · Linux', host: 'friday-linux', accent: '#0891b2' },
+  { id: 'jarvis', name: 'JARVIS', role: 'Business partner · Linux', host: 'friday-linux', accent: '#9db4ec' },
   { id: 'friday', name: 'FRIDAY', role: 'Desktop commander', host: 'friday-linux', accent: '#7c3aed' },
   { id: 'edith', name: 'EDITH', role: 'Sentinel · MacBook', host: 'friday-macbook', accent: '#65a30d' },
   { id: 'openclaw', name: 'OPENCLAW', role: 'SO-101 arm gateway :18789', host: 'friday-linux', accent: '#c2410c' },
-  { id: 'echo', name: 'ECHO', role: 'Memory steward', host: 'friday-linux', accent: '#0d9488' },
+  { id: 'echo', name: 'ECHO', role: 'Memory steward', host: 'friday-linux', accent: '#6366f1' },
   { id: 'sage', name: 'SAGE', role: 'Research', host: 'friday-linux', accent: '#db2777' },
   { id: 'forge', name: 'FORGE', role: 'Builder · code', host: 'friday-linux', accent: '#65a30d' },
 ]
