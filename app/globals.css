@@ -803,6 +803,13 @@ body {
 }
 
 /* ── Main pane ────────────────────────────────────────── */
+.mc-shell > .mc-main {
+  /* Fixed navigation switches the shell from grid to block. Keep its scroll
+     pane bounded by the shell in either layout, including padding. */
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+}
 .mc-main {
   overflow-y: auto;
   /* --mc-gutter is the single source of truth for the main pane's inline
