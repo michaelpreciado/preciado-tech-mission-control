@@ -1,0 +1,459 @@
+{
+  "evaluatedAt": "2026-10-03T16:00:00.000Z",
+  "cases": [
+    {
+      "id": "confirmed-worker",
+      "input": {
+        "identities": [
+          "friday",
+          "pepper",
+          "edith",
+          "sage"
+        ],
+        "tasks": [
+          {
+            "id": "fixture-task",
+            "title": "Fixture task",
+            "status": "running",
+            "assignee": "friday",
+            "currentRunId": 1,
+            "lastHeartbeatAt": "2026-10-03T15:59:59.000Z"
+          }
+        ],
+        "heartbeats": [],
+        "profiles": []
+      },
+      "expected": {
+        "kind": "confirmed-worker",
+        "worker": "confirmed-worker",
+        "workerFreshness": "fresh",
+        "presence": "unknown",
+        "presenceFreshness": "unknown",
+        "active": 1,
+        "needsIntervention": 0
+      }
+    },
+    {
+      "id": "worker-boundary",
+      "input": {
+        "identities": [
+          "friday",
+          "pepper",
+          "edith",
+          "sage"
+        ],
+        "tasks": [
+          {
+            "id": "fixture-task",
+            "title": "Fixture task",
+            "status": "running",
+            "assignee": "friday",
+            "currentRunId": 1,
+            "lastHeartbeatAt": "2026-10-03T15:50:00.000Z"
+          }
+        ],
+        "heartbeats": [],
+        "profiles": []
+      },
+      "expected": {
+        "kind": "confirmed-worker",
+        "worker": "confirmed-worker",
+        "workerFreshness": "fresh",
+        "presence": "unknown",
+        "presenceFreshness": "unknown",
+        "active": 1,
+        "needsIntervention": 0
+      }
+    },
+    {
+      "id": "stale-task-heartbeat",
+      "input": {
+        "identities": [
+          "friday",
+          "pepper",
+          "edith",
+          "sage"
+        ],
+        "tasks": [
+          {
+            "id": "fixture-task",
+            "title": "Fixture task",
+            "status": "running",
+            "assignee": "friday",
+            "currentRunId": 1,
+            "lastHeartbeatAt": "2026-10-03T15:49:59.000Z",
+            "startedAt": "2026-10-03T15:59:59.000Z"
+          }
+        ],
+        "heartbeats": [],
+        "profiles": []
+      },
+      "expected": {
+        "kind": "tracked-only",
+        "worker": "tracked-only",
+        "workerFreshness": "stale",
+        "presence": "unknown",
+        "presenceFreshness": "unknown",
+        "active": 0,
+        "needsIntervention": 0
+      }
+    },
+    {
+      "id": "future-task-heartbeat",
+      "input": {
+        "identities": [
+          "friday",
+          "pepper",
+          "edith",
+          "sage"
+        ],
+        "tasks": [
+          {
+            "id": "fixture-task",
+            "title": "Fixture task",
+            "status": "running",
+            "assignee": "friday",
+            "currentRunId": 1,
+            "lastHeartbeatAt": "2026-10-03T16:00:01.000Z"
+          }
+        ],
+        "heartbeats": [],
+        "profiles": []
+      },
+      "expected": {
+        "kind": "tracked-only",
+        "worker": "tracked-only",
+        "workerFreshness": "unknown",
+        "presence": "unknown",
+        "presenceFreshness": "unknown",
+        "active": 0,
+        "needsIntervention": 0
+      }
+    },
+    {
+      "id": "startedAt-only",
+      "input": {
+        "identities": [
+          "friday",
+          "pepper",
+          "edith",
+          "sage"
+        ],
+        "tasks": [
+          {
+            "id": "fixture-task",
+            "title": "Fixture task",
+            "status": "running",
+            "assignee": "friday",
+            "currentRunId": 1,
+            "startedAt": "2026-10-03T15:59:59.000Z"
+          }
+        ],
+        "heartbeats": [],
+        "profiles": []
+      },
+      "expected": {
+        "kind": "tracked-only",
+        "worker": "tracked-only",
+        "workerFreshness": "fresh",
+        "presence": "unknown",
+        "presenceFreshness": "unknown",
+        "active": 0,
+        "needsIntervention": 0
+      }
+    },
+    {
+      "id": "missing-task-heartbeat",
+      "input": {
+        "identities": [
+          "friday",
+          "pepper",
+          "edith",
+          "sage"
+        ],
+        "tasks": [
+          {
+            "id": "fixture-task",
+            "title": "Fixture task",
+            "status": "running",
+            "assignee": "friday",
+            "currentRunId": 1
+          }
+        ],
+        "heartbeats": [],
+        "profiles": []
+      },
+      "expected": {
+        "kind": "tracked-only",
+        "worker": "tracked-only",
+        "workerFreshness": "unknown",
+        "presence": "unknown",
+        "presenceFreshness": "unknown",
+        "active": 0,
+        "needsIntervention": 0
+      }
+    },
+    {
+      "id": "missing-run-id",
+      "input": {
+        "identities": [
+          "friday",
+          "pepper",
+          "edith",
+          "sage"
+        ],
+        "tasks": [
+          {
+            "id": "fixture-task",
+            "title": "Fixture task",
+            "status": "running",
+            "assignee": "friday",
+            "lastHeartbeatAt": "2026-10-03T15:59:59.000Z"
+          }
+        ],
+        "heartbeats": [],
+        "profiles": []
+      },
+      "expected": {
+        "kind": "tracked-only",
+        "worker": "tracked-only",
+        "workerFreshness": "fresh",
+        "presence": "unknown",
+        "presenceFreshness": "unknown",
+        "active": 0,
+        "needsIntervention": 0
+      }
+    },
+    {
+      "id": "presence-only",
+      "input": {
+        "identities": [
+          "friday",
+          "pepper",
+          "edith",
+          "sage"
+        ],
+        "tasks": [],
+        "heartbeats": [
+          {
+            "id": "friday",
+            "status": "working",
+            "receivedAt": 1791043199000
+          }
+        ],
+        "profiles": []
+      },
+      "expected": {
+        "kind": "presence-reported",
+        "worker": "unknown",
+        "workerFreshness": "unknown",
+        "presence": "presence-reported",
+        "presenceFreshness": "fresh",
+        "active": 0,
+        "needsIntervention": 0
+      }
+    },
+    {
+      "id": "stale-presence",
+      "input": {
+        "identities": [
+          "friday",
+          "pepper",
+          "edith",
+          "sage"
+        ],
+        "tasks": [],
+        "heartbeats": [
+          {
+            "id": "friday",
+            "status": "working",
+            "receivedAt": 1791042899999
+          }
+        ],
+        "profiles": []
+      },
+      "expected": {
+        "kind": "presence-reported",
+        "worker": "unknown",
+        "workerFreshness": "unknown",
+        "presence": "presence-reported",
+        "presenceFreshness": "stale",
+        "active": 0,
+        "needsIntervention": 0
+      }
+    },
+    {
+      "id": "future-presence",
+      "input": {
+        "identities": [
+          "friday",
+          "pepper",
+          "edith",
+          "sage"
+        ],
+        "tasks": [],
+        "heartbeats": [
+          {
+            "id": "friday",
+            "status": "working",
+            "receivedAt": 1791043201000
+          }
+        ],
+        "profiles": []
+      },
+      "expected": {
+        "kind": "presence-reported",
+        "worker": "unknown",
+        "workerFreshness": "unknown",
+        "presence": "presence-reported",
+        "presenceFreshness": "unknown",
+        "active": 0,
+        "needsIntervention": 0
+      }
+    },
+    {
+      "id": "missing-heartbeat",
+      "input": {
+        "identities": [
+          "friday",
+          "pepper",
+          "edith",
+          "sage"
+        ],
+        "tasks": [],
+        "heartbeats": [],
+        "profiles": []
+      },
+      "expected": {
+        "kind": "unknown",
+        "worker": "unknown",
+        "workerFreshness": "unknown",
+        "presence": "unknown",
+        "presenceFreshness": "unknown",
+        "active": 0,
+        "needsIntervention": 0
+      }
+    },
+    {
+      "id": "gateway-only",
+      "input": {
+        "identities": [
+          "friday",
+          "pepper",
+          "edith",
+          "sage"
+        ],
+        "tasks": [],
+        "heartbeats": [],
+        "profiles": [
+          {
+            "id": "friday",
+            "gateway": {
+              "status": "running",
+              "sourceAt": "2026-10-03T15:59:59.000Z",
+              "needsAttention": false
+            },
+            "model": {
+              "value": "fixture/model",
+              "sourceAt": "2026-10-03T15:59:59.000Z"
+            },
+            "lastMessageAt": "2026-10-03T15:59:59.000Z"
+          }
+        ]
+      },
+      "expected": {
+        "kind": "unknown",
+        "worker": "unknown",
+        "workerFreshness": "unknown",
+        "presence": "unknown",
+        "presenceFreshness": "unknown",
+        "active": 0,
+        "needsIntervention": 0
+      }
+    },
+    {
+      "id": "blocked-task",
+      "input": {
+        "identities": [
+          "friday",
+          "pepper",
+          "edith",
+          "sage"
+        ],
+        "tasks": [
+          {
+            "id": "fixture-task",
+            "title": "Fixture task",
+            "status": "blocked",
+            "assignee": "friday",
+            "currentRunId": 1,
+            "lastHeartbeatAt": "2026-10-03T15:59:59.000Z"
+          }
+        ],
+        "heartbeats": [],
+        "profiles": []
+      },
+      "expected": {
+        "kind": "unknown",
+        "worker": "unknown",
+        "workerFreshness": "unknown",
+        "presence": "unknown",
+        "presenceFreshness": "unknown",
+        "active": 0,
+        "needsIntervention": 1
+      }
+    },
+    {
+      "id": "idle-SSE",
+      "input": {
+        "identities": [
+          "friday",
+          "pepper",
+          "edith",
+          "sage"
+        ],
+        "tasks": [],
+        "heartbeats": [
+          {
+            "id": "friday",
+            "status": "idle",
+            "receivedAt": 1791043199000
+          }
+        ],
+        "profiles": []
+      },
+      "expected": {
+        "kind": "presence-reported",
+        "worker": "unknown",
+        "workerFreshness": "unknown",
+        "presence": "presence-reported",
+        "presenceFreshness": "fresh",
+        "active": 0,
+        "needsIntervention": 0
+      }
+    },
+    {
+      "id": "unknown-database",
+      "input": {
+        "identities": [
+          "friday",
+          "pepper",
+          "edith",
+          "sage"
+        ],
+        "tasks": null,
+        "heartbeats": [],
+        "profiles": []
+      },
+      "expected": {
+        "kind": "unknown",
+        "worker": "unknown",
+        "workerFreshness": "unknown",
+        "presence": "unknown",
+        "presenceFreshness": "unknown",
+        "active": null,
+        "needsIntervention": null
+      }
+    }
+  ]
+}

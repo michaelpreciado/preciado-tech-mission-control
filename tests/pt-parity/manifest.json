@@ -1,0 +1,16 @@
+{
+  "contractRevision": "pt-os.v1",
+  "evaluatedAt": "2026-10-03T16:00:00.000Z",
+  "capturedAt": "2026-10-03T17:01:02.003722+00:00",
+  "pipelineSource": "web-dev-pipeline/pipeline.json",
+  "pipelineSourceSha256": "da6977e83bd37ab513354cc21c1e61f5fdfa10e3ca4a73d7c18122b34f7c3ee4",
+  "provenance": "Selected allowlisted fields from one source record per available stage. Appended edge cases and all other fixtures are synthetic; no tokens or real session identifiers.",
+  "sha256": {
+    "pipeline.json": "3c56ef2d971dbe6df1bc0ad4c6ded7ddc78b34265dc8ea5028c3b852163fbc96",
+    "pipeline-cases.json": "f7ccce653f9aea7f799456858809fbfd1274a96021f6102198b1e3dd2e257989",
+    "heartbeats.json": "b82f0c97273201526332774f857cd8ec0148ebe56baf93f5a4ca866bedcc5d6f",
+    "denied-auth.json": "8d527d873dd4a608a83c78d9d3e9d42fc450ab4f099052b8b6fbd29a66972c45",
+    "envelopes.json": "912501d23d880e12a1e93b5c413748f4312be6db08f6552104137ed28f77744a",
+    "radar-envelopes.json": "ec4db3588afd3c73a4539f63d72c50db78309feebef2f2493491e7303466496b"
+  }
+}

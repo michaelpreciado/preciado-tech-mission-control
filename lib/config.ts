@@ -22,6 +22,8 @@ export interface FridayPaths {
   agentsDir: string
   /** Primary agent workspace (MEMORY.md, ideas.json, memory/ ...). */
   workspaceDir: string
+  /** Base for explicitly registered deliverables report collections; never a query path. */
+  deliverablesReportsDir: string
   /** Per-project agent workspace scanned for tasks/missions ('' = disabled). */
   projectWorkspaceDir: string
   /** A local code repository to surface in Projects ('' = disabled). */
@@ -255,6 +257,7 @@ function buildConfig(): FridayConfig {
     paths: {
       agentsDir: str(env.FRIDAY_AGENTS_DIR, str(p.agentsDir, path.join(home, '.openclaw/agents'))),
       workspaceDir: str(env.FRIDAY_WORKSPACE_DIR, str(p.workspaceDir, path.join(home, '.openclaw/workspace'))),
+      deliverablesReportsDir: str(env.MC_DELIVERABLES_REPORTS_DIR, str(p.deliverablesReportsDir, path.join(str(env.FRIDAY_WORKSPACE_DIR, str(p.workspaceDir, path.join(home, '.openclaw/workspace'))), 'reports'))),
       projectWorkspaceDir: str(env.FRIDAY_PROJECT_WORKSPACE_DIR, str(p.projectWorkspaceDir, '')),
       repoDir: str(env.FRIDAY_REPO_DIR, str(p.repoDir, '')),
       vaultDir: str(env.MC_VAULT_DIR, str(env.FRIDAY_VAULT_DIR, str(p.vaultDir, '/home/mp/Documents/Preciado Tech'))),

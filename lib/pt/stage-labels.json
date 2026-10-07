@@ -1,0 +1,10 @@
+{
+  "leads_found": "Leads found",
+  "social_scraped": "Social scraped",
+  "concept_ready": "Concept ready",
+  "awaiting_approval": "Awaiting approval",
+  "in_development": "In development",
+  "completed": "Build completed",
+  "archived": "Archived",
+  "disqualified": "Disqualified"
+}

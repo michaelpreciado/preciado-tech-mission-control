@@ -24,7 +24,7 @@ const EMPTY: KanbanSnapshotValue = {
 
 const Ctx = createContext<KanbanSnapshotValue>(EMPTY)
 
-/** One shared, read-only poll of /api/kanban for the nav badge, Home brief and Crew roster. */
+/** One shared, read-only poll of /api/kanban for the nav badge and task strips. Crew uses /api/crew. */
 export function KanbanSnapshotProvider({ children }: { children: React.ReactNode }) {
   const [tasks, setTasks] = useState<HermesTask[]>([])
   const [loaded, setLoaded] = useState(false)
@@ -59,7 +59,9 @@ export function KanbanSnapshotProvider({ children }: { children: React.ReactNode
     const timer = window.setInterval(() => {
       if (document.visibilityState === 'visible') void load(controller.signal)
     }, POLL_MS)
-    return () => { controller.abort(); window.clearInterval(timer) }
+    // Evidence ages even when polls fail or the SSE stream is idle.
+    const clock = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => { controller.abort(); window.clearInterval(timer); window.clearInterval(clock) }
   }, [load])
 
   const summary = useMemo(() => (loaded ? summarizeKanban(tasks, now) : null), [loaded, tasks, now])

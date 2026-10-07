@@ -1,14 +1,16 @@
-import fs from 'node:fs/promises'
 import path from 'node:path'
 import { getConfig } from './config'
-import { pipelineStore } from './pipeline-data'
+import { readPipelineStore } from './pt/pipeline'
+import { listArtifactFiles, readArtifactFile } from './pt/artifact-files'
 import type { VaultDoc, VaultClientDocs } from './vault-links'
 
 export const PIPELINE_VAULT_PATH = '0800 Preciado Tech/Web Dev Pipeline'
 const CACHE_MS = 60_000
-let cache: { vaultDir: string; expires: number; docs: Promise<VaultDoc[]> } | undefined
+type VaultScan = { docs: VaultDoc[]; revisions: Record<string, string>; paths: string[]; complete: boolean; reason: string | null }
+type ScanOptions = { root?: string; vaultPrefix?: string; fresh?: boolean }
+let cache: { root: string; prefix: string; expires: number; scan: Promise<VaultScan> } | undefined
 
-function metadata(source: string, fallback: string): { title: string; updated?: string } {
+export function vaultMetadata(source: string, fallback: string): { title: string; updated?: string } {
   const frontmatter = source.match(/^\uFEFF?---\r?\n([\s\S]*?)\r?\n(?:---|\.\.\.)[ \t]*(?:\r?\n|$)/)
   const value = frontmatter?.[1].match(/^updated:[ \t]*(.*)$/m)?.[1].trim()
   // Frontmatter dates can be plain or quoted YAML scalars, with a comment.
@@ -32,63 +34,66 @@ function metadata(source: string, fallback: string): { title: string; updated?: 
   return { title: fallback, updated: updated || undefined }
 }
 
-async function scan(vaultDir: string): Promise<VaultDoc[]> {
-  const docs: VaultDoc[] = []
-  const root = path.join(vaultDir, PIPELINE_VAULT_PATH)
-  async function walk(dir: string): Promise<void> {
-    try {
-      // Do not follow symlinks into unrelated vaults or directory cycles.
-      if (!(await fs.lstat(dir)).isDirectory()) return
-      const entries = await fs.readdir(dir, { withFileTypes: true })
-      for (const entry of entries) {
-        const absolute = path.join(dir, entry.name)
-        if (entry.isDirectory()) await walk(absolute)
-        else if (entry.isFile() && /\.md$/i.test(entry.name)) {
-          try {
-            const content = await fs.readFile(absolute)
-            const segments = path.relative(root, absolute).split(path.sep)
-            const group = segments.length > 1 ? segments[0] : 'Root'
-            docs.push({
-              path: path.relative(vaultDir, absolute).split(path.sep).join('/'),
-              ...metadata(content.toString('utf8'), entry.name.replace(/\.md$/i, '')),
-              group,
-              bytes: content.byteLength,
-              isClientDoc: group === 'Clients',
-            })
-          } catch { /* Unreadable or removed note: keep the rest of the scan. */ }
-        }
-      }
-    } catch { /* Missing or unreadable directory: return the readable notes. */ }
-  }
-  await walk(root)
-  return docs.sort((a, b) => a.path.localeCompare(b.path))
+export function vaultDocFromText(vaultRelative: string, content: string, bytes: number): VaultDoc {
+  const segments = vaultRelative.slice(PIPELINE_VAULT_PATH.length + 1).split('/')
+  const group = segments.length > 1 ? segments[0] : 'Root'
+  return { path: vaultRelative, ...vaultMetadata(content, path.basename(vaultRelative).replace(/\.md$/i, '')), group, bytes, isClientDoc: group === 'Clients' }
 }
 
-/** Cached per vault, including in-flight scans and empty results. Never writes. */
-export async function scanVaultDocs(): Promise<VaultDoc[]> {
+async function scan(root: string, prefix: string): Promise<VaultScan> {
+  const result: VaultScan = { docs: [], revisions: {}, paths: [], complete: true, reason: null }
   try {
-    const vaultDir = getConfig().paths.vaultDir
-    if (!cache || cache.vaultDir !== vaultDir || Date.now() >= cache.expires) {
-      cache = { vaultDir, expires: Date.now() + CACHE_MS, docs: scan(vaultDir).catch(() => []) }
+    const inventory = await listArtifactFiles(root)
+    result.paths = inventory.paths.filter(p => /\.md$/i.test(p))
+    result.complete = inventory.complete
+    if (!inventory.complete) result.reason = 'inventory_truncated'
+    for (const relative of result.paths) {
+      try {
+        const { bytes, revision } = await readArtifactFile(root, relative)
+        const text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes)
+        if (text.includes('\0')) continue
+        const doc = vaultDocFromText(`${prefix}/${relative}`, text, bytes.length)
+        result.docs.push(doc)
+        result.revisions[doc.path] = revision
+      } catch { /* Unreadable, oversized or moved notes are omitted from legacy metadata. */ }
     }
-    return await cache.docs
-  } catch { return [] }
+  } catch { result.complete = false; result.reason = 'root_unavailable' }
+  result.docs.sort((a, b) => a.path.localeCompare(b.path))
+  return result
 }
 
-/** Read docs_path separately: the existing pipeline normalization/schema stays intact. */
+/** Cached metadata for legacy callers; fresh inventory for revision-bound shelves.
+ * Inventory retains unreadable paths and scan quality without inventing metadata.
+ * root/prefix are server-owned registrations, never request parameters. */
+export function scanVaultDocs(options: ScanOptions & { inventory: true }): Promise<VaultScan>
+export function scanVaultDocs(options?: ScanOptions & { inventory?: false }): Promise<VaultDoc[]>
+export async function scanVaultDocs(options: ScanOptions & { inventory?: boolean } = {}): Promise<VaultDoc[] | VaultScan> {
+  const prefix = options.vaultPrefix ?? PIPELINE_VAULT_PATH
+  const root = options.root ?? path.join(getConfig().paths.vaultDir, PIPELINE_VAULT_PATH)
+  if (options.fresh) {
+    const result = await scan(root, prefix)
+    return options.inventory ? result : result.docs
+  }
+  if (!cache || cache.root !== root || cache.prefix !== prefix || Date.now() >= cache.expires) {
+    cache = { root, prefix, expires: Date.now() + CACHE_MS, scan: scan(root, prefix) }
+  }
+  const result = await cache.scan
+  return options.inventory ? result : result.docs
+}
+
+/** Select docs_path from the shared normalized pipeline and its lossless evidence. */
 export async function collectVaultClientDocs(docs: VaultDoc[]): Promise<VaultClientDocs[]> {
   try {
-    const store = JSON.parse(await fs.readFile(pipelineStore(), 'utf8'))
-    const leads = Array.isArray(store) ? store : store?.leads
-    if (!Array.isArray(leads)) return []
+    const read = await readPipelineStore()
+    if (!read.ok) return []
     const vaultDir = getConfig().paths.vaultDir
-    return leads.flatMap(lead => {
-      const id = lead?.id || lead?.lead_id
-      const folder = lead?.docs_path ?? lead?.extra_data?.docs_path ?? lead?.extraData?.docs_path
+    return read.store.records.flatMap(lead => lead.evidence.flatMap(({ raw }) => {
+      const id = lead.id
+      const folder = raw.docs_path ?? (raw.extra_data as Record<string, unknown> | undefined)?.docs_path ?? (raw.extraData as Record<string, unknown> | undefined)?.docs_path
       if (!id || typeof folder !== 'string' || !folder.trim()) return []
       const relative = path.relative(vaultDir, path.resolve(vaultDir, folder)).split(path.sep).join('/')
       if (!relative.startsWith(`${PIPELINE_VAULT_PATH}/Clients/`)) return []
       return [{ leadId: String(id), path: relative, count: docs.filter(doc => doc.path.startsWith(`${relative}/`)).length }]
-    })
+    })).filter((entry, index, entries) => entries.findIndex(other => other.leadId === entry.leadId && other.path === entry.path) === index)
   } catch { return [] }
 }

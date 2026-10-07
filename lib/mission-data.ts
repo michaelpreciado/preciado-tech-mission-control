@@ -14,7 +14,8 @@ import { collectKanbanActivity } from './collectors/kanban'
 import { collectGithub } from './collectors/github'
 import { collectProjects } from './collectors/projects'
 import { collectMemory } from './collectors/memory'
-import { collectCrew } from './collectors/crew'
+import { legacyCrew } from './collectors/crew'
+import { collectCrew } from './pt/crew-read'
 import { collectCosts } from './collectors/costs'
 import { collectOperations } from './collectors/operations'
 import { collectTelemetry } from './collectors/telemetry'
@@ -80,7 +81,7 @@ export async function getMissionData(): Promise<TruthfulMissionData> {
   const emptyKanban: KanbanActivity = { available: false, source: rel(ROOTS.kanbanDb), openTasks: 0, runningTasks: 0, lastEventAt: null, byAssignee: {} }
   const emptyTelemetry: import('./types').SystemTelemetry = { generatedAt: '', cpu: null, memory: null, disk: null, gpus: null, ollama: null }
 
-  const [tasks, cron, memory, integrationStates, github, costs, operations, calendarResult, ideasResult, missionsResult, kanban, telemetry] = await Promise.all([
+  const [tasks, cron, memory, integrationStates, github, costs, operations, calendarResult, ideasResult, missionsResult, kanban, telemetry, crewSnapshot] = await Promise.all([
     safeCollect('tasks', collectTasks, [], collectorErrors),
     safeCollect('cron', collectCron, [], collectorErrors),
     safeCollect('memory', collectMemory, [], collectorErrors),
@@ -93,6 +94,7 @@ export async function getMissionData(): Promise<TruthfulMissionData> {
     safeCollect('missions', collectMissions, emptyMissions, collectorErrors),
     safeCollect('kanban', collectKanbanActivity, emptyKanban, collectorErrors),
     safeCollect('telemetry', collectTelemetry, emptyTelemetry, collectorErrors),
+    Promise.resolve().then(() => collectCrew()),
   ])
   const [projects, vaultFiles] = await Promise.all([
     safeCollect('projects', () => collectProjects(tasks), [] as MissionProject[], collectorErrors),
@@ -134,7 +136,8 @@ export async function getMissionData(): Promise<TruthfulMissionData> {
     tasks: tasks.map(t => ({ ...t, agent_id: 'hermes' as const })),
     cron: cron.map(c => ({ ...c, agent_id: 'hermes' as const })),
     projects: tagList(projects),
-    crew: tagList(collectCrew(tasks, cron, kanban)),
+    crew: legacyCrew(crewSnapshot),
+    crewSnapshot,
     memory: tagList(memory),
     github: tagObj(github),
     costs: tagObj(costs),

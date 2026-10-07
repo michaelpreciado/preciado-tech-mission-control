@@ -1,0 +1,1008 @@
+[
+  {
+    "id": "staged-ready",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "53e10c873bfe45ee2ae7863dda0db82d2fa678813bfb4a4543dfe40a96151de9",
+      "dataRevision": "ed694b6c33110851dbe64160949df7e44940c6ee80f160713c54f27661f954cf",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:03:00.000Z",
+      "sources": [
+        {
+          "id": "command-catalog",
+          "revision": "a0b7297499ff27576b91f2998be308827b498fc934c5889c49e51cb2c5583034",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshness": "fresh",
+          "blocked": false,
+          "reason": null
+        }
+      ],
+      "data": {
+        "commands": [
+          {
+            "id": "pipeline",
+            "label": "Pipeline",
+            "practiceArea": "Web Development",
+            "webPath": "/pipeline",
+            "desktopActionId": "mp.preciadoTech.pipeline",
+            "enabled": true,
+            "blockedReason": null,
+            "badgeRef": {
+              "destination": "pipeline",
+              "fact": "pendingDecisionCount"
+            }
+          },
+          {
+            "id": "crew",
+            "label": "Crew",
+            "practiceArea": "AI Solutions",
+            "webPath": "/crew",
+            "desktopActionId": "mp.preciadoTech.crew",
+            "enabled": true,
+            "blockedReason": null,
+            "badgeRef": {
+              "destination": "crew",
+              "fact": "counts.needsIntervention"
+            }
+          },
+          {
+            "id": "command",
+            "label": "Command",
+            "practiceArea": "Tech Advisory",
+            "webPath": "/command",
+            "desktopActionId": "mp.preciadoTech.command",
+            "enabled": false,
+            "blockedReason": "destination_not_implemented",
+            "badgeRef": null
+          },
+          {
+            "id": "deliverables",
+            "label": "Deliverables",
+            "practiceArea": "Web Development",
+            "webPath": "/deliverables",
+            "desktopActionId": "mp.preciadoTech.deliverables",
+            "enabled": true,
+            "blockedReason": null,
+            "badgeRef": null
+          }
+        ],
+        "referencedSnapshots": {
+          "pipeline": {
+            "schemaVersion": 1,
+            "contractRevision": "pt-os.v1",
+            "snapshotId": "56fb0c2d2f70038aeecd802e0cb3c7fdb1649185da60e674b84e70abb1ede9e2",
+            "dataRevision": "ac7e94a17db866b9a3761b3cd16bfe0150f3f35f9cef3e97eab6adf77f6dd3cb",
+            "generatedAt": "2026-10-03T16:00:00.000Z",
+            "validUntil": "2026-10-03T16:01:30.000Z",
+            "sources": [
+              {
+                "id": "pipeline",
+                "revision": "707e336a4c5b1c74907e9bed7d9729e960c5495e928848d836fb192d89d679d8",
+                "sourceAt": "2026-10-03T14:01:09.268Z",
+                "observedAt": "2026-10-03T16:00:00.000Z",
+                "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+                "freshness": "fresh",
+                "reason": "invalid_records",
+                "freshnessBasis": "inventory",
+                "blocked": true
+              }
+            ],
+            "data": {
+              "facts": {
+                "pendingDecisionCount": 2
+              }
+            },
+            "errors": [
+              {
+                "sourceId": "pipeline",
+                "code": "invalid_records"
+              }
+            ]
+          },
+          "crew": {
+            "schemaVersion": 1,
+            "contractRevision": "pt-os.v1",
+            "snapshotId": "46b210b2e98537afcda3fa5e322bd2d8660a86c1526295388743779db3071225",
+            "dataRevision": "18d5524815d671fe1f20be73f93c7b68f9bfddf86a6362b1c0150cb3aaf064d8",
+            "generatedAt": "2026-10-03T16:00:00.000Z",
+            "validUntil": "2026-10-03T16:00:45.000Z",
+            "sources": [
+              {
+                "id": "fixture",
+                "revision": "crew-fixture-v1",
+                "sourceAt": null,
+                "observedAt": "2026-10-03T16:00:00.000Z",
+                "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+                "freshness": "fresh",
+                "blocked": false,
+                "reason": null
+              }
+            ],
+            "data": {
+              "facts": {
+                "counts.needsIntervention": 0
+              }
+            },
+            "errors": []
+          }
+        }
+      },
+      "errors": []
+    },
+    "now": "2026-10-03T16:00:00.000Z",
+    "expected": {
+      "pipeline": null,
+      "crew": null,
+      "command": "destination_not_implemented",
+      "deliverables": null
+    }
+  },
+  {
+    "id": "feature-not-staged-ready",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "53e10c873bfe45ee2ae7863dda0db82d2fa678813bfb4a4543dfe40a96151de9",
+      "dataRevision": "ed694b6c33110851dbe64160949df7e44940c6ee80f160713c54f27661f954cf",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:03:00.000Z",
+      "sources": [
+        {
+          "id": "command-catalog",
+          "revision": "a0b7297499ff27576b91f2998be308827b498fc934c5889c49e51cb2c5583034",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshness": "fresh",
+          "blocked": false,
+          "reason": null
+        }
+      ],
+      "data": {
+        "commands": [
+          {
+            "id": "pipeline",
+            "label": "Pipeline",
+            "practiceArea": "Web Development",
+            "webPath": "/pipeline",
+            "desktopActionId": "mp.preciadoTech.pipeline",
+            "enabled": false,
+            "blockedReason": "feature_not_staged_ready",
+            "badgeRef": {
+              "destination": "pipeline",
+              "fact": "pendingDecisionCount"
+            }
+          },
+          {
+            "id": "crew",
+            "label": "Crew",
+            "practiceArea": "AI Solutions",
+            "webPath": "/crew",
+            "desktopActionId": "mp.preciadoTech.crew",
+            "enabled": true,
+            "blockedReason": null,
+            "badgeRef": {
+              "destination": "crew",
+              "fact": "counts.needsIntervention"
+            }
+          },
+          {
+            "id": "command",
+            "label": "Command",
+            "practiceArea": "Tech Advisory",
+            "webPath": "/command",
+            "desktopActionId": "mp.preciadoTech.command",
+            "enabled": false,
+            "blockedReason": "destination_not_implemented",
+            "badgeRef": null
+          },
+          {
+            "id": "deliverables",
+            "label": "Deliverables",
+            "practiceArea": "Web Development",
+            "webPath": "/deliverables",
+            "desktopActionId": "mp.preciadoTech.deliverables",
+            "enabled": true,
+            "blockedReason": null,
+            "badgeRef": null
+          }
+        ],
+        "referencedSnapshots": {
+          "pipeline": {
+            "schemaVersion": 1,
+            "contractRevision": "pt-os.v1",
+            "snapshotId": "56fb0c2d2f70038aeecd802e0cb3c7fdb1649185da60e674b84e70abb1ede9e2",
+            "dataRevision": "ac7e94a17db866b9a3761b3cd16bfe0150f3f35f9cef3e97eab6adf77f6dd3cb",
+            "generatedAt": "2026-10-03T16:00:00.000Z",
+            "validUntil": "2026-10-03T16:01:30.000Z",
+            "sources": [
+              {
+                "id": "pipeline",
+                "revision": "707e336a4c5b1c74907e9bed7d9729e960c5495e928848d836fb192d89d679d8",
+                "sourceAt": "2026-10-03T14:01:09.268Z",
+                "observedAt": "2026-10-03T16:00:00.000Z",
+                "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+                "freshness": "fresh",
+                "reason": "invalid_records",
+                "freshnessBasis": "inventory",
+                "blocked": true
+              }
+            ],
+            "data": {
+              "facts": {
+                "pendingDecisionCount": 2
+              }
+            },
+            "errors": [
+              {
+                "sourceId": "pipeline",
+                "code": "invalid_records"
+              }
+            ]
+          },
+          "crew": {
+            "schemaVersion": 1,
+            "contractRevision": "pt-os.v1",
+            "snapshotId": "46b210b2e98537afcda3fa5e322bd2d8660a86c1526295388743779db3071225",
+            "dataRevision": "18d5524815d671fe1f20be73f93c7b68f9bfddf86a6362b1c0150cb3aaf064d8",
+            "generatedAt": "2026-10-03T16:00:00.000Z",
+            "validUntil": "2026-10-03T16:00:45.000Z",
+            "sources": [
+              {
+                "id": "fixture",
+                "revision": "crew-fixture-v1",
+                "sourceAt": null,
+                "observedAt": "2026-10-03T16:00:00.000Z",
+                "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+                "freshness": "fresh",
+                "blocked": false,
+                "reason": null
+              }
+            ],
+            "data": {
+              "facts": {
+                "counts.needsIntervention": 0
+              }
+            },
+            "errors": []
+          }
+        }
+      },
+      "errors": []
+    },
+    "now": "2026-10-03T16:00:00.000Z",
+    "expected": {
+      "pipeline": "feature_not_staged_ready",
+      "crew": null,
+      "command": "destination_not_implemented",
+      "deliverables": null
+    }
+  },
+  {
+    "id": "wire-cannot-enable-placeholder",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "53e10c873bfe45ee2ae7863dda0db82d2fa678813bfb4a4543dfe40a96151de9",
+      "dataRevision": "ed694b6c33110851dbe64160949df7e44940c6ee80f160713c54f27661f954cf",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:03:00.000Z",
+      "sources": [
+        {
+          "id": "command-catalog",
+          "revision": "a0b7297499ff27576b91f2998be308827b498fc934c5889c49e51cb2c5583034",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshness": "fresh",
+          "blocked": false,
+          "reason": null
+        }
+      ],
+      "data": {
+        "commands": [
+          {
+            "id": "pipeline",
+            "label": "Pipeline",
+            "practiceArea": "Web Development",
+            "webPath": "/pipeline",
+            "desktopActionId": "mp.preciadoTech.pipeline",
+            "enabled": true,
+            "blockedReason": null,
+            "badgeRef": {
+              "destination": "pipeline",
+              "fact": "pendingDecisionCount"
+            }
+          },
+          {
+            "id": "crew",
+            "label": "Crew",
+            "practiceArea": "AI Solutions",
+            "webPath": "/crew",
+            "desktopActionId": "mp.preciadoTech.crew",
+            "enabled": true,
+            "blockedReason": null,
+            "badgeRef": {
+              "destination": "crew",
+              "fact": "counts.needsIntervention"
+            }
+          },
+          {
+            "id": "command",
+            "label": "Command",
+            "practiceArea": "Tech Advisory",
+            "webPath": "/command",
+            "desktopActionId": "mp.preciadoTech.command",
+            "enabled": true,
+            "blockedReason": null,
+            "badgeRef": null
+          },
+          {
+            "id": "deliverables",
+            "label": "Deliverables",
+            "practiceArea": "Web Development",
+            "webPath": "/deliverables",
+            "desktopActionId": "mp.preciadoTech.deliverables",
+            "enabled": true,
+            "blockedReason": null,
+            "badgeRef": null
+          }
+        ],
+        "referencedSnapshots": {
+          "pipeline": {
+            "schemaVersion": 1,
+            "contractRevision": "pt-os.v1",
+            "snapshotId": "56fb0c2d2f70038aeecd802e0cb3c7fdb1649185da60e674b84e70abb1ede9e2",
+            "dataRevision": "ac7e94a17db866b9a3761b3cd16bfe0150f3f35f9cef3e97eab6adf77f6dd3cb",
+            "generatedAt": "2026-10-03T16:00:00.000Z",
+            "validUntil": "2026-10-03T16:01:30.000Z",
+            "sources": [
+              {
+                "id": "pipeline",
+                "revision": "707e336a4c5b1c74907e9bed7d9729e960c5495e928848d836fb192d89d679d8",
+                "sourceAt": "2026-10-03T14:01:09.268Z",
+                "observedAt": "2026-10-03T16:00:00.000Z",
+                "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+                "freshness": "fresh",
+                "reason": "invalid_records",
+                "freshnessBasis": "inventory",
+                "blocked": true
+              }
+            ],
+            "data": {
+              "facts": {
+                "pendingDecisionCount": 2
+              }
+            },
+            "errors": [
+              {
+                "sourceId": "pipeline",
+                "code": "invalid_records"
+              }
+            ]
+          },
+          "crew": {
+            "schemaVersion": 1,
+            "contractRevision": "pt-os.v1",
+            "snapshotId": "46b210b2e98537afcda3fa5e322bd2d8660a86c1526295388743779db3071225",
+            "dataRevision": "18d5524815d671fe1f20be73f93c7b68f9bfddf86a6362b1c0150cb3aaf064d8",
+            "generatedAt": "2026-10-03T16:00:00.000Z",
+            "validUntil": "2026-10-03T16:00:45.000Z",
+            "sources": [
+              {
+                "id": "fixture",
+                "revision": "crew-fixture-v1",
+                "sourceAt": null,
+                "observedAt": "2026-10-03T16:00:00.000Z",
+                "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+                "freshness": "fresh",
+                "blocked": false,
+                "reason": null
+              }
+            ],
+            "data": {
+              "facts": {
+                "counts.needsIntervention": 0
+              }
+            },
+            "errors": []
+          }
+        }
+      },
+      "errors": []
+    },
+    "now": "2026-10-03T16:00:00.000Z",
+    "expected": {
+      "pipeline": null,
+      "crew": null,
+      "command": "destination_not_implemented",
+      "deliverables": null
+    }
+  },
+  {
+    "id": "expired",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "53e10c873bfe45ee2ae7863dda0db82d2fa678813bfb4a4543dfe40a96151de9",
+      "dataRevision": "ed694b6c33110851dbe64160949df7e44940c6ee80f160713c54f27661f954cf",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:03:00.000Z",
+      "sources": [
+        {
+          "id": "command-catalog",
+          "revision": "a0b7297499ff27576b91f2998be308827b498fc934c5889c49e51cb2c5583034",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshness": "fresh",
+          "blocked": false,
+          "reason": null
+        }
+      ],
+      "data": {
+        "commands": [
+          {
+            "id": "pipeline",
+            "label": "Pipeline",
+            "practiceArea": "Web Development",
+            "webPath": "/pipeline",
+            "desktopActionId": "mp.preciadoTech.pipeline",
+            "enabled": true,
+            "blockedReason": null,
+            "badgeRef": {
+              "destination": "pipeline",
+              "fact": "pendingDecisionCount"
+            }
+          },
+          {
+            "id": "crew",
+            "label": "Crew",
+            "practiceArea": "AI Solutions",
+            "webPath": "/crew",
+            "desktopActionId": "mp.preciadoTech.crew",
+            "enabled": true,
+            "blockedReason": null,
+            "badgeRef": {
+              "destination": "crew",
+              "fact": "counts.needsIntervention"
+            }
+          },
+          {
+            "id": "command",
+            "label": "Command",
+            "practiceArea": "Tech Advisory",
+            "webPath": "/command",
+            "desktopActionId": "mp.preciadoTech.command",
+            "enabled": false,
+            "blockedReason": "destination_not_implemented",
+            "badgeRef": null
+          },
+          {
+            "id": "deliverables",
+            "label": "Deliverables",
+            "practiceArea": "Web Development",
+            "webPath": "/deliverables",
+            "desktopActionId": "mp.preciadoTech.deliverables",
+            "enabled": true,
+            "blockedReason": null,
+            "badgeRef": null
+          }
+        ],
+        "referencedSnapshots": {
+          "pipeline": {
+            "schemaVersion": 1,
+            "contractRevision": "pt-os.v1",
+            "snapshotId": "56fb0c2d2f70038aeecd802e0cb3c7fdb1649185da60e674b84e70abb1ede9e2",
+            "dataRevision": "ac7e94a17db866b9a3761b3cd16bfe0150f3f35f9cef3e97eab6adf77f6dd3cb",
+            "generatedAt": "2026-10-03T16:00:00.000Z",
+            "validUntil": "2026-10-03T16:01:30.000Z",
+            "sources": [
+              {
+                "id": "pipeline",
+                "revision": "707e336a4c5b1c74907e9bed7d9729e960c5495e928848d836fb192d89d679d8",
+                "sourceAt": "2026-10-03T14:01:09.268Z",
+                "observedAt": "2026-10-03T16:00:00.000Z",
+                "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+                "freshness": "fresh",
+                "reason": "invalid_records",
+                "freshnessBasis": "inventory",
+                "blocked": true
+              }
+            ],
+            "data": {
+              "facts": {
+                "pendingDecisionCount": 2
+              }
+            },
+            "errors": [
+              {
+                "sourceId": "pipeline",
+                "code": "invalid_records"
+              }
+            ]
+          },
+          "crew": {
+            "schemaVersion": 1,
+            "contractRevision": "pt-os.v1",
+            "snapshotId": "46b210b2e98537afcda3fa5e322bd2d8660a86c1526295388743779db3071225",
+            "dataRevision": "18d5524815d671fe1f20be73f93c7b68f9bfddf86a6362b1c0150cb3aaf064d8",
+            "generatedAt": "2026-10-03T16:00:00.000Z",
+            "validUntil": "2026-10-03T16:00:45.000Z",
+            "sources": [
+              {
+                "id": "fixture",
+                "revision": "crew-fixture-v1",
+                "sourceAt": null,
+                "observedAt": "2026-10-03T16:00:00.000Z",
+                "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+                "freshness": "fresh",
+                "blocked": false,
+                "reason": null
+              }
+            ],
+            "data": {
+              "facts": {
+                "counts.needsIntervention": 0
+              }
+            },
+            "errors": []
+          }
+        }
+      },
+      "errors": []
+    },
+    "now": "2026-10-03T16:03:00.000Z",
+    "expected": {
+      "pipeline": "snapshot_expired",
+      "crew": "snapshot_expired",
+      "command": "destination_not_implemented",
+      "deliverables": "snapshot_expired"
+    }
+  },
+  {
+    "id": "failed-refresh",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "53e10c873bfe45ee2ae7863dda0db82d2fa678813bfb4a4543dfe40a96151de9",
+      "dataRevision": "ed694b6c33110851dbe64160949df7e44940c6ee80f160713c54f27661f954cf",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:03:00.000Z",
+      "sources": [
+        {
+          "id": "command-catalog",
+          "revision": "a0b7297499ff27576b91f2998be308827b498fc934c5889c49e51cb2c5583034",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshness": "fresh",
+          "blocked": false,
+          "reason": null
+        }
+      ],
+      "data": {
+        "commands": [
+          {
+            "id": "pipeline",
+            "label": "Pipeline",
+            "practiceArea": "Web Development",
+            "webPath": "/pipeline",
+            "desktopActionId": "mp.preciadoTech.pipeline",
+            "enabled": true,
+            "blockedReason": null,
+            "badgeRef": {
+              "destination": "pipeline",
+              "fact": "pendingDecisionCount"
+            }
+          },
+          {
+            "id": "crew",
+            "label": "Crew",
+            "practiceArea": "AI Solutions",
+            "webPath": "/crew",
+            "desktopActionId": "mp.preciadoTech.crew",
+            "enabled": true,
+            "blockedReason": null,
+            "badgeRef": {
+              "destination": "crew",
+              "fact": "counts.needsIntervention"
+            }
+          },
+          {
+            "id": "command",
+            "label": "Command",
+            "practiceArea": "Tech Advisory",
+            "webPath": "/command",
+            "desktopActionId": "mp.preciadoTech.command",
+            "enabled": false,
+            "blockedReason": "destination_not_implemented",
+            "badgeRef": null
+          },
+          {
+            "id": "deliverables",
+            "label": "Deliverables",
+            "practiceArea": "Web Development",
+            "webPath": "/deliverables",
+            "desktopActionId": "mp.preciadoTech.deliverables",
+            "enabled": true,
+            "blockedReason": null,
+            "badgeRef": null
+          }
+        ],
+        "referencedSnapshots": {
+          "pipeline": {
+            "schemaVersion": 1,
+            "contractRevision": "pt-os.v1",
+            "snapshotId": "56fb0c2d2f70038aeecd802e0cb3c7fdb1649185da60e674b84e70abb1ede9e2",
+            "dataRevision": "ac7e94a17db866b9a3761b3cd16bfe0150f3f35f9cef3e97eab6adf77f6dd3cb",
+            "generatedAt": "2026-10-03T16:00:00.000Z",
+            "validUntil": "2026-10-03T16:01:30.000Z",
+            "sources": [
+              {
+                "id": "pipeline",
+                "revision": "707e336a4c5b1c74907e9bed7d9729e960c5495e928848d836fb192d89d679d8",
+                "sourceAt": "2026-10-03T14:01:09.268Z",
+                "observedAt": "2026-10-03T16:00:00.000Z",
+                "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+                "freshness": "fresh",
+                "reason": "invalid_records",
+                "freshnessBasis": "inventory",
+                "blocked": true
+              }
+            ],
+            "data": {
+              "facts": {
+                "pendingDecisionCount": 2
+              }
+            },
+            "errors": [
+              {
+                "sourceId": "pipeline",
+                "code": "invalid_records"
+              }
+            ]
+          },
+          "crew": {
+            "schemaVersion": 1,
+            "contractRevision": "pt-os.v1",
+            "snapshotId": "46b210b2e98537afcda3fa5e322bd2d8660a86c1526295388743779db3071225",
+            "dataRevision": "18d5524815d671fe1f20be73f93c7b68f9bfddf86a6362b1c0150cb3aaf064d8",
+            "generatedAt": "2026-10-03T16:00:00.000Z",
+            "validUntil": "2026-10-03T16:00:45.000Z",
+            "sources": [
+              {
+                "id": "fixture",
+                "revision": "crew-fixture-v1",
+                "sourceAt": null,
+                "observedAt": "2026-10-03T16:00:00.000Z",
+                "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+                "freshness": "fresh",
+                "blocked": false,
+                "reason": null
+              }
+            ],
+            "data": {
+              "facts": {
+                "counts.needsIntervention": 0
+              }
+            },
+            "errors": []
+          }
+        }
+      },
+      "errors": []
+    },
+    "now": "2026-10-03T16:00:00.000Z",
+    "failed": true,
+    "error": "transport_failed",
+    "expected": {
+      "pipeline": "refresh_failed",
+      "crew": "refresh_failed",
+      "command": "destination_not_implemented",
+      "deliverables": "refresh_failed"
+    }
+  },
+  {
+    "id": "denied-retained",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "53e10c873bfe45ee2ae7863dda0db82d2fa678813bfb4a4543dfe40a96151de9",
+      "dataRevision": "ed694b6c33110851dbe64160949df7e44940c6ee80f160713c54f27661f954cf",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:03:00.000Z",
+      "sources": [
+        {
+          "id": "command-catalog",
+          "revision": "a0b7297499ff27576b91f2998be308827b498fc934c5889c49e51cb2c5583034",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshness": "fresh",
+          "blocked": false,
+          "reason": null
+        }
+      ],
+      "data": {
+        "commands": [
+          {
+            "id": "pipeline",
+            "label": "Pipeline",
+            "practiceArea": "Web Development",
+            "webPath": "/pipeline",
+            "desktopActionId": "mp.preciadoTech.pipeline",
+            "enabled": true,
+            "blockedReason": null,
+            "badgeRef": {
+              "destination": "pipeline",
+              "fact": "pendingDecisionCount"
+            }
+          },
+          {
+            "id": "crew",
+            "label": "Crew",
+            "practiceArea": "AI Solutions",
+            "webPath": "/crew",
+            "desktopActionId": "mp.preciadoTech.crew",
+            "enabled": true,
+            "blockedReason": null,
+            "badgeRef": {
+              "destination": "crew",
+              "fact": "counts.needsIntervention"
+            }
+          },
+          {
+            "id": "command",
+            "label": "Command",
+            "practiceArea": "Tech Advisory",
+            "webPath": "/command",
+            "desktopActionId": "mp.preciadoTech.command",
+            "enabled": false,
+            "blockedReason": "destination_not_implemented",
+            "badgeRef": null
+          },
+          {
+            "id": "deliverables",
+            "label": "Deliverables",
+            "practiceArea": "Web Development",
+            "webPath": "/deliverables",
+            "desktopActionId": "mp.preciadoTech.deliverables",
+            "enabled": true,
+            "blockedReason": null,
+            "badgeRef": null
+          }
+        ],
+        "referencedSnapshots": {
+          "pipeline": {
+            "schemaVersion": 1,
+            "contractRevision": "pt-os.v1",
+            "snapshotId": "56fb0c2d2f70038aeecd802e0cb3c7fdb1649185da60e674b84e70abb1ede9e2",
+            "dataRevision": "ac7e94a17db866b9a3761b3cd16bfe0150f3f35f9cef3e97eab6adf77f6dd3cb",
+            "generatedAt": "2026-10-03T16:00:00.000Z",
+            "validUntil": "2026-10-03T16:01:30.000Z",
+            "sources": [
+              {
+                "id": "pipeline",
+                "revision": "707e336a4c5b1c74907e9bed7d9729e960c5495e928848d836fb192d89d679d8",
+                "sourceAt": "2026-10-03T14:01:09.268Z",
+                "observedAt": "2026-10-03T16:00:00.000Z",
+                "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+                "freshness": "fresh",
+                "reason": "invalid_records",
+                "freshnessBasis": "inventory",
+                "blocked": true
+              }
+            ],
+            "data": {
+              "facts": {
+                "pendingDecisionCount": 2
+              }
+            },
+            "errors": [
+              {
+                "sourceId": "pipeline",
+                "code": "invalid_records"
+              }
+            ]
+          },
+          "crew": {
+            "schemaVersion": 1,
+            "contractRevision": "pt-os.v1",
+            "snapshotId": "46b210b2e98537afcda3fa5e322bd2d8660a86c1526295388743779db3071225",
+            "dataRevision": "18d5524815d671fe1f20be73f93c7b68f9bfddf86a6362b1c0150cb3aaf064d8",
+            "generatedAt": "2026-10-03T16:00:00.000Z",
+            "validUntil": "2026-10-03T16:00:45.000Z",
+            "sources": [
+              {
+                "id": "fixture",
+                "revision": "crew-fixture-v1",
+                "sourceAt": null,
+                "observedAt": "2026-10-03T16:00:00.000Z",
+                "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+                "freshness": "fresh",
+                "blocked": false,
+                "reason": null
+              }
+            ],
+            "data": {
+              "facts": {
+                "counts.needsIntervention": 0
+              }
+            },
+            "errors": []
+          }
+        }
+      },
+      "errors": []
+    },
+    "now": "2026-10-03T16:00:00.000Z",
+    "failed": true,
+    "error": "access_denied",
+    "expected": {
+      "pipeline": "access_denied",
+      "crew": "access_denied",
+      "command": "destination_not_implemented",
+      "deliverables": "access_denied"
+    }
+  },
+  {
+    "id": "denied-empty",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "0018ee7bef91d092c8dac0c701687438c1925d73c32abcf3f937765f87d88c60",
+      "dataRevision": "e5532718eccbf3b707efcf5696a3347b6ac2fad00fe3417fbcf4fe6786394821",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:00:00.000Z",
+      "sources": [
+        {
+          "id": "command-catalog",
+          "revision": null,
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": null,
+          "freshness": "unknown",
+          "blocked": true,
+          "reason": "access_denied"
+        }
+      ],
+      "data": null,
+      "errors": [
+        {
+          "sourceId": "command-catalog",
+          "code": "access_denied"
+        }
+      ]
+    },
+    "now": "2026-10-03T16:00:00.000Z",
+    "expected": {
+      "pipeline": "access_denied",
+      "crew": "access_denied",
+      "command": "destination_not_implemented",
+      "deliverables": "access_denied"
+    }
+  },
+  {
+    "id": "read-failed",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "55d8b14a9fd46fba9e9cec611b09cbd36d83a504a80ad86c5d4d7476e204c994",
+      "dataRevision": "ec833b19d159ba681e50bda3b3397116bad0053bb383e42149b8ac22a17a580f",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:00:00.000Z",
+      "sources": [
+        {
+          "id": "command-catalog",
+          "revision": null,
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": null,
+          "freshness": "error",
+          "blocked": false,
+          "reason": "read_failed"
+        }
+      ],
+      "data": null,
+      "errors": [
+        {
+          "sourceId": "command-catalog",
+          "code": "read_failed"
+        }
+      ]
+    },
+    "now": "2026-10-03T16:00:00.000Z",
+    "expected": {
+      "pipeline": "catalog_unavailable",
+      "crew": "catalog_unavailable",
+      "command": "destination_not_implemented",
+      "deliverables": "catalog_unavailable"
+    }
+  },
+  {
+    "id": "missing-badges",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "8c01e54e3d500f43f7e2a07e5e736fd0ee7f74f503bb8083d228243a11b30ece",
+      "dataRevision": "1766b9d7c9ce79c5dd30e717582b863bf16ef9d90187425abdeb7f3aa9c22ffb",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:03:00.000Z",
+      "sources": [
+        {
+          "id": "command-catalog",
+          "revision": "a0b7297499ff27576b91f2998be308827b498fc934c5889c49e51cb2c5583034",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshness": "fresh",
+          "blocked": false,
+          "reason": null
+        }
+      ],
+      "data": {
+        "commands": [
+          {
+            "id": "pipeline",
+            "label": "Pipeline",
+            "practiceArea": "Web Development",
+            "webPath": "/pipeline",
+            "desktopActionId": "mp.preciadoTech.pipeline",
+            "enabled": true,
+            "blockedReason": null,
+            "badgeRef": {
+              "destination": "pipeline",
+              "fact": "pendingDecisionCount"
+            }
+          },
+          {
+            "id": "crew",
+            "label": "Crew",
+            "practiceArea": "AI Solutions",
+            "webPath": "/crew",
+            "desktopActionId": "mp.preciadoTech.crew",
+            "enabled": true,
+            "blockedReason": null,
+            "badgeRef": {
+              "destination": "crew",
+              "fact": "counts.needsIntervention"
+            }
+          },
+          {
+            "id": "command",
+            "label": "Command",
+            "practiceArea": "Tech Advisory",
+            "webPath": "/command",
+            "desktopActionId": "mp.preciadoTech.command",
+            "enabled": false,
+            "blockedReason": "destination_not_implemented",
+            "badgeRef": null
+          },
+          {
+            "id": "deliverables",
+            "label": "Deliverables",
+            "practiceArea": "Web Development",
+            "webPath": "/deliverables",
+            "desktopActionId": "mp.preciadoTech.deliverables",
+            "enabled": true,
+            "blockedReason": null,
+            "badgeRef": null
+          }
+        ],
+        "referencedSnapshots": {}
+      },
+      "errors": []
+    },
+    "now": "2026-10-03T16:00:00.000Z",
+    "expected": {
+      "pipeline": null,
+      "crew": null,
+      "command": "destination_not_implemented",
+      "deliverables": null
+    }
+  }
+]

@@ -4,6 +4,8 @@ import fs from 'node:fs/promises'
 import { collectPipeline, pipelineStore, upsertLead } from '@/lib/pipeline-data'
 import type { PipelineStage } from '@/lib/types'
 import { logger } from '@/lib/logger'
+import { collectPipelineRadar, unavailablePipeline } from '@/lib/pt/pipeline'
+import { isReadAuthorized } from '@/lib/pt/read-auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,8 +20,17 @@ function isAuthorized(req: NextRequest): boolean {
 }
 
 export async function GET(req: NextRequest) {
-  const data = await collectPipeline(req.nextUrl.searchParams.get('view') === 'revenue')
-  return NextResponse.json(data, { headers: { 'Cache-Control': 'no-store' } })
+  const headers = { 'Cache-Control': 'no-store' }
+  if (!await isReadAuthorized(req)) return NextResponse.json(unavailablePipeline('access_denied'), { status: 401, headers })
+  try {
+    if (req.nextUrl.searchParams.get('view') === 'radar') {
+      const data = await collectPipelineRadar()
+      return NextResponse.json(data, { status: data.data === null ? 503 : 200, headers })
+    }
+    return NextResponse.json(await collectPipeline(req.nextUrl.searchParams.get('view') === 'revenue'), { headers })
+  } catch {
+    return NextResponse.json(unavailablePipeline('read_failed'), { status: 503, headers })
+  }
 }
 
 /**

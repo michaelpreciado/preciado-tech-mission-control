@@ -1,0 +1,1259 @@
+[
+  {
+    "id": "pipeline-edge-cases",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "56fb0c2d2f70038aeecd802e0cb3c7fdb1649185da60e674b84e70abb1ede9e2",
+      "dataRevision": "ac7e94a17db866b9a3761b3cd16bfe0150f3f35f9cef3e97eab6adf77f6dd3cb",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:01:30.000Z",
+      "sources": [
+        {
+          "id": "pipeline",
+          "revision": "707e336a4c5b1c74907e9bed7d9729e960c5495e928848d836fb192d89d679d8",
+          "sourceAt": "2026-10-03T14:01:09.268Z",
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshness": "fresh",
+          "reason": "invalid_records",
+          "freshnessBasis": "inventory",
+          "blocked": true
+        }
+      ],
+      "data": {
+        "rawRecordCount": 11,
+        "recordCount": 7,
+        "invalidRecordCount": 3,
+        "duplicateRecordCount": 1,
+        "invalidRecords": [
+          {
+            "index": 8,
+            "reason": "invalid_record"
+          },
+          {
+            "index": 9,
+            "reason": "invalid_record"
+          },
+          {
+            "index": 10,
+            "reason": "invalid_record"
+          }
+        ],
+        "counts": {
+          "leads_found": 1,
+          "social_scraped": 0,
+          "concept_ready": 2,
+          "awaiting_approval": 2,
+          "in_development": 0,
+          "completed": 2,
+          "archived": 0,
+          "disqualified": 0
+        },
+        "activeCounts": {
+          "leads_found": 1,
+          "social_scraped": 0,
+          "concept_ready": 2,
+          "awaiting_approval": 2,
+          "in_development": 0,
+          "completed": 1,
+          "archived": 0,
+          "disqualified": 0
+        },
+        "activeCount": 6,
+        "archivedCount": 1,
+        "disqualifiedCount": 0,
+        "blockedCount": 1,
+        "attentionCount": 4,
+        "pendingDecisionCount": 2,
+        "sendReadyCount": 0,
+        "evidenceCounts": {
+          "build": {
+            "unknown": 4,
+            "in_progress": 1,
+            "complete": 2
+          },
+          "review": {
+            "pending": 1,
+            "held": 1,
+            "unknown": 5
+          },
+          "providerAcceptance": {
+            "unknown": 7
+          },
+          "delivery": {
+            "unknown": 7
+          },
+          "reply": {
+            "unknown": 7
+          },
+          "payment": {
+            "unknown": 7
+          },
+          "send": {
+            "unknown": 7
+          }
+        },
+        "attentionIds": [
+          "lead-mosquito-squad-of-modesto",
+          "fixture-held",
+          "lead-yourk-heating-and-air-conditioning",
+          "lead-roofing-modesto-pro"
+        ],
+        "pendingDecisionIds": [
+          "lead-mosquito-squad-of-modesto",
+          "fixture-held"
+        ],
+        "revenue": {
+          "activeCount": 2,
+          "pricedCount": 0,
+          "offerEstimate": 0,
+          "recordIds": [
+            "lead-mosquito-squad-of-modesto",
+            "fixture-held",
+            "lead-loves-air"
+          ]
+        },
+        "records": [
+          {
+            "id": "lead-mosquito-squad-of-modesto",
+            "businessName": "Mosquito Squad of Modesto",
+            "stage": "awaiting_approval",
+            "lead": {
+              "id": "lead-mosquito-squad-of-modesto",
+              "businessName": "Mosquito Squad of Modesto",
+              "stage": "awaiting_approval",
+              "archived": false,
+              "disqualified": false,
+              "createdAt": "2026-06-10T07:03:22.249Z",
+              "updatedAt": "2026-09-17T14:00:55.276Z",
+              "extraData": {},
+              "outreach": {},
+              "socials": {},
+              "concept": {},
+              "approval": {},
+              "development": {},
+              "completed": {},
+              "history": []
+            },
+            "sourceIndices": [
+              2
+            ],
+            "duplicateCount": 0,
+            "archived": false,
+            "disqualified": false,
+            "active": true,
+            "sourceAt": "2026-09-17T14:00:55.276Z",
+            "freshness": "stale",
+            "blocked": false,
+            "blockedReasons": [],
+            "attention": [
+              "Unfinished work unchanged for 7+ days",
+              "Approval requested"
+            ],
+            "requiresBoss": true,
+            "gate": "approval_required",
+            "nextAction": "Open review",
+            "sendReady": false,
+            "facts": {
+              "build": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": [
+                  {
+                    "recordIndex": 2,
+                    "field": "stage",
+                    "value": "awaiting_approval"
+                  }
+                ]
+              },
+              "review": {
+                "state": "pending",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "providerAcceptance": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "delivery": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "reply": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "payment": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "send": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              }
+            }
+          },
+          {
+            "id": "fixture-held",
+            "businessName": "Held fixture",
+            "stage": "awaiting_approval",
+            "lead": {
+              "id": "fixture-held",
+              "businessName": "Held fixture",
+              "stage": "awaiting_approval",
+              "archived": false,
+              "disqualified": false,
+              "updatedAt": "2026-10-01T16:00:00Z",
+              "extraData": {
+                "review": "held",
+                "reviewed_at": "2026-10-02T16:00:00Z"
+              },
+              "outreach": {},
+              "socials": {},
+              "concept": {},
+              "approval": {
+                "status": "approved"
+              },
+              "development": {},
+              "completed": {},
+              "history": []
+            },
+            "sourceIndices": [
+              4
+            ],
+            "duplicateCount": 0,
+            "archived": false,
+            "disqualified": false,
+            "active": true,
+            "sourceAt": "2026-10-02T16:00:00.000Z",
+            "freshness": "fresh",
+            "blocked": true,
+            "blockedReasons": [
+              "review_held",
+              "review_conflict"
+            ],
+            "attention": [
+              "Blocked evidence or business hold",
+              "Approval requested"
+            ],
+            "requiresBoss": true,
+            "gate": "approval_required",
+            "nextAction": "Open review",
+            "sendReady": false,
+            "facts": {
+              "build": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": [
+                  {
+                    "recordIndex": 4,
+                    "field": "stage",
+                    "value": "awaiting_approval"
+                  }
+                ]
+              },
+              "review": {
+                "state": "held",
+                "sourceAt": "2026-10-02T16:00:00.000Z",
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "fresh",
+                "reason": "review_conflict",
+                "blocked": true,
+                "evidence": [
+                  {
+                    "recordIndex": 4,
+                    "field": "approval.status",
+                    "value": "approved"
+                  },
+                  {
+                    "recordIndex": 4,
+                    "field": "extra_data.review",
+                    "value": "held"
+                  },
+                  {
+                    "recordIndex": 4,
+                    "field": "extra_data.reviewed_at",
+                    "value": "2026-10-02T16:00:00Z"
+                  }
+                ]
+              },
+              "providerAcceptance": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "delivery": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "reply": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "payment": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "send": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              }
+            }
+          },
+          {
+            "id": "lead-yourk-heating-and-air-conditioning",
+            "businessName": "Yourk Heating & Air Conditioning",
+            "stage": "leads_found",
+            "lead": {
+              "id": "lead-yourk-heating-and-air-conditioning",
+              "businessName": "Yourk Heating & Air Conditioning",
+              "stage": "leads_found",
+              "archived": false,
+              "disqualified": false,
+              "createdAt": "2026-06-10T07:03:22.058Z",
+              "updatedAt": "2026-06-10T07:04:04.911Z",
+              "extraData": {},
+              "outreach": {},
+              "socials": {},
+              "concept": {},
+              "approval": {},
+              "development": {},
+              "completed": {},
+              "history": []
+            },
+            "sourceIndices": [
+              0
+            ],
+            "duplicateCount": 0,
+            "archived": false,
+            "disqualified": false,
+            "active": true,
+            "sourceAt": "2026-06-10T07:04:04.911Z",
+            "freshness": "stale",
+            "blocked": false,
+            "blockedReasons": [],
+            "attention": [
+              "Unfinished work unchanged for 7+ days"
+            ],
+            "requiresBoss": false,
+            "gate": null,
+            "nextAction": "Review pipeline record",
+            "sendReady": false,
+            "facts": {
+              "build": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": [
+                  {
+                    "recordIndex": 0,
+                    "field": "stage",
+                    "value": "leads_found"
+                  }
+                ]
+              },
+              "review": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "providerAcceptance": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "delivery": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "reply": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "payment": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "send": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              }
+            }
+          },
+          {
+            "id": "lead-roofing-modesto-pro",
+            "businessName": "Roofing Modesto Pro",
+            "stage": "concept_ready",
+            "lead": {
+              "id": "lead-roofing-modesto-pro",
+              "businessName": "Roofing Modesto Pro",
+              "stage": "concept_ready",
+              "archived": false,
+              "disqualified": false,
+              "createdAt": "2026-06-09T23:45:00Z",
+              "updatedAt": "2026-08-22T23:28:35.758Z",
+              "extraData": {},
+              "outreach": {},
+              "socials": {},
+              "concept": {},
+              "approval": {},
+              "development": {
+                "status": "Preview HTML generated; not yet enhanced or deployed",
+                "progress_pct": 50,
+                "progressPct": 50
+              },
+              "completed": {},
+              "history": []
+            },
+            "sourceIndices": [
+              1
+            ],
+            "duplicateCount": 0,
+            "archived": false,
+            "disqualified": false,
+            "active": true,
+            "sourceAt": "2026-08-22T23:28:35.758Z",
+            "freshness": "stale",
+            "blocked": false,
+            "blockedReasons": [],
+            "attention": [
+              "Unfinished work unchanged for 7+ days"
+            ],
+            "requiresBoss": false,
+            "gate": null,
+            "nextAction": "Review pipeline record",
+            "sendReady": false,
+            "facts": {
+              "build": {
+                "state": "in_progress",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": [
+                  {
+                    "recordIndex": 1,
+                    "field": "stage",
+                    "value": "concept_ready"
+                  },
+                  {
+                    "recordIndex": 1,
+                    "field": "development.status",
+                    "value": "Preview HTML generated; not yet enhanced or deployed"
+                  },
+                  {
+                    "recordIndex": 1,
+                    "field": "development.progress_pct",
+                    "value": 50
+                  }
+                ]
+              },
+              "review": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "providerAcceptance": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "delivery": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "reply": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "payment": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "send": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              }
+            }
+          },
+          {
+            "id": "fixture-archived",
+            "businessName": "Archived fixture",
+            "stage": "completed",
+            "lead": {
+              "id": "fixture-archived",
+              "businessName": "Archived fixture",
+              "stage": "completed",
+              "archived": true,
+              "disqualified": false,
+              "updatedAt": "2026-09-01T16:00:00Z",
+              "extraData": {},
+              "outreach": {},
+              "socials": {},
+              "concept": {},
+              "approval": {},
+              "development": {},
+              "completed": {},
+              "history": []
+            },
+            "sourceIndices": [
+              5
+            ],
+            "duplicateCount": 0,
+            "archived": true,
+            "disqualified": false,
+            "active": false,
+            "sourceAt": "2026-09-01T16:00:00.000Z",
+            "freshness": "stale",
+            "blocked": false,
+            "blockedReasons": [],
+            "attention": [],
+            "requiresBoss": false,
+            "gate": null,
+            "nextAction": "Retained history",
+            "sendReady": false,
+            "facts": {
+              "build": {
+                "state": "complete",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": [
+                  {
+                    "recordIndex": 5,
+                    "field": "stage",
+                    "value": "completed"
+                  }
+                ]
+              },
+              "review": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "providerAcceptance": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "delivery": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "reply": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "payment": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "send": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              }
+            }
+          },
+          {
+            "id": "lead-loves-air",
+            "businessName": "Loves Air",
+            "stage": "completed",
+            "lead": {
+              "id": "lead-loves-air",
+              "businessName": "Loves Air",
+              "stage": "completed",
+              "archived": false,
+              "disqualified": false,
+              "createdAt": "2026-06-10T07:03:22.062Z",
+              "updatedAt": "2026-09-17T14:00:55.265Z",
+              "extraData": {},
+              "outreach": {},
+              "socials": {},
+              "concept": {},
+              "approval": {},
+              "development": {},
+              "completed": {},
+              "history": []
+            },
+            "sourceIndices": [
+              3
+            ],
+            "duplicateCount": 0,
+            "archived": false,
+            "disqualified": false,
+            "active": true,
+            "sourceAt": "2026-09-17T14:00:55.265Z",
+            "freshness": "stale",
+            "blocked": false,
+            "blockedReasons": [],
+            "attention": [],
+            "requiresBoss": false,
+            "gate": null,
+            "nextAction": "Review pipeline record",
+            "sendReady": false,
+            "facts": {
+              "build": {
+                "state": "complete",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": [
+                  {
+                    "recordIndex": 3,
+                    "field": "stage",
+                    "value": "completed"
+                  }
+                ]
+              },
+              "review": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "providerAcceptance": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "delivery": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "reply": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "payment": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "send": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              }
+            }
+          },
+          {
+            "id": "fixture-duplicate",
+            "businessName": "Duplicate fixture",
+            "stage": "concept_ready",
+            "lead": {
+              "id": "fixture-duplicate",
+              "businessName": "Duplicate fixture",
+              "stage": "concept_ready",
+              "archived": false,
+              "disqualified": false,
+              "updatedAt": "2026-10-02T16:00:00Z",
+              "extraData": {},
+              "outreach": {},
+              "socials": {},
+              "concept": {},
+              "approval": {},
+              "development": {},
+              "completed": {},
+              "history": []
+            },
+            "sourceIndices": [
+              6,
+              7
+            ],
+            "duplicateCount": 1,
+            "archived": false,
+            "disqualified": false,
+            "active": true,
+            "sourceAt": "2026-10-02T16:00:00.000Z",
+            "freshness": "fresh",
+            "blocked": false,
+            "blockedReasons": [],
+            "attention": [],
+            "requiresBoss": false,
+            "gate": null,
+            "nextAction": "Review pipeline record",
+            "sendReady": false,
+            "facts": {
+              "build": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": [
+                  {
+                    "recordIndex": 6,
+                    "field": "stage",
+                    "value": "concept_ready"
+                  },
+                  {
+                    "recordIndex": 7,
+                    "field": "stage",
+                    "value": "concept_ready"
+                  }
+                ]
+              },
+              "review": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "providerAcceptance": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "delivery": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "reply": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "payment": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              },
+              "send": {
+                "state": "unknown",
+                "sourceAt": null,
+                "sourceIds": [
+                  "pipeline"
+                ],
+                "freshness": "unknown",
+                "reason": "no_evidence",
+                "blocked": false,
+                "evidence": []
+              }
+            }
+          }
+        ],
+        "display": {
+          "recordIds": [
+            "lead-yourk-heating-and-air-conditioning",
+            "lead-roofing-modesto-pro",
+            "fixture-duplicate",
+            "lead-mosquito-squad-of-modesto",
+            "fixture-held",
+            "fixture-archived",
+            "lead-loves-air"
+          ],
+          "limitPerStage": 50,
+          "complete": true
+        }
+      },
+      "errors": [
+        {
+          "sourceId": "pipeline",
+          "code": "invalid_records"
+        }
+      ]
+    }
+  },
+  {
+    "id": "empty",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "d434afa08e7157bc2c249df3194435ee9cb58ec639b978caaa2b8a34ddb76ccd",
+      "dataRevision": "806ba77f09c789a0752d42293b9083a240d413da6bea3c0c4cae600235235940",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:01:30.000Z",
+      "sources": [
+        {
+          "id": "pipeline",
+          "revision": "de4332a0803a8bc5fd19e51bed6ecc3eebd8c323d16d46926a68c6941f0e4430",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshness": "fresh",
+          "reason": null,
+          "freshnessBasis": "inventory",
+          "blocked": false
+        }
+      ],
+      "data": {
+        "rawRecordCount": 0,
+        "recordCount": 0,
+        "invalidRecordCount": 0,
+        "duplicateRecordCount": 0,
+        "invalidRecords": [],
+        "counts": {
+          "leads_found": 0,
+          "social_scraped": 0,
+          "concept_ready": 0,
+          "awaiting_approval": 0,
+          "in_development": 0,
+          "completed": 0,
+          "archived": 0,
+          "disqualified": 0
+        },
+        "activeCounts": {
+          "leads_found": 0,
+          "social_scraped": 0,
+          "concept_ready": 0,
+          "awaiting_approval": 0,
+          "in_development": 0,
+          "completed": 0,
+          "archived": 0,
+          "disqualified": 0
+        },
+        "activeCount": 0,
+        "archivedCount": 0,
+        "disqualifiedCount": 0,
+        "blockedCount": 0,
+        "attentionCount": 0,
+        "pendingDecisionCount": 0,
+        "sendReadyCount": 0,
+        "evidenceCounts": {
+          "build": {},
+          "review": {},
+          "providerAcceptance": {},
+          "delivery": {},
+          "reply": {},
+          "payment": {},
+          "send": {}
+        },
+        "attentionIds": [],
+        "pendingDecisionIds": [],
+        "revenue": {
+          "activeCount": 0,
+          "pricedCount": 0,
+          "offerEstimate": 0,
+          "recordIds": []
+        },
+        "records": [],
+        "display": {
+          "recordIds": [],
+          "limitPerStage": 50,
+          "complete": true
+        }
+      },
+      "errors": []
+    }
+  },
+  {
+    "id": "missing_store",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "84194bc82f225c92411bb431b674eaf2bd1b81b339026ec2b1764787a68730be",
+      "dataRevision": "45b878fc01a573d905328d5d2abf4a036bf497589e0a31fc10cd64e63d036758",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:01:30.000Z",
+      "sources": [
+        {
+          "id": "pipeline",
+          "revision": null,
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": null,
+          "freshness": "unknown",
+          "reason": "missing_store",
+          "freshnessBasis": "inventory",
+          "blocked": false
+        }
+      ],
+      "data": null,
+      "errors": [
+        {
+          "sourceId": "pipeline",
+          "code": "missing_store"
+        }
+      ]
+    }
+  },
+  {
+    "id": "read_failed",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "e73c43389dded7023af7a6d8e01cceda243857b5353128dbff2811e069b17a6e",
+      "dataRevision": "45b878fc01a573d905328d5d2abf4a036bf497589e0a31fc10cd64e63d036758",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:01:30.000Z",
+      "sources": [
+        {
+          "id": "pipeline",
+          "revision": null,
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": null,
+          "freshness": "error",
+          "reason": "read_failed",
+          "freshnessBasis": "inventory",
+          "blocked": false
+        }
+      ],
+      "data": null,
+      "errors": [
+        {
+          "sourceId": "pipeline",
+          "code": "read_failed"
+        }
+      ]
+    }
+  },
+  {
+    "id": "invalid_json",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "5f610932f7b300ac5810a15dcff97b0e3d5b69588b9aeafa26b5e25932dcbf8c",
+      "dataRevision": "45b878fc01a573d905328d5d2abf4a036bf497589e0a31fc10cd64e63d036758",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:01:30.000Z",
+      "sources": [
+        {
+          "id": "pipeline",
+          "revision": null,
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": null,
+          "freshness": "error",
+          "reason": "invalid_json",
+          "freshnessBasis": "inventory",
+          "blocked": false
+        }
+      ],
+      "data": null,
+      "errors": [
+        {
+          "sourceId": "pipeline",
+          "code": "invalid_json"
+        }
+      ]
+    }
+  },
+  {
+    "id": "invalid_store",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "02faaffd2efb8025d805b957489988975089ec038d5ad3e601bfa6eb07e6ba91",
+      "dataRevision": "45b878fc01a573d905328d5d2abf4a036bf497589e0a31fc10cd64e63d036758",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:01:30.000Z",
+      "sources": [
+        {
+          "id": "pipeline",
+          "revision": null,
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": null,
+          "freshness": "error",
+          "reason": "invalid_store",
+          "freshnessBasis": "inventory",
+          "blocked": false
+        }
+      ],
+      "data": null,
+      "errors": [
+        {
+          "sourceId": "pipeline",
+          "code": "invalid_store"
+        }
+      ]
+    }
+  }
+]

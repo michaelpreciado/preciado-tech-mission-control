@@ -4,7 +4,7 @@
 .title { margin: 0; font: 600 28px/1.15 var(--mbg-sans); color: var(--mbg-ink, #eaf4ff); }
 .sub { margin: 0; max-width: 62ch; color: var(--mbg-ink-2, #b8c9da); font: 400 14px/1.5 var(--mbg-sans); }
 .note { margin: 0; padding: 12px 14px; border: 1px solid var(--mbg-edge, rgba(90,200,255,.25)); border-radius: 10px; background: var(--mbg-glass-1); color: var(--mbg-ink-2, #b8c9da); font: 400 13px/1.4 var(--mbg-sans); }
-.table { width: 100%; border-collapse: separate; border-spacing: 0 6px; font: 400 14px/1.4 var(--mbg-sans); color: var(--mbg-ink, #eaf4ff); }
+.table { table-layout: fixed; overflow-wrap: anywhere; width: 100%; border-collapse: separate; border-spacing: 0 6px; font: 400 14px/1.4 var(--mbg-sans); color: var(--mbg-ink, #eaf4ff); }
 .table thead th { text-align: left; padding: 4px 14px; font: 500 11px/1.2 var(--mbg-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--mbg-ink-3, #8fa3b8); }
 .row > * { padding: 12px 14px; background: var(--mbg-glass-1); text-align: left; vertical-align: top; border-block: 1px solid var(--mbg-edge, rgba(90,200,255,.2)); }
 .row > *:first-child { border-left: 3px solid var(--rail, #6b7c8f); border-radius: 10px 0 0 10px; }

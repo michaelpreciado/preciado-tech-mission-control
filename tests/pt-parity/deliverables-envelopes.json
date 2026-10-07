@@ -1,0 +1,1404 @@
+[
+  {
+    "id": "all-six-states",
+    "now": "2026-10-03T16:00:00.000Z",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "6cc01280fb59286fc194182299ddafefb2d7a29b4f0d7c2f9ae1c2850996db42",
+      "dataRevision": "cb7c88dfc04ef97f3148d0405f31d1e0abd27d86e00dcc1bc46f24e5b48cd2f9",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:03:00.000Z",
+      "sources": [
+        {
+          "id": "pipeline",
+          "revision": "d3fc544a26fd8681fd3f8c7784c41c2c589bcdc8774ae4a33b0069cad14266d9",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshnessBasis": "inventory",
+          "freshness": "fresh",
+          "reason": null,
+          "blocked": false
+        },
+        {
+          "id": "tracker:reports",
+          "revision": "e96d759c5b41d065dae50aa81f2fcaab17faddb470dcaffb0ed6ff60207e92b6",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshnessBasis": "inventory",
+          "freshness": "fresh",
+          "reason": null,
+          "blocked": false
+        },
+        {
+          "id": "reports",
+          "revision": "2e78caba4a904f9ccb9fbfed96ddef38874b1bc4e0df7a50f906bea2f80429d7",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshnessBasis": "inventory",
+          "freshness": "fresh",
+          "reason": null,
+          "blocked": false
+        },
+        {
+          "id": "vault",
+          "revision": "1bf10a5512a62d1feb5896394785f6193fec3d570db58423c398fb76feaaa6fa",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshnessBasis": "inventory",
+          "freshness": "fresh",
+          "reason": null,
+          "blocked": false
+        }
+      ],
+      "data": {
+        "items": [
+          {
+            "id": "fe76fc64b5f5848f9023a885a959998236f68d62416640eab849029e798fc81e",
+            "title": "awaiting.md",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "awaiting.md",
+            "artifactRevision": "7c6eae969e63066f17687089f4e66da2d199dfd6b3cf7c0921580f1c3be6d863",
+            "evidenceRevision": "e3ddef1b3447302756277e32f60af58c78d6bfdf47d735d7f3f1f37746f0e765",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "awaiting-verification",
+            "reviewReason": "hash_bound_coordinator_acceptance_required",
+            "trackerStates": [
+              {
+                "id": "awaiting-task",
+                "status": "awaiting-verification",
+                "gate": null
+              }
+            ],
+            "gateIds": [],
+            "evidenceRefs": [],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": true,
+            "unavailableReason": null,
+            "bytes": 47,
+            "mediaType": "text/markdown",
+            "webPath": "/deliverables?id=fe76fc64b5f5848f9023a885a959998236f68d62416640eab849029e798fc81e",
+            "vault": null
+          },
+          {
+            "id": "6171f51b55b0cf160c7ca94a099c97e552996547956c784aa248a5fed100b84b",
+            "title": "binary.md",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "binary.md",
+            "artifactRevision": "f742b965f156c10374bc23aea96e3a8aff8facd6fc079defeaa30219ad86f211",
+            "evidenceRevision": "e3ddef1b3447302756277e32f60af58c78d6bfdf47d735d7f3f1f37746f0e765",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "unknown",
+            "reviewReason": "no_acceptance_evidence",
+            "trackerStates": [],
+            "gateIds": [],
+            "evidenceRefs": [],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": false,
+            "unavailableReason": "unsupported_format",
+            "bytes": 3,
+            "mediaType": "text/markdown",
+            "webPath": "/deliverables?id=6171f51b55b0cf160c7ca94a099c97e552996547956c784aa248a5fed100b84b",
+            "vault": null
+          },
+          {
+            "id": "ffe2db3f71f2ac74de498e57a6ae889df4d1af1212508a9fb941b856cc345ada",
+            "title": "bom.md",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "bom.md",
+            "artifactRevision": "1faa97474ebaa0689bdb4356dfe22e87afcac45c830b42cadc877b02f2bbf0de",
+            "evidenceRevision": "e3ddef1b3447302756277e32f60af58c78d6bfdf47d735d7f3f1f37746f0e765",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "unknown",
+            "reviewReason": "no_acceptance_evidence",
+            "trackerStates": [],
+            "gateIds": [],
+            "evidenceRefs": [],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": true,
+            "unavailableReason": null,
+            "bytes": 18,
+            "mediaType": "text/markdown",
+            "webPath": "/deliverables?id=ffe2db3f71f2ac74de498e57a6ae889df4d1af1212508a9fb941b856cc345ada",
+            "vault": null
+          },
+          {
+            "id": "066df1bfe464c1397b15940857bab9ed1594e2979030985e48377f27a2ae4f37",
+            "title": "coordinator.md",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "coordinator.md",
+            "artifactRevision": "716938574e2972b183db9d26533aa39c4b0e20635763447d6005a9ad365e7cd7",
+            "evidenceRevision": "e3ddef1b3447302756277e32f60af58c78d6bfdf47d735d7f3f1f37746f0e765",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "unknown",
+            "reviewReason": "no_acceptance_evidence",
+            "trackerStates": [],
+            "gateIds": [],
+            "evidenceRefs": [],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": true,
+            "unavailableReason": null,
+            "bytes": 41,
+            "mediaType": "text/markdown",
+            "webPath": "/deliverables?id=066df1bfe464c1397b15940857bab9ed1594e2979030985e48377f27a2ae4f37",
+            "vault": null
+          },
+          {
+            "id": "65c3a9169504480e4ee6d630c8f7c309cbee90c5548722c5d80996a0f637eace",
+            "title": "draft.txt",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "draft.txt",
+            "artifactRevision": "d3378d8103402bad9f1f0e1608cc6bb35ac02749e00792330440d5e69501275d",
+            "evidenceRevision": "e3ddef1b3447302756277e32f60af58c78d6bfdf47d735d7f3f1f37746f0e765",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "draft",
+            "reviewReason": "tracker_draft",
+            "trackerStates": [
+              {
+                "id": "draft-task",
+                "status": "draft",
+                "gate": null
+              }
+            ],
+            "gateIds": [],
+            "evidenceRefs": [],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": true,
+            "unavailableReason": null,
+            "bytes": 12,
+            "mediaType": "text/plain",
+            "webPath": "/deliverables?id=65c3a9169504480e4ee6d630c8f7c309cbee90c5548722c5d80996a0f637eace",
+            "vault": null
+          },
+          {
+            "id": "b7cc3e17cd1e403d09ec4b3e7225f383f6dcb41b83c1e251281add7ebdaa4e8b",
+            "title": "escape-directory/private.txt",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "escape-directory/private.txt",
+            "artifactRevision": null,
+            "evidenceRevision": "b7a480b43e1648cd28efb8edbf3ada8edf770f78f057c5258f273343221b478d",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "unknown",
+            "reviewReason": "artifact_unavailable",
+            "trackerStates": [
+              {
+                "id": "escape-task",
+                "status": "verified",
+                "gate": null
+              }
+            ],
+            "gateIds": [],
+            "evidenceRefs": [
+              {
+                "ref": "reports:escape.txt",
+                "revision": null
+              }
+            ],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": false,
+            "unavailableReason": "unavailable",
+            "bytes": null,
+            "mediaType": "text/plain",
+            "webPath": "/deliverables?id=b7cc3e17cd1e403d09ec4b3e7225f383f6dcb41b83c1e251281add7ebdaa4e8b",
+            "vault": null
+          },
+          {
+            "id": "ab30c26cd13bf95919d091f342c3d75b843fd3c126d6c57b6c51dd20b3cf2fa8",
+            "title": "escape.txt",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "escape.txt",
+            "artifactRevision": null,
+            "evidenceRevision": "6dce5d5b91ab9c787386d665f6bca4c0407473f4ed4567d6cfb3ccc6ef62048c",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "unknown",
+            "reviewReason": "artifact_unavailable",
+            "trackerStates": [
+              {
+                "id": "escape-task",
+                "status": "verified",
+                "gate": null
+              }
+            ],
+            "gateIds": [],
+            "evidenceRefs": [
+              {
+                "ref": "reports:escape-directory/private.txt",
+                "revision": null
+              }
+            ],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": false,
+            "unavailableReason": "unavailable",
+            "bytes": null,
+            "mediaType": "text/plain",
+            "webPath": "/deliverables?id=ab30c26cd13bf95919d091f342c3d75b843fd3c126d6c57b6c51dd20b3cf2fa8",
+            "vault": null
+          },
+          {
+            "id": "21f65b485be22db61a710b53a6e08956edaa1c4f62ff6e7ad3f43845a2d8dffd",
+            "title": "evidence.txt",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "evidence.txt",
+            "artifactRevision": "dffe389087476e6aa4c9f7d01a1fbc2f2c8e4dc9ab310845f6613e51a1412619",
+            "evidenceRevision": "5549004c4fe17f5b612b5a1627d47d1034ebff2b8f7302306df2fa2c65bd3af9",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "awaiting-verification",
+            "reviewReason": "hash_bound_coordinator_acceptance_required",
+            "trackerStates": [
+              {
+                "id": "verified-task",
+                "status": "verified",
+                "gate": null
+              }
+            ],
+            "gateIds": [],
+            "evidenceRefs": [
+              {
+                "ref": "reports:coordinator.md",
+                "revision": "716938574e2972b183db9d26533aa39c4b0e20635763447d6005a9ad365e7cd7"
+              },
+              {
+                "ref": "reports:verified note.md",
+                "revision": "144cce55b0769ab7bdb107b9f3416a35866f98d61bf7153f854705cbba2bcd1e"
+              }
+            ],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": true,
+            "unavailableReason": null,
+            "bytes": 29,
+            "mediaType": "text/plain",
+            "webPath": "/deliverables?id=21f65b485be22db61a710b53a6e08956edaa1c4f62ff6e7ad3f43845a2d8dffd",
+            "vault": null
+          },
+          {
+            "id": "895a8e5fd03349c5d8f2e48873184b46e7e7b9201d2493e4f3c239c1c4718fa6",
+            "title": "held/offer.html",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "held/offer.html",
+            "artifactRevision": "f6132199ff70f220fcfd882288b6cb05f62ad058e153fc3fdff956e9a69fb500",
+            "evidenceRevision": "e3ddef1b3447302756277e32f60af58c78d6bfdf47d735d7f3f1f37746f0e765",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "approval-held",
+            "reviewReason": "tracker_approval_hold",
+            "trackerStates": [
+              {
+                "id": "held-task",
+                "status": "verified",
+                "gate": null
+              },
+              {
+                "id": "publish",
+                "status": "approval-held",
+                "gate": "Explicit publication approval required"
+              }
+            ],
+            "gateIds": [
+              "publish"
+            ],
+            "evidenceRefs": [],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [
+              "fixture-lead"
+            ],
+            "available": true,
+            "unavailableReason": null,
+            "bytes": 83,
+            "mediaType": "text/html-source",
+            "webPath": "/deliverables?id=895a8e5fd03349c5d8f2e48873184b46e7e7b9201d2493e4f3c239c1c4718fa6",
+            "vault": null
+          },
+          {
+            "id": "b99e96e11d4a39bfda5f0545268c1a45535c058c389c391783bb4ddaacc7089d",
+            "title": "large.txt",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "large.txt",
+            "artifactRevision": null,
+            "evidenceRevision": "e3ddef1b3447302756277e32f60af58c78d6bfdf47d735d7f3f1f37746f0e765",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "unknown",
+            "reviewReason": "artifact_unavailable",
+            "trackerStates": [],
+            "gateIds": [],
+            "evidenceRefs": [],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": false,
+            "unavailableReason": "too_large",
+            "bytes": null,
+            "mediaType": "text/plain",
+            "webPath": "/deliverables?id=b99e96e11d4a39bfda5f0545268c1a45535c058c389c391783bb4ddaacc7089d",
+            "vault": null
+          },
+          {
+            "id": "14428c8ea265d2391edd682eedf5f43c5f8e23ed1e7fd83a26c5b02bbc6dd02e",
+            "title": "moved.md",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "moved.md",
+            "artifactRevision": "064b5c0a9b2b5d5eb319d0df9bf08d7609b1c77e62010540458123ca4b45a573",
+            "evidenceRevision": "e3ddef1b3447302756277e32f60af58c78d6bfdf47d735d7f3f1f37746f0e765",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "awaiting-verification",
+            "reviewReason": "hash_bound_coordinator_acceptance_required",
+            "trackerStates": [
+              {
+                "id": "moved-task",
+                "status": "awaiting-verification",
+                "gate": null
+              }
+            ],
+            "gateIds": [],
+            "evidenceRefs": [],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": true,
+            "unavailableReason": null,
+            "bytes": 10,
+            "mediaType": "text/markdown",
+            "webPath": "/deliverables?id=14428c8ea265d2391edd682eedf5f43c5f8e23ed1e7fd83a26c5b02bbc6dd02e",
+            "vault": null
+          },
+          {
+            "id": "0e55d3025ee3c645cf8922778f115358da511c8047710c075876f5fe6e0c153b",
+            "title": "prototype/REPORT.md",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "prototype/REPORT.md",
+            "artifactRevision": "75c5b744ea929827781374d189a583f22729821218d1b7481edb1e31e1c8c4b8",
+            "evidenceRevision": "afc153109797afb9b03bd0096b159854d9d1f5687189293926779d2382305266",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "not-accepted",
+            "reviewReason": "coordinator_or_tracker_rejection",
+            "trackerStates": [
+              {
+                "id": "prototype-task",
+                "status": "verified",
+                "gate": null
+              }
+            ],
+            "gateIds": [],
+            "evidenceRefs": [
+              {
+                "ref": "reports:prototype/review.md",
+                "revision": "050be93ab93ef1c94e91ef5aa4ac59812ee09861a3a3807bc6edf63bd3e81600"
+              }
+            ],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": true,
+            "unavailableReason": null,
+            "bytes": 44,
+            "mediaType": "text/markdown",
+            "webPath": "/deliverables?id=0e55d3025ee3c645cf8922778f115358da511c8047710c075876f5fe6e0c153b",
+            "vault": null
+          },
+          {
+            "id": "240e70b16190a1a169b055e12558a67bd71d72353bfcef80bc133f753821a603",
+            "title": "prototype/review.md",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "prototype/review.md",
+            "artifactRevision": "050be93ab93ef1c94e91ef5aa4ac59812ee09861a3a3807bc6edf63bd3e81600",
+            "evidenceRevision": "afc153109797afb9b03bd0096b159854d9d1f5687189293926779d2382305266",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "not-accepted",
+            "reviewReason": "coordinator_or_tracker_rejection",
+            "trackerStates": [],
+            "gateIds": [],
+            "evidenceRefs": [
+              {
+                "ref": "reports:prototype/review.md",
+                "revision": "050be93ab93ef1c94e91ef5aa4ac59812ee09861a3a3807bc6edf63bd3e81600"
+              }
+            ],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": true,
+            "unavailableReason": null,
+            "bytes": 43,
+            "mediaType": "text/markdown",
+            "webPath": "/deliverables?id=240e70b16190a1a169b055e12558a67bd71d72353bfcef80bc133f753821a603",
+            "vault": null
+          },
+          {
+            "id": "d64aa708733234c9f335d9849e80154f0912b8876f9dc42a4cdfcbfbf0e6cfd1",
+            "title": "tracker.json",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "tracker.json",
+            "artifactRevision": "e96d759c5b41d065dae50aa81f2fcaab17faddb470dcaffb0ed6ff60207e92b6",
+            "evidenceRevision": "e3ddef1b3447302756277e32f60af58c78d6bfdf47d735d7f3f1f37746f0e765",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "unknown",
+            "reviewReason": "no_acceptance_evidence",
+            "trackerStates": [],
+            "gateIds": [],
+            "evidenceRefs": [],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": false,
+            "unavailableReason": "unsupported_format",
+            "bytes": 950,
+            "mediaType": null,
+            "webPath": "/deliverables?id=d64aa708733234c9f335d9849e80154f0912b8876f9dc42a4cdfcbfbf0e6cfd1",
+            "vault": null
+          },
+          {
+            "id": "8060cfa48cab4d9549a14940a3e2b651f6e8f6693546f4f1d3a90ea856e6500f",
+            "title": "unsupported.pdf",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "unsupported.pdf",
+            "artifactRevision": "51837589f62324f05a4d3468d248c4fbe767538385910e813e6a3dcc5cc59839",
+            "evidenceRevision": "e3ddef1b3447302756277e32f60af58c78d6bfdf47d735d7f3f1f37746f0e765",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "unknown",
+            "reviewReason": "no_acceptance_evidence",
+            "trackerStates": [],
+            "gateIds": [],
+            "evidenceRefs": [],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": false,
+            "unavailableReason": "unsupported_format",
+            "bytes": 21,
+            "mediaType": null,
+            "webPath": "/deliverables?id=8060cfa48cab4d9549a14940a3e2b651f6e8f6693546f4f1d3a90ea856e6500f",
+            "vault": null
+          },
+          {
+            "id": "b2e3feaecbe06f31fedf143d552a0a804ac431988e5c3690abfae64263170792",
+            "title": "untracked.md",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "untracked.md",
+            "artifactRevision": "608332a4c8bd0cc1e28f099b32b8a5e60990f1249b475d846c4d995cbba8b366",
+            "evidenceRevision": "e3ddef1b3447302756277e32f60af58c78d6bfdf47d735d7f3f1f37746f0e765",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "unknown",
+            "reviewReason": "no_acceptance_evidence",
+            "trackerStates": [],
+            "gateIds": [],
+            "evidenceRefs": [],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": true,
+            "unavailableReason": null,
+            "bytes": 27,
+            "mediaType": "text/markdown",
+            "webPath": "/deliverables?id=b2e3feaecbe06f31fedf143d552a0a804ac431988e5c3690abfae64263170792",
+            "vault": null
+          },
+          {
+            "id": "b7e480a9d2c1137807ff5d96e7efe6b202d099b173d8ef6a953d71e4eb223ec1",
+            "title": "verified note.md",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "verified note.md",
+            "artifactRevision": "144cce55b0769ab7bdb107b9f3416a35866f98d61bf7153f854705cbba2bcd1e",
+            "evidenceRevision": "9e810a13a32c5e6267915cd3602d6b920d4a3c2bfc8203d546f08aaab6e402a4",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "verified",
+            "reviewReason": "coordinator_hash_binding_matches",
+            "trackerStates": [
+              {
+                "id": "verified-task",
+                "status": "verified",
+                "gate": null
+              }
+            ],
+            "gateIds": [],
+            "evidenceRefs": [
+              {
+                "ref": "reports:coordinator.md",
+                "revision": "716938574e2972b183db9d26533aa39c4b0e20635763447d6005a9ad365e7cd7"
+              },
+              {
+                "ref": "reports:evidence.txt",
+                "revision": "dffe389087476e6aa4c9f7d01a1fbc2f2c8e4dc9ab310845f6613e51a1412619"
+              }
+            ],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [
+              "fixture-lead"
+            ],
+            "available": true,
+            "unavailableReason": null,
+            "bytes": 32,
+            "mediaType": "text/markdown",
+            "webPath": "/deliverables?id=b7e480a9d2c1137807ff5d96e7efe6b202d099b173d8ef6a953d71e4eb223ec1",
+            "vault": null
+          },
+          {
+            "id": "2dbfe6807797a7101fd87475e0f1837286878545f5294b08db1c724c0a6f3f38",
+            "title": "publish",
+            "kind": "gate",
+            "rootId": "reports",
+            "path": null,
+            "artifactRevision": null,
+            "evidenceRevision": "e96d759c5b41d065dae50aa81f2fcaab17faddb470dcaffb0ed6ff60207e92b6",
+            "coordinatorRevision": null,
+            "reviewState": "approval-held",
+            "reviewReason": "tracker_gate_only",
+            "trackerStates": [
+              {
+                "id": "publish",
+                "status": "approval-held",
+                "gate": "Explicit publication approval required"
+              }
+            ],
+            "gateIds": [
+              "publish"
+            ],
+            "evidenceRefs": [],
+            "sourceIds": [
+              "tracker:reports"
+            ],
+            "leadIds": [],
+            "available": false,
+            "unavailableReason": "no_artifact",
+            "bytes": null,
+            "mediaType": null,
+            "webPath": "/deliverables?id=2dbfe6807797a7101fd87475e0f1837286878545f5294b08db1c724c0a6f3f38",
+            "vault": null
+          },
+          {
+            "id": "80b54e45598d87f4c689dc356818cce1982cc2f2ad2100a01d56ed43c4e537c5",
+            "title": "Terms with spaces",
+            "kind": "vault",
+            "rootId": "vault",
+            "path": "Clients/A & B/Terms #1.md",
+            "artifactRevision": "5dbc04f3c40d6ede12d69ad828d303c30be4237a9625dc59a1f91c2a3138577e",
+            "evidenceRevision": null,
+            "coordinatorRevision": null,
+            "reviewState": "unknown",
+            "reviewReason": "no_acceptance_evidence",
+            "trackerStates": [],
+            "gateIds": [],
+            "evidenceRefs": [],
+            "sourceIds": [
+              "vault",
+              "pipeline"
+            ],
+            "leadIds": [
+              "fixture-lead"
+            ],
+            "available": true,
+            "unavailableReason": null,
+            "bytes": 57,
+            "mediaType": "text/markdown",
+            "webPath": "/deliverables?id=80b54e45598d87f4c689dc356818cce1982cc2f2ad2100a01d56ed43c4e537c5",
+            "vault": {
+              "name": "Vault with spaces",
+              "path": "0800 Preciado Tech/Web Dev Pipeline/Clients/A & B/Terms #1.md",
+              "metadata": {
+                "path": "0800 Preciado Tech/Web Dev Pipeline/Clients/A & B/Terms #1.md",
+                "title": "Terms with spaces",
+                "updated": "2026-10-03",
+                "group": "Clients",
+                "bytes": 57,
+                "isClientDoc": true
+              }
+            }
+          }
+        ],
+        "count": 19,
+        "complete": true,
+        "nextCursor": null,
+        "maxContentBytes": 262144
+      },
+      "errors": []
+    }
+  },
+  {
+    "id": "verified-then-edited",
+    "now": "2026-10-03T16:00:00.000Z",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "6332b0a11af4fcdd8990ecd4016dda247c5f8fae99749615d8bdeb6498d8e9e5",
+      "dataRevision": "ef5130c8d1bc2390ccffb3c76f75438d161eef499279f30794b45f5787a4f575",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:03:00.000Z",
+      "sources": [
+        {
+          "id": "pipeline",
+          "revision": "d3fc544a26fd8681fd3f8c7784c41c2c589bcdc8774ae4a33b0069cad14266d9",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshnessBasis": "inventory",
+          "freshness": "fresh",
+          "reason": null,
+          "blocked": false
+        },
+        {
+          "id": "tracker:reports",
+          "revision": "e96d759c5b41d065dae50aa81f2fcaab17faddb470dcaffb0ed6ff60207e92b6",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshnessBasis": "inventory",
+          "freshness": "fresh",
+          "reason": null,
+          "blocked": false
+        },
+        {
+          "id": "reports",
+          "revision": "7f15d4fd7a9cc20ec638020c46759d078c688997471a9ab42bb20761c0fa24a1",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshnessBasis": "inventory",
+          "freshness": "fresh",
+          "reason": null,
+          "blocked": false
+        },
+        {
+          "id": "vault",
+          "revision": "1bf10a5512a62d1feb5896394785f6193fec3d570db58423c398fb76feaaa6fa",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshnessBasis": "inventory",
+          "freshness": "fresh",
+          "reason": null,
+          "blocked": false
+        }
+      ],
+      "data": {
+        "items": [
+          {
+            "id": "fe76fc64b5f5848f9023a885a959998236f68d62416640eab849029e798fc81e",
+            "title": "awaiting.md",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "awaiting.md",
+            "artifactRevision": "7c6eae969e63066f17687089f4e66da2d199dfd6b3cf7c0921580f1c3be6d863",
+            "evidenceRevision": "e3ddef1b3447302756277e32f60af58c78d6bfdf47d735d7f3f1f37746f0e765",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "awaiting-verification",
+            "reviewReason": "hash_bound_coordinator_acceptance_required",
+            "trackerStates": [
+              {
+                "id": "awaiting-task",
+                "status": "awaiting-verification",
+                "gate": null
+              }
+            ],
+            "gateIds": [],
+            "evidenceRefs": [],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": true,
+            "unavailableReason": null,
+            "bytes": 47,
+            "mediaType": "text/markdown",
+            "webPath": "/deliverables?id=fe76fc64b5f5848f9023a885a959998236f68d62416640eab849029e798fc81e",
+            "vault": null
+          },
+          {
+            "id": "6171f51b55b0cf160c7ca94a099c97e552996547956c784aa248a5fed100b84b",
+            "title": "binary.md",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "binary.md",
+            "artifactRevision": "f742b965f156c10374bc23aea96e3a8aff8facd6fc079defeaa30219ad86f211",
+            "evidenceRevision": "e3ddef1b3447302756277e32f60af58c78d6bfdf47d735d7f3f1f37746f0e765",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "unknown",
+            "reviewReason": "no_acceptance_evidence",
+            "trackerStates": [],
+            "gateIds": [],
+            "evidenceRefs": [],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": false,
+            "unavailableReason": "unsupported_format",
+            "bytes": 3,
+            "mediaType": "text/markdown",
+            "webPath": "/deliverables?id=6171f51b55b0cf160c7ca94a099c97e552996547956c784aa248a5fed100b84b",
+            "vault": null
+          },
+          {
+            "id": "ffe2db3f71f2ac74de498e57a6ae889df4d1af1212508a9fb941b856cc345ada",
+            "title": "bom.md",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "bom.md",
+            "artifactRevision": "1faa97474ebaa0689bdb4356dfe22e87afcac45c830b42cadc877b02f2bbf0de",
+            "evidenceRevision": "e3ddef1b3447302756277e32f60af58c78d6bfdf47d735d7f3f1f37746f0e765",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "unknown",
+            "reviewReason": "no_acceptance_evidence",
+            "trackerStates": [],
+            "gateIds": [],
+            "evidenceRefs": [],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": true,
+            "unavailableReason": null,
+            "bytes": 18,
+            "mediaType": "text/markdown",
+            "webPath": "/deliverables?id=ffe2db3f71f2ac74de498e57a6ae889df4d1af1212508a9fb941b856cc345ada",
+            "vault": null
+          },
+          {
+            "id": "066df1bfe464c1397b15940857bab9ed1594e2979030985e48377f27a2ae4f37",
+            "title": "coordinator.md",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "coordinator.md",
+            "artifactRevision": "716938574e2972b183db9d26533aa39c4b0e20635763447d6005a9ad365e7cd7",
+            "evidenceRevision": "e3ddef1b3447302756277e32f60af58c78d6bfdf47d735d7f3f1f37746f0e765",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "unknown",
+            "reviewReason": "no_acceptance_evidence",
+            "trackerStates": [],
+            "gateIds": [],
+            "evidenceRefs": [],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": true,
+            "unavailableReason": null,
+            "bytes": 41,
+            "mediaType": "text/markdown",
+            "webPath": "/deliverables?id=066df1bfe464c1397b15940857bab9ed1594e2979030985e48377f27a2ae4f37",
+            "vault": null
+          },
+          {
+            "id": "65c3a9169504480e4ee6d630c8f7c309cbee90c5548722c5d80996a0f637eace",
+            "title": "draft.txt",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "draft.txt",
+            "artifactRevision": "d3378d8103402bad9f1f0e1608cc6bb35ac02749e00792330440d5e69501275d",
+            "evidenceRevision": "e3ddef1b3447302756277e32f60af58c78d6bfdf47d735d7f3f1f37746f0e765",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "draft",
+            "reviewReason": "tracker_draft",
+            "trackerStates": [
+              {
+                "id": "draft-task",
+                "status": "draft",
+                "gate": null
+              }
+            ],
+            "gateIds": [],
+            "evidenceRefs": [],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": true,
+            "unavailableReason": null,
+            "bytes": 12,
+            "mediaType": "text/plain",
+            "webPath": "/deliverables?id=65c3a9169504480e4ee6d630c8f7c309cbee90c5548722c5d80996a0f637eace",
+            "vault": null
+          },
+          {
+            "id": "b7cc3e17cd1e403d09ec4b3e7225f383f6dcb41b83c1e251281add7ebdaa4e8b",
+            "title": "escape-directory/private.txt",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "escape-directory/private.txt",
+            "artifactRevision": null,
+            "evidenceRevision": "b7a480b43e1648cd28efb8edbf3ada8edf770f78f057c5258f273343221b478d",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "unknown",
+            "reviewReason": "artifact_unavailable",
+            "trackerStates": [
+              {
+                "id": "escape-task",
+                "status": "verified",
+                "gate": null
+              }
+            ],
+            "gateIds": [],
+            "evidenceRefs": [
+              {
+                "ref": "reports:escape.txt",
+                "revision": null
+              }
+            ],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": false,
+            "unavailableReason": "unavailable",
+            "bytes": null,
+            "mediaType": "text/plain",
+            "webPath": "/deliverables?id=b7cc3e17cd1e403d09ec4b3e7225f383f6dcb41b83c1e251281add7ebdaa4e8b",
+            "vault": null
+          },
+          {
+            "id": "ab30c26cd13bf95919d091f342c3d75b843fd3c126d6c57b6c51dd20b3cf2fa8",
+            "title": "escape.txt",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "escape.txt",
+            "artifactRevision": null,
+            "evidenceRevision": "6dce5d5b91ab9c787386d665f6bca4c0407473f4ed4567d6cfb3ccc6ef62048c",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "unknown",
+            "reviewReason": "artifact_unavailable",
+            "trackerStates": [
+              {
+                "id": "escape-task",
+                "status": "verified",
+                "gate": null
+              }
+            ],
+            "gateIds": [],
+            "evidenceRefs": [
+              {
+                "ref": "reports:escape-directory/private.txt",
+                "revision": null
+              }
+            ],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": false,
+            "unavailableReason": "unavailable",
+            "bytes": null,
+            "mediaType": "text/plain",
+            "webPath": "/deliverables?id=ab30c26cd13bf95919d091f342c3d75b843fd3c126d6c57b6c51dd20b3cf2fa8",
+            "vault": null
+          },
+          {
+            "id": "21f65b485be22db61a710b53a6e08956edaa1c4f62ff6e7ad3f43845a2d8dffd",
+            "title": "evidence.txt",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "evidence.txt",
+            "artifactRevision": "dffe389087476e6aa4c9f7d01a1fbc2f2c8e4dc9ab310845f6613e51a1412619",
+            "evidenceRevision": "c3a3e7cbcebb5bcce27ef80dd21430e28d87318f4abaccf33cf0625ae1f83775",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "awaiting-verification",
+            "reviewReason": "hash_bound_coordinator_acceptance_required",
+            "trackerStates": [
+              {
+                "id": "verified-task",
+                "status": "verified",
+                "gate": null
+              }
+            ],
+            "gateIds": [],
+            "evidenceRefs": [
+              {
+                "ref": "reports:coordinator.md",
+                "revision": "716938574e2972b183db9d26533aa39c4b0e20635763447d6005a9ad365e7cd7"
+              },
+              {
+                "ref": "reports:verified note.md",
+                "revision": "fc8c9ede946c15d279977ad92d6f12832ad3d2b085647dea7d3851bd33aa84cf"
+              }
+            ],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": true,
+            "unavailableReason": null,
+            "bytes": 29,
+            "mediaType": "text/plain",
+            "webPath": "/deliverables?id=21f65b485be22db61a710b53a6e08956edaa1c4f62ff6e7ad3f43845a2d8dffd",
+            "vault": null
+          },
+          {
+            "id": "895a8e5fd03349c5d8f2e48873184b46e7e7b9201d2493e4f3c239c1c4718fa6",
+            "title": "held/offer.html",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "held/offer.html",
+            "artifactRevision": "f6132199ff70f220fcfd882288b6cb05f62ad058e153fc3fdff956e9a69fb500",
+            "evidenceRevision": "e3ddef1b3447302756277e32f60af58c78d6bfdf47d735d7f3f1f37746f0e765",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "approval-held",
+            "reviewReason": "tracker_approval_hold",
+            "trackerStates": [
+              {
+                "id": "held-task",
+                "status": "verified",
+                "gate": null
+              },
+              {
+                "id": "publish",
+                "status": "approval-held",
+                "gate": "Explicit publication approval required"
+              }
+            ],
+            "gateIds": [
+              "publish"
+            ],
+            "evidenceRefs": [],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [
+              "fixture-lead"
+            ],
+            "available": true,
+            "unavailableReason": null,
+            "bytes": 83,
+            "mediaType": "text/html-source",
+            "webPath": "/deliverables?id=895a8e5fd03349c5d8f2e48873184b46e7e7b9201d2493e4f3c239c1c4718fa6",
+            "vault": null
+          },
+          {
+            "id": "b99e96e11d4a39bfda5f0545268c1a45535c058c389c391783bb4ddaacc7089d",
+            "title": "large.txt",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "large.txt",
+            "artifactRevision": null,
+            "evidenceRevision": "e3ddef1b3447302756277e32f60af58c78d6bfdf47d735d7f3f1f37746f0e765",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "unknown",
+            "reviewReason": "artifact_unavailable",
+            "trackerStates": [],
+            "gateIds": [],
+            "evidenceRefs": [],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": false,
+            "unavailableReason": "too_large",
+            "bytes": null,
+            "mediaType": "text/plain",
+            "webPath": "/deliverables?id=b99e96e11d4a39bfda5f0545268c1a45535c058c389c391783bb4ddaacc7089d",
+            "vault": null
+          },
+          {
+            "id": "14428c8ea265d2391edd682eedf5f43c5f8e23ed1e7fd83a26c5b02bbc6dd02e",
+            "title": "moved.md",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "moved.md",
+            "artifactRevision": "064b5c0a9b2b5d5eb319d0df9bf08d7609b1c77e62010540458123ca4b45a573",
+            "evidenceRevision": "e3ddef1b3447302756277e32f60af58c78d6bfdf47d735d7f3f1f37746f0e765",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "awaiting-verification",
+            "reviewReason": "hash_bound_coordinator_acceptance_required",
+            "trackerStates": [
+              {
+                "id": "moved-task",
+                "status": "awaiting-verification",
+                "gate": null
+              }
+            ],
+            "gateIds": [],
+            "evidenceRefs": [],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": true,
+            "unavailableReason": null,
+            "bytes": 10,
+            "mediaType": "text/markdown",
+            "webPath": "/deliverables?id=14428c8ea265d2391edd682eedf5f43c5f8e23ed1e7fd83a26c5b02bbc6dd02e",
+            "vault": null
+          },
+          {
+            "id": "0e55d3025ee3c645cf8922778f115358da511c8047710c075876f5fe6e0c153b",
+            "title": "prototype/REPORT.md",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "prototype/REPORT.md",
+            "artifactRevision": "75c5b744ea929827781374d189a583f22729821218d1b7481edb1e31e1c8c4b8",
+            "evidenceRevision": "afc153109797afb9b03bd0096b159854d9d1f5687189293926779d2382305266",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "not-accepted",
+            "reviewReason": "coordinator_or_tracker_rejection",
+            "trackerStates": [
+              {
+                "id": "prototype-task",
+                "status": "verified",
+                "gate": null
+              }
+            ],
+            "gateIds": [],
+            "evidenceRefs": [
+              {
+                "ref": "reports:prototype/review.md",
+                "revision": "050be93ab93ef1c94e91ef5aa4ac59812ee09861a3a3807bc6edf63bd3e81600"
+              }
+            ],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": true,
+            "unavailableReason": null,
+            "bytes": 44,
+            "mediaType": "text/markdown",
+            "webPath": "/deliverables?id=0e55d3025ee3c645cf8922778f115358da511c8047710c075876f5fe6e0c153b",
+            "vault": null
+          },
+          {
+            "id": "240e70b16190a1a169b055e12558a67bd71d72353bfcef80bc133f753821a603",
+            "title": "prototype/review.md",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "prototype/review.md",
+            "artifactRevision": "050be93ab93ef1c94e91ef5aa4ac59812ee09861a3a3807bc6edf63bd3e81600",
+            "evidenceRevision": "afc153109797afb9b03bd0096b159854d9d1f5687189293926779d2382305266",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "not-accepted",
+            "reviewReason": "coordinator_or_tracker_rejection",
+            "trackerStates": [],
+            "gateIds": [],
+            "evidenceRefs": [
+              {
+                "ref": "reports:prototype/review.md",
+                "revision": "050be93ab93ef1c94e91ef5aa4ac59812ee09861a3a3807bc6edf63bd3e81600"
+              }
+            ],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": true,
+            "unavailableReason": null,
+            "bytes": 43,
+            "mediaType": "text/markdown",
+            "webPath": "/deliverables?id=240e70b16190a1a169b055e12558a67bd71d72353bfcef80bc133f753821a603",
+            "vault": null
+          },
+          {
+            "id": "d64aa708733234c9f335d9849e80154f0912b8876f9dc42a4cdfcbfbf0e6cfd1",
+            "title": "tracker.json",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "tracker.json",
+            "artifactRevision": "e96d759c5b41d065dae50aa81f2fcaab17faddb470dcaffb0ed6ff60207e92b6",
+            "evidenceRevision": "e3ddef1b3447302756277e32f60af58c78d6bfdf47d735d7f3f1f37746f0e765",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "unknown",
+            "reviewReason": "no_acceptance_evidence",
+            "trackerStates": [],
+            "gateIds": [],
+            "evidenceRefs": [],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": false,
+            "unavailableReason": "unsupported_format",
+            "bytes": 950,
+            "mediaType": null,
+            "webPath": "/deliverables?id=d64aa708733234c9f335d9849e80154f0912b8876f9dc42a4cdfcbfbf0e6cfd1",
+            "vault": null
+          },
+          {
+            "id": "8060cfa48cab4d9549a14940a3e2b651f6e8f6693546f4f1d3a90ea856e6500f",
+            "title": "unsupported.pdf",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "unsupported.pdf",
+            "artifactRevision": "51837589f62324f05a4d3468d248c4fbe767538385910e813e6a3dcc5cc59839",
+            "evidenceRevision": "e3ddef1b3447302756277e32f60af58c78d6bfdf47d735d7f3f1f37746f0e765",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "unknown",
+            "reviewReason": "no_acceptance_evidence",
+            "trackerStates": [],
+            "gateIds": [],
+            "evidenceRefs": [],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": false,
+            "unavailableReason": "unsupported_format",
+            "bytes": 21,
+            "mediaType": null,
+            "webPath": "/deliverables?id=8060cfa48cab4d9549a14940a3e2b651f6e8f6693546f4f1d3a90ea856e6500f",
+            "vault": null
+          },
+          {
+            "id": "b2e3feaecbe06f31fedf143d552a0a804ac431988e5c3690abfae64263170792",
+            "title": "untracked.md",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "untracked.md",
+            "artifactRevision": "608332a4c8bd0cc1e28f099b32b8a5e60990f1249b475d846c4d995cbba8b366",
+            "evidenceRevision": "e3ddef1b3447302756277e32f60af58c78d6bfdf47d735d7f3f1f37746f0e765",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "unknown",
+            "reviewReason": "no_acceptance_evidence",
+            "trackerStates": [],
+            "gateIds": [],
+            "evidenceRefs": [],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [],
+            "available": true,
+            "unavailableReason": null,
+            "bytes": 27,
+            "mediaType": "text/markdown",
+            "webPath": "/deliverables?id=b2e3feaecbe06f31fedf143d552a0a804ac431988e5c3690abfae64263170792",
+            "vault": null
+          },
+          {
+            "id": "b7e480a9d2c1137807ff5d96e7efe6b202d099b173d8ef6a953d71e4eb223ec1",
+            "title": "verified note.md",
+            "kind": "report",
+            "rootId": "reports",
+            "path": "verified note.md",
+            "artifactRevision": "fc8c9ede946c15d279977ad92d6f12832ad3d2b085647dea7d3851bd33aa84cf",
+            "evidenceRevision": "9e810a13a32c5e6267915cd3602d6b920d4a3c2bfc8203d546f08aaab6e402a4",
+            "coordinatorRevision": "3f3a311f708447a0a20c931b0a11f4721453e358167773cb32a3b346f2704089",
+            "reviewState": "awaiting-verification",
+            "reviewReason": "verification_revision_mismatch",
+            "trackerStates": [
+              {
+                "id": "verified-task",
+                "status": "verified",
+                "gate": null
+              }
+            ],
+            "gateIds": [],
+            "evidenceRefs": [
+              {
+                "ref": "reports:coordinator.md",
+                "revision": "716938574e2972b183db9d26533aa39c4b0e20635763447d6005a9ad365e7cd7"
+              },
+              {
+                "ref": "reports:evidence.txt",
+                "revision": "dffe389087476e6aa4c9f7d01a1fbc2f2c8e4dc9ab310845f6613e51a1412619"
+              }
+            ],
+            "sourceIds": [
+              "reports",
+              "tracker:reports",
+              "pipeline"
+            ],
+            "leadIds": [
+              "fixture-lead"
+            ],
+            "available": true,
+            "unavailableReason": null,
+            "bytes": 38,
+            "mediaType": "text/markdown",
+            "webPath": "/deliverables?id=b7e480a9d2c1137807ff5d96e7efe6b202d099b173d8ef6a953d71e4eb223ec1",
+            "vault": null
+          },
+          {
+            "id": "2dbfe6807797a7101fd87475e0f1837286878545f5294b08db1c724c0a6f3f38",
+            "title": "publish",
+            "kind": "gate",
+            "rootId": "reports",
+            "path": null,
+            "artifactRevision": null,
+            "evidenceRevision": "e96d759c5b41d065dae50aa81f2fcaab17faddb470dcaffb0ed6ff60207e92b6",
+            "coordinatorRevision": null,
+            "reviewState": "approval-held",
+            "reviewReason": "tracker_gate_only",
+            "trackerStates": [
+              {
+                "id": "publish",
+                "status": "approval-held",
+                "gate": "Explicit publication approval required"
+              }
+            ],
+            "gateIds": [
+              "publish"
+            ],
+            "evidenceRefs": [],
+            "sourceIds": [
+              "tracker:reports"
+            ],
+            "leadIds": [],
+            "available": false,
+            "unavailableReason": "no_artifact",
+            "bytes": null,
+            "mediaType": null,
+            "webPath": "/deliverables?id=2dbfe6807797a7101fd87475e0f1837286878545f5294b08db1c724c0a6f3f38",
+            "vault": null
+          },
+          {
+            "id": "80b54e45598d87f4c689dc356818cce1982cc2f2ad2100a01d56ed43c4e537c5",
+            "title": "Terms with spaces",
+            "kind": "vault",
+            "rootId": "vault",
+            "path": "Clients/A & B/Terms #1.md",
+            "artifactRevision": "5dbc04f3c40d6ede12d69ad828d303c30be4237a9625dc59a1f91c2a3138577e",
+            "evidenceRevision": null,
+            "coordinatorRevision": null,
+            "reviewState": "unknown",
+            "reviewReason": "no_acceptance_evidence",
+            "trackerStates": [],
+            "gateIds": [],
+            "evidenceRefs": [],
+            "sourceIds": [
+              "vault",
+              "pipeline"
+            ],
+            "leadIds": [
+              "fixture-lead"
+            ],
+            "available": true,
+            "unavailableReason": null,
+            "bytes": 57,
+            "mediaType": "text/markdown",
+            "webPath": "/deliverables?id=80b54e45598d87f4c689dc356818cce1982cc2f2ad2100a01d56ed43c4e537c5",
+            "vault": {
+              "name": "Vault with spaces",
+              "path": "0800 Preciado Tech/Web Dev Pipeline/Clients/A & B/Terms #1.md",
+              "metadata": {
+                "path": "0800 Preciado Tech/Web Dev Pipeline/Clients/A & B/Terms #1.md",
+                "title": "Terms with spaces",
+                "updated": "2026-10-03",
+                "group": "Clients",
+                "bytes": 57,
+                "isClientDoc": true
+              }
+            }
+          }
+        ],
+        "count": 19,
+        "complete": true,
+        "nextCursor": null,
+        "maxContentBytes": 262144
+      },
+      "errors": []
+    }
+  }
+]

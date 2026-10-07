@@ -66,6 +66,12 @@ export function Sidebar() {
             {section.items.map(item => {
               const active = isRouteActive(pathname, item.id)
               const count = item.id === '/kanban' ? needsYou : 0
+              if (item.enabled === false) return (
+                <span key={item.id} className={styles.link} aria-disabled="true" title={`${item.label}: ${item.blockedReason}`}>
+                  <Icon name={item.icon} size={18} />
+                  <span className={styles.label}>{item.label} · Disabled<small style={{ display: 'block', whiteSpace: 'normal' }}>{item.blockedReason}</small></span>
+                </span>
+              )
               return (
                 <Link
                   key={item.id}

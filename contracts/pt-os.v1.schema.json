@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Preciado Tech OS v1 envelope",
+  "description": "Frozen revision pt-os.v1. dataRevision follows source revisions; generatedAt never renews evidence. Empty successful data differs from unavailable null data.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contractRevision",
+    "snapshotId",
+    "dataRevision",
+    "generatedAt",
+    "validUntil",
+    "sources",
+    "data",
+    "errors"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "contractRevision": {
+      "const": "pt-os.v1"
+    },
+    "snapshotId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "dataRevision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "validUntil": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/source"
+      }
+    },
+    "data": {
+      "description": "Feature-specific JSON payload or null when unavailable. Never invent zero for missing evidence."
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/error"
+      }
+    }
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "revision",
+        "sourceAt",
+        "observedAt",
+        "lastSuccessAt",
+        "freshness",
+        "blocked",
+        "reason"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "sourceAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "observedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "lastSuccessAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "freshness": {
+          "enum": [
+            "fresh",
+            "stale",
+            "unknown",
+            "error"
+          ]
+        },
+        "blocked": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "freshnessBasis": {
+          "enum": [
+            "inventory",
+            "fact"
+          ],
+          "description": "Inventory freshness uses lastSuccessAt (scan); fact freshness uses sourceAt (producer evidence). Older v1 sources may omit this annotation."
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceId",
+        "code"
+      ],
+      "properties": {
+        "sourceId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

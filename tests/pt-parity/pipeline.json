@@ -1,0 +1,82 @@
+{
+  "updated_at": "2026-10-03T14:01:09.268Z",
+  "leads": [
+    {
+      "id": "lead-yourk-heating-and-air-conditioning",
+      "business_name": "Yourk Heating & Air Conditioning",
+      "stage": "leads_found",
+      "created_at": "2026-06-10T07:03:22.058Z",
+      "updated_at": "2026-06-10T07:04:04.911Z"
+    },
+    {
+      "id": "lead-roofing-modesto-pro",
+      "business_name": "Roofing Modesto Pro",
+      "stage": "concept_ready",
+      "created_at": "2026-06-09T23:45:00Z",
+      "updated_at": "2026-08-22T23:28:35.758Z",
+      "development": {
+        "status": "Preview HTML generated; not yet enhanced or deployed",
+        "progress_pct": 50
+      },
+      "extra_data": {}
+    },
+    {
+      "id": "lead-mosquito-squad-of-modesto",
+      "business_name": "Mosquito Squad of Modesto",
+      "stage": "awaiting_approval",
+      "created_at": "2026-06-10T07:03:22.249Z",
+      "updated_at": "2026-09-17T14:00:55.276Z",
+      "extra_data": {}
+    },
+    {
+      "id": "lead-loves-air",
+      "business_name": "Loves Air",
+      "stage": "completed",
+      "created_at": "2026-06-10T07:03:22.062Z",
+      "updated_at": "2026-09-17T14:00:55.265Z",
+      "extra_data": {}
+    },
+    {
+      "id": "fixture-held",
+      "business_name": "Held fixture",
+      "stage": "awaiting_approval",
+      "updated_at": "2026-10-01T16:00:00Z",
+      "approval": {
+        "status": "approved"
+      },
+      "extra_data": {
+        "review": "held",
+        "reviewed_at": "2026-10-02T16:00:00Z"
+      }
+    },
+    {
+      "id": "fixture-archived",
+      "business_name": "Archived fixture",
+      "stage": "completed",
+      "archived": true,
+      "updated_at": "2026-09-01T16:00:00Z"
+    },
+    {
+      "id": "fixture-duplicate",
+      "business_name": "Duplicate fixture",
+      "stage": "concept_ready",
+      "updated_at": "2026-10-02T16:00:00Z"
+    },
+    {
+      "id": "fixture-duplicate",
+      "business_name": "Duplicate fixture",
+      "stage": "concept_ready",
+      "updated_at": "2026-10-02T16:00:00Z"
+    },
+    null,
+    {
+      "id": "fixture-corrupt",
+      "business_name": "Corrupt fixture",
+      "stage": "not-a-stage"
+    },
+    {
+      "id": "fixture-missing-name",
+      "stage": "leads_found"
+    }
+  ]
+}

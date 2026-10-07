@@ -60,7 +60,7 @@ export type CrewMember = {
   role: string
   station: string
   room: string
-  status: 'active' | 'standby' | 'sleeping' | 'on-demand' | 'attention' | 'offline'
+  status: 'active' | 'standby' | 'sleeping' | 'on-demand' | 'attention' | 'offline' | 'unknown'
   model?: string
   signal: string
   lastRun?: string
@@ -370,6 +370,7 @@ export type MissionData = {
   cron: MissionCron[]
   projects: MissionProject[]
   crew: CrewMember[]
+  crewSnapshot?: import('./pt/contract').E<import('./pt/crew').CrewProjection>
   memory: MemoryEntry[]
   github: GitHubActivity
   costs: CostDashboard

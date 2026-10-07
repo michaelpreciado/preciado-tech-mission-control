@@ -78,13 +78,13 @@ test('scanner skips unreadable files and symlinks without losing readable notes'
   await fs.writeFile(path.join(root, 'bad.md'), '# Private')
   await fs.symlink(root, path.join(root, 'cycle'))
   await fs.symlink(path.join(root, 'good.md'), path.join(root, 'linked.md'))
-  const readFile = fs.readFile
-  fs.readFile = async (file, ...args) => {
+  const open = fs.open
+  fs.open = async (file, ...args) => {
     if (String(file).endsWith('/bad.md')) throw Object.assign(new Error('Denied'), { code: 'EACCES' })
-    return readFile(file, ...args)
+    return open(file, ...args)
   }
   try { assert.deepEqual((await scanVaultDocs()).map(d => d.title), ['Good']) }
-  finally { fs.readFile = readFile }
+  finally { fs.open = open }
 })
 
 test('client metadata joins raw docs_path by id, counts descendants and excludes neighboring folders', async () => {
@@ -95,7 +95,7 @@ test('client metadata joins raw docs_path by id, counts descendants and excludes
   const original = JSON.stringify({ leads: [
     { id: 'a', docs_path: folder }, { lead_id: 'absolute', docs_path: path.join(vault, folder) },
     { id: 'none' }, { id: 'outside', docs_path: '../other-vault' }, { id: 'missing', docs_path: `${PIPELINE_VAULT_PATH}/Clients/Missing` },
-  ] })
+  ].map(lead => ({ business_name: 'Fixture', stage: 'leads_found', ...lead })) })
   await fs.writeFile(path.join(temp, 'pipeline.json'), original)
   assert.deepEqual(await collectVaultClientDocs(await scanVaultDocs()), [
     { leadId: 'a', path: folder, count: 2 }, { leadId: 'absolute', path: folder, count: 2 },
@@ -119,7 +119,7 @@ test('vault GET enforces pipeline authorization, returns metadata, and handles m
   assert.equal((await allowed.json()).docs.length, 3)
   process.env.MC_VAULT_DIR = path.join(temp, 'missing-api')
   resetConfigCache()
-  const empty = await GET(request({}))
+  const empty = await GET(request({ authorization: 'Bearer vault-test-only' }))
   assert.equal(empty.status, 200)
   const data = await empty.json()
   assert.equal(data.vaultDir, process.env.MC_VAULT_DIR)

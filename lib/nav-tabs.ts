@@ -10,19 +10,27 @@
  * code (or anything else) into the Setup page's bundle.
  */
 import type { IconName } from '@/components/icons'
+import { COMMAND_GROUPS, type DestinationId } from './pt/catalog'
 
-export type NavItem = { id: string; label: string; icon: IconName }
+export type NavItem = { id: string; label: string; icon: IconName; destinationId?: DestinationId; enabled?: boolean; blockedReason?: string | null }
 export type NavSection = { section: string; items: NavItem[] }
 
+export const COMMAND_ICONS: Record<DestinationId, IconName> = { pipeline: 'pipeline', crew: 'team', command: 'deck', deliverables: 'projects' }
+
+export const COMMAND_NAV: NavSection[] = COMMAND_GROUPS.map(group => ({
+  section: group.practiceArea,
+  items: group.commands.map(command => ({ id: command.webPath, destinationId: command.id, label: command.label, icon: COMMAND_ICONS[command.id], enabled: command.enabled, blockedReason: command.blockedReason })),
+}))
+
+// Existing workspace tools stay reachable; business destinations come only from the catalog.
 export const NAV: NavSection[] = [
+  ...COMMAND_NAV,
   { section: 'Now', items: [
     { id: '/', label: 'Home', icon: 'deck' },
     { id: '/kanban', label: 'Kanban', icon: 'kanban' },
-    { id: '/crew', label: 'Crew', icon: 'team' },
     { id: '/chat', label: 'Chat', icon: 'chat' },
   ]},
   { section: 'Operations', items: [
-    { id: '/pipeline', label: 'Pipeline', icon: 'pipeline' },
     { id: '/projects', label: 'Clients', icon: 'projects' },
     { id: '/content-creation', label: 'Content Creation', icon: 'content' },
     { id: '/calendar', label: 'Calendar', icon: 'calendar' },

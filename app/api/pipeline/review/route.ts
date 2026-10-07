@@ -3,6 +3,7 @@ import fs from 'node:fs/promises'
 import { assertSameOrigin } from '@/lib/mission-api'
 import { pipelineStore, upsertLead } from '@/lib/pipeline-data'
 import { logger } from '@/lib/logger'
+import { isReadAuthorized } from '@/lib/pt/read-auth'
 
 export const dynamic = 'force-dynamic'
 const SECRET = process.env.INTERNAL_API_SECRET
@@ -27,7 +28,7 @@ async function findLead(id: string) {
 }
 
 export async function GET(req: NextRequest) {
-  if (!isAuthorized(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  if (!await isReadAuthorized(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   const id = req.nextUrl.searchParams.get('lead_id')
   if (!id) return NextResponse.json({ error: 'missing lead_id' }, { status: 400 })
   try {

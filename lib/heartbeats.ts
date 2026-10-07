@@ -1,8 +1,9 @@
 import type { AgentHeartbeat } from './types'
 import fs from 'node:fs'
 import path from 'node:path'
+import { CADENCE } from './pt/contract'
 
-const TTL_MS = 5 * 60 * 1000 // 5 minutes
+const TTL_MS = CADENCE.crew.heartbeatTtlMs
 const PERSIST_INTERVAL_MS = 10 * 1000
 const HEARTBEATS_FILE = path.join(process.cwd(), 'data', 'heartbeats.json')
 
@@ -75,19 +76,29 @@ export function recordHeartbeat(id: string, status: AgentHeartbeat['status'], cu
 
 export function getHeartbeats(): AgentHeartbeat[] {
   const now = Date.now()
-  // Evict expired entries
-  for (const [key, hb] of store) {
-    if (now - hb.receivedAt > TTL_MS) store.delete(key)
-  }
-  return [...store.values()]
+  // Legacy fresh-only API. Never erase dated observations during a read.
+  return [...store.values()].filter(hb => now >= hb.receivedAt && now - hb.receivedAt <= TTL_MS)
 }
 
 export function getHeartbeat(id: string): AgentHeartbeat | undefined {
   const hb = store.get(id)
   if (!hb) return undefined
-  if (Date.now() - hb.receivedAt > TTL_MS) {
-    store.delete(id)
-    return undefined
-  }
+  if (Date.now() < hb.receivedAt || Date.now() - hb.receivedAt > TTL_MS) return undefined
   return hb
+}
+
+/** Read-only inventory for crew: expired and future reports remain visible.
+ * Read the file each time so another process's report is visible. No persistence,
+ * pruning, credentials, or inferred presence; only an explicit field allowlist. */
+export function readHeartbeatObservations(file = HEARTBEATS_FILE): {
+  read: 'success' | 'missing' | 'error'; observations: AgentHeartbeat[]; invalidRecords: number
+} {
+  try {
+    const raw: unknown = JSON.parse(fs.readFileSync(file, 'utf8'))
+    if (!Array.isArray(raw)) return { read: 'error', observations: [], invalidRecords: 0 }
+    const observations = raw.filter(isHeartbeat).map(hb => ({ id: hb.id, status: hb.status, receivedAt: hb.receivedAt, currentTask: hb.currentTask }))
+    return { read: 'success', observations, invalidRecords: raw.length - observations.length }
+  } catch (error) {
+    return { read: (error as NodeJS.ErrnoException).code === 'ENOENT' ? 'missing' : 'error', observations: [], invalidRecords: 0 }
+  }
 }

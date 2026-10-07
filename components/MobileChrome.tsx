@@ -97,7 +97,12 @@ function MoreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
             <section key={sec.section} className={styles.section} aria-label={sec.section}>
               <p className={styles.sectionLabel}>{sec.section}</p>
               <div className={styles.grid}>
-                {items.map(it => (
+                {items.map(it => it.enabled === false ? (
+                  <span key={it.id} className={styles.cell} aria-disabled="true">
+                    <Icon name={it.icon} size={18} />
+                    <span>{it.label} · Disabled<small style={{ display: 'block', overflowWrap: 'anywhere' }}>{it.blockedReason}</small></span>
+                  </span>
+                ) : (
                   <Link key={it.id} href={it.id} aria-current={isActive(pathname, it.id) ? 'page' : undefined} className={styles.cell} onClick={onClose}>
                     <Icon name={it.icon} size={18} />
                     <span>{it.label}</span>

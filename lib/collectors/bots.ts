@@ -63,14 +63,8 @@ export type Bot = {
   messages: number
   /** Max message timestamp across the bot's sessions, epoch ms. */
   lastActiveAt: number | null
-  /** Hermes' canonical forever-chat session, if the profile has one. */
-  canonicalSessionId: string | null
   /** Max message timestamp in the canonical Bot Chat, epoch ms. */
   canonicalLastActiveAt: number | null
-  /** The bot's Telegram connection token (full value) from its profile
-   *  `.env`, or null when the profile has none on file. Displayed masked;
-   *  copied in full so Michael can re-wire a bot from the roster. */
-  telegramToken: string | null
   routineCount: number
   routines: BotRoutine[]
   /** First letter of the name, upper-cased — a placeholder avatar. */
@@ -240,32 +234,6 @@ function readGateway(entry: ProfileEntry): BotGateway {
   }
 }
 
-/* ── profile .env read (connection token) ───────────────── */
-
-/** Best-effort `TELEGRAM_BOT_TOKEN` from the profile's own `.env` — for the
- *  default profile that's `<hermes-root>/.env`, for named profiles
- *  `<profile dir>/.env` (entry.dir covers both). The value is never logged;
- *  it reaches the dashboard only so the human can copy it to re-wire a bot. */
-function readTelegramToken(entry: ProfileEntry): string | null {
-  const file = path.join(entry.dir, '.env')
-  try {
-    if (!fs.existsSync(file)) return null
-    const m = fs.readFileSync(file, 'utf8').match(/^\s*TELEGRAM_BOT_TOKEN\s*=\s*(.*)$/m)
-    if (!m) return null
-    let value = m[1].trim()
-    const q = value[0]
-    if ((q === '"' || q === "'") && value.length > 1 && value.endsWith(q)) {
-      value = value.slice(1, -1)
-    } else {
-      value = value.split(/\s+#/)[0].trim()
-    }
-    return value.length ? value : null
-  } catch (err) {
-    logger.error('bots/token', err)
-    return null
-  }
-}
-
 /* ── routines (namespaced cron jobs) ────────────────────── */
 
 const ROUTINE_NS = /^\[bot:\s*([^\]]+)\]\s*(.*)$/i
@@ -305,6 +273,44 @@ async function routinesByBot(): Promise<Map<string, BotRoutine[]>> {
 
 /* ── Public API ──────────────────────────────────────────── */
 
+/** Explicit server-side allowlist, including nested objects. Extra runtime keys
+ * (even if introduced by a future collector) never become status DTO fields.
+ * readBotDb may use session IDs internally; the public collector never reads .env. */
+export function toBotStatus(bot: Bot): Bot {
+  return {
+    name: bot.name,
+    isDefault: bot.isDefault,
+    model: bot.model,
+    gateway: {
+      status: bot.gateway.status,
+      detail: bot.gateway.detail,
+      updatedAt: bot.gateway.updatedAt,
+      platforms: bot.gateway.platforms?.map(platform => ({
+        name: platform.name,
+        state: platform.state,
+        needsAttention: platform.needsAttention,
+      })),
+    },
+    sessions: bot.sessions,
+    messages: bot.messages,
+    lastActiveAt: bot.lastActiveAt,
+    canonicalLastActiveAt: bot.canonicalLastActiveAt,
+    routineCount: bot.routineCount,
+    routines: bot.routines.map(routine => ({
+      id: routine.id,
+      routine: routine.routine,
+      name: routine.name,
+      enabled: routine.enabled,
+      schedule: routine.schedule,
+      cadence: routine.cadence,
+      nextRunAt: routine.nextRunAt,
+      lastRunAt: routine.lastRunAt,
+      lastRunStatus: routine.lastRunStatus,
+    })),
+    avatarInitial: bot.avatarInitial,
+  }
+}
+
 /** Every local Bot (Hermes profile) with its metadata + routine readout.
  *  Pass `refresh = true` to bypass the short TTL (used right after a
  *  create/delete so the caller sees the on-disk truth immediately). */
@@ -313,13 +319,12 @@ export async function collectBots(refresh = false): Promise<BotsSnapshot> {
 }
 
 async function collectBotsFresh(): Promise<BotsSnapshot> {
-  const now = Date.now()
   const [profiles, routineMap] = [discoverProfiles(), await routinesByBot()]
 
   const bots: Bot[] = profiles.map(entry => {
     const db = readBotDb(entry.dbPath)
     const routines = routineMap.get(entry.name) ?? []
-    return {
+    return toBotStatus({
       name: entry.name,
       isDefault: entry.isDefault,
       model: db.model,
@@ -327,13 +332,11 @@ async function collectBotsFresh(): Promise<BotsSnapshot> {
       sessions: db.sessions,
       messages: db.messages,
       lastActiveAt: db.lastActiveAt,
-      canonicalSessionId: db.canonicalSessionId,
       canonicalLastActiveAt: db.canonicalLastActiveAt,
-      telegramToken: readTelegramToken(entry),
       routineCount: routines.length,
       routines,
       avatarInitial: (entry.name[0] || '?').toUpperCase(),
-    }
+    })
   })
 
   bots.sort((a, b) => (b.lastActiveAt ?? 0) - (a.lastActiveAt ?? 0))

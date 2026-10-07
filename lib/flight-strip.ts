@@ -1,5 +1,6 @@
-import type { HermesTask, CrewMember } from './types'
-import type { Bot } from './collectors/bots'
+import type { HermesTask } from './types'
+import { CADENCE } from './pt/contract'
+import { classifyWorker, isCrewUnassigned, type CrewProjection } from './pt/crew'
 
 /* Pure derivation for the Home brief, Kanban lanes and Crew roster.
    Nothing here fetches or mutates; every function takes the data it needs. */
@@ -17,8 +18,7 @@ export const LANE_LABEL: Record<LaneId, string> = {
 }
 
 /** A worker counts as live only if it heartbeated inside this window. */
-export const WORKER_FRESH_MS = 10 * 60_000
-const CLOCK_SKEW_MS = 60_000
+export const WORKER_FRESH_MS = CADENCE.crew.workerWindowMs
 
 const LANE_BY_STATUS: Record<string, LaneId> = {
   review: 'needs_you',
@@ -53,20 +53,14 @@ export function laneFor(status: string): LaneId {
 }
 
 export function isUnassigned(assignee: string | null | undefined): boolean {
-  const v = (assignee ?? '').trim().toLowerCase()
-  return v === '' || v === 'none' || v === 'unassigned'
+  return isCrewUnassigned(assignee)
 }
 
 const isRunningStatus = (status: string) => status === 'running' || status === 'in_progress'
 
 export function workerState(task: HermesTask, now: number): WorkerState {
   if (!isRunningStatus(task.status)) return 'not-running'
-  if (task.currentRunId == null) return 'no-worker'
-  const stamp = task.lastHeartbeatAt ?? task.startedAt
-  const at = stamp ? Date.parse(stamp) : NaN
-  if (!Number.isFinite(at)) return 'no-worker'
-  const age = now - at
-  return age >= -CLOCK_SKEW_MS && age <= WORKER_FRESH_MS ? 'live' : 'no-worker'
+  return classifyWorker(task, new Date(now).toISOString()).kind === 'confirmed-worker' ? 'live' : 'no-worker'
 }
 
 export function toneFor(task: HermesTask, now: number): StripTone {
@@ -167,143 +161,7 @@ export function taskSort(a: HermesTask, b: HermesTask, pinned: Set<string>): num
   return at - bt
 }
 
-/* ── Crew roster ─────────────────────────────────────────────────── */
-
-export type RosterState = 'working' | 'attention' | 'degraded' | 'idle' | 'offline'
-
-export type RosterRow = {
-  name: string
-  role: string | null
-  model: string | null
-  state: RosterState
-  stateLabel: string
-  detail: string
-  /** Only present when the gateway actually reported a status. */
-  gateway: { status: 'running' | 'degraded' | 'stopped'; detail: string } | null
-  /** The task a live worker is on right now. */
-  task: HermesTask | null
-  counts: { live: number; tracked: number; blocked: number; failed: number; review: number; queued: number }
-  lastActiveAt: number | null
-}
-
-export type Roster = {
-  rows: RosterRow[]
-  unowned: { count: number; tasks: HermesTask[] }
-}
-
-const STATE_ORDER: Record<RosterState, number> = { working: 0, attention: 1, degraded: 2, idle: 3, offline: 4 }
-const STATE_LABEL: Record<RosterState, string> = {
-  working: 'Working',
-  attention: 'Needs you',
-  degraded: 'Degraded',
-  idle: 'Idle',
-  offline: 'Offline',
-}
-
-const norm = (s: string | null | undefined) => (s ?? '').trim().toLowerCase()
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
-
-/* Copies only display-safe fields. Bot records also carry a Telegram token and
-   session ids, which must never reach a rendered row. */
-export function buildRoster(input: {
-  bots: Bot[]
-  crew: CrewMember[]
-  tasks: HermesTask[]
-  now: number
-}): Roster {
-  const { bots, crew, tasks, now } = input
-
-  type Identity = { name: string; role: string | null; model: string | null; bot: Bot | null; crew: CrewMember | null }
-  const identities = new Map<string, Identity>()
-
-  for (const bot of bots) {
-    identities.set(norm(bot.name), { name: bot.name, role: null, model: bot.model ?? null, bot, crew: null })
-  }
-  for (const member of crew) {
-    const key = [norm(member.id), norm(member.name)].find(k => identities.has(k)) ?? norm(member.id)
-    const existing = identities.get(key)
-    if (existing) {
-      existing.role = member.role || existing.role
-      existing.model = existing.model ?? member.model ?? null
-      existing.crew = member
-    } else {
-      identities.set(key, { name: String(member.id), role: member.role || null, model: member.model ?? null, bot: null, crew: member })
-    }
-  }
-
-  const tasksByOwner = new Map<string, HermesTask[]>()
-  const unownedTasks: HermesTask[] = []
-  for (const t of tasks) {
-    if (laneFor(t.status) === 'done') continue
-    if (isUnassigned(t.assignee)) { unownedTasks.push(t); continue }
-    const key = norm(t.assignee)
-    const list = tasksByOwner.get(key)
-    if (list) list.push(t)
-    else tasksByOwner.set(key, [t])
-  }
-  for (const [key, list] of tasksByOwner) {
-    if (!identities.has(key)) {
-      identities.set(key, { name: (list[0].assignee ?? key).trim(), role: null, model: null, bot: null, crew: null })
-    }
-  }
-
-  const rows: RosterRow[] = []
-  for (const [key, id] of identities) {
-    const owned = tasksByOwner.get(key) ?? []
-    const live = owned.filter(t => workerState(t, now) === 'live')
-    const counts = {
-      live: live.length,
-      tracked: owned.filter(t => isRunningStatus(t.status) && workerState(t, now) !== 'live').length,
-      blocked: owned.filter(t => t.status === 'blocked').length,
-      failed: owned.filter(t => t.status === 'failed').length,
-      review: owned.filter(t => t.status === 'review').length,
-      queued: owned.filter(t => laneFor(t.status) === 'up_next').length,
-    }
-    const needs = counts.blocked + counts.failed + counts.review
-
-    const reported = id.bot?.gateway.status
-    const gateway = reported && reported !== 'unknown'
-      ? { status: reported, detail: id.bot!.gateway.detail }
-      : null
-
-    let state: RosterState
-    if (live.length > 0) state = 'working'
-    else if (gateway?.status === 'degraded') state = 'degraded'
-    else if (needs > 0) state = 'attention'
-    else if (gateway?.status === 'stopped' || id.crew?.status === 'offline') state = 'offline'
-    else if (id.crew?.status === 'attention') state = 'attention'
-    else state = 'idle'
-
-    const bits: string[] = []
-    if (live.length) bits.push(`${plural(live.length, 'live worker', 'live workers')}`)
-    if (needs) bits.push(`${needs} waiting on you`)
-    if (counts.tracked) bits.push(`${counts.tracked} marked running · no live worker`)
-    if (counts.queued) bits.push(`${counts.queued} queued`)
-    if (state === 'degraded' && gateway) bits.unshift(gateway.detail)
-    const detail = bits.length ? bits.join(' · ') : 'No open tasks'
-
-    rows.push({
-      name: id.name,
-      role: id.role,
-      model: id.model,
-      state,
-      stateLabel: STATE_LABEL[state],
-      detail,
-      gateway,
-      task: live[0] ?? null,
-      counts,
-      lastActiveAt: id.bot?.lastActiveAt ?? null,
-    })
-  }
-
-  rows.sort((a, b) => STATE_ORDER[a.state] - STATE_ORDER[b.state] || a.name.localeCompare(b.name))
-
-  const noPins = new Set<string>()
-  return {
-    rows,
-    unowned: {
-      count: unownedTasks.length,
-      tasks: unownedTasks.sort((a, b) => taskSort(a, b, noPins)),
-    },
-  }
+/** Roster adapter accepts only the canonical projection, never role/cron guesses. */
+export function buildRoster(projection: CrewProjection | null) {
+  return { rows: projection?.members ?? [], unowned: { count: projection?.counts.unassignedTasks ?? null, tasks: projection?.tasks?.filter(t => t.assignee === null && !['done', 'archived'].includes(t.status)) ?? [] } }
 }

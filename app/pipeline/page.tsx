@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
+import { THEME_CSS_VARIABLES } from '@/lib/pt/theme'
 import dynamic from 'next/dynamic'
 import { PageHeader } from '@/components/PageHeader'
 import { Button, Card, CardHead } from '@/components/ui'
@@ -12,9 +13,9 @@ const PipelineBoard = dynamic(() => import('@/components/PipelineBoard').then(m 
 
 export default function PipelinePage() {
   const [showDocs, setShowDocs] = useState(false)
-  return <div className={styles.page}>
+  return <div className={`${styles.page} ${styles.radar}`} style={THEME_CSS_VARIABLES as CSSProperties}>
     <CommandHeader />
-    <PageHeader eyebrow="~/pipeline · FUNNEL-STATE" title="PIPELINE" subtitle="Move clients from first contact to delivery." />
+    <PageHeader eyebrow="~/pipeline · FUNNEL-STATE" title="PIPELINE" subtitle="Pipeline evidence, decisions, and dated progress." />
     <VaultDocumentsProvider>
       <PipelineBoard />
       <Card className={styles.documents}>

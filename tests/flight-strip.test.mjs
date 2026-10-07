@@ -4,6 +4,7 @@ import {
   LANE_ORDER, WORKER_FRESH_MS, laneFor, isUnassigned, workerState, toneFor, stateWord,
   summarizeKanban, briefSentence, needsYouTasks, upNextTasks, taskSort, buildRoster,
 } from '../lib/flight-strip.ts'
+import { projectCrew } from '../lib/pt/crew.ts'
 
 const NOW = Date.parse('2026-09-29T22:00:00Z')
 const iso = (msAgo) => new Date(NOW - msAgo).toISOString()
@@ -39,8 +40,8 @@ test('workerState only calls a task live with a current run and a fresh heartbea
   assert.equal(workerState(task({ status: 'running', lastHeartbeatAt: fresh }), NOW), 'no-worker')
   // run attached but heartbeat is stale
   assert.equal(workerState(task({ status: 'running', currentRunId: 4, lastHeartbeatAt: iso(WORKER_FRESH_MS + 1000) }), NOW), 'no-worker')
-  // no heartbeat at all: falls back to startedAt, still bounded by the window
-  assert.equal(workerState(task({ status: 'running', currentRunId: 4, startedAt: iso(30_000) }), NOW), 'live')
+  // Start time only establishes tracked work, never a confirmed worker.
+  assert.equal(workerState(task({ status: 'running', currentRunId: 4, startedAt: iso(30_000) }), NOW), 'no-worker')
   assert.equal(workerState(task({ status: 'running', currentRunId: 4, startedAt: iso(WORKER_FRESH_MS * 3) }), NOW), 'no-worker')
   assert.equal(workerState(task({ status: 'running', currentRunId: 4 }), NOW), 'no-worker')
   // unparsable / future heartbeat cannot prove liveness
@@ -147,94 +148,11 @@ test('taskSort keeps the existing board ordering: pinned, blocked/failed, failur
   assert.deepEqual([...list].sort((a, b) => taskSort(a, b, pins)).map(t => t.id), ['p', 'blk', 'flaky', 'old'])
 })
 
-/* ── Crew roster ─────────────────────────────────────────────────── */
-
-const bot = (over = {}) => ({
-  name: 'forge', isDefault: false, model: 'claude-opus-5-5',
-  gateway: { status: 'unknown', detail: 'no gateway file' }, sessions: 3, messages: 40,
-  lastActiveAt: NOW - 3_600_000, canonicalSessionId: 'sess-SECRET', canonicalLastActiveAt: NOW,
-  telegramToken: '123456:SECRET-TOKEN', routineCount: 0, routines: [], avatarInitial: 'F', ...over,
-})
-
-test('buildRoster never carries the Telegram token or session ids into a row', () => {
-  const roster = buildRoster({ bots: [bot()], crew: [], tasks: [], now: NOW })
-  const json = JSON.stringify(roster)
-  assert.doesNotMatch(json, /SECRET/)
-  assert.doesNotMatch(json, /telegram/i)
-  assert.doesNotMatch(json, /canonicalSessionId|sessionId/)
-})
-
-test('buildRoster merges bots, persona crew and task assignees into one row per agent', () => {
-  const roster = buildRoster({
-    bots: [bot({ name: 'friday', model: 'gpt-6.1-sol' }), bot({ name: 'forge' })],
-    crew: [{ id: 'friday', name: 'Friday', role: 'Chief of staff', status: 'active', signal: 'ok', station: 's', room: 'r', accent: '#fff' }],
-    tasks: [
-      task({ id: 'c1', status: 'blocked', assignee: 'codex' }),
-      task({ id: 'f1', status: 'done', assignee: 'ghost' }),
-    ],
-    now: NOW,
-  })
-  const names = roster.rows.map(r => r.name)
-  assert.equal(new Set(names).size, names.length, 'no duplicate agents')
-  assert.ok(names.includes('friday') && names.includes('forge') && names.includes('codex'))
-  assert.ok(!names.includes('ghost'), 'agents whose only tasks are done do not get a row')
-  const friday = roster.rows.find(r => r.name === 'friday')
-  assert.equal(friday.role, 'Chief of staff')
-  assert.equal(friday.model, 'gpt-6.1-sol')
-  const codex = roster.rows.find(r => r.name === 'codex')
-  assert.equal(codex.model, null)
-})
-
-test('buildRoster shows the task an agent is actually on, and only for a live worker', () => {
-  const live = task({ id: 'live', title: 'Ship it', status: 'running', assignee: 'forge', currentRunId: 2, lastHeartbeatAt: iso(1000) })
-  const tracked = task({ id: 'trk', title: 'Tracked only', status: 'running', assignee: 'sage' })
-  const roster = buildRoster({ bots: [bot(), bot({ name: 'sage' })], crew: [], tasks: [live, tracked], now: NOW })
-  const forge = roster.rows.find(r => r.name === 'forge')
-  const sage = roster.rows.find(r => r.name === 'sage')
-  assert.equal(forge.state, 'working')
-  assert.equal(forge.task.id, 'live')
-  assert.equal(sage.state, 'idle')
-  assert.equal(sage.task, null)
-  assert.match(sage.detail, /no live worker/i)
-})
-
-test('buildRoster reports gateway health only where it is actually reported', () => {
-  const roster = buildRoster({
-    bots: [
-      bot({ name: 'forge', gateway: { status: 'unknown', detail: 'x' } }),
-      bot({ name: 'jarvis', gateway: { status: 'degraded', detail: 'telegram needs attention' } }),
-      bot({ name: 'scout', gateway: { status: 'running', detail: 'ok' } }),
-    ],
-    crew: [], tasks: [], now: NOW,
-  })
-  assert.equal(roster.rows.find(r => r.name === 'forge').gateway, null)
-  assert.equal(roster.rows.find(r => r.name === 'jarvis').gateway.status, 'degraded')
-  assert.equal(roster.rows.find(r => r.name === 'jarvis').state, 'degraded')
-  assert.equal(roster.rows.find(r => r.name === 'scout').gateway.status, 'running')
-})
-
-test('buildRoster collects open tasks with no owner into the unowned row', () => {
-  const roster = buildRoster({
-    bots: [bot()], crew: [], now: NOW,
-    tasks: [
-      task({ id: 'u1', status: 'blocked', assignee: 'none' }),
-      task({ id: 'u2', status: 'todo' }),
-      task({ id: 'u3', status: 'done' }),
-      task({ id: 'o1', status: 'todo', assignee: 'forge' }),
-    ],
-  })
-  assert.equal(roster.unowned.count, 2)
-  assert.deepEqual(roster.unowned.tasks.map(t => t.id).sort(), ['u1', 'u2'])
-  assert.equal(buildRoster({ bots: [], crew: [], tasks: [], now: NOW }).unowned.count, 0)
-})
-
-test('buildRoster flags agents with blocked or failed work as needing attention when not working', () => {
-  const roster = buildRoster({
-    bots: [bot()], crew: [], now: NOW,
-    tasks: [task({ id: 'b', status: 'blocked', assignee: 'forge' }), task({ id: 'q', status: 'todo', assignee: 'forge' })],
-  })
-  const forge = roster.rows[0]
-  assert.equal(forge.state, 'attention')
-  assert.equal(forge.counts.blocked, 1)
-  assert.equal(forge.counts.queued, 1)
+test('buildRoster consumes the canonical projection and retains unknown identities', () => {
+  const projection = projectCrew({ tasks: [task({ status: 'blocked', assignee: 'none' })], heartbeats: [] }, new Date(NOW).toISOString())
+  const roster = buildRoster(projection)
+  assert.deepEqual(roster.rows, projection.members)
+  assert.equal(roster.rows.find(r => r.id === 'pepper').kind, 'unknown')
+  assert.equal(roster.unowned.count, 1)
+  assert.equal(buildRoster(null).unowned.count, null)
 })

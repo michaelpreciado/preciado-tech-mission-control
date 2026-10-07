@@ -1,0 +1,36 @@
+{
+  "excerptRecordCount": 4,
+  "appendedCases": [
+    {
+      "indices": [
+        4
+      ],
+      "case": "held",
+      "expect": "Keep stored approved evidence and later review-held evidence; blocked, never send-ready."
+    },
+    {
+      "indices": [
+        5
+      ],
+      "case": "archived",
+      "expect": "Retain history and exclude from actionable counts."
+    },
+    {
+      "indices": [
+        6,
+        7
+      ],
+      "case": "duplicate",
+      "expect": "Retain duplicate evidence; do not count the same lead twice."
+    },
+    {
+      "indices": [
+        8,
+        9,
+        10
+      ],
+      "case": "corrupt-record",
+      "expect": "Count three invalid records without losing the usable records."
+    }
+  ]
+}

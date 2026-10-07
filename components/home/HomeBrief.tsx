@@ -2,12 +2,12 @@
 
 import Link from 'next/link'
 import { useMemo } from 'react'
-import { useLiveData } from '../LiveDataProvider'
+import { useCrew } from '../crew/useCrew'
 import { useKanbanSnapshot } from '../KanbanSnapshot'
 import { HomeChat } from '../HomeChat'
 import { isFreshAlert, useAlertDismissals, useFeedRows } from '../ActionFeed'
 import { Strip, StripEmpty, StripList, TaskStrip } from '../strip/Strip'
-import { briefSentence, buildRoster, needsYouTasks, upNextTasks } from '@/lib/flight-strip'
+import { briefSentence, needsYouTasks, upNextTasks } from '@/lib/flight-strip'
 import styles from './HomeBrief.module.css'
 
 const SYSTEM_ROW = /^(svc|collector|warn|crew):/
@@ -27,14 +27,13 @@ function BriefHeading({ text, kind }: { text: string; kind: string }) {
 
 export function HomeBrief() {
   const { tasks, summary, loading, error, lastUpdated, now } = useKanbanSnapshot()
-  const { data } = useLiveData()
+  const roster = useCrew()
   const { rows } = useFeedRows()
   const { dismissedIds, dismiss, now: alertNow } = useAlertDismissals()
 
   const brief = briefSentence(summary, { loading, error })
   const needs = useMemo(() => needsYouTasks(tasks, 5), [tasks])
   const next = useMemo(() => upNextTasks(tasks, 3), [tasks])
-  const roster = useMemo(() => buildRoster({ bots: [], crew: data?.crew ?? [], tasks, now }), [data?.crew, tasks, now])
   const alerts = rows.filter(r => SYSTEM_ROW.test(r.id) && !dismissedIds.has(r.id) && isFreshAlert(r, alertNow))
 
   const dash = '—'
@@ -108,14 +107,14 @@ export function HomeBrief() {
               <Link href="/crew" className={styles.more}>Open crew</Link>
             </div>
             {roster.rows.length === 0 ? (
-              <StripEmpty title={data ? 'No crew reported' : 'Loading crew…'} />
+              <StripEmpty title={roster.error ? 'Crew unavailable' : 'Loading crew…'} />
             ) : (
               <ul className={styles.crew}>
                 {roster.rows.slice(0, 5).map(r => (
-                  <li key={r.name} data-state={r.state}>
+                  <li key={r.name} data-state={r.worker.kind === 'confirmed-worker' && !roster.lastKnown ? 'working' : 'unknown'}>
                     <span className={styles.dot} aria-hidden="true" />
                     <span className={styles.who}>{r.name}</span>
-                    <span className={styles.doing}>{r.stateLabel} · {r.detail}</span>
+                    <span className={styles.doing}>{r.kind} · {r.worker.freshness}{roster.lastKnown ? ' · last known' : ''}{r.needsIntervention ? ' · needs intervention' : ''}</span>
                   </li>
                 ))}
               </ul>

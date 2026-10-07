@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { assertSameOrigin, getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv } from '@/lib/mission-api'
 import { recordHeartbeat, getHeartbeats } from '@/lib/heartbeats'
+import { isReadAuthorized } from '@/lib/pt/read-auth'
 
 const SECRET = process.env.INTERNAL_API_SECRET
 
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  if (!isAuthorized(req)) {
+  if (!await isReadAuthorized(req)) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
   return NextResponse.json({ heartbeats: getHeartbeats() }, {

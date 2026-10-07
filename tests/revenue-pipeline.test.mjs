@@ -26,7 +26,7 @@ const now = Date.parse('2026-09-10T12:00:00Z')
 const request = (body, headers = {}) => new NextRequest('http://localhost/api/pipeline/review', {
   method: 'POST', headers: { host: 'localhost', 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(body),
 })
-const get = id => GET(new NextRequest(`http://localhost/api/pipeline/review${id === undefined ? '' : `?lead_id=${id}`}`))
+const get = id => GET(new NextRequest(`http://localhost/api/pipeline/review${id === undefined ? '' : `?lead_id=${id}`}`, { headers: { 'x-forwarded-for': '127.0.0.1' } }))
 
 test('time in stage uses stage history and handles boundaries and invalid dates', () => {
   for (const [date, expected] of [[undefined, '—'], ['bad', '—'], ['2026-09-11', 'now'], ['2026-09-10T11:59:30Z', 'now'], ['2026-09-10T11:55:00Z', '5m'], ['2026-09-10T07:00:00Z', '5h'], ['2026-09-08T12:00:00Z', '2d']]) {
@@ -92,7 +92,7 @@ test('pipeline sent summary is computed before display caps', async () => {
     outreach: { sent_at: '2026-09-15T15:00:00Z' },
   }))
   await fs.writeFile(storeFile, JSON.stringify({ leads }))
-  const board = await (await pipelineGET(new NextRequest('http://localhost/api/pipeline'))).json()
+  const board = await (await pipelineGET(new NextRequest('http://localhost/api/pipeline', { headers: { 'x-forwarded-for': '127.0.0.1' } }))).json()
   assert.equal(board.leads.length, 20)
   assert.equal(board.counts.leads_found, 25)
   // The endpoint uses the real clock for calendar buckets. This invariant is
@@ -145,12 +145,12 @@ test('real handlers reject bad input, unknown leads, foreign origins and unautho
 test('Home view returns every active lead with previews while default board caps remain', async () => {
   const leads = Array.from({ length: 55 }, (_, n) => ({ id: `lead-${n}`, business_name: `Lead ${n}`, stage: 'awaiting_approval', preview_url: 'https://example.com/preview', first_seen_at: '2026-09-01', extra_data: { offer_estimate: 600 } }))
   await fs.writeFile(storeFile, JSON.stringify({ leads }))
-  const home = await (await pipelineGET(new NextRequest('http://localhost/api/pipeline?view=revenue'))).json()
+  const home = await (await pipelineGET(new NextRequest('http://localhost/api/pipeline?view=revenue', { headers: { 'x-forwarded-for': '127.0.0.1' } }))).json()
   assert.equal(home.leads.length, 55)
   assert.equal(home.leadsTotal, 55)
   assert.equal(home.leads[0].previewUrl, 'https://example.com/preview')
   assert.equal(home.leads[0].firstSeenAt, '2026-09-01')
-  const board = await (await pipelineGET(new NextRequest('http://localhost/api/pipeline'))).json()
+  const board = await (await pipelineGET(new NextRequest('http://localhost/api/pipeline', { headers: { 'x-forwarded-for': '127.0.0.1' } }))).json()
   assert.equal(board.leads.length, 50)
 })
 test('real handlers return 500 for unreadable store data', async () => {

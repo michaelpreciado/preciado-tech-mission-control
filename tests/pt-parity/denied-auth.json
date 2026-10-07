@@ -1,0 +1,46 @@
+{
+  "cases": [
+    {
+      "id": "public-client",
+      "headers": {
+        "x-forwarded-for": "203.0.113.19"
+      },
+      "expectedStatus": 401
+    },
+    {
+      "id": "missing-address",
+      "headers": {},
+      "expectedStatus": 401
+    },
+    {
+      "id": "untrusted-proxy-chain",
+      "headers": {
+        "x-forwarded-for": "127.0.0.1, 203.0.113.19"
+      },
+      "expectedStatus": 401
+    },
+    {
+      "id": "untrusted-real-ip",
+      "headers": {
+        "x-real-ip": "127.0.0.1"
+      },
+      "expectedStatus": 401
+    },
+    {
+      "id": "invalid-session",
+      "headers": {
+        "x-forwarded-for": "203.0.113.19"
+      },
+      "cookie": "invalid-fixture-session",
+      "expectedStatus": 401
+    },
+    {
+      "id": "wrong-bearer",
+      "headers": {
+        "x-forwarded-for": "203.0.113.19",
+        "authorization": "Bearer deliberately-invalid-fixture"
+      },
+      "expectedStatus": 401
+    }
+  ]
+}

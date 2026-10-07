@@ -1,0 +1,96 @@
+{
+  "evaluatedAt": "2026-10-03T16:00:00.000Z",
+  "ttlMs": 300000,
+  "cases": [
+    {
+      "id": "fresh",
+      "read": "success",
+      "hasSnapshot": true,
+      "heartbeat": {
+        "id": "fixture-fresh",
+        "status": "working",
+        "receivedAt": 1791043199000
+      },
+      "expected": {
+        "freshness": "fresh",
+        "reason": null
+      }
+    },
+    {
+      "id": "boundary",
+      "read": "success",
+      "hasSnapshot": true,
+      "heartbeat": {
+        "id": "fixture-boundary",
+        "status": "idle",
+        "receivedAt": 1791042900000
+      },
+      "expected": {
+        "freshness": "fresh",
+        "reason": null
+      }
+    },
+    {
+      "id": "stale",
+      "read": "success",
+      "hasSnapshot": true,
+      "heartbeat": {
+        "id": "fixture-stale",
+        "status": "working",
+        "receivedAt": 1791042899999
+      },
+      "expected": {
+        "freshness": "stale",
+        "reason": "cadence_exceeded"
+      }
+    },
+    {
+      "id": "future",
+      "read": "success",
+      "hasSnapshot": true,
+      "heartbeat": {
+        "id": "fixture-future",
+        "status": "working",
+        "receivedAt": 1791043260000
+      },
+      "expected": {
+        "freshness": "unknown",
+        "reason": "future_timestamp"
+      }
+    },
+    {
+      "id": "missing",
+      "read": "missing",
+      "hasSnapshot": false,
+      "heartbeat": null,
+      "expected": {
+        "freshness": "unknown",
+        "reason": "no_evidence"
+      }
+    },
+    {
+      "id": "failed-retained",
+      "read": "error",
+      "hasSnapshot": true,
+      "heartbeat": {
+        "id": "fixture-retained",
+        "status": "idle",
+        "receivedAt": 1791043199000
+      },
+      "expected": {
+        "freshness": "stale",
+        "reason": "refresh_failed"
+      }
+    },
+    {
+      "id": "failed-unavailable",
+      "read": "error",
+      "hasSnapshot": false,
+      "heartbeat": null,
+      "expected": {
+        "freshness": "error",
+        "reason": "read_failed"
+      }
+    }
+  ]
+}

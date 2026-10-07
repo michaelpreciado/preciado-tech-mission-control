@@ -18,6 +18,7 @@ import type { CanonicalEvent, PipelineUpdatePayload } from './canonical-schema'
 import { logger } from './logger'
 
 import { getConfig } from './config'
+import { legacyPipelineLeads, readPipelineStore } from './pt/pipeline'
 // Resolved per call so config edits (via /setup) apply without a restart.
 export function pipelineDir(): string { return getConfig().paths.pipelineDir }
 export function pipelineStore(): string { return path.join(pipelineDir(), 'pipeline.json') }
@@ -45,72 +46,6 @@ export const STAGE_ACTIONS: Record<PipelineStage, string> = {
 
 function isStage(v: unknown): v is PipelineStage {
   return typeof v === 'string' && (PIPELINE_STAGES as string[]).includes(v)
-}
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-function normalizeLead(raw: any): PipelineLead | null {
-  if (!raw || typeof raw !== 'object') return null
-  const id = raw.id || raw.lead_id
-  const businessName = raw.business_name || raw.businessName
-  if (!id || !businessName || !isStage(raw.stage)) return null
-  return {
-    id: String(id),
-    stage: raw.stage,
-    businessName: String(businessName),
-    previewUrl: raw.preview_url ?? raw.previewUrl ?? undefined,
-    firstSeenAt: raw.first_seen_at ?? raw.firstSeenAt ?? undefined,
-    location: raw.location ?? undefined,
-    playStoreUrl: raw.play_store_url ?? raw.playStoreUrl ?? undefined,
-    score: typeof raw.score === 'number' ? raw.score : undefined,
-    vertical: raw.vertical ?? undefined,
-    phone: raw.phone ?? undefined,
-    website: raw.website ?? undefined,
-    rating: typeof raw.rating === 'number' ? raw.rating : undefined,
-    reviewCount: typeof raw.review_count === 'number' ? raw.review_count
-      : typeof raw.reviewCount === 'number' ? raw.reviewCount : undefined,
-    qualified: typeof raw.qualified === 'boolean' ? raw.qualified : undefined,
-    socials: raw.socials ?? undefined,
-    extraData: raw.extra_data ?? raw.extraData ?? undefined,
-    outreach: raw.outreach ?? undefined,
-    concept: raw.concept ? {
-      designDirection: raw.concept.design_direction ?? raw.concept.designDirection,
-      inspirationSources: raw.concept.inspiration_sources ?? raw.concept.inspirationSources,
-      estimatedScope: raw.concept.estimated_scope ?? raw.concept.estimatedScope,
-    } : undefined,
-    approval: raw.approval ? {
-      telegramSentAt: raw.approval.telegram_sent_at ?? raw.approval.telegramSentAt,
-      status: raw.approval.status,
-      decidedAt: raw.approval.decided_at ?? raw.approval.decidedAt,
-    } : undefined,
-    development: raw.development ? {
-      taskId: raw.development.task_id ?? raw.development.taskId,
-      status: raw.development.status,
-      progressPct: raw.development.progress_pct ?? raw.development.progressPct,
-      milestones: raw.development.milestones,
-    } : undefined,
-    completed: raw.completed ? {
-      previewUrl: raw.completed.preview_url ?? raw.completed.previewUrl,
-      emailDraft: raw.completed.email_draft ?? raw.completed.emailDraft,
-      emailStatus: raw.completed.email_status ?? raw.completed.emailStatus,
-      signoffSentAt: raw.completed.signoff_sent_at ?? raw.completed.signoffSentAt,
-    } : undefined,
-    history: Array.isArray(raw.history) ? raw.history.filter((h: any) => isStage(h?.stage)) : undefined,
-    createdAt: raw.created_at ?? raw.createdAt ?? undefined,
-    updatedAt: raw.updated_at ?? raw.updatedAt ?? undefined,
-  }
-}
-/* eslint-enable @typescript-eslint/no-explicit-any */
-
-async function readLeads(): Promise<PipelineLead[]> {
-  try {
-    const raw = JSON.parse(await fs.readFile(pipelineStore(), 'utf8'))
-    const list = Array.isArray(raw) ? raw : raw?.leads
-    if (!Array.isArray(list)) return []
-    return list.map(normalizeLead).filter((l): l is PipelineLead => l !== null)
-  } catch (err) {
-    if ((err as NodeJS.ErrnoException).code !== 'ENOENT') logger.error('pipeline/store', err)
-    return []
-  }
 }
 
 async function readRecentEvents(limit = 40): Promise<PipelineEvent[]> {
@@ -392,7 +327,9 @@ export function buildPipelineSentSummary(leads: PipelineLead[], now = new Date()
 }
 
 export async function collectPipeline(revenue = false): Promise<PipelineData> {
-  const [leads, events] = await Promise.all([readLeads(), readRecentEvents()])
+  const [read, events] = await Promise.all([readPipelineStore(), readRecentEvents()])
+  if (!read.ok) throw new Error(read.code)
+  const leads = legacyPipelineLeads(read.store)
   const sentSummary = buildPipelineSentSummary(leads)
   const counts = Object.fromEntries(PIPELINE_STAGES.map(s => [s, 0])) as Record<PipelineStage, number>
   for (const lead of leads) counts[lead.stage] += 1

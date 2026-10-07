@@ -1,0 +1,3281 @@
+[
+  {
+    "id": "confirmed-worker",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "46b210b2e98537afcda3fa5e322bd2d8660a86c1526295388743779db3071225",
+      "dataRevision": "18d5524815d671fe1f20be73f93c7b68f9bfddf86a6362b1c0150cb3aaf064d8",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:00:45.000Z",
+      "sources": [
+        {
+          "id": "fixture",
+          "revision": "crew-fixture-v1",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshness": "fresh",
+          "blocked": false,
+          "reason": null
+        }
+      ],
+      "data": {
+        "members": [
+          {
+            "id": "edith",
+            "name": "edith",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "friday",
+            "name": "friday",
+            "kind": "confirmed-worker",
+            "worker": {
+              "kind": "confirmed-worker",
+              "runId": 1,
+              "evidence": "task-heartbeat",
+              "sourceAt": "2026-10-03T15:59:59.000Z",
+              "freshness": "fresh",
+              "reason": null
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": {
+              "id": "fixture-task",
+              "title": "Fixture task",
+              "status": "running",
+              "assignee": "friday",
+              "worker": {
+                "kind": "confirmed-worker",
+                "runId": 1,
+                "evidence": "task-heartbeat",
+                "sourceAt": "2026-10-03T15:59:59.000Z",
+                "freshness": "fresh",
+                "reason": null
+              },
+              "needsIntervention": false
+            },
+            "tasks": [
+              {
+                "id": "fixture-task",
+                "title": "Fixture task",
+                "status": "running",
+                "assignee": "friday",
+                "worker": {
+                  "kind": "confirmed-worker",
+                  "runId": 1,
+                  "evidence": "task-heartbeat",
+                  "sourceAt": "2026-10-03T15:59:59.000Z",
+                  "freshness": "fresh",
+                  "reason": null
+                },
+                "needsIntervention": false
+              }
+            ],
+            "needsIntervention": false
+          },
+          {
+            "id": "pepper",
+            "name": "pepper",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "sage",
+            "name": "sage",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          }
+        ],
+        "tasks": [
+          {
+            "id": "fixture-task",
+            "title": "Fixture task",
+            "status": "running",
+            "assignee": "friday",
+            "worker": {
+              "kind": "confirmed-worker",
+              "runId": 1,
+              "evidence": "task-heartbeat",
+              "sourceAt": "2026-10-03T15:59:59.000Z",
+              "freshness": "fresh",
+              "reason": null
+            },
+            "needsIntervention": false
+          }
+        ],
+        "counts": {
+          "members": 4,
+          "active": 1,
+          "confirmedWorkers": 1,
+          "trackedOnly": 0,
+          "presenceReported": 0,
+          "unknown": 3,
+          "needsIntervention": 0,
+          "interventionTasks": 0,
+          "runningTasks": 1,
+          "unassignedTasks": 0
+        }
+      },
+      "errors": []
+    }
+  },
+  {
+    "id": "worker-boundary",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "ef5851c959e67624fca0a85dbee3c8ad6540fac09ca1d7dab05ea1c160dc9a26",
+      "dataRevision": "18d5524815d671fe1f20be73f93c7b68f9bfddf86a6362b1c0150cb3aaf064d8",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:00:45.000Z",
+      "sources": [
+        {
+          "id": "fixture",
+          "revision": "crew-fixture-v1",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshness": "fresh",
+          "blocked": false,
+          "reason": null
+        }
+      ],
+      "data": {
+        "members": [
+          {
+            "id": "edith",
+            "name": "edith",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "friday",
+            "name": "friday",
+            "kind": "confirmed-worker",
+            "worker": {
+              "kind": "confirmed-worker",
+              "runId": 1,
+              "evidence": "task-heartbeat",
+              "sourceAt": "2026-10-03T15:50:00.000Z",
+              "freshness": "fresh",
+              "reason": null
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": {
+              "id": "fixture-task",
+              "title": "Fixture task",
+              "status": "running",
+              "assignee": "friday",
+              "worker": {
+                "kind": "confirmed-worker",
+                "runId": 1,
+                "evidence": "task-heartbeat",
+                "sourceAt": "2026-10-03T15:50:00.000Z",
+                "freshness": "fresh",
+                "reason": null
+              },
+              "needsIntervention": false
+            },
+            "tasks": [
+              {
+                "id": "fixture-task",
+                "title": "Fixture task",
+                "status": "running",
+                "assignee": "friday",
+                "worker": {
+                  "kind": "confirmed-worker",
+                  "runId": 1,
+                  "evidence": "task-heartbeat",
+                  "sourceAt": "2026-10-03T15:50:00.000Z",
+                  "freshness": "fresh",
+                  "reason": null
+                },
+                "needsIntervention": false
+              }
+            ],
+            "needsIntervention": false
+          },
+          {
+            "id": "pepper",
+            "name": "pepper",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "sage",
+            "name": "sage",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          }
+        ],
+        "tasks": [
+          {
+            "id": "fixture-task",
+            "title": "Fixture task",
+            "status": "running",
+            "assignee": "friday",
+            "worker": {
+              "kind": "confirmed-worker",
+              "runId": 1,
+              "evidence": "task-heartbeat",
+              "sourceAt": "2026-10-03T15:50:00.000Z",
+              "freshness": "fresh",
+              "reason": null
+            },
+            "needsIntervention": false
+          }
+        ],
+        "counts": {
+          "members": 4,
+          "active": 1,
+          "confirmedWorkers": 1,
+          "trackedOnly": 0,
+          "presenceReported": 0,
+          "unknown": 3,
+          "needsIntervention": 0,
+          "interventionTasks": 0,
+          "runningTasks": 1,
+          "unassignedTasks": 0
+        }
+      },
+      "errors": []
+    }
+  },
+  {
+    "id": "stale-task-heartbeat",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "d3f911ef55b8206c28d1ec1f10b469400201d418bdb104fe02cf45de74b4c75b",
+      "dataRevision": "18d5524815d671fe1f20be73f93c7b68f9bfddf86a6362b1c0150cb3aaf064d8",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:00:45.000Z",
+      "sources": [
+        {
+          "id": "fixture",
+          "revision": "crew-fixture-v1",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshness": "fresh",
+          "blocked": false,
+          "reason": null
+        }
+      ],
+      "data": {
+        "members": [
+          {
+            "id": "edith",
+            "name": "edith",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "friday",
+            "name": "friday",
+            "kind": "tracked-only",
+            "worker": {
+              "kind": "tracked-only",
+              "runId": 1,
+              "evidence": "task-heartbeat",
+              "sourceAt": "2026-10-03T15:49:59.000Z",
+              "freshness": "stale",
+              "reason": "cadence_exceeded"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": {
+              "id": "fixture-task",
+              "title": "Fixture task",
+              "status": "running",
+              "assignee": "friday",
+              "worker": {
+                "kind": "tracked-only",
+                "runId": 1,
+                "evidence": "task-heartbeat",
+                "sourceAt": "2026-10-03T15:49:59.000Z",
+                "freshness": "stale",
+                "reason": "cadence_exceeded"
+              },
+              "needsIntervention": false
+            },
+            "tasks": [
+              {
+                "id": "fixture-task",
+                "title": "Fixture task",
+                "status": "running",
+                "assignee": "friday",
+                "worker": {
+                  "kind": "tracked-only",
+                  "runId": 1,
+                  "evidence": "task-heartbeat",
+                  "sourceAt": "2026-10-03T15:49:59.000Z",
+                  "freshness": "stale",
+                  "reason": "cadence_exceeded"
+                },
+                "needsIntervention": false
+              }
+            ],
+            "needsIntervention": false
+          },
+          {
+            "id": "pepper",
+            "name": "pepper",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "sage",
+            "name": "sage",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          }
+        ],
+        "tasks": [
+          {
+            "id": "fixture-task",
+            "title": "Fixture task",
+            "status": "running",
+            "assignee": "friday",
+            "worker": {
+              "kind": "tracked-only",
+              "runId": 1,
+              "evidence": "task-heartbeat",
+              "sourceAt": "2026-10-03T15:49:59.000Z",
+              "freshness": "stale",
+              "reason": "cadence_exceeded"
+            },
+            "needsIntervention": false
+          }
+        ],
+        "counts": {
+          "members": 4,
+          "active": 0,
+          "confirmedWorkers": 0,
+          "trackedOnly": 1,
+          "presenceReported": 0,
+          "unknown": 3,
+          "needsIntervention": 0,
+          "interventionTasks": 0,
+          "runningTasks": 1,
+          "unassignedTasks": 0
+        }
+      },
+      "errors": []
+    }
+  },
+  {
+    "id": "future-task-heartbeat",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "875df22fc4b13902e7ed36dac26d16a1e29c679de015e515d1311c2510e1cc09",
+      "dataRevision": "18d5524815d671fe1f20be73f93c7b68f9bfddf86a6362b1c0150cb3aaf064d8",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:00:45.000Z",
+      "sources": [
+        {
+          "id": "fixture",
+          "revision": "crew-fixture-v1",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshness": "fresh",
+          "blocked": false,
+          "reason": null
+        }
+      ],
+      "data": {
+        "members": [
+          {
+            "id": "edith",
+            "name": "edith",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "friday",
+            "name": "friday",
+            "kind": "tracked-only",
+            "worker": {
+              "kind": "tracked-only",
+              "runId": 1,
+              "evidence": "task-heartbeat",
+              "sourceAt": "2026-10-03T16:00:01.000Z",
+              "freshness": "unknown",
+              "reason": "future_timestamp"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": {
+              "id": "fixture-task",
+              "title": "Fixture task",
+              "status": "running",
+              "assignee": "friday",
+              "worker": {
+                "kind": "tracked-only",
+                "runId": 1,
+                "evidence": "task-heartbeat",
+                "sourceAt": "2026-10-03T16:00:01.000Z",
+                "freshness": "unknown",
+                "reason": "future_timestamp"
+              },
+              "needsIntervention": false
+            },
+            "tasks": [
+              {
+                "id": "fixture-task",
+                "title": "Fixture task",
+                "status": "running",
+                "assignee": "friday",
+                "worker": {
+                  "kind": "tracked-only",
+                  "runId": 1,
+                  "evidence": "task-heartbeat",
+                  "sourceAt": "2026-10-03T16:00:01.000Z",
+                  "freshness": "unknown",
+                  "reason": "future_timestamp"
+                },
+                "needsIntervention": false
+              }
+            ],
+            "needsIntervention": false
+          },
+          {
+            "id": "pepper",
+            "name": "pepper",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "sage",
+            "name": "sage",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          }
+        ],
+        "tasks": [
+          {
+            "id": "fixture-task",
+            "title": "Fixture task",
+            "status": "running",
+            "assignee": "friday",
+            "worker": {
+              "kind": "tracked-only",
+              "runId": 1,
+              "evidence": "task-heartbeat",
+              "sourceAt": "2026-10-03T16:00:01.000Z",
+              "freshness": "unknown",
+              "reason": "future_timestamp"
+            },
+            "needsIntervention": false
+          }
+        ],
+        "counts": {
+          "members": 4,
+          "active": 0,
+          "confirmedWorkers": 0,
+          "trackedOnly": 1,
+          "presenceReported": 0,
+          "unknown": 3,
+          "needsIntervention": 0,
+          "interventionTasks": 0,
+          "runningTasks": 1,
+          "unassignedTasks": 0
+        }
+      },
+      "errors": []
+    }
+  },
+  {
+    "id": "startedAt-only",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "92f4fe68d174ed5a3418aecd14dd458c266b8aef35c5c7537c1a1886c3eef20b",
+      "dataRevision": "18d5524815d671fe1f20be73f93c7b68f9bfddf86a6362b1c0150cb3aaf064d8",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:00:45.000Z",
+      "sources": [
+        {
+          "id": "fixture",
+          "revision": "crew-fixture-v1",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshness": "fresh",
+          "blocked": false,
+          "reason": null
+        }
+      ],
+      "data": {
+        "members": [
+          {
+            "id": "edith",
+            "name": "edith",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "friday",
+            "name": "friday",
+            "kind": "tracked-only",
+            "worker": {
+              "kind": "tracked-only",
+              "runId": 1,
+              "evidence": "startedAt",
+              "sourceAt": "2026-10-03T15:59:59.000Z",
+              "freshness": "fresh",
+              "reason": "no_task_heartbeat"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": {
+              "id": "fixture-task",
+              "title": "Fixture task",
+              "status": "running",
+              "assignee": "friday",
+              "worker": {
+                "kind": "tracked-only",
+                "runId": 1,
+                "evidence": "startedAt",
+                "sourceAt": "2026-10-03T15:59:59.000Z",
+                "freshness": "fresh",
+                "reason": "no_task_heartbeat"
+              },
+              "needsIntervention": false
+            },
+            "tasks": [
+              {
+                "id": "fixture-task",
+                "title": "Fixture task",
+                "status": "running",
+                "assignee": "friday",
+                "worker": {
+                  "kind": "tracked-only",
+                  "runId": 1,
+                  "evidence": "startedAt",
+                  "sourceAt": "2026-10-03T15:59:59.000Z",
+                  "freshness": "fresh",
+                  "reason": "no_task_heartbeat"
+                },
+                "needsIntervention": false
+              }
+            ],
+            "needsIntervention": false
+          },
+          {
+            "id": "pepper",
+            "name": "pepper",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "sage",
+            "name": "sage",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          }
+        ],
+        "tasks": [
+          {
+            "id": "fixture-task",
+            "title": "Fixture task",
+            "status": "running",
+            "assignee": "friday",
+            "worker": {
+              "kind": "tracked-only",
+              "runId": 1,
+              "evidence": "startedAt",
+              "sourceAt": "2026-10-03T15:59:59.000Z",
+              "freshness": "fresh",
+              "reason": "no_task_heartbeat"
+            },
+            "needsIntervention": false
+          }
+        ],
+        "counts": {
+          "members": 4,
+          "active": 0,
+          "confirmedWorkers": 0,
+          "trackedOnly": 1,
+          "presenceReported": 0,
+          "unknown": 3,
+          "needsIntervention": 0,
+          "interventionTasks": 0,
+          "runningTasks": 1,
+          "unassignedTasks": 0
+        }
+      },
+      "errors": []
+    }
+  },
+  {
+    "id": "missing-task-heartbeat",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "7ff7e2078de57e374f5501dc4634d8b77daf59594ea82bc64bd8aeb65a18be3c",
+      "dataRevision": "18d5524815d671fe1f20be73f93c7b68f9bfddf86a6362b1c0150cb3aaf064d8",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:00:45.000Z",
+      "sources": [
+        {
+          "id": "fixture",
+          "revision": "crew-fixture-v1",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshness": "fresh",
+          "blocked": false,
+          "reason": null
+        }
+      ],
+      "data": {
+        "members": [
+          {
+            "id": "edith",
+            "name": "edith",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "friday",
+            "name": "friday",
+            "kind": "tracked-only",
+            "worker": {
+              "kind": "tracked-only",
+              "runId": 1,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": {
+              "id": "fixture-task",
+              "title": "Fixture task",
+              "status": "running",
+              "assignee": "friday",
+              "worker": {
+                "kind": "tracked-only",
+                "runId": 1,
+                "evidence": null,
+                "sourceAt": null,
+                "freshness": "unknown",
+                "reason": "no_evidence"
+              },
+              "needsIntervention": false
+            },
+            "tasks": [
+              {
+                "id": "fixture-task",
+                "title": "Fixture task",
+                "status": "running",
+                "assignee": "friday",
+                "worker": {
+                  "kind": "tracked-only",
+                  "runId": 1,
+                  "evidence": null,
+                  "sourceAt": null,
+                  "freshness": "unknown",
+                  "reason": "no_evidence"
+                },
+                "needsIntervention": false
+              }
+            ],
+            "needsIntervention": false
+          },
+          {
+            "id": "pepper",
+            "name": "pepper",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "sage",
+            "name": "sage",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          }
+        ],
+        "tasks": [
+          {
+            "id": "fixture-task",
+            "title": "Fixture task",
+            "status": "running",
+            "assignee": "friday",
+            "worker": {
+              "kind": "tracked-only",
+              "runId": 1,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "needsIntervention": false
+          }
+        ],
+        "counts": {
+          "members": 4,
+          "active": 0,
+          "confirmedWorkers": 0,
+          "trackedOnly": 1,
+          "presenceReported": 0,
+          "unknown": 3,
+          "needsIntervention": 0,
+          "interventionTasks": 0,
+          "runningTasks": 1,
+          "unassignedTasks": 0
+        }
+      },
+      "errors": []
+    }
+  },
+  {
+    "id": "missing-run-id",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "e6dd1a17914efe761b3e377ab1c835e335c7e60d247edc4015f133bef1def090",
+      "dataRevision": "18d5524815d671fe1f20be73f93c7b68f9bfddf86a6362b1c0150cb3aaf064d8",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:00:45.000Z",
+      "sources": [
+        {
+          "id": "fixture",
+          "revision": "crew-fixture-v1",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshness": "fresh",
+          "blocked": false,
+          "reason": null
+        }
+      ],
+      "data": {
+        "members": [
+          {
+            "id": "edith",
+            "name": "edith",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "friday",
+            "name": "friday",
+            "kind": "tracked-only",
+            "worker": {
+              "kind": "tracked-only",
+              "runId": null,
+              "evidence": "task-heartbeat",
+              "sourceAt": "2026-10-03T15:59:59.000Z",
+              "freshness": "fresh",
+              "reason": "no_run_id"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": {
+              "id": "fixture-task",
+              "title": "Fixture task",
+              "status": "running",
+              "assignee": "friday",
+              "worker": {
+                "kind": "tracked-only",
+                "runId": null,
+                "evidence": "task-heartbeat",
+                "sourceAt": "2026-10-03T15:59:59.000Z",
+                "freshness": "fresh",
+                "reason": "no_run_id"
+              },
+              "needsIntervention": false
+            },
+            "tasks": [
+              {
+                "id": "fixture-task",
+                "title": "Fixture task",
+                "status": "running",
+                "assignee": "friday",
+                "worker": {
+                  "kind": "tracked-only",
+                  "runId": null,
+                  "evidence": "task-heartbeat",
+                  "sourceAt": "2026-10-03T15:59:59.000Z",
+                  "freshness": "fresh",
+                  "reason": "no_run_id"
+                },
+                "needsIntervention": false
+              }
+            ],
+            "needsIntervention": false
+          },
+          {
+            "id": "pepper",
+            "name": "pepper",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "sage",
+            "name": "sage",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          }
+        ],
+        "tasks": [
+          {
+            "id": "fixture-task",
+            "title": "Fixture task",
+            "status": "running",
+            "assignee": "friday",
+            "worker": {
+              "kind": "tracked-only",
+              "runId": null,
+              "evidence": "task-heartbeat",
+              "sourceAt": "2026-10-03T15:59:59.000Z",
+              "freshness": "fresh",
+              "reason": "no_run_id"
+            },
+            "needsIntervention": false
+          }
+        ],
+        "counts": {
+          "members": 4,
+          "active": 0,
+          "confirmedWorkers": 0,
+          "trackedOnly": 1,
+          "presenceReported": 0,
+          "unknown": 3,
+          "needsIntervention": 0,
+          "interventionTasks": 0,
+          "runningTasks": 1,
+          "unassignedTasks": 0
+        }
+      },
+      "errors": []
+    }
+  },
+  {
+    "id": "presence-only",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "356607db1a533b8a0a26e5e07627f169a50cec8da91893cf6048f8e0bad8bc6e",
+      "dataRevision": "18d5524815d671fe1f20be73f93c7b68f9bfddf86a6362b1c0150cb3aaf064d8",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:00:45.000Z",
+      "sources": [
+        {
+          "id": "fixture",
+          "revision": "crew-fixture-v1",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshness": "fresh",
+          "blocked": false,
+          "reason": null
+        }
+      ],
+      "data": {
+        "members": [
+          {
+            "id": "edith",
+            "name": "edith",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "friday",
+            "name": "friday",
+            "kind": "presence-reported",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "presence-reported",
+              "reportedStatus": "working",
+              "reportedTask": null,
+              "sourceAt": "2026-10-03T15:59:59.000Z",
+              "freshness": "fresh",
+              "reason": null
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "pepper",
+            "name": "pepper",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "sage",
+            "name": "sage",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          }
+        ],
+        "tasks": [],
+        "counts": {
+          "members": 4,
+          "active": 0,
+          "confirmedWorkers": 0,
+          "trackedOnly": 0,
+          "presenceReported": 1,
+          "unknown": 3,
+          "needsIntervention": 0,
+          "interventionTasks": 0,
+          "runningTasks": 0,
+          "unassignedTasks": 0
+        }
+      },
+      "errors": []
+    }
+  },
+  {
+    "id": "stale-presence",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "4935fe2aa459157b3fe152a023dba370203cf6dd94cb6e5be6a28c728e7ca23a",
+      "dataRevision": "18d5524815d671fe1f20be73f93c7b68f9bfddf86a6362b1c0150cb3aaf064d8",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:00:45.000Z",
+      "sources": [
+        {
+          "id": "fixture",
+          "revision": "crew-fixture-v1",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshness": "fresh",
+          "blocked": false,
+          "reason": null
+        }
+      ],
+      "data": {
+        "members": [
+          {
+            "id": "edith",
+            "name": "edith",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "friday",
+            "name": "friday",
+            "kind": "presence-reported",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "presence-reported",
+              "reportedStatus": "working",
+              "reportedTask": null,
+              "sourceAt": "2026-10-03T15:54:59.999Z",
+              "freshness": "stale",
+              "reason": "cadence_exceeded"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "pepper",
+            "name": "pepper",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "sage",
+            "name": "sage",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          }
+        ],
+        "tasks": [],
+        "counts": {
+          "members": 4,
+          "active": 0,
+          "confirmedWorkers": 0,
+          "trackedOnly": 0,
+          "presenceReported": 1,
+          "unknown": 3,
+          "needsIntervention": 0,
+          "interventionTasks": 0,
+          "runningTasks": 0,
+          "unassignedTasks": 0
+        }
+      },
+      "errors": []
+    }
+  },
+  {
+    "id": "future-presence",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "1c9c2d94ace85a863b00612d0fd7ccafbc33ae124f8a2084e60d6f5c11c90e83",
+      "dataRevision": "18d5524815d671fe1f20be73f93c7b68f9bfddf86a6362b1c0150cb3aaf064d8",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:00:45.000Z",
+      "sources": [
+        {
+          "id": "fixture",
+          "revision": "crew-fixture-v1",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshness": "fresh",
+          "blocked": false,
+          "reason": null
+        }
+      ],
+      "data": {
+        "members": [
+          {
+            "id": "edith",
+            "name": "edith",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "friday",
+            "name": "friday",
+            "kind": "presence-reported",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "presence-reported",
+              "reportedStatus": "working",
+              "reportedTask": null,
+              "sourceAt": "2026-10-03T16:00:01.000Z",
+              "freshness": "unknown",
+              "reason": "future_timestamp"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "pepper",
+            "name": "pepper",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "sage",
+            "name": "sage",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          }
+        ],
+        "tasks": [],
+        "counts": {
+          "members": 4,
+          "active": 0,
+          "confirmedWorkers": 0,
+          "trackedOnly": 0,
+          "presenceReported": 1,
+          "unknown": 3,
+          "needsIntervention": 0,
+          "interventionTasks": 0,
+          "runningTasks": 0,
+          "unassignedTasks": 0
+        }
+      },
+      "errors": []
+    }
+  },
+  {
+    "id": "missing-heartbeat",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "7c458b89e24af06527402f38284a70ee070898c8e705f44bc92f50231cd31982",
+      "dataRevision": "18d5524815d671fe1f20be73f93c7b68f9bfddf86a6362b1c0150cb3aaf064d8",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:00:45.000Z",
+      "sources": [
+        {
+          "id": "fixture",
+          "revision": "crew-fixture-v1",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshness": "fresh",
+          "blocked": false,
+          "reason": null
+        }
+      ],
+      "data": {
+        "members": [
+          {
+            "id": "edith",
+            "name": "edith",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "friday",
+            "name": "friday",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "pepper",
+            "name": "pepper",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "sage",
+            "name": "sage",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          }
+        ],
+        "tasks": [],
+        "counts": {
+          "members": 4,
+          "active": 0,
+          "confirmedWorkers": 0,
+          "trackedOnly": 0,
+          "presenceReported": 0,
+          "unknown": 4,
+          "needsIntervention": 0,
+          "interventionTasks": 0,
+          "runningTasks": 0,
+          "unassignedTasks": 0
+        }
+      },
+      "errors": []
+    }
+  },
+  {
+    "id": "gateway-only",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "bf73648b1f8190d5d91cc7fffb014102f34ec06a7925d5dfe4e34dbaebf7113e",
+      "dataRevision": "18d5524815d671fe1f20be73f93c7b68f9bfddf86a6362b1c0150cb3aaf064d8",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:00:45.000Z",
+      "sources": [
+        {
+          "id": "fixture",
+          "revision": "crew-fixture-v1",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshness": "fresh",
+          "blocked": false,
+          "reason": null
+        }
+      ],
+      "data": {
+        "members": [
+          {
+            "id": "edith",
+            "name": "edith",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "friday",
+            "name": "friday",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "running",
+              "needsAttention": false,
+              "sourceAt": "2026-10-03T15:59:59.000Z",
+              "freshness": "fresh",
+              "reason": null
+            },
+            "model": {
+              "value": "fixture/model",
+              "sourceAt": "2026-10-03T15:59:59.000Z",
+              "freshness": "fresh",
+              "reason": null
+            },
+            "lastMessageAt": "2026-10-03T15:59:59.000Z",
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "pepper",
+            "name": "pepper",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "sage",
+            "name": "sage",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          }
+        ],
+        "tasks": [],
+        "counts": {
+          "members": 4,
+          "active": 0,
+          "confirmedWorkers": 0,
+          "trackedOnly": 0,
+          "presenceReported": 0,
+          "unknown": 4,
+          "needsIntervention": 0,
+          "interventionTasks": 0,
+          "runningTasks": 0,
+          "unassignedTasks": 0
+        }
+      },
+      "errors": []
+    }
+  },
+  {
+    "id": "blocked-task",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "eb264e78ccbca4ab12e8854f7e5dfcc7895aa19377cbd83a77a615661126b07a",
+      "dataRevision": "18d5524815d671fe1f20be73f93c7b68f9bfddf86a6362b1c0150cb3aaf064d8",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:00:45.000Z",
+      "sources": [
+        {
+          "id": "fixture",
+          "revision": "crew-fixture-v1",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshness": "fresh",
+          "blocked": false,
+          "reason": null
+        }
+      ],
+      "data": {
+        "members": [
+          {
+            "id": "edith",
+            "name": "edith",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "friday",
+            "name": "friday",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [
+              {
+                "id": "fixture-task",
+                "title": "Fixture task",
+                "status": "blocked",
+                "assignee": "friday",
+                "worker": {
+                  "kind": "unknown",
+                  "runId": 1,
+                  "evidence": null,
+                  "sourceAt": "2026-10-03T15:59:59.000Z",
+                  "freshness": "fresh",
+                  "reason": "not_running"
+                },
+                "needsIntervention": true
+              }
+            ],
+            "needsIntervention": true
+          },
+          {
+            "id": "pepper",
+            "name": "pepper",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "sage",
+            "name": "sage",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          }
+        ],
+        "tasks": [
+          {
+            "id": "fixture-task",
+            "title": "Fixture task",
+            "status": "blocked",
+            "assignee": "friday",
+            "worker": {
+              "kind": "unknown",
+              "runId": 1,
+              "evidence": null,
+              "sourceAt": "2026-10-03T15:59:59.000Z",
+              "freshness": "fresh",
+              "reason": "not_running"
+            },
+            "needsIntervention": true
+          }
+        ],
+        "counts": {
+          "members": 4,
+          "active": 0,
+          "confirmedWorkers": 0,
+          "trackedOnly": 0,
+          "presenceReported": 0,
+          "unknown": 4,
+          "needsIntervention": 1,
+          "interventionTasks": 1,
+          "runningTasks": 0,
+          "unassignedTasks": 0
+        }
+      },
+      "errors": []
+    }
+  },
+  {
+    "id": "idle-SSE",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "014290801f82e4412e64f01b4cdef3e03f97a11e11a363df6676fb2dc2fc3902",
+      "dataRevision": "18d5524815d671fe1f20be73f93c7b68f9bfddf86a6362b1c0150cb3aaf064d8",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:00:45.000Z",
+      "sources": [
+        {
+          "id": "fixture",
+          "revision": "crew-fixture-v1",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshness": "fresh",
+          "blocked": false,
+          "reason": null
+        }
+      ],
+      "data": {
+        "members": [
+          {
+            "id": "edith",
+            "name": "edith",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "friday",
+            "name": "friday",
+            "kind": "presence-reported",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "presence-reported",
+              "reportedStatus": "idle",
+              "reportedTask": null,
+              "sourceAt": "2026-10-03T15:59:59.000Z",
+              "freshness": "fresh",
+              "reason": null
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "pepper",
+            "name": "pepper",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "sage",
+            "name": "sage",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          }
+        ],
+        "tasks": [],
+        "counts": {
+          "members": 4,
+          "active": 0,
+          "confirmedWorkers": 0,
+          "trackedOnly": 0,
+          "presenceReported": 1,
+          "unknown": 3,
+          "needsIntervention": 0,
+          "interventionTasks": 0,
+          "runningTasks": 0,
+          "unassignedTasks": 0
+        }
+      },
+      "errors": []
+    }
+  },
+  {
+    "id": "unknown-database",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "651796bb91875086138a0e7d7fb791aebda788ed228cf18508711807921fa451",
+      "dataRevision": "18d5524815d671fe1f20be73f93c7b68f9bfddf86a6362b1c0150cb3aaf064d8",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:00:45.000Z",
+      "sources": [
+        {
+          "id": "fixture",
+          "revision": "crew-fixture-v1",
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshness": "fresh",
+          "blocked": false,
+          "reason": null
+        }
+      ],
+      "data": {
+        "members": [
+          {
+            "id": "edith",
+            "name": "edith",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "friday",
+            "name": "friday",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "pepper",
+            "name": "pepper",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          },
+          {
+            "id": "sage",
+            "name": "sage",
+            "kind": "unknown",
+            "worker": {
+              "kind": "unknown",
+              "runId": null,
+              "evidence": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "presence": {
+              "kind": "unknown",
+              "reportedStatus": null,
+              "reportedTask": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "gateway": {
+              "status": "unknown",
+              "needsAttention": false,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "model": {
+              "value": null,
+              "sourceAt": null,
+              "freshness": "unknown",
+              "reason": "no_evidence"
+            },
+            "lastMessageAt": null,
+            "currentTask": null,
+            "tasks": [],
+            "needsIntervention": false
+          }
+        ],
+        "tasks": null,
+        "counts": {
+          "members": 4,
+          "active": null,
+          "confirmedWorkers": null,
+          "trackedOnly": null,
+          "presenceReported": 0,
+          "unknown": 4,
+          "needsIntervention": null,
+          "interventionTasks": null,
+          "runningTasks": null,
+          "unassignedTasks": null
+        }
+      },
+      "errors": []
+    }
+  },
+  {
+    "id": "denied-auth",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "35e45c9a417160baebdb8dc67237365454522b495cf65df1c2e81f504469ab88",
+      "dataRevision": "36c90fa96ea8dc6f3153aeb7ab0367bb1bf6793a458b47219cf903814fbb747b",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:00:45.000Z",
+      "sources": [
+        {
+          "id": "crew",
+          "revision": null,
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": null,
+          "freshness": "unknown",
+          "blocked": true,
+          "reason": "access_denied"
+        }
+      ],
+      "data": null,
+      "errors": [
+        {
+          "sourceId": "crew",
+          "code": "access_denied"
+        }
+      ]
+    }
+  }
+]

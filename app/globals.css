@@ -9794,3 +9794,18 @@ html:root body *::before, html:root body *::after {
   html:root body .mc-cockpit { backdrop-filter: none !important; }
 }
 .mc-hud3d { contain: layout paint; }
+
+/* Lane 03: readable disabled catalog rows and explicit motion opt-out. */
+.cmdp-input { min-width: 0; }
+.cmdp-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 4px; }
+.cmdp-reason { color: var(--pt-text-mute); font-size: 12px; overflow-wrap: anywhere; }
+.cmdp-status { padding: 6px 16px; font-size: 12px; color: var(--pt-text-mute); }
+.cmdp-item { min-height: 44px; }
+.cmdp-item[aria-disabled='true'] { cursor: not-allowed; }
+.cmdp-item[aria-disabled='true'] .cmdp-ic { color: var(--pt-text-mute); }
+.cmdp-item .cmdp-sub { flex-shrink: 1; text-align: right; overflow-wrap: anywhere; }
+.cmdp-kbd:focus-visible { outline: 2px solid var(--pt-neon); }
+html[data-motion='reduced'] .cmdp, html[data-motion='off'] .cmdp { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .cmdp, .cmdp * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

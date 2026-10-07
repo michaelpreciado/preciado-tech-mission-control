@@ -32,9 +32,8 @@ function dbPath(): string {
 
 // Epoch columns are INTEGER; tolerate seconds or milliseconds.
 function toIso(epoch: unknown): string | undefined {
-  if (typeof epoch !== 'number' || !Number.isFinite(epoch) || epoch <= 0) return undefined
-  const ms = epoch > 1e12 ? epoch : epoch * 1000
-  return new Date(ms).toISOString()
+  const ms = typeof epoch === 'number' ? (epoch > 1e12 ? epoch : epoch * 1000) : typeof epoch === 'string' ? Date.parse(epoch) : NaN
+  return Number.isFinite(ms) && ms > 0 && ms <= 8640000000000000 ? new Date(ms).toISOString() : undefined
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -51,7 +50,7 @@ function rowToTask(r: any, origin?: string, parentIds?: string[]): HermesTask {
     completedAt: toIso(r.completed_at),
     consecutiveFailures: typeof r.consecutive_failures === 'number' ? r.consecutive_failures : 0,
     lastFailureError: r.last_failure_error ?? undefined,
-    lastHeartbeatAt: toIso(r.last_heartbeat_at),
+    lastHeartbeatAt: r.last_heartbeat_at == null ? undefined : toIso(r.last_heartbeat_at) ?? 'invalid',
     currentRunId: typeof r.current_run_id === 'number' ? r.current_run_id : undefined,
     sessionId: r.session_id ?? undefined,
     origin,
@@ -82,6 +81,7 @@ interface DbRead {
   counts: Record<string, number>
   tasks: HermesTask[]
   available: boolean
+  read: 'success' | 'missing' | 'error'
 }
 
 /** Read one task's full detail (runs/comments/events) from an OPEN connection. */
@@ -125,7 +125,7 @@ function readDetailFromDb(db: DatabaseSync, id: string, origin?: string): Hermes
   }
 }
 
-function readBoard(file: string, origin?: string): DbRead {
+function readBoard(file: string, origin?: string, limit = 500): DbRead {
   const result = withDbFile(file, db => {
     const counts: Record<string, number> = {}
     for (const row of db.prepare('SELECT status, COUNT(*) AS n FROM tasks GROUP BY status').all() as { status: string; n: number }[]) {
@@ -138,10 +138,10 @@ function readBoard(file: string, origin?: string): DbRead {
       arr.push(link.parent_id)
       parentMap.set(link.child_id, arr)
     }
-    const rows = db.prepare(`SELECT ${TASK_COLS} FROM tasks ORDER BY created_at DESC LIMIT 500`).all() as any[]
-    return { counts, tasks: rows.map(r => rowToTask(r, origin, parentMap.get(String(r.id)))), available: true }
+    const rows = db.prepare(`SELECT ${TASK_COLS} FROM tasks ORDER BY created_at DESC LIMIT ?`).all(Number.isFinite(limit) ? Math.max(0, Math.floor(limit)) : -1) as any[]
+    return { counts, tasks: rows.map(r => rowToTask(r, origin, parentMap.get(String(r.id)))), available: true, read: 'success' as const }
   })
-  return result ?? { counts: {}, tasks: [], available: false }
+  return result ?? { counts: {}, tasks: [], available: false, read: fs.existsSync(file) ? 'error' : 'missing' }
 }
 
 /* ── Remote (SSH) pull with TTL cache ─────────────────────────────── */
@@ -183,11 +183,11 @@ function fetchRemote(remote: FridayKanbanRemote): DbRead {
       ['-q', '-o', 'StrictHostKeyChecking=accept-new', '-o', 'ConnectTimeout=6', '-i', keyFile, target, tmp],
       { timeout: remote.timeoutMs ?? 8000, stdio: 'pipe' },
     )
-    read = fs.existsSync(tmp) ? readBoard(tmp, remote.name) : { counts: {}, tasks: [], available: false }
+    read = fs.existsSync(tmp) ? readBoard(tmp, remote.name) : { counts: {}, tasks: [], available: false, read: 'missing' }
     read.available = read.available && fs.existsSync(tmp)
   } catch (err) {
     logger.warn('hermes-kanban-remote', `${remote.name}: scp failed — ${(err as Error).message}`)
-    read = { counts: {}, tasks: [], available: false }
+    read = { counts: {}, tasks: [], available: false, read: 'error' }
   } finally {
     try { fs.unlinkSync(tmp) } catch { /* best effort */ }
   }
@@ -203,6 +203,7 @@ export type KanbanSourceStatus = {
   origin: string
   available: boolean
   counts: Record<string, number>
+  read: 'success' | 'missing' | 'error'
 }
 
 export type KanbanMultiSnapshot = HermesKanbanSnapshot & {
@@ -210,10 +211,13 @@ export type KanbanMultiSnapshot = HermesKanbanSnapshot & {
   tasks: HermesTask[]
 }
 
-export function getKanbanSnapshot(status?: string, limit = 100): KanbanMultiSnapshot {
+/** Local projections explicitly exclude remote configuration, cache and SSH.
+ * Infinity requests all local tasks so crew counts do not inherit UI truncation. */
+export function getKanbanSnapshot(status?: string, limit = 100, options: { scope?: 'local' | 'all'; localDbFile?: string } = {}): KanbanMultiSnapshot {
   const localHost = os.hostname() || 'local'
-  const local = readBoard(dbPath(), localHost)
-  const remotes = getConfig().kanbanRemotes.map(fetchRemote)
+  const local = readBoard(options.localDbFile ?? dbPath(), localHost, options.scope === 'local' ? limit : 500)
+  const remoteConfigs = options.scope === 'local' ? [] : getConfig().kanbanRemotes
+  const remotes = remoteConfigs.map(fetchRemote)
 
   // Tag the local board with the local hostname; remote tasks keep their name.
   const all = [...local.tasks, ...remotes.flatMap(r => r.tasks)]
@@ -226,12 +230,13 @@ export function getKanbanSnapshot(status?: string, limit = 100): KanbanMultiSnap
   }
 
   const sources: KanbanSourceStatus[] = [
-    { name: localHost, origin: localHost, available: local.available, counts: local.counts },
-    ...getConfig().kanbanRemotes.map((r, i) => ({
+    { name: localHost, origin: localHost, available: local.available, counts: local.counts, read: local.read },
+    ...remoteConfigs.map((r, i) => ({
       name: r.name,
       origin: r.name,
       available: remotes[i].available,
       counts: remotes[i].counts,
+      read: remotes[i].read,
     })),
   ]
 

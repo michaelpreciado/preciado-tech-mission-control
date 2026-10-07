@@ -15,13 +15,6 @@ export function ago(ts: number | null): string {
   return `${Math.floor(minutes / 1440)}d ago`
 }
 
-function maskToken(token: string): string {
-  const sep = token.indexOf(':')
-  const head = sep > 0 ? token.slice(0, sep + 1) : ''
-  const secret = sep > 0 ? token.slice(sep + 1) : token
-  return secret.length <= 8 ? `${head}••••••` : `${head}${secret.slice(0, 2)}••••••${secret.slice(-2)}`
-}
-
 type ActionResult = { ok: boolean; error?: string }
 type PostAction = (body: Record<string, unknown>) => Promise<ActionResult>
 
@@ -73,17 +66,9 @@ function ConfirmAction({ label, actionLabel = label, word, disabled, danger, rea
 function BotDetails({ bot, bots, onAction }: { bot: Bot; bots: Bot[]; onAction: PostAction }) {
   const [model, setModel] = useState(bot.model || '')
   const [custom, setCustom] = useState(false)
-  const [copyStatus, setCopyStatus] = useState('')
   const live = bot.gateway.status === 'running' || bot.gateway.status === 'degraded'
   const protectedProfile = bot.isDefault || bot.name === 'default'
   const models = Array.from(new Set([bot.model, ...bots.map(b => b.model)].filter((m): m is string => Boolean(m))))
-  const copy = async () => {
-    try {
-      if (!navigator.clipboard) throw new Error('Clipboard unavailable in this browser')
-      await navigator.clipboard.writeText(bot.telegramToken!)
-      setCopyStatus('Token copied')
-    } catch { setCopyStatus('Could not copy token. Use a secure browser connection and retry.') }
-  }
   return <div className={styles.stack}>
     <CardHead title={bot.name} sub={bot.gateway.detail} right={<Chip tone={live ? (bot.gateway.status === 'running' ? 'ok' : 'warn') : 'neutral'}>{bot.gateway.status}</Chip>} />
     <div className={styles.stats}>
@@ -113,8 +98,6 @@ function BotDetails({ bot, bots, onAction }: { bot: Bot; bots: Bot[]; onAction: 
     <section className={styles.stack} aria-label="Connection details">
       <h3>Connection details</h3>
       {bot.gateway.platforms?.map(p => <Row key={p.name} title={p.name} sub={p.state} />)}
-      {bot.telegramToken ? <><code>{maskToken(bot.telegramToken)}</code><Button onClick={() => void copy()} aria-label={`Copy ${bot.name} Telegram token`}>Copy Telegram token</Button><span role="status">{copyStatus}</span></> : <p className={styles.muted}>No Telegram token on file.</p>}
-      {bot.canonicalSessionId && <p className={styles.muted}>Canonical session: <code>{bot.canonicalSessionId}</code></p>}
     </section>
     {!protectedProfile && <section className={styles.stack} aria-label="Remove bot">
       {live && <p className={styles.muted}>Stop the gateway before removing this bot.</p>}
@@ -145,7 +128,7 @@ function AddBot({ bots, onAction }: { bots: Bot[]; onAction: PostAction }) {
 }
 
 export function BotsPanel({ selected, onSelect, disabled, management, onManage, details }: {
-  selected: string; onSelect: (profile: string, canonicalSessionId?: string | null) => void; disabled: boolean
+  selected: string; onSelect: (profile: string) => void; disabled: boolean
   management: string | null; onManage: (name: string | null) => void; details?: ReactNode
 }) {
   const [data, setData] = useState<BotsSnapshot | null>(null)
@@ -193,7 +176,7 @@ export function BotsPanel({ selected, onSelect, disabled, management, onManage, 
       {visibleBots.map(b => {
         const display = BOT_DISPLAY_METADATA[b.name] ?? { displayName: b.name, role: '' }
         const label = display.role ? `${display.displayName} (${display.role})` : display.displayName
-        return <Row key={b.name} className={styles.botRow} title={<Button className={styles.botIdentity} active={selected === b.name} disabled={disabled} onClick={() => onSelect(b.name, b.canonicalSessionId)} aria-label={`Conversations with ${label}, gateway ${b.gateway.status}`}>
+        return <Row key={b.name} className={styles.botRow} title={<Button className={styles.botIdentity} active={selected === b.name} disabled={disabled} onClick={() => onSelect(b.name)} aria-label={`Conversations with ${label}, gateway ${b.gateway.status}`}>
           <span className={styles.dot} role="img" data-status={b.gateway.status} title={`Gateway ${b.gateway.status}`} aria-label={`Gateway ${b.gateway.status}`} />
           <span className={styles.botCopy}><strong>{display.displayName}</strong>{display.role && <span className={styles.rowMeta}>({display.role})</span>}<span className={styles.botModel}>{b.model || 'No model'}</span><span className={styles.rowMeta}>{ago(b.lastActiveAt)}</span></span><span aria-hidden="true">›</span>
         </Button>} trailing={<IconButton aria-label={`Manage ${b.name}`} disabled={disabled} onClick={() => onManage(b.name)}>⋯</IconButton>} />

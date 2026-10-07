@@ -1,0 +1,98 @@
+[
+  {
+    "id": "empty-success",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "fixture-empty",
+      "dataRevision": "fixture-revision-1",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:01:30.000Z",
+      "sources": [
+        {
+          "id": "pipeline",
+          "revision": "fixture-revision-1",
+          "sourceAt": "2026-10-03T16:00:00.000Z",
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshness": "fresh",
+          "blocked": false,
+          "reason": null
+        }
+      ],
+      "data": [],
+      "errors": []
+    }
+  },
+  {
+    "id": "fresh-blocked",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "fixture-held",
+      "dataRevision": "fixture-revision-1",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:01:30.000Z",
+      "sources": [
+        {
+          "id": "pipeline",
+          "revision": "fixture-revision-1",
+          "sourceAt": "2026-10-03T16:00:00.000Z",
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": "2026-10-03T16:00:00.000Z",
+          "freshness": "fresh",
+          "blocked": true,
+          "reason": "approval_held"
+        }
+      ],
+      "data": {
+        "decisions": [
+          {
+            "id": "fixture-held",
+            "business_name": "Held fixture",
+            "stage": "awaiting_approval",
+            "updated_at": "2026-10-01T16:00:00Z",
+            "approval": {
+              "status": "approved"
+            },
+            "extra_data": {
+              "review": "held",
+              "reviewed_at": "2026-10-02T16:00:00Z"
+            }
+          }
+        ]
+      },
+      "errors": []
+    }
+  },
+  {
+    "id": "failed-read",
+    "envelope": {
+      "schemaVersion": 1,
+      "contractRevision": "pt-os.v1",
+      "snapshotId": "fixture-failed",
+      "dataRevision": "fixture-revision-1",
+      "generatedAt": "2026-10-03T16:00:00.000Z",
+      "validUntil": "2026-10-03T16:01:30.000Z",
+      "sources": [
+        {
+          "id": "pipeline",
+          "revision": null,
+          "sourceAt": null,
+          "observedAt": "2026-10-03T16:00:00.000Z",
+          "lastSuccessAt": null,
+          "freshness": "error",
+          "blocked": true,
+          "reason": "access_denied"
+        }
+      ],
+      "data": null,
+      "errors": [
+        {
+          "sourceId": "pipeline",
+          "code": "access_denied"
+        }
+      ]
+    }
+  }
+]
