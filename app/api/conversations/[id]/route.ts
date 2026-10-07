@@ -17,7 +17,7 @@ function isAuthorized(req: NextRequest): boolean {
   const secret = process.env.INTERNAL_API_SECRET
   if (secret) return req.headers.get('authorization') === `Bearer ${secret}`
   const ip = getClientIpFromHeaders(req.headers)
-  return isTrustedIp(ip === 'unknown' ? '127.0.0.1' : ip, trustedRangesFromEnv())
+  return isTrustedIp(ip, trustedRangesFromEnv())
 }
 
 function rate(req: NextRequest): boolean {

@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   const ip = getClientIpFromHeaders(req.headers)
   const secret = process.env.INTERNAL_API_SECRET
   if (secret ? req.headers.get('authorization') !== `Bearer ${secret}` :
-    !isTrustedIp(ip === 'unknown' ? '127.0.0.1' : ip, trustedRangesFromEnv())) {
+    !isTrustedIp(ip, trustedRangesFromEnv())) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
   if (!checkRateLimit(bucket, ip, Date.now(), 20, 60_000).allowed) return NextResponse.json({ error: 'rate limited' }, { status: 429 })

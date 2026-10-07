@@ -14,7 +14,7 @@ registerHooks({ resolve(specifier, context, nextResolve) {
 } })
 const { POST } = await import('../app/api/handoff/route.ts')
 const request = body => new Request('http://localhost/api/handoff', {
-  method: 'POST', headers: { 'content-type': 'application/json', origin: 'http://localhost' }, body: JSON.stringify(body),
+  method: 'POST', headers: { 'content-type': 'application/json', origin: 'http://localhost', 'x-forwarded-for': '127.0.0.1' }, body: JSON.stringify(body),
 })
 const valid = { sessionId: 'test', agent: 'codex', task: 'test' }
 
@@ -39,7 +39,7 @@ test('route rejects malformed input, extra cwd, and foreign origin before execut
   for (const body of [null, [], {}, { ...valid, agent: 'pi' }, { ...valid, task: ' ' }, { ...valid, task: 'x'.repeat(4001) }, { ...valid, cwd: '/unrelated' }]) {
     assert.equal((await POST(request(body))).status, 400)
   }
-  const foreign = new Request('http://localhost/api/handoff', { method: 'POST', headers: { host: 'localhost', origin: 'https://foreign.invalid' }, body: JSON.stringify(valid) })
+  const foreign = new Request('http://localhost/api/handoff', { method: 'POST', headers: { host: 'localhost', origin: 'https://foreign.invalid', 'x-forwarded-for': '127.0.0.1' }, body: JSON.stringify(valid) })
   assert.equal((await POST(foreign)).status, 403)
   await assert.rejects(assertHandoffCwd('/'), /server repository/)
 })

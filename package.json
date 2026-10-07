@@ -4,9 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "next dev -H 0.0.0.0 -p 4175",
+    "dev": "next dev -H 127.0.0.1 -p 4175",
     "build": "next build",
-    "start": "next start -H 0.0.0.0 -p 4175",
+    "start": "next start -H 127.0.0.1 -p 4175",
     "typecheck": "tsc --noEmit",
     "test": "node --test --import ./tests/helpers/ts-resolve.mjs tests/*.test.mjs",
     "seed-demo": "node scripts/seed-demo.mjs"

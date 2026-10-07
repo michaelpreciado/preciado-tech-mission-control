@@ -10,7 +10,7 @@ registerHooks({ resolve(specifier, context, nextResolve) {
 } })
 const { POST } = await import('../app/api/chat/route.ts')
 const request = body => new Request('http://localhost/api/chat', {
-  method: 'POST', headers: { 'content-type': 'application/json', origin: 'http://localhost' }, body: JSON.stringify(body),
+  method: 'POST', headers: { 'content-type': 'application/json', origin: 'http://localhost', 'x-forwarded-for': '127.0.0.1' }, body: JSON.stringify(body),
 })
 
 test('chat route rejects unknown agents before CLI execution', async () => {
@@ -47,7 +47,7 @@ test('POST defaults to Hermes, preserves its session fallback, and returns busy-
 
 test('existing message length and same-origin gates still apply', async () => {
   assert.equal((await POST(request({ message: 'x'.repeat(4001) }))).status, 400)
-  const foreign = new Request('http://localhost/api/chat', { method: 'POST', headers: { host: 'localhost', origin: 'https://elsewhere.invalid' }, body: '{"message":"hi"}' })
+  const foreign = new Request('http://localhost/api/chat', { method: 'POST', headers: { host: 'localhost', origin: 'https://elsewhere.invalid', 'x-forwarded-for': '127.0.0.1' }, body: '{"message":"hi"}' })
   assert.equal((await POST(foreign)).status, 403)
 })
 
