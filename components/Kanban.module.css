@@ -14,6 +14,8 @@
 .searchRow { display: flex; align-items: center; gap: var(--pt-s-3); min-width: 0; }
 .toolbar { flex-wrap: wrap; justify-content: space-between; }
 .searchRow > input { flex: 1; min-width: 0; }
+/* >=16px stops iOS Safari zooming on focus. */
+.searchRow > input[type='search'] { font-size: 16px; }
 .searchRow > button { flex-shrink: 0; }
 .filters.filters { min-width: 0; }
 .filters > button { text-transform: none; letter-spacing: 0; min-width: 0; }
@@ -92,7 +94,13 @@
 }
 
 @media (min-width: 900px) {
-  .lanes { grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
+  .lanes { display: flex; flex-wrap: nowrap; overflow-x: auto; }
+  .lane { flex: 1 1 0; min-width: 170px; }
+  .laneRail { flex: 0 0 auto; min-width: 0; }
+  .laneRail .laneTitle { gap: var(--pt-s-1); padding-inline: var(--pt-s-2); font-size: var(--pt-fs-sm); }
+  .laneRail .laneBody { min-height: 0; padding: 0; }
+  .laneRail .laneTitle { opacity: .6; }
+  .laneNeeds .laneTitle { border-bottom: 2px solid var(--pt-neon); }
   .laneHeader { position: static; }
 }
 

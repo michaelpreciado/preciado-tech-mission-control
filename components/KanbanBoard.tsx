@@ -45,6 +45,9 @@ const ATTENTION_STATUSES = new Set(['blocked', 'failed'])
 /** "Mine" = tasks addressed to the local crew (no viewer concept yet). */
 const MINE_ASSIGNEES = new Set(['jarvis', 'friday'])
 
+/** Lanes that need a human; shown first and accented on desktop. */
+const NEEDS_YOU = new Set(['blocked', 'failed', 'review'])
+
 type FilterId = 'all' | 'mine' | 'active' | 'attention'
 
 const FILTER_OPTIONS: { id: FilterId; label: string }[] = [
@@ -392,14 +395,14 @@ function KanbanCard({ task, onOpen, draggable, dragging, onDragStart, onDragEnd 
       onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', task.id); onDragStart() }}
       onDragEnd={onDragEnd}>
       <strong className={styles.taskTitle}>{task.title}</strong>
-      <Chip>{statusLabel(task.status)}</Chip>
       <span className={styles.taskMeta}>{task.assignee || 'Unassigned'}{task.createdAt && <> · <RelativeTime ts={new Date(task.createdAt).getTime()} frame="ago" /></>}</span>
     </Button>
   </Card>
 }
 
-function Column({ def, tasks, pinned, onOpen, expanded, onToggle, desktop, drag, onCardDragStart, onCardDragEnd, onDropToStatus }: {
+function Column({ def, needsYou, tasks, pinned, onOpen, expanded, onToggle, desktop, drag, onCardDragStart, onCardDragEnd, onDropToStatus }: {
   def: { status: string; label: string }
+  needsYou: boolean
   tasks: HermesTask[]
   pinned: Set<string>
   onOpen: (id: string) => void
@@ -414,7 +417,9 @@ function Column({ def, tasks, pinned, onOpen, expanded, onToggle, desktop, drag,
   const [over, setOver] = useState(false)
   const dropOk = desktop && !!drag && supportedTransition(drag.from, def.status) !== null
   const bodyId = `kanban-lane-${def.status}`
-  return <section className={styles.lane} aria-label={`${def.label} lane`}>
+  // Desktop only: an empty lane shrinks to a slim rail (still a drop target mid-drag).
+  const rail = desktop && tasks.length === 0
+  return <section className={`${styles.lane} ${rail ? styles.laneRail : ''} ${needsYou ? styles.laneNeeds : ''}`} aria-label={`${def.label} lane`}>
     <h2 className={styles.laneHeader}>
       {desktop ? <span className={styles.laneTitle}>{def.label}<Chip>{tasks.length}</Chip></span> : (
         <Button className={styles.laneToggle} aria-expanded={expanded} aria-controls={bodyId} onClick={onToggle}>
@@ -426,7 +431,7 @@ function Column({ def, tasks, pinned, onOpen, expanded, onToggle, desktop, drag,
       onDragOver={dropOk ? e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setOver(true) } : undefined}
       onDragLeave={() => setOver(false)}
       onDrop={dropOk ? e => { e.preventDefault(); setOver(false); onDropToStatus(def.status) } : undefined}>
-      {tasks.length === 0 ? <p className={styles.empty}>{dropOk ? 'Drop here' : 'No tasks'}</p> : [...tasks].sort((a, b) => taskSort(a, b, pinned)).map(task => (
+      {tasks.length === 0 ? (dropOk ? <p className={styles.empty}>Drop here</p> : desktop ? null : <p className={styles.empty}>No tasks</p>) : [...tasks].sort((a, b) => taskSort(a, b, pinned)).map(task => (
         <KanbanCard key={task.id} task={task} onOpen={() => onOpen(task.id)} draggable={desktop} dragging={drag?.id === task.id}
           onDragStart={() => onCardDragStart({ id: task.id, from: task.status })} onDragEnd={onCardDragEnd} />
       ))}
@@ -632,6 +637,10 @@ export function KanbanBoard({ token = '' }: { token?: string }) {
   // Highest urgency first, then the largest queue in that urgency tier.
   const urgency = (status: string) => ATTENTION_STATUSES.has(status) ? 4 : status === 'review' ? 3 : ['running', 'in_progress'].includes(status) ? 2 : ACTIVE_STATUSES.has(status) ? 1 : 0
   const defaultLane = [...cols].filter(column => byStatus.has(column.status)).sort((a, b) => urgency(b.status) - urgency(a.status) || (byStatus.get(b.status)?.length ?? 0) - (byStatus.get(a.status)?.length ?? 0))[0]?.status
+  // Desktop display order (D2: Needs you / Running / Up next / Done). COLUMNS stays the status source of truth.
+  const LANE_ORDER = ['blocked', 'failed', 'review', 'running', 'in_progress', 'todo', 'ready', 'done', 'archived']
+  const laneRank = (status: string) => { const i = LANE_ORDER.indexOf(status); return i < 0 ? LANE_ORDER.length : i }
+  const desktopCols = [...cols].sort((a, b) => laneRank(a.status) - laneRank(b.status))
   const changeFilter = (value: string) => { setFilter(value as FilterId); setExpanded(null) }
 
   return <>
@@ -654,7 +663,7 @@ export function KanbanBoard({ token = '' }: { token?: string }) {
       {!snap && !error && <SkeletonPanel label="Loading tasks" />}
       {snap && <div className={styles.lanes}>
         {cols.length === 0 && <Card pad="md"><p className={styles.empty}>{completedCount > 0 ? 'No open tasks match. Show done to view completed work.' : 'No tasks match the current filters.'}</p></Card>}
-        {(isDesktop ? cols : [...cols].sort((a, b) => urgency(b.status) - urgency(a.status) || (byStatus.get(b.status)?.length ?? 0) - (byStatus.get(a.status)?.length ?? 0))).map(column => <Column key={column.status} def={column} tasks={byStatus.get(column.status) ?? []} pinned={pinned} onOpen={setOpenId}
+        {(isDesktop ? desktopCols : [...cols].sort((a, b) => urgency(b.status) - urgency(a.status) || (byStatus.get(b.status)?.length ?? 0) - (byStatus.get(a.status)?.length ?? 0))).map(column => <Column key={column.status} def={column} needsYou={NEEDS_YOU.has(column.status)} tasks={byStatus.get(column.status) ?? []} pinned={pinned} onOpen={setOpenId}
           expanded={expanded === null ? column.status === defaultLane : !!expanded[column.status]}
           onToggle={() => setExpanded(previous => {
             const current = previous ?? (defaultLane ? { [defaultLane]: true } : {})
