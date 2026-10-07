@@ -8,13 +8,11 @@ import { Button, Card, CardHead } from '@/components/ui'
 import { VaultDocuments, VaultDocumentsProvider } from '@/components/VaultDocuments'
 import styles from '@/components/Pipeline.module.css'
 
-const CommandHeader = dynamic(() => import('@/components/views/CommandHeader').then(m => m.CommandHeader), { ssr: false })
 const PipelineBoard = dynamic(() => import('@/components/PipelineBoard').then(m => m.PipelineBoard), { ssr: false })
 
 export default function PipelinePage() {
   const [showDocs, setShowDocs] = useState(false)
   return <div className={`${styles.page} ${styles.radar}`} style={THEME_CSS_VARIABLES as CSSProperties}>
-    <CommandHeader />
     <PageHeader eyebrow="~/pipeline · FUNNEL-STATE" title="PIPELINE" subtitle="Pipeline evidence, decisions, and dated progress." />
     <VaultDocumentsProvider>
       <PipelineBoard />

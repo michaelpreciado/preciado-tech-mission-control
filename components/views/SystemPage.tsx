@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLiveData } from '@/components/LiveDataProvider'
-import { PageHeader } from '@/components/PageHeader'
 import { Button, Card, CardHead, Chip, Row, Stat, type ChipTone } from '@/components/ui'
 import { apiFetch } from '@/lib/api-base'
 import type { HostMetrics } from '@/lib/host-metrics'
@@ -180,12 +179,10 @@ export default function SystemPage() {
   }, [states])
 
   return <>
-    <PageHeader title="System" subtitle="The machine, the rig, and the data you rely on."
-      actions={<Button variant="primary" loading={refreshing} onClick={() => void refresh()} aria-label="Refresh system data">Refresh</Button>} />
     <div className={styles.content} aria-live="polite" aria-relevant="text additions">
       <Card as="section">
         <CardHead title={host?.static.hostname || 'Machine identity unavailable'} sub={host?.static.cpuModel || 'Processor model not reported'}
-          right={<Freshness at={freshest} error={resources.host.error || error} now={now} />} />
+          right={<><Freshness at={freshest} error={resources.host.error || error} now={now} /><Button variant="primary" loading={refreshing} onClick={() => void refresh()} aria-label="Refresh system data">Refresh</Button></>} />
         <dl className={styles.identity}>
           <div><dt>Kernel</dt><dd>{host?.static.kernel || 'Not reported'}</dd></div>
           <div><dt>OS distribution</dt><dd>Not exposed</dd></div>

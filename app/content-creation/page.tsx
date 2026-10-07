@@ -5,7 +5,6 @@ import { SectionHead, SkeletonPanel } from '@/components/ui'
 import { PageHeader } from '@/components/PageHeader'
 import '../vf/v3-lane.css'
 
-const CommandHeader = dynamic(() => import('@/components/views/CommandHeader').then(m => m.CommandHeader), { ssr: false })
 const ContentCreationBoard = dynamic(() => import('@/components/ContentCreationBoard').then(m => m.ContentCreationBoard), { ssr: false })
 const VideoPromptStudio = dynamic(() => import('@/components/VideoPromptStudio').then(m => m.VideoPromptStudio), { ssr: false, loading: () => <SkeletonShell /> })
 const SignalFeed = dynamic(() => import('@/components/SignalFeed').then(m => m.SignalFeed), { ssr: false, loading: () => <SkeletonShell /> })
@@ -17,7 +16,6 @@ function SkeletonShell() {
 export default function ContentCreationPage() {
   return (
     <>
-      <CommandHeader />
       <PageHeader eyebrow="CONTENT · IDEA-STATE" title="CONTENT" subtitle="Idea queue, production studio, and signal feed" />
       <div className="v3-kicker v4-legacy-kicker"><span className="jp">制作</span> idea queue</div>
       <nav className="w2l-section-nav" aria-label="Content sections">
