@@ -1,0 +1,76 @@
+/* AURORA tokens (--aur-*): near-black ink, periwinkle glass, mint / honey / coral status.
+   Source: agentic-os/concepts/aurora/tokens.css. Additive and namespaced: no --mbg-* or
+   --pt-* token is read or written here. Component CSS in components/aurora resolves
+   every colour through this layer. Imported after matrix-blue.css. */
+:root {
+  /* primitive */
+  --aur-ink-0: #07080b;
+  --aur-ink-1: #0b0d12;
+  --aur-ink-2: #10131b;
+  --aur-ink-3: #161a25;
+  --aur-ink-4: #1e2331;
+  --aur-peri-2: #dfe6f9;
+  --aur-peri-3: #c3d1f4;
+  --aur-peri-5: #9db4ec;
+  --aur-peri-7: #5d71a8;
+  --aur-fog-9: #eceef5;
+  --aur-fog-7: #b4bacb;
+  --aur-fog-5: #7a8196;
+  --aur-fog-4: #585e70;
+  --aur-mint-5: #86d4b4;
+  --aur-honey-5: #e8c27e;
+  --aur-coral-5: #f08c84;
+
+  /* semantic */
+  --aur-bg: var(--aur-ink-0);
+  --aur-surface: var(--aur-ink-1);
+  --aur-surface-raised: var(--aur-ink-2);
+  --aur-surface-hover: var(--aur-ink-3);
+  --aur-line-subtle: rgb(157 180 236 / .07);
+  --aur-line: rgb(157 180 236 / .11);
+  --aur-line-strong: rgb(157 180 236 / .22);
+  --aur-text: var(--aur-fog-9);
+  --aur-text-2: var(--aur-fog-7);
+  --aur-text-3: var(--aur-fog-5);
+  --aur-text-4: var(--aur-fog-4);
+  --aur-accent: var(--aur-peri-5);
+  --aur-accent-strong: var(--aur-peri-3);
+  --aur-accent-deep: var(--aur-peri-7);
+  --aur-accent-ink: var(--aur-ink-0);
+  --aur-accent-wash: rgb(157 180 236 / .10);
+  --aur-accent-glow: rgb(157 180 236 / .35);
+  --aur-ok: var(--aur-mint-5);
+  --aur-warn: var(--aur-honey-5);
+  --aur-error: var(--aur-coral-5);
+  --aur-error-wash: rgb(240 140 132 / .09);
+  --aur-stale: var(--aur-fog-5);
+  --aur-bloom-1: rgb(52 64 140 / .30);
+  --aur-bloom-2: rgb(157 180 236 / .07);
+  --aur-glass-bg: rgb(11 13 18 / .66);
+  --aur-glass-blur: 18px;
+  --aur-glass-border: rgb(255 255 255 / .06);
+  --aur-highlight: inset 0 1px 0 rgb(255 255 255 / .035);
+  --aur-fill-faint: rgb(255 255 255 / .025);
+  --aur-now: var(--aur-peri-2);
+
+  /* scale */
+  --aur-radius-sm: 8px;
+  --aur-radius-md: 12px;
+  --aur-radius-lg: 16px;
+  --aur-radius-full: 999px;
+  --aur-space-1: 4px;
+  --aur-space-2: 8px;
+  --aur-space-3: 12px;
+  --aur-space-4: 16px;
+  --aur-space-5: 24px;
+  --aur-space-6: 32px;
+  --aur-space-7: 48px;
+  --aur-fs-xs: 12px;
+  --aur-fs-sm: 13px;
+  --aur-fs-md: 15px;
+  --aur-fs-lg: 18px;
+  --aur-fs-hero: 52px;
+  --aur-font-ui: var(--mbg-font-sans, 'Instrument Sans'), system-ui, sans-serif;
+  --aur-font-data: var(--mbg-font-mono, 'JetBrains Mono'), ui-monospace, monospace;
+  --aur-ease: cubic-bezier(.2, .7, .2, 1);
+}

@@ -1,0 +1,96 @@
+/* AURORA Home. Ported from concepts/aurora/shell.css (.hero, .sky-wrap, .sky, .bands, .item, .btn, .dot).
+   The global Shell (rail, header, mobile tab bar) is untouched, so .shell / .hdr / .rail are not ported.
+   Colours resolve through --aur-* only (app/styles/aurora.css). */
+
+.home { position: relative; z-index: 1; display: flex; flex-direction: column; gap: var(--aur-space-6); max-width: 1280px; margin: 0 auto; font-family: var(--aur-font-ui); color: var(--aur-text); -webkit-font-smoothing: antialiased; font-feature-settings: "ss01", "cv11"; }
+.home::before {
+  content: ""; position: absolute; inset: -80px 0 auto; height: 560px; pointer-events: none; z-index: -1;
+  background:
+    radial-gradient(900px 420px at 68% 0%, var(--aur-bloom-1), transparent 70%),
+    radial-gradient(700px 420px at 6% 40%, var(--aur-bloom-2), transparent 70%);
+}
+.num { font-family: var(--aur-font-data); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+
+/* ---------- hero ---------- */
+.hero { position: relative; min-width: 0; }
+.date { margin: 0 0 10px; color: var(--aur-text-3); font-size: var(--aur-fs-sm); }
+.hero h1, .band h2, .item h3 { font-family: var(--aur-font-ui); }
+.hero h1 { margin: 0; max-width: 34ch; font-size: var(--aur-fs-hero); font-weight: 400; line-height: 1.08; letter-spacing: -0.028em; color: var(--aur-text); text-wrap: balance; }
+.err { margin: 12px 0 0; color: var(--aur-error); font-size: var(--aur-fs-sm); }
+
+.skyWrap { position: relative; margin-top: var(--aur-space-5); display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: var(--aur-space-3); }
+.skyLabels { display: flex; flex-direction: column; padding-top: 12px; }
+.skyLabels span { height: 24px; font: 400 11px/24px var(--aur-font-data); color: var(--aur-text-4); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.skyScroll { min-width: 0; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: var(--aur-line-strong) transparent; }
+.sky { display: block; width: 100%; min-width: 640px; overflow: visible; }
+.hr { stroke: var(--aur-line-subtle); stroke-width: 1; }
+.hl { fill: var(--aur-text-4); font: 400 10.5px var(--aur-font-data); }
+.halo { fill: var(--aur-accent); opacity: .75; }
+.failHalo { fill: var(--aur-error); opacity: .3; }
+.fail { fill: var(--aur-error); }
+.now { stroke: var(--aur-accent-strong); stroke-width: 1; stroke-dasharray: 2 3; opacity: .8; }
+.nowDot { fill: var(--aur-now); }
+.skyNote { margin: var(--aur-space-2) 0 0 calc(112px + var(--aur-space-3)); color: var(--aur-text-4); font-size: var(--aur-fs-xs); }
+.skyEmpty { margin-top: var(--aur-space-5); padding: var(--aur-space-5); border: 1px dashed var(--aur-line); border-radius: var(--aur-radius-lg); color: var(--aur-text-3); font-size: var(--aur-fs-sm); }
+.skyEmpty strong { display: block; margin-bottom: 2px; color: var(--aur-text-2); font-weight: 500; }
+
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-motion="off"]):not([data-motion="reduced"]) .nowDot { animation: aurPulse 3.2s var(--aur-ease) infinite; }
+}
+@keyframes aurPulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+/* Static render: drop the blur glow, keep the strands. */
+@media (prefers-reduced-motion: reduce) {
+  .halo, .failHalo { filter: none; }
+  .halo { opacity: .22; }
+}
+:global(html[data-motion="off"]) .halo, :global(html[data-motion="reduced"]) .halo,
+:global(html[data-motion="off"]) .failHalo, :global(html[data-motion="reduced"]) .failHalo { filter: none; }
+:global(html[data-motion="off"]) .halo, :global(html[data-motion="reduced"]) .halo { opacity: .22; }
+
+/* ---------- bands ---------- */
+.bands { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: var(--aur-space-4); min-height: 0; }
+.band { display: flex; flex-direction: column; min-width: 0; padding: var(--aur-space-4) var(--aur-space-5) var(--aur-space-3); background: var(--aur-surface); border: 1px solid var(--aur-line-subtle); border-radius: var(--aur-radius-lg); box-shadow: var(--aur-highlight); }
+.band > header { display: flex; align-items: baseline; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--aur-line-subtle); }
+.band h2 { margin: 0; font-size: var(--aur-fs-md); font-weight: 600; letter-spacing: -0.005em; }
+.count { font: 500 var(--aur-fs-sm) var(--aur-font-data); color: var(--aur-accent); }
+.countErr { color: var(--aur-error); }
+.band > header a { margin-left: auto; color: var(--aur-text-3); font-size: var(--aur-fs-sm); text-decoration: none; }
+.band > header a:hover { color: var(--aur-text); }
+.waiting { border-color: var(--aur-line); background: linear-gradient(180deg, var(--aur-accent-wash), transparent 140px), var(--aur-surface); }
+.list { margin: 0; padding: 0; list-style: none; }
+.more { display: block; padding: 12px 0 4px; color: var(--aur-text-3); font-size: var(--aur-fs-sm); text-decoration: none; }
+.more:hover { color: var(--aur-text); }
+.empty { padding: 18px 0 14px; color: var(--aur-text-3); font-size: var(--aur-fs-sm); }
+.empty strong { display: block; color: var(--aur-text-2); font-weight: 500; }
+
+.item { display: flex; gap: var(--aur-space-4); padding: 14px 0; border-bottom: 1px solid var(--aur-line-subtle); }
+.item:last-child { border-bottom: 0; }
+.itemMain { flex: 1; min-width: 0; }
+.item h3 { margin: 0; font-size: 14.5px; font-weight: 500; line-height: 1.35; color: var(--aur-text); overflow-wrap: anywhere; }
+.item p { margin: 3px 0 0; font-size: var(--aur-fs-sm); line-height: 1.45; color: var(--aur-text-3); overflow-wrap: anywhere; }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 8px; font-size: var(--aur-fs-xs); color: var(--aur-text-4); }
+.acts { display: flex; flex-direction: column; gap: 6px; align-items: stretch; justify-content: flex-start; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 30px; padding: 0 12px; border: 1px solid var(--aur-line); border-radius: var(--aur-radius-sm); background: var(--aur-fill-faint); color: var(--aur-text-2); font-size: var(--aur-fs-sm); font-weight: 500; white-space: nowrap; text-decoration: none; }
+.btn:hover { background: var(--aur-surface-hover); color: var(--aur-text); }
+.btnPrimary { color: var(--aur-accent-ink); background: var(--aur-accent); border-color: transparent; box-shadow: 0 0 18px -4px var(--aur-accent-glow); }
+.btnPrimary:hover { background: var(--aur-accent-strong); color: var(--aur-accent-ink); }
+.btn:focus-visible, .band a:focus-visible { outline: 2px solid var(--aur-accent-strong); outline-offset: 2px; }
+
+.dot { width: 7px; height: 7px; margin-top: 7px; border-radius: var(--aur-radius-full); flex: none; background: var(--aur-text-4); }
+.dotErr { background: var(--aur-error); box-shadow: 0 0 0 3px var(--aur-error-wash); }
+.dotWarn { background: var(--aur-warn); }
+
+/* ---------- phone ---------- */
+@media (max-width: 839px) {
+  .home { gap: var(--aur-space-5); }
+  .hero h1 { font-size: clamp(30px, 8.6vw, 40px); }
+  .skyWrap { grid-template-columns: 76px minmax(0, 1fr); gap: var(--aur-space-2); }
+  .sky { min-width: 960px; }
+  .skyNote { margin-left: 0; }
+  .bands { grid-template-columns: minmax(0, 1fr); }
+  .band { padding-inline: var(--aur-space-4); }
+  .item { flex-direction: column; gap: var(--aur-space-3); }
+  .broke .item { flex-direction: row; }
+  .acts { flex-direction: row; }
+  .btn { height: 44px; padding: 0 16px; }
+}
