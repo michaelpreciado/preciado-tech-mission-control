@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getMessages } from '@/lib/conversations'
 import { continueConversation } from '@/lib/conversation-actions'
-import {checkRateLimit, getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv, isLoopbackIp, assertSameOrigin } from '@/lib/mission-api'
+import { checkRateLimit, getClientIpFromHeaders, isLoopbackIp, assertSameOrigin } from '@/lib/mission-api'
+import { isAgentControlAuthorized } from '@/lib/herdr-auth'
 import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -14,10 +15,7 @@ const MODEL_RE = /^[A-Za-z0-9][A-Za-z0-9._:/-]{1,119}$/
 const PROVIDER_RE = /^[a-z0-9][a-z0-9._-]{1,39}$/
 
 function isAuthorized(req: NextRequest): boolean {
-  const secret = process.env.INTERNAL_API_SECRET
-  if (secret) return req.headers.get('authorization') === `Bearer ${secret}`
-  const ip = getClientIpFromHeaders(req.headers)
-  return isTrustedIp(ip, trustedRangesFromEnv())
+  return isAgentControlAuthorized(req.headers)
 }
 
 function rate(req: NextRequest): boolean {

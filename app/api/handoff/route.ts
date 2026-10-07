@@ -4,20 +4,16 @@ import { configuredAgents, withAgentFlight } from '@/lib/agent-adapters'
 import { getMessages, listConversations } from '@/lib/conversations'
 import { readPiSessions } from '@/lib/pi-sessions'
 import { buildHandoffBrief, runCodexHandoff } from '@/lib/handoff'
-import { assertSameOrigin, getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv, checkRateLimit } from '@/lib/mission-api'
+import { getClientIpFromHeaders, checkRateLimit } from '@/lib/mission-api'
+import { herdrGate } from '@/lib/herdr-auth'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 const bucket = new Map<string, { count: number; resetAt: number }>()
 export async function POST(req: NextRequest) {
-  const origin = assertSameOrigin(req)
-  if (!origin.ok) return NextResponse.json(origin.body, { status: origin.status })
+  const denied = herdrGate(req, true)
+  if (denied) return NextResponse.json({ error: denied.error }, { status: denied.status })
   const ip = getClientIpFromHeaders(req.headers)
-  const secret = process.env.INTERNAL_API_SECRET
-  if (secret ? req.headers.get('authorization') !== `Bearer ${secret}` :
-    !isTrustedIp(ip, trustedRangesFromEnv())) {
-    return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
-  }
   if (!checkRateLimit(bucket, ip, Date.now(), 20, 60_000).allowed) return NextResponse.json({ error: 'rate limited' }, { status: 429 })
   let body
   try { body = await req.json() } catch { return NextResponse.json({ error: 'invalid JSON body' }, { status: 400 }) }

@@ -1,17 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { assertSameOrigin, getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv } from '@/lib/mission-api'
+import { herdrGate } from '@/lib/herdr-auth'
 import { createBot, deleteBot, gatewayAction, editBotModel, toggleRoutine } from '@/lib/bot-actions'
 import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
-
-/** Same trusted-client gate as every other write route: bearer INTERNAL_API_SECRET if set, else loopback / FRIDAY_TRUSTED_IPS CIDR. */
-function isAuthorized(req: NextRequest): boolean {
-  const secret = process.env.INTERNAL_API_SECRET
-  if (secret) return req.headers.get('authorization') === `Bearer ${secret}`
-  const ip = getClientIpFromHeaders(req.headers)
-  return isTrustedIp(ip, trustedRangesFromEnv())
-}
 
 /**
  * POST /api/bots/actions — bot profile management (Hermes desktop parity).
@@ -23,16 +15,15 @@ function isAuthorized(req: NextRequest): boolean {
  *   { action: 'edit-model',    name, model, provider? }
  *   { action: 'toggle-routine', id, enabled }
  *
- * Every branch runs the same gate as create/delete: assertSameOrigin +
- * isAuthorized, then server-side name/charset/`default` checks in
+ * Every branch runs the same gate as create/delete: herdrGate (same-origin +
+ * agent-control auth + rate limit), then server-side name/charset/`default` checks in
  * lib/bot-actions.ts. Shells out to the `hermes` CLI — the roster on disk stays
  * the single source of truth.
  */
 const LIFECYCLE = new Set(['start', 'stop', 'restart'])
 export async function POST(req: NextRequest) {
-  const _origin = assertSameOrigin(req)
-  if (!_origin.ok) return NextResponse.json(_origin.body, { status: _origin.status })
-  if (!isAuthorized(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  const denied = herdrGate(req, true)
+  if (denied) return NextResponse.json({ error: denied.error }, { status: denied.status })
   try {
     const b = await req.json()
     const action = typeof b?.action === 'string' ? b.action : ''

@@ -1,17 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { assertSameOrigin, getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv } from '@/lib/mission-api'
+import { assertSameOrigin } from '@/lib/mission-api'
+import { isAgentControlAuthorized } from '@/lib/herdr-auth'
 import { getKanbanSnapshot } from '@/lib/hermes-kanban'
 import { createTask } from '@/lib/kanban-actions'
 import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
-/** Same trusted-client gate as every other write route: bearer INTERNAL_API_SECRET if set, else loopback / FRIDAY_TRUSTED_IPS CIDR. */
+/** Same trusted-client gate as every other write route: see isAgentControlAuthorized in lib/herdr-auth.ts. */
 function isAuthorized(req: NextRequest): boolean {
-  const secret = process.env.INTERNAL_API_SECRET
-  if (secret) return req.headers.get('authorization') === `Bearer ${secret}`
-  const ip = getClientIpFromHeaders(req.headers)
-  return isTrustedIp(ip, trustedRangesFromEnv())
+  return isAgentControlAuthorized(req.headers)
 }
 
 /** GET /api/kanban → column-grouped multi-machine snapshot. */

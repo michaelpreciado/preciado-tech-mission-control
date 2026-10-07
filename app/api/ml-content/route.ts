@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { assertSameOrigin, getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv } from '@/lib/mission-api'
+import { assertSameOrigin } from '@/lib/mission-api'
+import { isAgentControlAuthorized } from '@/lib/herdr-auth'
 import { readFileSync, readdirSync, mkdirSync, writeFileSync } from 'fs'
 import { join, dirname } from 'path'
 // Use relative path — @/ alias may not work in API routes
@@ -7,12 +8,9 @@ import { deriveMLContentIdeaId, type MLContentIdea } from '../../../lib/types'
 import { getConfig } from '../../../lib/config'
 import { logger } from '../../../lib/logger'
 
-/** Same trusted-client gate as every other write route: bearer INTERNAL_API_SECRET if set, else loopback / FRIDAY_TRUSTED_IPS CIDR. */
+/** Same trusted-client gate as every other write route: see isAgentControlAuthorized in lib/herdr-auth.ts. */
 function isAuthorized(req: NextRequest): boolean {
-  const secret = process.env.INTERNAL_API_SECRET
-  if (secret) return req.headers.get('authorization') === `Bearer ${secret}`
-  const ip = getClientIpFromHeaders(req.headers)
-  return isTrustedIp(ip, trustedRangesFromEnv())
+  return isAgentControlAuthorized(req.headers)
 }
 
 /** Ids of ideas currently present in the week-N.json files — used to reject dispatch

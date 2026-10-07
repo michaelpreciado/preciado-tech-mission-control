@@ -13,7 +13,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { CONFIG_FILE, getConfig, isConfigured, resetConfigCache, type ConfigFile } from '@/lib/config'
-import {getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv, checkRateLimit, assertSameOrigin } from '@/lib/mission-api'
+import { getClientIpFromHeaders, checkRateLimit, assertSameOrigin } from '@/lib/mission-api'
+import { isAgentControlAuthorized } from '@/lib/herdr-auth'
 import { isHexColor } from '@/lib/theme'
 import { logger } from '@/lib/logger'
 
@@ -22,10 +23,7 @@ export const dynamic = 'force-dynamic'
 const rateBucket = new Map<string, { count: number; resetAt: number }>()
 
 function isAuthorized(req: NextRequest): boolean {
-  const secret = process.env.INTERNAL_API_SECRET
-  if (secret) return req.headers.get('authorization') === `Bearer ${secret}`
-  const ip = getClientIpFromHeaders(req.headers)
-  return isTrustedIp(ip, trustedRangesFromEnv())
+  return isAgentControlAuthorized(req.headers)
 }
 
 export async function GET() {

@@ -21,7 +21,7 @@ import { promisify } from 'node:util'
 import fs from 'node:fs'
 import path from 'node:path'
 import { hermesDir } from '@/lib/collectors/bots'
-import { getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv } from '@/lib/mission-api'
+import { isAgentControlAuthorized } from '@/lib/herdr-auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,10 +41,7 @@ export type ModelCatalog = {
 }
 
 function isAuthorized(req: NextRequest): boolean {
-  const secret = process.env.INTERNAL_API_SECRET
-  if (secret) return req.headers.get('authorization') === `Bearer ${secret}`
-  const ip = getClientIpFromHeaders(req.headers)
-  return isTrustedIp(ip, trustedRangesFromEnv())
+  return isAgentControlAuthorized(req.headers)
 }
 
 /** `ollama list` prints a NAME/ID/SIZE/MODIFIED table, one model per row. */

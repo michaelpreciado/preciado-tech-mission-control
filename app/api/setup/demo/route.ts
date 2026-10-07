@@ -8,7 +8,8 @@ import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import path from 'node:path'
 import { resetConfigCache } from '@/lib/config'
-import {getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv, checkRateLimit, assertSameOrigin } from '@/lib/mission-api'
+import { getClientIpFromHeaders, checkRateLimit, assertSameOrigin } from '@/lib/mission-api'
+import { isAgentControlAuthorized } from '@/lib/herdr-auth'
 import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -17,10 +18,7 @@ const execFileAsync = promisify(execFile)
 const rateBucket = new Map<string, { count: number; resetAt: number }>()
 
 function isAuthorized(req: NextRequest): boolean {
-  const secret = process.env.INTERNAL_API_SECRET
-  if (secret) return req.headers.get('authorization') === `Bearer ${secret}`
-  const ip = getClientIpFromHeaders(req.headers)
-  return isTrustedIp(ip, trustedRangesFromEnv())
+  return isAgentControlAuthorized(req.headers)
 }
 
 export async function POST(req: NextRequest) {

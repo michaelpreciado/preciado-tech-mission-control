@@ -7,8 +7,9 @@
  * from the UI rotates it. One run per agent at a time: turns are heavyweight,
  * so concurrent sends get a 409 instead of queuing silently.
  *
- * Security: same posture as /api/setup — loopback (plus FRIDAY_TRUSTED_IPS)
- * unless INTERNAL_API_SECRET is set (then bearer required). The binary comes from
+ * Security: herdrGate — see isAgentControlAuthorized in lib/herdr-auth.ts
+ * (bearer, loopback, or an allowed Tailscale login once INTERNAL_API_SECRET is
+ * set). The binary comes from
  * operator config only; the user message is passed as a single argv element
  * (no shell), validated and length-capped.
  */
@@ -18,7 +19,8 @@ import { promisify } from 'node:util'
 import { randomUUID } from 'node:crypto'
 import { adapters, configuredAgents, selectAgent, isAgentBusy, withAgentFlight, sendAgent } from '@/lib/agent-adapters'
 import { invalidateConversationCache, listConversations, listDevices } from '@/lib/conversations'
-import {getClientIpFromHeaders, isTrustedIp, trustedRangesFromEnv, checkRateLimit, assertSameOrigin } from '@/lib/mission-api'
+import { getClientIpFromHeaders, checkRateLimit } from '@/lib/mission-api'
+import { herdrGate } from '@/lib/herdr-auth'
 import { chatContinuity, continuityStore } from '@/lib/chat-continuity'
 import { logger } from '@/lib/logger'
 import { sanitizeCliFailure, sanitizeServerError } from '@/lib/server-error-sanitizer'
@@ -37,13 +39,6 @@ const MODEL_RE = /^[A-Za-z0-9][A-Za-z0-9._:/-]{1,119}$/
 const PROVIDER_RE = /^[a-z0-9][a-z0-9._-]{1,39}$/
 const availability = new Map<string, boolean>()
 
-function isAuthorized(req: NextRequest): boolean {
-  const secret = process.env.INTERNAL_API_SECRET
-  if (secret) return req.headers.get('authorization') === `Bearer ${secret}`
-  const ip = getClientIpFromHeaders(req.headers)
-  return isTrustedIp(ip, trustedRangesFromEnv())
-}
-
 async function checkAvailable(command: string): Promise<boolean> {
   if (availability.has(command)) return availability.get(command)!
   try {
@@ -57,8 +52,9 @@ async function checkAvailable(command: string): Promise<boolean> {
 
 export async function GET(req?: NextRequest) {
   const session = req ? new URL(req.url).searchParams.get('session') : null
-  if (session) {
-    if (!req || !isAuthorized(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  if (session && req) {
+    const denied = herdrGate(req)
+    if (denied) return NextResponse.json({ error: denied.error }, { status: denied.status })
     const profile = new URL(req.url).searchParams.get('profile') || 'default'
     const store = continuityStore()
     try { return NextResponse.json({ continuity: store.get(profile, session) ?? null }, { headers: { 'Cache-Control': 'no-store' } }) }
@@ -76,15 +72,12 @@ export async function GET(req?: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const _origin = assertSameOrigin(req)
-  if (!_origin.ok) return NextResponse.json(_origin.body, { status: _origin.status })
+  const denied = herdrGate(req, true)
+  if (denied) return NextResponse.json({ error: denied.error }, { status: denied.status })
   const ip = getClientIpFromHeaders(req.headers)
   const limit = checkRateLimit(rateBucket, ip, Date.now(), 20, 60_000)
   if (!limit.allowed) {
     return NextResponse.json({ error: 'rate limited' }, { status: 429, headers: { 'Retry-After': String(limit.retryAfter) } })
-  }
-  if (!isAuthorized(req)) {
-    return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
 
   let body: { message?: unknown; session?: unknown; agent?: unknown; profile?: unknown; createSession?: unknown; model?: unknown; provider?: unknown }
