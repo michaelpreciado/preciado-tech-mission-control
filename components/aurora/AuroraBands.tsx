@@ -27,9 +27,9 @@ type BandProps = {
 
 function Band({ title, count, countTone, linkLabel, href, items, more, empty, variant }: BandProps) {
   return (
-    <article className={`${styles.band} ${variant === 'waiting' ? styles.waiting : ''}`}>
+    <article className={`${styles.band} ${variant === 'waiting' ? styles.waiting : styles.broke}`} data-glass="">
       <header>
-        <h2>{title}</h2>
+        <h2><span className={styles.chev} aria-hidden="true">&gt;</span>{title}</h2>
         {count !== null && <span className={`${styles.count} ${countTone === 'error' && count > 0 ? styles.countErr : ''}`}>{count}</span>}
         <Link href={href}>{linkLabel}</Link>
       </header>

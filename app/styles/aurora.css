@@ -1,4 +1,6 @@
-/* AURORA tokens (--aur-*): near-black ink, periwinkle glass, mint / honey / coral status.
+/* AURORA tokens (--aur-*): near-black ink, Blue Matrix glass, mint / honey / coral status.
+   Phase A re-points the semantic layer at --pt-mx-* and the dodger accent; the periwinkle
+   primitives below are kept only as named references and are no longer consumed.
    Source: agentic-os/concepts/aurora/tokens.css. Additive and namespaced: no --mbg-* or
    --pt-* token is read or written here. Component CSS in components/aurora resolves
    every colour through this layer. Imported after matrix-blue.css. */
@@ -23,35 +25,35 @@
 
   /* semantic */
   --aur-bg: var(--aur-ink-0);
-  --aur-surface: var(--aur-ink-1);
-  --aur-surface-raised: var(--aur-ink-2);
-  --aur-surface-hover: var(--aur-ink-3);
-  --aur-line-subtle: rgb(157 180 236 / .07);
-  --aur-line: rgb(157 180 236 / .11);
-  --aur-line-strong: rgb(157 180 236 / .22);
-  --aur-text: var(--aur-fog-9);
-  --aur-text-2: var(--aur-fog-7);
-  --aur-text-3: var(--aur-fog-5);
-  --aur-text-4: var(--aur-fog-4);
-  --aur-accent: var(--aur-peri-5);
-  --aur-accent-strong: var(--aur-peri-3);
-  --aur-accent-deep: var(--aur-peri-7);
-  --aur-accent-ink: var(--aur-ink-0);
-  --aur-accent-wash: rgb(157 180 236 / .10);
-  --aur-accent-glow: rgb(157 180 236 / .35);
+  --aur-surface: var(--pt-mx-glass, rgb(10 12 14 / .72));
+  --aur-surface-raised: var(--pt-mx-glass-hi, rgb(13 16 20 / .8));
+  --aur-surface-hover: rgb(255 255 255 / .045);
+  --aur-line-subtle: var(--pt-mx-line-subtle, rgb(255 255 255 / .06));
+  --aur-line: var(--pt-mx-line, rgb(255 255 255 / .10));
+  --aur-line-strong: var(--pt-mx-line-strong, rgb(255 255 255 / .18));
+  --aur-text: var(--pt-mx-ink-head, #f2f2f2);
+  --aur-text-2: var(--pt-mx-ink, #e5e7eb);
+  --aur-text-3: var(--pt-mx-ink-2, #94a3b8);
+  --aur-text-4: var(--pt-mx-ink-meta, #718096);
+  --aur-accent: var(--pt-dodger, #1e90ff);
+  --aur-accent-strong: #7cc0ff;
+  --aur-accent-deep: #0b5fb8;
+  --aur-accent-ink: #03101d;
+  --aur-accent-wash: rgb(30 144 255 / .07);
+  --aur-accent-glow: rgb(30 144 255 / .5);
   --aur-ok: var(--aur-mint-5);
   --aur-warn: var(--aur-honey-5);
   --aur-error: var(--aur-coral-5);
   --aur-error-wash: rgb(240 140 132 / .09);
   --aur-stale: var(--aur-fog-5);
-  --aur-bloom-1: rgb(52 64 140 / .30);
-  --aur-bloom-2: rgb(157 180 236 / .07);
+  --aur-bloom-1: rgb(30 144 255 / .09);
+  --aur-bloom-2: rgb(0 229 255 / .03);
   --aur-glass-bg: rgb(11 13 18 / .66);
   --aur-glass-blur: 18px;
   --aur-glass-border: rgb(255 255 255 / .06);
   --aur-highlight: inset 0 1px 0 rgb(255 255 255 / .035);
   --aur-fill-faint: rgb(255 255 255 / .025);
-  --aur-now: var(--aur-peri-2);
+  --aur-now: #bfe1ff;
 
   /* scale */
   --aur-radius-sm: 8px;

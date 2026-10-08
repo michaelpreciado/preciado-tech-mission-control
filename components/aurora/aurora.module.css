@@ -13,12 +13,37 @@
 
 /* ---------- hero ---------- */
 .hero { position: relative; min-width: 0; }
-.date { margin: 0 0 10px; color: var(--aur-text-3); font-size: var(--aur-fs-sm); }
+.date { display: flex; align-items: baseline; gap: 0; margin: 0 0 12px; color: var(--aur-text-3); font: 500 12.5px/1.3 var(--aur-font-data); letter-spacing: .01em; }
+.chev { margin-right: .6em; color: var(--aur-accent); font-family: var(--aur-font-data); font-weight: 500; }
+.date .num { margin-left: .4em; color: var(--aur-text-2); }
 .hero h1, .band h2, .item h3 { font-family: var(--aur-font-ui); }
-.hero h1 { margin: 0; max-width: 34ch; font-size: var(--aur-fs-hero); font-weight: 400; line-height: 1.08; letter-spacing: -0.028em; color: var(--aur-text); text-wrap: balance; }
+.hero h1 { margin: 0; max-width: 34ch; font-size: var(--aur-fs-hero); font-weight: 400; line-height: 1.08; letter-spacing: -0.03em; color: var(--aur-text); text-wrap: balance; text-shadow: var(--pt-mx-head-glow); }
+/* A new headline resolves in like a line of terminal output; the block cursor stays parked after it. */
+.headline { display: inline; animation: aurResolve 520ms var(--aur-ease) backwards; }
+.cursor {
+  display: inline-block; width: .36em; height: .78em; margin-left: .14em; vertical-align: -.04em;
+  background: var(--aur-accent); box-shadow: 0 0 14px var(--aur-accent-glow);
+  animation: aurBlink 1.15s steps(1, end) infinite;
+}
+@keyframes aurResolve { from { opacity: 0; transform: translate3d(0, 6px, 0); } to { opacity: 1; transform: none; } }
+@keyframes aurBlink { 50% { opacity: 0; } }
 .err { margin: 12px 0 0; color: var(--aur-error); font-size: var(--aur-fs-sm); }
 
-.skyWrap { position: relative; margin-top: var(--aur-space-5); display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: var(--aur-space-3); }
+/* Telemetry window around the sky. */
+.skyPanel { position: relative; margin-top: var(--aur-space-6); padding: 0 var(--aur-space-5) var(--aur-space-4); border: 1px solid var(--aur-line); border-radius: var(--aur-radius-lg); overflow: hidden; animation: aurArrive 420ms var(--aur-ease) 80ms backwards; }
+.panelHead { display: flex; align-items: center; gap: 14px; min-height: 40px; margin: 0 calc(-1 * var(--aur-space-5)); padding: 0 var(--aur-space-5); border-bottom: 1px solid var(--aur-line-subtle); font: 500 12px/1 var(--aur-font-data); color: var(--aur-text-3); }
+.lights { display: inline-flex; gap: 6px; }
+.lights i { width: 8px; height: 8px; border-radius: 50%; background: var(--aur-line-strong); }
+.panelTitle { color: var(--aur-text-2); }
+.panelPath { color: var(--aur-text-4); }
+.boot { display: grid; margin-left: auto; text-align: right; color: var(--aur-text-4); text-transform: uppercase; letter-spacing: .08em; font-size: 11px; }
+.boot > span { grid-area: 1 / 1; white-space: nowrap; }
+.bootInit { opacity: 0; color: var(--aur-accent); animation: aurInitOut 760ms linear backwards; }
+.bootReady { animation: aurInitIn 760ms linear backwards; }
+@keyframes aurInitOut { from, 78% { opacity: 1; } to { opacity: 0; } }
+@keyframes aurInitIn { from, 78% { opacity: 0; } to { opacity: 1; } }
+@keyframes aurArrive { from { opacity: 0; transform: translate3d(0, 8px, 0); } to { opacity: 1; transform: none; } }
+.skyWrap { position: relative; margin-top: var(--aur-space-4); display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: var(--aur-space-3); }
 .skyLabels { display: flex; flex-direction: column; padding-top: 12px; }
 .skyLabels span { height: 24px; font: 400 11px/24px var(--aur-font-data); color: var(--aur-text-4); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .skyScroll { min-width: 0; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: var(--aur-line-strong) transparent; }
@@ -49,21 +74,29 @@
 
 /* ---------- bands ---------- */
 .bands { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: var(--aur-space-4); min-height: 0; }
-.band { display: flex; flex-direction: column; min-width: 0; padding: var(--aur-space-4) var(--aur-space-5) var(--aur-space-3); background: var(--aur-surface); border: 1px solid var(--aur-line-subtle); border-radius: var(--aur-radius-lg); box-shadow: var(--aur-highlight); }
+.band { position: relative; isolation: isolate; display: flex; flex-direction: column; min-width: 0; padding: var(--aur-space-4) var(--aur-space-5) var(--aur-space-3); background: var(--aur-surface); border: 1px solid var(--aur-line); border-radius: var(--aur-radius-lg); box-shadow: var(--aur-highlight); animation: aurArrive 420ms var(--aur-ease) 160ms backwards; }
+.broke { animation-delay: 220ms; }
 .band > header { display: flex; align-items: baseline; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--aur-line-subtle); }
-.band h2 { margin: 0; font-size: var(--aur-fs-md); font-weight: 600; letter-spacing: -0.005em; }
+.band h2 { margin: 0; font: 600 13.5px/1.2 var(--aur-font-data); letter-spacing: -0.005em; color: var(--aur-text); }
 .count { font: 500 var(--aur-fs-sm) var(--aur-font-data); color: var(--aur-accent); }
+.count::before { content: '['; color: var(--aur-text-4); }
+.count::after { content: ']'; color: var(--aur-text-4); }
 .countErr { color: var(--aur-error); }
-.band > header a { margin-left: auto; color: var(--aur-text-3); font-size: var(--aur-fs-sm); text-decoration: none; }
+.band > header a { margin-left: auto; color: var(--aur-text-3); font: 500 12px/1 var(--aur-font-data); text-decoration: none; }
 .band > header a:hover { color: var(--aur-text); }
-.waiting { border-color: var(--aur-line); background: linear-gradient(180deg, var(--aur-accent-wash), transparent 140px), var(--aur-surface); }
+.waiting { border-color: var(--aur-line); }
+/* The band that wants a decision carries a faint accent wash beneath its glass. */
+.waiting::after { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: linear-gradient(180deg, var(--aur-accent-wash), transparent 160px); pointer-events: none; }
 .list { margin: 0; padding: 0; list-style: none; }
 .more { display: block; padding: 12px 0 4px; color: var(--aur-text-3); font-size: var(--aur-fs-sm); text-decoration: none; }
 .more:hover { color: var(--aur-text); }
 .empty { padding: 18px 0 14px; color: var(--aur-text-3); font-size: var(--aur-fs-sm); }
 .empty strong { display: block; color: var(--aur-text-2); font-weight: 500; }
 
-.item { display: flex; gap: var(--aur-space-4); padding: 14px 0; border-bottom: 1px solid var(--aur-line-subtle); }
+.item { position: relative; display: flex; gap: var(--aur-space-4); padding: 14px 0; border-bottom: 1px solid var(--aur-line-subtle); }
+/* Hover marks the row with a lit rail, like a cursor resting on a line of output. */
+.item::before { content: ""; position: absolute; left: calc(-1 * var(--aur-space-5)); top: 14px; bottom: 14px; width: 2px; border-radius: 0 2px 2px 0; background: var(--aur-accent); box-shadow: 0 0 10px var(--aur-accent-glow); opacity: 0; transition: opacity var(--pt-dur-micro, 140ms) var(--aur-ease); }
+.item:hover::before, .item:focus-within::before { opacity: 1; }
 .item:last-child { border-bottom: 0; }
 .itemMain { flex: 1; min-width: 0; }
 .item h3 { margin: 0; font-size: 14.5px; font-weight: 500; line-height: 1.35; color: var(--aur-text); overflow-wrap: anywhere; }
@@ -71,9 +104,9 @@
 .meta { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 8px; font-size: var(--aur-fs-xs); color: var(--aur-text-4); }
 .acts { display: flex; flex-direction: column; gap: 6px; align-items: stretch; justify-content: flex-start; }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 30px; padding: 0 12px; border: 1px solid var(--aur-line); border-radius: var(--aur-radius-sm); background: var(--aur-fill-faint); color: var(--aur-text-2); font-size: var(--aur-fs-sm); font-weight: 500; white-space: nowrap; text-decoration: none; }
-.btn:hover { background: var(--aur-surface-hover); color: var(--aur-text); }
-.btnPrimary { color: var(--aur-accent-ink); background: var(--aur-accent); border-color: transparent; box-shadow: 0 0 18px -4px var(--aur-accent-glow); }
-.btnPrimary:hover { background: var(--aur-accent-strong); color: var(--aur-accent-ink); }
+.btn:hover { background: var(--aur-surface-hover); border-color: var(--aur-line-strong); color: var(--aur-text); }
+.btnPrimary { color: var(--aur-text); background: linear-gradient(180deg, rgb(30 144 255 / .30), rgb(30 144 255 / .14)); border-color: rgb(30 144 255 / .55); box-shadow: inset 0 1px 0 rgb(191 225 255 / .22), 0 0 18px -6px var(--aur-accent-glow); }
+.btnPrimary:hover { background: linear-gradient(180deg, rgb(30 144 255 / .42), rgb(30 144 255 / .2)); border-color: rgb(124 192 255 / .8); color: #fff; }
 .btn:focus-visible, .band a:focus-visible { outline: 2px solid var(--aur-accent-strong); outline-offset: 2px; }
 
 .dot { width: 7px; height: 7px; margin-top: 7px; border-radius: var(--aur-radius-full); flex: none; background: var(--aur-text-4); }
@@ -87,10 +120,19 @@
   .skyWrap { grid-template-columns: 76px minmax(0, 1fr); gap: var(--aur-space-2); }
   .sky { min-width: 960px; }
   .skyNote { margin-left: 0; }
+  .skyPanel { padding-inline: var(--aur-space-4); }
+  .panelHead { margin-inline: calc(-1 * var(--aur-space-4)); padding-inline: var(--aur-space-4); }
+  .lights, .panelPath { display: none; }
+  .item::before { left: calc(-1 * var(--aur-space-4)); }
   .bands { grid-template-columns: minmax(0, 1fr); }
   .band { padding-inline: var(--aur-space-4); }
   .item { flex-direction: column; gap: var(--aur-space-3); }
   .broke .item { flex-direction: row; }
   .acts { flex-direction: row; }
   .btn { height: 44px; padding: 0 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .headline, .cursor, .skyPanel, .band, .bootInit, .bootReady { animation: none; }
+  .item::before { transition: none; }
 }
