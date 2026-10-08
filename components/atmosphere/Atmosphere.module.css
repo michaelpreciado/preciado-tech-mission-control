@@ -1,0 +1,166 @@
+/* Atmosphere — the environment the shell floats in. Every layer is decorative,
+   pointer-events: none, and sits under .mc-shell (z-index 5). Only transform and
+   opacity ever animate. */
+
+.field {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+}
+.field * { pointer-events: none; }
+
+/* Dim structural grid, strongest under the top-right light source. */
+.grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--pt-mx-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--pt-mx-grid-line) 1px, transparent 1px);
+  background-size: 64px 64px;
+  background-position: -1px -1px;
+  -webkit-mask-image: radial-gradient(ellipse 85% 70% at 72% 0%, #000 0%, rgba(0, 0, 0, .35) 55%, transparent 85%);
+          mask-image: radial-gradient(ellipse 85% 70% at 72% 0%, #000 0%, rgba(0, 0, 0, .35) 55%, transparent 85%);
+}
+
+/* Parallax carrier for rain + constellation. Oversized so the drift never shows an edge. */
+.depth {
+  position: absolute;
+  inset: -48px 0;
+}
+
+/* Data columns: calmer through the reading column, denser at the margins. */
+.rain {
+  position: absolute;
+  inset: 0;
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, rgba(0, 0, 0, .4) 26%, rgba(0, 0, 0, .28) 55%, #000 100%);
+          mask-image: linear-gradient(90deg, #000 0%, rgba(0, 0, 0, .4) 26%, rgba(0, 0, 0, .28) 55%, #000 100%);
+}
+.col {
+  position: absolute;
+  top: 0;
+  width: 1ch;
+  font-family: var(--pt-font-mono);
+  line-height: 1.42;
+  word-break: break-all;
+  white-space: normal;
+  user-select: none;
+  will-change: transform;
+  animation: mx-fall 60s linear infinite;
+  /* Four trails per column (two per copy): a bright leading head, a long fading tail. */
+  -webkit-mask-image: repeating-linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, .2) 8%, #000 18.5%, transparent 19.6%, transparent 25%);
+          mask-image: repeating-linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, .2) 8%, #000 18.5%, transparent 19.6%, transparent 25%);
+}
+.tone1 { color: var(--pt-mx-rain-1); }
+.tone2 { color: var(--pt-mx-rain-2); }
+.tone3 { color: var(--pt-mx-rain-3); }
+
+@keyframes mx-fall {
+  from { transform: translate3d(0, -50%, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+
+/* Neural constellation. */
+.edges {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.edges line {
+  stroke: var(--pt-mx-neural-line);
+  stroke-width: 1;
+}
+.node {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  margin: -1.5px 0 0 -1.5px;
+  border-radius: 50%;
+  background: var(--pt-dodger);
+  opacity: .42;
+  transition: opacity var(--pt-dur-complex) var(--pt-ease-enter), transform var(--pt-dur-complex) var(--pt-ease-enter);
+}
+.node::before,
+.node::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+}
+/* Proximity halo: lit by the pointer, opacity only. */
+.node::before {
+  inset: -9px;
+  background: radial-gradient(circle, rgba(0, 229, 255, .32), transparent 70%);
+  opacity: 0;
+  transition: opacity var(--pt-dur-complex) var(--pt-ease-enter);
+}
+.node[data-near='true'] { opacity: 1; transform: scale(1.5); }
+.node[data-near='true']::before { opacity: 1; }
+
+/* Slow signal ring on a few nodes. */
+.pulse::after {
+  inset: -1px;
+  border: 1px solid rgba(30, 144, 255, .55);
+  opacity: 0;
+  animation: mx-ping 7.5s var(--pt-ease-exit) infinite;
+}
+@keyframes mx-ping {
+  0% { opacity: .7; transform: scale(1); }
+  45%, 100% { opacity: 0; transform: scale(6); }
+}
+
+/* Pointer light: a soft cone that brightens the glass and nodes it passes over. */
+.glow {
+  position: absolute;
+  left: -320px;
+  top: -320px;
+  width: 640px;
+  height: 640px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(30, 144, 255, .075) 0%, rgba(0, 229, 255, .025) 38%, transparent 66%);
+  opacity: 0;
+  transition: opacity 600ms var(--pt-ease-enter);
+  will-change: transform;
+}
+.field[data-pointer='on'] .glow { opacity: 1; }
+
+/* Lens falloff so the field recedes at the edges. */
+.vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 120% 90% at 50% 40%, transparent 55%, rgba(3, 4, 5, .65) 100%);
+}
+
+/* Small viewports carry fewer columns and nodes. */
+@media (max-width: 1100px) {
+  .col:nth-child(n + 15) { display: none; }
+}
+@media (max-width: 719px) {
+  .col:nth-child(n + 9),
+  .node:nth-of-type(n + 11) { display: none; }
+  .glow { display: none; }
+  .depth { inset: 0; }
+}
+
+/* Reduced motion removes every ambient animation outright. */
+@media (prefers-reduced-motion: reduce) {
+  .col,
+  .pulse::after { animation: none; }
+  .col { will-change: auto; }
+  .glow { display: none; }
+  .node,
+  .node::before { transition: none; }
+}
+:global(html[data-motion='off']) .glow,
+:global(html[data-motion='reduced']) .glow { display: none; }
+
+@media (prefers-reduced-transparency: reduce) {
+  .rain,
+  .edges { opacity: .4; }
+}
+
+@media print {
+  .field { display: none; }
+}

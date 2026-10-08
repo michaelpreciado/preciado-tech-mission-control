@@ -265,7 +265,7 @@ export function Window({ tag, title, meta, children, style, className = '', fram
   }
 
   return (
-    <div className={`mc-window ${className}`} style={style}>
+    <div className={`mc-window ${className}`} style={style} data-glass="">
       {frameCorners}
       {head(false)}
       {children}
@@ -397,6 +397,7 @@ export const Card = React.forwardRef<HTMLElement, CardProps>(function Card(
   const toneClass = tone === 'raised' ? styles.cardRaised : tone === 'sunken' ? styles.cardSunken : ''
   const padClass = pad === 'sm' ? styles.cardPadSm : pad === 'md' ? styles.cardPadMd : styles.cardPadNone
   return React.createElement(Element, {
+    'data-glass': tone === 'sunken' ? 'sunken' : '',
     ...rest,
     ref,
     className: [styles.card, toneClass, padClass, className].filter(Boolean).join(' '),
@@ -415,7 +416,7 @@ export const CardHead = React.forwardRef<HTMLDivElement, CardHeadProps>(function
   ref,
 ) {
   return (
-    <div ref={ref} className={[styles.cardHead, className].filter(Boolean).join(' ')}>
+    <div ref={ref} data-glass-head="" className={[styles.cardHead, className].filter(Boolean).join(' ')}>
       <div className={styles.cardHeadCopy}>
         <h2 className={styles.cardTitle}>{title}</h2>
         {sub ? <p className={styles.cardSub}>{sub}</p> : null}

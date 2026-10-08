@@ -44,26 +44,18 @@
   --mbg-mono: var(--mbg-font-mono, "JetBrains Mono"), ui-monospace, monospace;
 }
 
-/* Page: gradient plus texture. The texture is a fixed static layer, mounted by Shell. */
+/* Page: near-black base with two faint light sources. The animated depth
+   (grid, data columns, neural field) is components/atmosphere/Atmosphere.tsx. */
 html[data-theme="friday"], html[data-theme="friday"] body {
-  background-color: var(--mbg-void);
+  background-color: var(--pt-mx-void, #050506);
 }
 html[data-theme="friday"] body {
   background-image:
-    radial-gradient(1100px 560px at 72% -12%, rgba(30, 144, 255, .17), transparent 62%),
-    radial-gradient(800px 520px at -8% 108%, rgba(79, 216, 255, .08), transparent 60%),
-    linear-gradient(180deg, #040911 0%, var(--mbg-void) 60%);
+    radial-gradient(1200px 620px at 78% -14%, rgba(30, 144, 255, .10), transparent 62%),
+    radial-gradient(900px 560px at -10% 110%, rgba(0, 229, 255, .045), transparent 60%),
+    linear-gradient(180deg, #07090b 0%, #050506 55%, #0a0a0b 100%);
   background-attachment: fixed;
   font-family: var(--mbg-sans);
-}
-.mbg-texture {
-  position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background: url("/matrix-blue/matrix-texture.svg") 0 0 / 960px 960px repeat;
-  opacity: .9;
-  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, .75) 20%, rgba(0, 0, 0, .45) 55%, rgba(0, 0, 0, .55) 100%), linear-gradient(90deg, rgba(0, 0, 0, .75) 0%, rgba(0, 0, 0, .3) 18%, rgba(0, 0, 0, .3) 50%, #000 100%);
-  -webkit-mask-composite: source-in;
-          mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, .75) 20%, rgba(0, 0, 0, .45) 55%, rgba(0, 0, 0, .55) 100%), linear-gradient(90deg, rgba(0, 0, 0, .75) 0%, rgba(0, 0, 0, .3) 18%, rgba(0, 0, 0, .3) 50%, #000 100%);
-          mask-composite: intersect;
 }
 
 /* The legacy CRT treatment (filter on the shell, flicker on main, scanline and
@@ -84,9 +76,6 @@ html[data-theme="friday"] body :focus-visible { outline: 2px solid var(--mbg-cya
   }
 }
 
-@media (prefers-reduced-transparency: reduce) {
-  .mbg-texture { opacity: .25; }
-}
 @media (prefers-reduced-motion: reduce) {
   html[data-theme="friday"] body *, html[data-theme="friday"] body *::before, html[data-theme="friday"] body *::after {
     scroll-behavior: auto !important;

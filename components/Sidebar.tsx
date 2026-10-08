@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { Icon } from './icons'
 import { useKanbanSnapshot } from './KanbanSnapshot'
+import { useLiveData } from './LiveDataProvider'
 import { useUiSettings } from './ui-settings'
 import { applyUiToNav } from '@/lib/nav-tabs'
 import styles from './Sidebar.module.css'
@@ -22,6 +23,8 @@ export function Sidebar() {
   const ui = useUiSettings()
   const nav = useMemo(() => applyUiToNav(ui), [ui])
   const { summary } = useKanbanSnapshot()
+  const live = useLiveData()
+  const sysState = live.error ? 'degraded' : live.isLive ? 'online' : 'syncing'
   const [collapsed, setCollapsed] = useState(false)
   const [foldInner, setFoldInner] = useState(false)
   const [storageReady, setStorageReady] = useState(false)
@@ -56,13 +59,16 @@ export function Sidebar() {
     <aside className={`ob-sidebar ${styles.sidebar} ${visuallyCollapsed ? `ob-sidebar--collapsed ${styles.collapsed}` : ''}`} aria-label="Main navigation">
       <Link href="/" className={styles.mark} aria-label="Mission Control home">
         <Icon name="brand" size={20} />
-        <span className={styles.label}>Mission Control</span>
+        <span className={`${styles.label} ${styles.markCopy}`}>
+          <span className={styles.markName}>Mission Control</span>
+          <span className={styles.markHost} aria-hidden="true">friday@system</span>
+        </span>
       </Link>
 
       <nav className={styles.nav} aria-label="Primary navigation">
         {nav.map(section => (
           <div key={section.section} className={styles.group} role="group" aria-label={section.section}>
-            <p className={styles.groupLabel}>{section.section}</p>
+            <p className={styles.groupLabel}><span aria-hidden="true">~/</span>{section.section}</p>
             {section.items.map(item => {
               const active = isRouteActive(pathname, item.id)
               const count = item.id === '/kanban' ? needsYou : 0
@@ -82,6 +88,7 @@ export function Sidebar() {
                 >
                   <Icon name={item.icon} size={18} />
                   <span className={styles.label}>{item.label}</span>
+                  {active && <span className={styles.caret} aria-hidden="true" />}
                   {count > 0 && <span className={styles.count} aria-label={`${count} need you`}>{count}</span>}
                 </Link>
               )
@@ -91,6 +98,10 @@ export function Sidebar() {
       </nav>
 
       <div className={styles.foot}>
+        <dl className={`${styles.label} ${styles.sys}`} aria-hidden="true">
+          <div data-state={sysState}><dt>status</dt><dd><b className={styles.sysDot} />{sysState}</dd></div>
+          <div><dt>build</dt><dd>2026.10</dd></div>
+        </dl>
         <button
           type="button"
           className={styles.palette}

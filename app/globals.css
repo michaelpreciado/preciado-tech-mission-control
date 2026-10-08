@@ -278,9 +278,9 @@ html[data-theme="friday"] .mc-main::after {
   50% { transform: translate(0.4px, 0); }
 }
 
-/* Heading + value glow */
+/* Heading + value glow. Headings are white ink (Blue Matrix Glass); values keep the bright accent. */
 html[data-theme="friday"] h1,
-html[data-theme="friday"] h2,
+html[data-theme="friday"] h2 { color: var(--pt-mx-ink-head); }
 html[data-theme="friday"] .mc-stat-val,
 html[data-theme="friday"] .mc-cal-title,
 html[data-theme="friday"] .mc-visual-head .mc-vh-title {
@@ -9808,4 +9808,70 @@ html:root body *::before, html:root body *::after {
 html[data-motion='reduced'] .cmdp, html[data-motion='off'] .cmdp { animation: none; }
 @media (prefers-reduced-motion: reduce) {
   .cmdp, .cmdp * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   BLUE MATRIX GLASS — Phase A shared layer (visual awakening, 2026-10)
+   Single writer: the Phase A lead. Tokens: --pt-mx-* (lib/tokens.ts).
+   Atmosphere lives in components/atmosphere/; component surfaces live in
+   their own CSS modules. This block holds only the cross-cutting recipes.
+   No new backdrop-filter: VG-6 above stays authoritative (persistent blur is
+   reserved for overlays). Glass here = translucent fill + sheen + edge light
+   + a pointer reflection driven by --gx/--gy (set by Atmosphere on fine pointers).
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Glass surface — opt in with [data-glass] (Card and Window carry it). */
+html[data-theme="friday"] body [data-glass] {
+  background-color: var(--pt-mx-glass);
+  background-image:
+    var(--pt-mx-glass-edge),
+    radial-gradient(440px circle at var(--gx, -999px) var(--gy, -999px), var(--pt-mx-glass-reflect), transparent 62%),
+    var(--pt-mx-glass-sheen);
+  background-size: 100% 1px, auto, auto;
+  background-position: 0 0, 0 0, 0 0;
+  background-repeat: no-repeat;
+  border-color: var(--pt-mx-line);
+  box-shadow: var(--pt-mx-glass-rim), var(--pt-mx-glass-shadow);
+}
+/* Sunken wells read as recessed terminal panes, not floating glass. */
+html[data-theme="friday"] body [data-glass][data-glass="sunken"] {
+  background-color: rgba(4, 6, 8, .78);
+  background-image: none;
+  border-color: var(--pt-mx-line-subtle);
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, .5);
+}
+
+/* Interactive glass lifts 2px and takes the strong hairline. Transform + shadow only. */
+html[data-theme="friday"] body [data-glass][data-glass-interactive] {
+  transition: transform var(--pt-dur-std) var(--pt-ease-enter), border-color var(--pt-dur-micro) var(--pt-ease), box-shadow var(--pt-dur-std) var(--pt-ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme="friday"] body [data-glass][data-glass-interactive]:hover {
+    transform: translate3d(0, var(--pt-mx-lift), 0);
+    border-color: var(--pt-mx-line-strong);
+    box-shadow: var(--pt-mx-glass-rim), var(--pt-mx-glass-shadow-hi);
+  }
+}
+html[data-theme="friday"] body [data-glass][data-glass-interactive]:focus-within {
+  border-color: var(--pt-mx-line-strong);
+}
+
+/* Terminal language: the `>` bullet as a recurring motif for glass card titles. */
+html[data-theme="friday"] body [data-glass] > [data-glass-head] h2::before,
+html[data-theme="friday"] body .mc-window-title > span:last-child::before {
+  content: '>';
+  margin-right: .55em;
+  color: var(--pt-dodger);
+  font-family: var(--pt-font-mono);
+  font-weight: 500;
+}
+
+/* Selection and scrollbars belong to the system too. */
+html[data-theme="friday"] ::selection { background: rgba(30, 144, 255, .32); color: #fff; }
+html[data-theme="friday"] .mc-main { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .12) transparent; }
+html[data-theme="friday"] .mc-main::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .12); }
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="friday"] body [data-glass][data-glass-interactive] { transition: none; }
+  html[data-theme="friday"] body [data-glass][data-glass-interactive]:hover { transform: none; }
 }

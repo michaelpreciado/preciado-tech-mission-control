@@ -56,12 +56,18 @@ export const CATEGORICAL = {
 export const ACCENT_RGB = '157,180,236'
 export const ACCENT_BRIGHT_RGB = '196,210,245'
 export const NEON_RGB = '30,144,255'
+/* Dodger ramp for the friday theme's bright/deep accent variants. */
+export const MX_NEON_BRIGHT = '#7cc0ff'
+export const MX_NEON_BRIGHT_RGB = '124,192,255'
+export const MX_NEON_DEEP = '#0b5fb8'
 
 /* ── Type roles ───────────────────────────────────────────────────── */
 export const FONT = {
   display: 'var(--pt-font-sans)',
-  mono: '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace',
-  ui: '"Geist Sans", "Geist", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif',
+  /* --mbg-font-* are the next/font variables set on <html> in app/layout.tsx;
+     the literal family names never match a self-hosted next/font face. */
+  mono: 'var(--mbg-font-mono), "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace',
+  ui: 'var(--mbg-font-sans), "Instrument Sans", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif',
 } as const
 
 export const TYPE_SCALE = {
@@ -170,8 +176,48 @@ export const BUTTON_GLASS = {
   'liquid-blur': 'blur(8px) saturate(120%)',
 } as const
 
+/* ── Blue Matrix Glass (Phase A) — the environment and glass vocabulary.
+   Emitted as --pt-mx-*. Rain tones are deliberately near-black teal: the data
+   streams should register subconsciously, never as bright Matrix green. */
+export const MATRIX = {
+  'void': '#050506',
+  'graphite': '#07090b',
+  'carbon': '#0a0a0b',
+  'rain-1': '#0b2633',
+  'rain-2': '#102e3c',
+  'rain-3': '#173744',
+  'grid-line': 'rgba(56,189,248,0.035)',
+  'neural-line': 'rgba(30,144,255,0.11)',
+  'cyan': '#00e5ff',
+  'sky': '#38bdf8',
+  'cyan-deep': '#082f49',
+  /* glass material */
+  'glass': 'rgba(10,12,14,0.72)',
+  'glass-hi': 'rgba(13,16,20,0.80)',
+  'glass-chrome': 'rgba(6,8,10,0.84)',
+  'glass-sheen': 'linear-gradient(180deg, rgba(255,255,255,0.032), rgba(255,255,255,0) 38%)',
+  'glass-edge': 'linear-gradient(90deg, rgba(0,229,255,0) 0%, rgba(0,229,255,0.38) 22%, rgba(30,144,255,0.18) 60%, rgba(30,144,255,0) 100%)',
+  'glass-rim': 'inset 0 1px 0 rgba(255,255,255,0.045)',
+  'glass-shadow': '0 18px 48px -24px rgba(0,0,0,0.85), 0 0 30px rgba(0,229,255,0.05)',
+  'glass-shadow-hi': '0 22px 56px -22px rgba(0,0,0,0.9), 0 0 34px rgba(0,229,255,0.09)',
+  'glass-reflect': 'rgba(30,144,255,0.085)',
+  /* hairlines — three tiers, no fourth. strong is interactive-only. */
+  'line-subtle': 'rgba(255,255,255,0.06)',
+  'line': 'rgba(255,255,255,0.10)',
+  'line-strong': 'rgba(255,255,255,0.18)',
+  /* ink */
+  'ink-head': '#f2f2f2',
+  'ink': '#e5e7eb',
+  'ink-2': '#94a3b8',
+  /* #64748b (spec) measures ~4.2:1 on the void; lifted one step to clear 4.5:1 for 11px metadata. */
+  'ink-meta': '#718096',
+  'head-glow': '0 0 18px rgba(0,229,255,0.25)',
+  /* motion */
+  'lift': '-2px',
+} as const
+
 export type DesignToken = typeof designTokens
-export const designTokens = { semantic: SEMANTIC, categorical: CATEGORICAL, font: FONT, typeScale: TYPE_SCALE, spacing: SPACING, radius: RADIUS, border: BORDER, surface: SURFACE, glow: GLOW, motion: MOTION, density: DENSITY, buttonGlass: BUTTON_GLASS }
+export const designTokens = { semantic: SEMANTIC, categorical: CATEGORICAL, font: FONT, typeScale: TYPE_SCALE, spacing: SPACING, radius: RADIUS, border: BORDER, surface: SURFACE, glow: GLOW, motion: MOTION, density: DENSITY, buttonGlass: BUTTON_GLASS, matrix: MATRIX }
 
 /**
  * Emit the canonical `:root { … }` custom-property block. This replaces the
@@ -182,6 +228,9 @@ export function buildTokenCss(): string {
   return `:root {
   /* Shared glass button material (also inherited by the Friday theme). */
 ${Object.entries(BUTTON_GLASS).map(([name, value]) => `  --pt-btn-glass-${name}: ${value};`).join('\n')}
+
+  /* Blue Matrix Glass environment + glass material */
+${Object.entries(MATRIX).map(([name, value]) => `  --pt-mx-${name}: ${value};`).join('\n')}
 
   /* gutter */
   --mc-gutter: 36px;
@@ -363,24 +412,29 @@ export function buildDensityCss(): string {
 
 /** Emit the FRIDAY theme override block (accent-consistent CRT emphasis). */
 export function buildFridayThemeCss(): string {
+  /* Mission Control's accent is dodger blue (NEON_DEFAULT). Periwinkle
+     (ACCENT_DEFAULT) is the client-site brand and stays the :root fallback for
+     non-friday themes only. A custom /setup accent still overrides this block. */
   return `html[data-theme="friday"] {
-  --pt-neon-rgb: ${ACCENT_RGB};
+  --pt-neon-rgb: ${NEON_RGB};
   --pt-glow-rgb: ${NEON_RGB};
-  --pt-neon-bright-rgb: ${ACCENT_BRIGHT_RGB};
+  --pt-neon-bright-rgb: ${MX_NEON_BRIGHT_RGB};
   --pt-text-rgb: 244,247,251;
   --pt-bg-tint: #0a0d16;
   --pt-text: #f4f7fb;
   --pt-text-high: #ffffff;
-  --pt-neon: ${ACCENT_DEFAULT};
-  --pt-neon-bright: #c4d2f5;
-  --pt-neon-deep: #4f6bb0;
+  --pt-neon: ${NEON_DEFAULT};
+  --pt-neon-bright: ${MX_NEON_BRIGHT};
+  --pt-neon-deep: ${MX_NEON_DEEP};
   --pt-neon-glow: rgba(var(--pt-glow-rgb),0.6);
   --pt-neon-glow-soft: rgba(var(--pt-glow-rgb),0.2);
   --pt-neon-wash: rgba(var(--pt-neon-rgb),0.08);
-  --pt-border: rgba(var(--pt-neon-rgb),0.55);
-  --pt-border-strong: rgba(var(--pt-neon-rgb),0.8);
-  --pt-border-dim: rgba(var(--pt-neon-rgb),0.28);
-  --pt-rule: rgba(var(--pt-neon-rgb),0.35);
+  /* Hairlines are neutral, three tiers (MATRIX line-*): accent never paints structure. */
+  --pt-border: ${MATRIX['line']};
+  --pt-border-strong: ${MATRIX['line-strong']};
+  --pt-border-dim: ${MATRIX['line-subtle']};
+  --pt-rule: ${MATRIX['line-subtle']};
+  --pt-card-border: ${MATRIX['line']};
   --pt-bg: #07080b;
   --pt-bg-soft: #0b0d12;
   --pt-bg-terminal: rgba(14,17,23,0.96);
