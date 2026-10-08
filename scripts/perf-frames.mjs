@@ -32,6 +32,7 @@ const OUT = flag('--out', null)
 const ONLY = flag('--only', null)?.split(',')
 const CPU = Number(flag('--cpu', 4))
 const TRACE_DIR = flag('--trace-dir', null)
+const LEAK_CYCLES = Number(flag('--leak', 3))  // full 17-route sweeps per viewport
 
 const VIEWPORTS = [
   { name: 'desktop', w: 1440, h: 900, touch: false },
@@ -78,6 +79,17 @@ function analyzeTrace(buf, intervalMs) {
   const bins = Math.ceil((t1 - t0) / intervalMs)
   const out = {}
   const busyPerBin = {}
+  // RunTask slices nest (a task can run a nested task); merge to the outermost
+  // intervals so busy time is never double-counted.
+  for (const stage of Object.keys(slices)) {
+    const merged = []
+    for (const [s, e] of slices[stage].sort((a, b) => a[0] - b[0])) {
+      const last = merged.at(-1)
+      if (last && s <= last[1]) last[1] = Math.max(last[1], e)
+      else merged.push([s, e])
+    }
+    slices[stage] = merged
+  }
   for (const [stage, list] of Object.entries(slices)) {
     const b = new Float64Array(bins)
     for (const [s, e] of list) {
@@ -98,10 +110,23 @@ function analyzeTrace(buf, intervalMs) {
 }
 
 const rafSample = (page, frames) => page.evaluate(n => new Promise(res => {
+  const raf = window.__perfRaf ?? requestAnimationFrame
   const d = []; let last = 0
-  const f = t => { if (last) d.push(t - last); last = t; if (d.length < n) requestAnimationFrame(f); else res(d) }
-  requestAnimationFrame(f)
+  const f = t => { if (last) d.push(t - last); last = t; if (d.length < n) raf(f); else res(d) }
+  raf(f)
 }), frames)
+
+/* App rAF callbacks requested per second while nothing is happening. A live loop shows ~60. */
+const appRafPerSec = page => page.evaluate(() => new Promise(res => {
+  const start = window.__perfRafCalls
+  setTimeout(() => res(window.__perfRafCalls - start), 1000)
+}))
+
+async function domCounters(cdp) {
+  await cdp.send('HeapProfiler.collectGarbage').catch(() => {})
+  const c = await cdp.send('Memory.getDOMCounters')
+  return { documents: c.documents, nodes: c.nodes, listeners: c.jsEventListeners }
+}
 
 const rafStats = (deltas) => {
   const s = stats(deltas)
@@ -144,7 +169,7 @@ async function navigate(page, path) {
   await page.waitForFunction(p => location.pathname === p, path, { timeout: 15000 }).catch(() => {})
 }
 
-async function scrollMain(cdp, page, touch) {
+async function scrollTarget(page) {
   // Scroll whichever container has the most room: .mc-main on most routes, an inner
   // pane on board-style routes that pin the shell and scroll a column.
   const box = await page.evaluate(() => {
@@ -158,6 +183,12 @@ async function scrollMain(cdp, page, touch) {
     const y = Math.max(b.top + 8, Math.min(innerHeight - 90, b.top + Math.min(b.height, innerHeight - b.top) / 2))
     return { x, y, room }
   })
+  return box
+}
+
+// Two gestures (down, back up). The target is found before tracing starts so
+// the measurement never includes the harness's own DOM walk.
+async function scrollMain(cdp, box, touch) {
   if (box.room < 50) return box.room
   const dist = Math.min(box.room, 1600)
   for (const dir of [-1, 1]) {
@@ -179,6 +210,11 @@ for (const vp of VIEWPORTS) {
   })
   await ctx.addInitScript(() => {
     try { sessionStorage.setItem('mc:boot:w2i', 'seen') } catch {}
+    // Count the app's rAF calls; the harness samples through the raw function.
+    const raw = window.requestAnimationFrame.bind(window)
+    window.__perfRaf = raw
+    window.__perfRafCalls = 0
+    window.requestAnimationFrame = cb => { window.__perfRafCalls++; return raw(cb) }
     window.__perfCLS = 0
     try {
       new PerformanceObserver(l => { for (const e of l.getEntries()) if (!e.hadRecentInput) window.__perfCLS += e.value })
@@ -220,14 +256,15 @@ for (const vp of VIEWPORTS) {
     const deltas = []; const stageRuns = []; let longest = 0
     for (const path of SCROLL_ROUTES) {
       await navigate(page, path); await page.waitForTimeout(2500)
-      let room = 0
-      const { buf } = await traced(browser, page, async () => { room = await scrollMain(cdp, page, vp.touch) }, `${vp.name}-scroll${path.replace(/\//g, '-')}`)
+      const target = await scrollTarget(page), room = target.room
+      const { buf } = await traced(browser, page, () => scrollMain(cdp, target, vp.touch), `${vp.name}-scroll${path.replace(/\//g, '-')}`)
       const stage = analyzeTrace(buf, 16.67)
       if (stage) { stageRuns.push({ path, room, ...stage }); longest = Math.max(longest, stage.longestMainTask) }
     }
     // A clean rAF cadence during scroll, sampled on the longest route.
     await navigate(page, '/costs'); await page.waitForTimeout(2000)
-    const [d] = await Promise.all([rafSample(page, 150), scrollMain(cdp, page, vp.touch)])
+    const target = await scrollTarget(page)
+    const [d] = await Promise.all([rafSample(page, 150), scrollMain(cdp, target, vp.touch)])
     deltas.push(...d)
     res.scroll = {
       raf: rafStats(deltas),
@@ -244,7 +281,7 @@ for (const vp of VIEWPORTS) {
     const { buf, extra } = await traced(browser, page, async () => {
       const deltas = []
       for (const path of ROUTES.filter(p => p !== '/login')) {
-        const [d] = await Promise.all([rafSample(page, 30), navigate(page, path)])
+        const [d] = await Promise.all([rafSample(page, 45), navigate(page, path)])
         deltas.push(...d)
       }
       return deltas
@@ -255,6 +292,18 @@ for (const vp of VIEWPORTS) {
     for (const t of long) byPath[t.path] = Math.max(byPath[t.path] ?? 0, t.dur)
     res.nav = { raf, stage: analyzeTrace(buf, 16.67), longTasks: byPath, probe: await probe(page) }
   }
+  // leak: sweep every route repeatedly; listeners, nodes, documents and WebGL
+  // contexts must return to the same level each time we land back on Home.
+  if (LEAK_CYCLES > 0) {
+    const cycles = []
+    for (let c = 0; c < LEAK_CYCLES; c++) {
+      for (const path of ROUTES.filter(p => p !== '/login')) { await navigate(page, path); await page.waitForTimeout(250) }
+      await navigate(page, '/'); await page.waitForTimeout(1500)
+      cycles.push({ ...(await domCounters(cdp)), webgl: (await probe(page)).webgl, rafPerSec: await appRafPerSec(page) })
+    }
+    res.leak = cycles
+  }
+  res.idleRafPerSec = await appRafPerSec(page)
   // hidden: rAF callbacks while the page reports hidden
   {
     await navigate(page, '/'); await page.waitForTimeout(800)
@@ -286,6 +335,7 @@ for (const vp of VIEWPORTS) {
   console.log(`  nav     rAF ${f(res.nav.raf)} ms (missed ${res.nav.raf.missed})  longest task ${res.nav.stage ? r2(res.nav.stage.longestMainTask) : '-'}`)
   console.log(`          long tasks >50ms by route: ${Object.entries(res.nav.longTasks).map(([p, d]) => `${p} ${d}`).join(', ') || 'none'}`)
   console.log(`  probe   home: dom ${res.idle.probe.dom} backdrop ${res.idle.probe.backdrop} anims ${res.idle.probe.animations} cls ${res.idle.probe.cls}  ·  after nav: webgl live ${res.nav.probe.webgl} created ${res.nav.probe.webglCreated}`)
+  if (res.leak) console.log(`  leak    per sweep → home: ${res.leak.map(c => `nodes ${c.nodes} listeners ${c.listeners} docs ${c.documents} gl ${c.webgl} rAF/s ${c.rafPerSec}`).join('  |  ')}`)
   console.log(`  hidden  data-page-hidden=${res.hidden.pageHidden} running animations ${res.hidden.runningAnimations}`)
   await ctx.close()
 }
