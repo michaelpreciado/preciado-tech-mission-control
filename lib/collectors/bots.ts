@@ -194,43 +194,91 @@ export function readBotDb(dbPath: string): BotDbStats {
 
 /* ── gateway_state.json read ─────────────────────────────── */
 
-function readGateway(entry: ProfileEntry): BotGateway {
-  // `default` uses the configured gateway_state.json (env-overridable, same
-  // file system-health.ts probes); named profiles keep their own copy.
-  const file = entry.isDefault
-    ? getConfig().paths.gatewayStateFile
-    : path.join(entry.dir, 'gateway_state.json')
-  if (!fs.existsSync(file)) return { status: 'unknown', detail: 'no gateway_state.json' }
+type RawGatewayState = {
+  pid?: number
+  gateway_state?: string
+  updated_at?: string
+  platforms?: Record<string, { state?: string; needs_attention?: boolean; updated_at?: string }>
+}
+
+/** The fleet-wide (multiplexed) gateway_state.json. When the configured file
+ *  lives at `<root>/profiles/<name>/gateway_state.json` the root file is
+ *  `<root>/gateway_state.json`; otherwise the configured file IS the root
+ *  (the `default` profile's own file). */
+function rootGatewayStateFile(): string {
+  const configured = getConfig().paths.gatewayStateFile
+  const parent = path.dirname(configured)
+  return path.basename(parent) === 'profiles' ? path.join(path.dirname(parent), 'gateway_state.json') : configured
+}
+
+function parseGatewayState(file: string): RawGatewayState | null {
+  if (!fs.existsSync(file)) return null
   try {
-    const st = JSON.parse(fs.readFileSync(file, 'utf8')) as {
-      gateway_state?: string
-      updated_at?: string
-      platforms?: Record<string, { state?: string; needs_attention?: boolean }>
-    }
-    const raw = String(st?.gateway_state ?? 'unknown')
-    const platforms = st?.platforms && typeof st.platforms === 'object'
-      ? Object.entries(st.platforms).map(([name, p]) => ({
-          name,
-          state: String(p?.state ?? 'unknown'),
-          needsAttention: Boolean(p?.needs_attention),
-        }))
-      : undefined
-    const flagged = platforms?.filter(p => p.needsAttention) ?? []
-    const status: BotGatewayStatus =
-      raw === 'running'
-        ? (flagged.length ? 'degraded' : 'running')
-        : /fail|stopped|exit|error/i.test(raw)
-          ? 'stopped'
-          : 'unknown'
-    return {
-      status,
-      detail: flagged.length ? `running · ${flagged.map(p => p.name).join(', ')} needs attention` : raw,
-      platforms,
-      updatedAt: typeof st?.updated_at === 'string' ? st.updated_at : undefined,
-    }
+    return JSON.parse(fs.readFileSync(file, 'utf8')) as RawGatewayState
   } catch (err) {
     logger.error('bots/gateway', err)
-    return { status: 'unknown', detail: 'gateway_state.json unreadable' }
+    return null
+  }
+}
+
+function gatewayStatus(raw: string, flagged: number): BotGatewayStatus {
+  if (raw === 'running') return flagged ? 'degraded' : 'running'
+  return /fail|stopped|exit|error/i.test(raw) ? 'stopped' : 'unknown'
+}
+
+/** Multiplexed fleet state keys platforms as `<profile>:<platform>`; the
+ *  `default` profile keeps the bare platform name. A profile with no scoped
+ *  platform is not served by this gateway — 'unknown', never a false 'down'
+ *  read off a stale per-profile file that the gateway stopped writing. */
+function scopedGateway(root: RawGatewayState, entry: ProfileEntry): BotGateway {
+  const prefix = entry.isDefault ? null : `${entry.name}:`
+  const scoped = Object.entries(root.platforms ?? {}).filter(([key]) => prefix ? key.startsWith(prefix) : !key.includes(':'))
+  if (!scoped.length) {
+    return {
+      status: 'unknown',
+      detail: root.gateway_state === 'running' ? 'not served by the running gateway' : 'no gateway_state.json',
+    }
+  }
+  const platforms = scoped.map(([key, p]) => ({
+    name: prefix ? key.slice(prefix.length) : key,
+    state: String(p?.state ?? 'unknown'),
+    needsAttention: Boolean(p?.needs_attention),
+  }))
+  const raw = String(root.gateway_state ?? 'unknown')
+  const flagged = platforms.filter(p => p.needsAttention)
+  const updatedAt = scoped.map(([, p]) => p?.updated_at).filter((v): v is string => typeof v === 'string').sort().at(-1)
+  return {
+    status: gatewayStatus(raw, flagged.length),
+    detail: flagged.length ? `running · ${flagged.map(p => p.name).join(', ')} needs attention` : raw,
+    platforms,
+    updatedAt: updatedAt ?? (typeof root.updated_at === 'string' ? root.updated_at : undefined),
+  }
+}
+
+function readGateway(entry: ProfileEntry): BotGateway {
+  const root = parseGatewayState(rootGatewayStateFile())
+  // Detect the multiplexed shape from the data itself, not from the path: any
+  // `<profile>:<platform>` key means one gateway serves the whole fleet.
+  if (root?.platforms && Object.keys(root.platforms).some(key => key.includes(':'))) {
+    return scopedGateway(root, entry)
+  }
+  // Legacy shape: one gateway_state.json per profile with bare platform names.
+  const legacy = entry.isDefault ? root : parseGatewayState(path.join(entry.dir, 'gateway_state.json'))
+  if (!legacy) return { status: 'unknown', detail: 'no gateway_state.json' }
+  const raw = String(legacy.gateway_state ?? 'unknown')
+  const platforms = legacy.platforms && typeof legacy.platforms === 'object'
+    ? Object.entries(legacy.platforms).map(([name, p]) => ({
+        name,
+        state: String(p?.state ?? 'unknown'),
+        needsAttention: Boolean(p?.needs_attention),
+      }))
+    : undefined
+  const flagged = platforms?.filter(p => p.needsAttention) ?? []
+  return {
+    status: gatewayStatus(raw, flagged.length),
+    detail: flagged.length ? `running · ${flagged.map(p => p.name).join(', ')} needs attention` : raw,
+    platforms,
+    updatedAt: typeof legacy.updated_at === 'string' ? legacy.updated_at : undefined,
   }
 }
 
