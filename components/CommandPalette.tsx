@@ -6,6 +6,7 @@ import { Icon } from './icons'
 import { apiFetch } from '@/lib/api-base'
 import { COMMAND_CATALOG, paletteSnapshot } from '@/lib/pt/catalog'
 import { compatibleCommands } from '@/lib/pt/command-display.mjs'
+import { blockedLabelFor } from '@/lib/pt/blocked-labels.mjs'
 import { COMMAND_ICONS } from '@/lib/nav-tabs'
 import { CADENCE } from '@/lib/pt/contract'
 import type { DestinationId } from '@/lib/pt/catalog'
@@ -139,7 +140,7 @@ export function CommandPalette() {
                 className={`cmdp-item ${i === cursor ? 'is-active' : ''}`} onMouseEnter={() => setCursor(i)} onClick={() => { setCursor(i); go(command.id) }}>
                 <span className="cmdp-ic"><Icon name={COMMAND_ICONS[command.id as DestinationId]} size={15} /></span>
                 <span className="cmdp-copy"><span className="cmdp-label">{command.label}</span>
-                  {!command.enabled && <span className="cmdp-reason">Disabled · {command.blockedReason}</span>}</span>
+                  {!command.enabled && <span className="cmdp-reason">Disabled · {blockedLabelFor(command.blockedReason)}</span>}</span>
                 {command.badge && <span className="cmdp-sub">{command.badge.value ?? '—'} · {command.badge.label}</span>}
               </div>
             </div>

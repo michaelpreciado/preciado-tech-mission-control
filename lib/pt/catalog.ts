@@ -1,6 +1,12 @@
 /** Frozen command destinations. Consumers resolve these relative paths against
  * their portal origin; desktop actions are IDs, never executable shell strings.
- * Desktop packaging is generated from this file, never maintained separately. */
+ * Desktop packaging is generated from this file, never maintained separately.
+ *
+ * `blockedReason` is a MACHINE id that travels in the API envelope and the
+ * desktop catalog. It is never rendered. UI copy comes only from
+ * `blockedLabelFor()` (lib/pt/blocked-labels.mjs), which maps the id to a human
+ * string. This preserves parity between the web and packaged data while keeping
+ * the raw enum out of operator-facing surfaces. */
 import { commandDisplay } from './command-display.mjs'
 import type { E } from './contract'
 export const PRACTICE_AREAS = ['Web Development', 'AI Solutions', 'Tech Advisory'] as const

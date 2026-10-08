@@ -8,6 +8,7 @@ import { useKanbanSnapshot } from './KanbanSnapshot'
 import { useLiveData } from './LiveDataProvider'
 import { useUiSettings } from './ui-settings'
 import { applyUiToNav } from '@/lib/nav-tabs'
+import { blockedLabelFor } from '@/lib/pt/blocked-labels.mjs'
 import styles from './Sidebar.module.css'
 
 const SIDEBAR_STORAGE_KEY = 'omniBridge.sidebar.collapsed'
@@ -73,9 +74,9 @@ export function Sidebar() {
               const active = isRouteActive(pathname, item.id)
               const count = item.id === '/kanban' ? needsYou : 0
               if (item.enabled === false) return (
-                <span key={item.id} className={styles.link} aria-disabled="true" title={`${item.label}: ${item.blockedReason}`}>
+                <span key={item.id} className={styles.link} aria-disabled="true" title={`${item.label}: ${blockedLabelFor(item.blockedReason)}`}>
                   <Icon name={item.icon} size={18} />
-                  <span className={styles.label}>{item.label} · Disabled<small style={{ display: 'block', whiteSpace: 'normal' }}>{item.blockedReason}</small></span>
+                  <span className={styles.label}>{item.label} · Disabled<small style={{ display: 'block', whiteSpace: 'normal' }}>{blockedLabelFor(item.blockedReason)}</small></span>
                 </span>
               )
               return (

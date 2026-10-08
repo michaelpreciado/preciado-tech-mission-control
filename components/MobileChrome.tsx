@@ -8,6 +8,7 @@ import { FOLD_INNER_MEDIA_QUERY } from './Sidebar'
 import { useKanbanSnapshot } from './KanbanSnapshot'
 import { useUiSettings } from './ui-settings'
 import { applyUiToNav } from '@/lib/nav-tabs'
+import { blockedLabelFor } from '@/lib/pt/blocked-labels.mjs'
 import styles from './MobileChrome.module.css'
 
 /** Bottom tabs. Everything else lives behind the More sheet. */
@@ -100,7 +101,7 @@ function MoreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
                 {items.map(it => it.enabled === false ? (
                   <span key={it.id} className={styles.cell} aria-disabled="true">
                     <Icon name={it.icon} size={18} />
-                    <span>{it.label} · Disabled<small style={{ display: 'block', overflowWrap: 'anywhere' }}>{it.blockedReason}</small></span>
+                    <span>{it.label} · Disabled<small style={{ display: 'block', overflowWrap: 'anywhere' }}>{blockedLabelFor(it.blockedReason)}</small></span>
                   </span>
                 ) : (
                   <Link key={it.id} href={it.id} aria-current={isActive(pathname, it.id) ? 'page' : undefined} className={styles.cell} onClick={onClose}>
