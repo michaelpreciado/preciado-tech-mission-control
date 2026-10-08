@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { forceSimulation, forceManyBody, forceLink, forceCenter, forceCollide, forceX, forceY } from 'd3-force'
 import type { SimulationNodeDatum } from 'd3-force'
 import { select } from 'd3-selection'
 import { zoom as d3Zoom, type ZoomTransform } from 'd3-zoom'
@@ -11,10 +10,9 @@ import { useUiSettings } from '../ui-settings'
 import { CATEGORICAL } from '@/lib/chart-colors'
 import type { MemoryGraph as MemoryGraphData, MemoryGraphNode } from '@/lib/types'
 import { apiFetch } from '@/lib/api-base'
+import { MEMORY_GRAPH_WIDTH as WIDTH, MEMORY_GRAPH_HEIGHT as HEIGHT, settleMemoryGraph, type LayoutEdge, type LayoutPosition } from '@/lib/memory-layout'
 
 const POLL_MS = 180_000
-const WIDTH = 900
-const HEIGHT = 560
 const MAX_CHIPS = 24
 
 type SimNode = MemoryGraphNode & SimulationNodeDatum
@@ -27,31 +25,51 @@ function folderColor(folder: string) {
   return CATEGORICAL[Math.abs(h) % CATEGORICAL.length]
 }
 
-/** Runs the d3-force simulation synchronously to a stable layout — a
- * fixed-size vault graph doesn't need a live tick loop, so we just settle
- * it once per node-set and render the result as static SVG. */
-function layout(nodes: MemoryGraphNode[], edges: { source: string; target: string; kind: 'link' | 'tag' }[]) {
-  const idSet = new Set(nodes.map(n => n.id))
-  const simNodes: SimNode[] = nodes.map((n, i) => ({
-    ...n,
-    x: WIDTH / 2 + Math.cos(i) * 60 + (Math.random() - 0.5) * 30,
-    y: HEIGHT / 2 + Math.sin(i) * 60 + (Math.random() - 0.5) * 30,
-  }))
-  const simLinks: SimLink[] = edges
-    .filter(e => idSet.has(e.source) && idSet.has(e.target))
-    .map(e => ({ source: e.source, target: e.target, kind: e.kind }))
+type Laid = { nodes: SimNode[]; links: SimLink[] }
+const EMPTY_LAYOUT: Laid = { nodes: [], links: [] }
 
-  const sim = forceSimulation(simNodes)
-    .force('charge', forceManyBody<SimNode>().strength(d => (d.kind === 'tag' ? -160 : -70)))
-    .force('link', forceLink<SimNode, SimLink>(simLinks).id(d => d.id).distance(l => (l.kind === 'tag' ? 34 : 78)).strength(0.55))
-    .force('center', forceCenter(WIDTH / 2, HEIGHT / 2))
-    .force('collide', forceCollide<SimNode>().radius(d => (d.kind === 'tag' ? 15 + Math.min(10, (d.noteCount ?? 1) / 4) : 8)))
-    .force('x', forceX(WIDTH / 2).strength(0.02))
-    .force('y', forceY(HEIGHT / 2).strength(0.02))
-    .stop()
-  for (let i = 0; i < 260; i++) sim.tick()
+/** Settles the force layout in a worker (lib/memory-layout.ts) and joins the
+ * positions back onto the node set. The previous layout stays on screen while
+ * a re-settle runs; null until the first one lands. */
+function useMemoryLayout(nodes: MemoryGraphNode[], edges: LayoutEdge[], enabled: boolean): Laid | null {
+  const [laid, setLaid] = useState<Laid | null>(null)
+  const workerRef = useRef<Worker | null>(null)
+  const seqRef = useRef(0)
 
-  return { nodes: simNodes, links: simLinks }
+  useEffect(() => () => { workerRef.current?.terminate(); workerRef.current = null }, [])
+
+  useEffect(() => {
+    if (!enabled) { setLaid(EMPTY_LAYOUT); return }
+    const seq = ++seqRef.current
+    const idSet = new Set(nodes.map(n => n.id))
+    const live = edges.filter(e => idSet.has(e.source) && idSet.has(e.target))
+    const join = (positions: LayoutPosition[]) => {
+      if (seq !== seqRef.current) return
+      const at = new Map(positions.map(p => [p.id, p]))
+      const simNodes: SimNode[] = nodes.map(n => ({ ...n, x: at.get(n.id)?.x, y: at.get(n.id)?.y }))
+      const byId = new Map(simNodes.map(n => [n.id, n]))
+      setLaid({ nodes: simNodes, links: live.map(e => ({ source: byId.get(e.source)!, target: byId.get(e.target)!, kind: e.kind })) })
+    }
+    const input = { nodes: nodes.map(n => ({ id: n.id, kind: n.kind, noteCount: n.noteCount })), edges: live }
+
+    let worker = workerRef.current
+    if (!worker && typeof Worker !== 'undefined') {
+      try {
+        worker = new Worker(new URL('../../lib/workers/memory-layout.worker.ts', import.meta.url))
+        workerRef.current = worker
+      } catch { worker = null }
+    }
+    if (!worker) {
+      const t = setTimeout(() => join(settleMemoryGraph(input.nodes, input.edges)), 0)
+      return () => clearTimeout(t)
+    }
+    const onMessage = (e: MessageEvent<{ seq: number; positions: LayoutPosition[] }>) => { if (e.data.seq === seq) join(e.data.positions) }
+    worker.addEventListener('message', onMessage)
+    worker.postMessage({ seq, ...input })
+    return () => worker.removeEventListener('message', onMessage)
+  }, [nodes, edges, enabled])
+
+  return laid
 }
 
 export function MemoryGraphView() {
@@ -73,19 +91,6 @@ export function MemoryGraphView() {
   // regardless of how far the user has panned/zoomed.
   const svgRef = useRef<SVGSVGElement>(null)
   const [zoomTransform, setZoomTransform] = useState<ZoomTransform | null>(null)
-
-  useEffect(() => {
-    const svg = svgRef.current
-    if (!svg || effectiveListView) return
-    const behavior = d3Zoom<SVGSVGElement, unknown>()
-      .scaleExtent([1, 4])
-      .on('zoom', (event: { transform: ZoomTransform }) => setZoomTransform(event.transform))
-    // Double-click is a DOM listener, not a zoom-dispatch event type.
-    select(svg).call(behavior).on('dblclick.zoom', null)
-    return () => { select(svg).on('.zoom', null) }
-    // Wire once the graph svg actually exists (after first data load) and
-    // re-wire on view toggles; data polls keep the boolean stable.
-  }, [effectiveListView, data !== null])
 
   useEffect(() => {
     let cancelled = false
@@ -111,10 +116,22 @@ export function MemoryGraphView() {
     return showAll ? data.nodes : data.nodes.filter(n => n.kind === 'tag' || !n.isolated)
   }, [data, showAll])
 
-  const { nodes: positioned, links } = useMemo(
-    () => (graphEnabled ? layout(baseNodes, data?.edges ?? []) : { nodes: [] as ReturnType<typeof layout>['nodes'], links: [] as ReturnType<typeof layout>['links'] }),
-    [baseNodes, data, graphEnabled],
-  )
+  const edges = useMemo(() => data?.edges ?? [], [data])
+  const laid = useMemoryLayout(baseNodes, edges, graphEnabled)
+  const { nodes: positioned, links } = laid ?? EMPTY_LAYOUT
+
+  useEffect(() => {
+    const svg = svgRef.current
+    if (!svg || effectiveListView) return
+    const behavior = d3Zoom<SVGSVGElement, unknown>()
+      .scaleExtent([1, 4])
+      .on('zoom', (event: { transform: ZoomTransform }) => setZoomTransform(event.transform))
+    // Double-click is a DOM listener, not a zoom-dispatch event type.
+    select(svg).call(behavior).on('dblclick.zoom', null)
+    return () => { select(svg).on('.zoom', null) }
+    // Wire once the graph svg actually exists (first data load + first layout) and
+    // re-wire on view toggles; data polls keep the boolean stable.
+  }, [effectiveListView, data !== null && laid !== null])
 
   const tagChips = useMemo(() => {
     const counts = new Map<string, number>()
@@ -175,7 +192,7 @@ export function MemoryGraphView() {
   }, [data])
 
   if (loadError) return <EmptyTerminal label="failed to load memory graph" />
-  if (!data) return <SkeletonPanel label="loading vault graph" />
+  if (!data || (!effectiveListView && !laid)) return <SkeletonPanel label="loading vault graph" />
   if (!data.totalNotes) return <EmptyTerminal label="no vault configured — see /setup" />
 
   return (
