@@ -389,7 +389,7 @@ function KanbanCard({ task, onOpen, draggable, dragging, onDragStart, onDragEnd 
   onDragStart: () => void
   onDragEnd: () => void
 }) {
-  return <Card as="article" className={`${styles.taskCard} ${dragging ? styles.dragging : ''}`}>
+  return <Card as="article" className={`${styles.taskCard} ${dragging ? styles.dragging : ''}`} data-glass-interactive="" data-status={task.status}>
     <Button className={styles.taskButton} aria-label={`Open ${task.title}`} onClick={onOpen}
       draggable={draggable}
       onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', task.id); onDragStart() }}

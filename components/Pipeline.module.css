@@ -12,6 +12,9 @@
 .metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--pt-s-5); padding: var(--pt-s-5); }
 .stages { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--pt-s-4); align-items: start; }
 .stage { min-width: 0; }
+/* A stage card can hold hundreds of client rows; below the fold it skips style,
+   layout and paint until scrolled near. The card already clips (overflow: hidden). */
+.stage { content-visibility: auto; contain-intrinsic-size: auto 600px; }
 .stage > div:first-child { flex-wrap: wrap; gap: var(--pt-s-2); }
 .clientSummary { display: flex; flex-direction: column; gap: var(--pt-s-2); margin-top: var(--pt-s-2); }
 .chips, .actions { display: flex; flex-wrap: wrap; gap: var(--pt-s-2); align-items: center; min-width: 0; }

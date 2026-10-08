@@ -1417,6 +1417,11 @@ body {
   overflow: hidden;
   position: relative;
   display: flex; flex-direction: column; box-shadow: var(--ob-surface-highlight); backdrop-filter: var(--glass-2-blur); }
+/* Off-screen windows skip style, layout and paint until they near the viewport.
+   Every .mc-window already clips (overflow: hidden) and pops out through a portal,
+   so the implied paint/layout containment changes nothing visible. `auto` keeps the
+   last rendered height once a window has been seen, so the scrollbar settles. */
+.mc-main .mc-window { content-visibility: auto; contain-intrinsic-size: auto 480px; }
 .mc-window-head {
   display: flex; align-items: center; gap: 10px;
   padding: 10px 14px;
