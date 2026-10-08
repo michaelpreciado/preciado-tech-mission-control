@@ -45,13 +45,20 @@ function fixed(n?: number | null, digits = 1): string {
   return finite(n) ? n.toFixed(digits) : '—'
 }
 
+// Formatters are built once: constructing an Intl formatter per call was the
+// hottest JS on this route (thousands of cells per render).
+const COUNT_FMT = new Intl.NumberFormat('en-US')
+const MONEY_FMT = new Map<number, Intl.NumberFormat>()
+
 function count(n?: number | null): string {
-  return finite(n) ? n.toLocaleString('en-US') : '—'
+  return finite(n) ? COUNT_FMT.format(n) : '—'
 }
 
 function money(n?: number | null, digits = 2) {
   if (!finite(n)) return '—'
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: digits }).format(n)
+  let fmt = MONEY_FMT.get(digits)
+  if (!fmt) MONEY_FMT.set(digits, fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: digits }))
+  return fmt.format(n)
 }
 
 /** Wall-clock duration for the generation-time readout. */
