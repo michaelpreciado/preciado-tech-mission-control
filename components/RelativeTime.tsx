@@ -23,7 +23,7 @@ export function RelativeTime({
 
   useEffect(() => {
     if (nowProp !== undefined) return
-    const t = setInterval(() => setNow(Date.now()), 1000)
+    const t = setInterval(() => { if (document.visibilityState === 'visible') setNow(Date.now()) }, 1000)
     return () => clearInterval(t)
   }, [nowProp])
 

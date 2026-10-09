@@ -11,6 +11,10 @@
   backdrop-filter: blur(12px);
 }
 
+/* Section-level cards skip style and layout while off-screen. They already clip
+   (overflow: hidden), so the implied paint containment changes nothing visible. */
+section.card { content-visibility: auto; contain-intrinsic-size: auto 400px; }
+
 .cardRaised {
   background: var(--pt-surface-2);
 }

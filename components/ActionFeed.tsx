@@ -90,7 +90,7 @@ export function useAlertDismissals(enabled = true) {
     setDismissed(entries)
     setNow(loadedAt)
     persistDismissals(entries)
-    const timer = window.setInterval(() => setNow(Date.now()), POLL_MS)
+    const timer = window.setInterval(() => { if (document.visibilityState === 'visible') setNow(Date.now()) }, POLL_MS)
     return () => window.clearInterval(timer)
   }, [enabled])
 

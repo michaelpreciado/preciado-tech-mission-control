@@ -4604,6 +4604,8 @@ html[data-motion="reduced"] .mc-hud-progress-fill, html[data-motion="off"] .mc-h
 body:has(.mc-costs-page) .mc-rain { display: none !important; }
 .mc-viz-grid {
   display: grid; gap: 16px;
+  /* Below the fold on every viewport; skip its chart subtree until it nears view. */
+  content-visibility: auto; contain-intrinsic-size: auto 600px; overflow-clip-margin: 32px;
 }
 
 /* ── Costs tables ─────────────────────────────────────────────────────

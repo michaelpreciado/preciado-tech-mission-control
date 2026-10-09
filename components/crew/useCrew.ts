@@ -27,7 +27,7 @@ export function useCrew(): CrewView {
     }
     void poll()
     const refresh = window.setInterval(() => { if (document.visibilityState === 'visible') void poll() }, CADENCE.crew.pollMs)
-    const clock = window.setInterval(() => setNow(Date.now()), 1000)
+    const clock = window.setInterval(() => { if (document.visibilityState === 'visible') setNow(Date.now()) }, 1000)
     return () => { controller.abort(); window.clearInterval(refresh); window.clearInterval(clock) }
   }, [])
   return crewDisplay(snapshot, now, failure !== null, failure) as CrewView

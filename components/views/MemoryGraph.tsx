@@ -105,7 +105,7 @@ export function MemoryGraphView() {
       }
     }
     load()
-    const t = setInterval(load, POLL_MS)
+    const t = setInterval(() => { if (document.visibilityState === 'visible') load() }, POLL_MS)
     return () => { cancelled = true; clearInterval(t) }
   }, [])
 

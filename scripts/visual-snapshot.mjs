@@ -66,7 +66,11 @@ async function capture(dir, base) {
           for (const el of root.querySelectorAll('*')) {
             const r = el.getBoundingClientRect()
             if (!r.width && !r.height) continue
-            out.push(`${el.tagName}.${typeof el.className === 'string' ? el.className.split(' ')[0] : ''}@${Math.round(r.left)},${Math.round(r.top - top)},${Math.round(r.width)}x${Math.round(r.height)}`)
+            // Only what is on screen at this step: off-screen content-visibility subtrees
+            // report placeholder geometry by design, which is not what the user sees.
+            if (r.bottom <= 0 || r.top >= innerHeight) continue
+            // Tag + rect only: CSS-module class hashes differ between bundlers and builds.
+            out.push(`${el.tagName}@${Math.round(r.left)},${Math.round(r.top - top)},${Math.round(r.width)}x${Math.round(r.height)}`)
           }
           return out
         }, s)
@@ -107,8 +111,9 @@ async function compare(a, b) {
   }
   let geomBad = 0
   for (const [key, r] of [...byRoute].sort()) {
-    const ga = JSON.parse(readFileSync(join(a, `${key}.geom.json`), 'utf8'))
-    const gb = existsSync(join(b, `${key}.geom.json`)) ? JSON.parse(readFileSync(join(b, `${key}.geom.json`), 'utf8')) : []
+    const norm = g => g.replace(/^(\w+)\.[^@]*@/, '$1@')
+    const ga = [...new Set(JSON.parse(readFileSync(join(a, `${key}.geom.json`), 'utf8')).map(norm))]
+    const gb = existsSync(join(b, `${key}.geom.json`)) ? [...new Set(JSON.parse(readFileSync(join(b, `${key}.geom.json`), 'utf8')).map(norm))] : []
     const sb = new Set(gb), sa = new Set(ga)
     const lost = ga.filter(g => !sb.has(g)).length, gained = gb.filter(g => !sa.has(g)).length
     const geomPct = ((lost + gained) / Math.max(1, ga.length + gb.length)) * 100

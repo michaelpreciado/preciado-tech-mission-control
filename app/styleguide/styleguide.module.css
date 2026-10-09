@@ -14,7 +14,7 @@
 
 .intro { max-width: 760px; margin: 0 0 var(--pt-s-8); }
 .content { display: flex; flex-direction: column; gap: var(--pt-s-10); }
-.section { display: flex; flex-direction: column; gap: var(--pt-s-4); scroll-margin-top: var(--pt-s-4); }
+.section { display: flex; flex-direction: column; gap: var(--pt-s-4); scroll-margin-top: var(--pt-s-4); content-visibility: auto; contain-intrinsic-size: auto 600px; overflow-clip-margin: 32px; }
 .sectionTitle { margin: 0; color: var(--pt-text-high); font-family: var(--pt-font-ui); font-size: var(--pt-fs-h3); line-height: var(--pt-lh-snug); }
 .gridThree,
 .gridFour,
@@ -52,7 +52,7 @@
 .glassTitle { margin: var(--pt-s-2) 0 var(--pt-s-3); font-size: var(--pt-fs-h2); color: var(--pt-text-high); letter-spacing: var(--pt-ls-tight); }
 .glassIntro p, .glassVerdict { margin: 0; color: var(--mc-ink-dim); font-size: var(--pt-fs-body); line-height: var(--pt-lh-body); }
 .conceptGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--pt-s-4); align-items: start; }
-.concept { min-width: 0; border-top: 1px solid var(--pt-btn-glass-line-base); }
+.concept { min-width: 0; border-top: 1px solid var(--pt-btn-glass-line-base); content-visibility: auto; contain-intrinsic-size: auto 800px; overflow-clip-margin: 32px; }
 .conceptHead { min-height: 210px; padding: var(--pt-s-5) var(--pt-s-3); }
 .conceptIndex { font: 500 var(--pt-fs-xs)/var(--pt-lh-ui) var(--pt-font-mono); color: var(--mc-ink-dim); }
 .edge .conceptIndex { color: var(--pt-info-ink); }

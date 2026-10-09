@@ -5,6 +5,9 @@
 .w2l-section-nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
 .w2l-section-nav a { display: inline-flex; align-items: center; min-height: 44px; }
 #ideas, #studio, #signals { scroll-margin-top: 16px; }
+/* Off-screen content sections skip style and layout until they near the viewport.
+   The clip margin keeps child glows that spill past the section edge visible. */
+#ideas, #studio, #signals { content-visibility: auto; contain-intrinsic-size: auto 800px; overflow-clip-margin: 32px; }
 .mc-drawer { overscroll-behavior: contain; }
 .mc-drawer-head { position: sticky; top: -16px; z-index: 3; background: var(--pt-bg); padding-block: 10px; }
 .mc-drawer-title { overflow-wrap: anywhere; }
@@ -118,7 +121,6 @@
 #home-conversation, #home-open-tasks { scroll-margin-top: 60px; }
 @media (max-width: 560px) {
   html body .mc-main .cp-panel .cp-tablewrap { overflow: visible; flex-shrink: 0; }
-  .cp-panel .mc-window { content-visibility: visible; }
 }
 @media (max-width: 900px) {
   .w2l-home-jumps { position: fixed; bottom: 12px; right: 12px; z-index: 30; padding: 6px; background: var(--pt-bg); border: 1px solid var(--pt-border); }
