@@ -292,7 +292,7 @@ for (const vp of VIEWPORTS) {
     const { buf, extra } = await traced(browser, page, async () => {
       const deltas = []
       for (const path of ROUTES.filter(p => p !== '/login')) {
-        const [d] = await Promise.all([rafSample(page, 45), navigate(page, path)])
+        const [d] = await Promise.all([rafSample(page, 45).catch(() => []), navigate(page, path)])
         deltas.push(...d)
       }
       return deltas
