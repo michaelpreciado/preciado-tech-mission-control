@@ -16,12 +16,15 @@
 // Plus point probes: longest main-thread task, CLS, live backdrop-filters, running
 // animations, DOM size, WebGL contexts, and rAF callbacks while the tab is hidden.
 //
-// Runs headless on the real GPU (--use-angle=vulkan). Headless rAF is fixed at 60Hz,
-// so 120fps readiness is argued from stage cost vs the 8.33ms budget, never from
-// the rAF cadence.
+// Default: headless on the real GPU (--use-angle=vulkan). Headless rAF is fixed at
+// 60Hz, so there 120fps readiness is argued from stage cost vs the 8.33ms budget.
+// --headed opens a real window through Xwayland (ozone x11), which vsyncs to the
+// physical panel (165Hz on DP-1), so rAF cadence is the observed frame rate.
+// Trace bins follow the observed interval in either mode.
 //
 // Usage: node scripts/perf-frames.mjs [baseUrl] [--out file.json] [--only phone,desktop]
 //                                     [--cpu N]   (main-thread throttle on touch viewports, default 4)
+//                                     [--headed]  (real display vsync)
 import { chromium } from 'playwright'
 import { writeFileSync } from 'node:fs'
 
@@ -33,6 +36,8 @@ const ONLY = flag('--only', null)?.split(',')
 const CPU = Number(flag('--cpu', 4))
 const TRACE_DIR = flag('--trace-dir', null)
 const LEAK_CYCLES = Number(flag('--leak', 3))  // full 17-route sweeps per viewport
+const HEADED = args.includes('--headed')
+const BUDGET_120 = 1000 / 120
 
 const VIEWPORTS = [
   { name: 'desktop', w: 1440, h: 900, touch: false },
@@ -131,7 +136,9 @@ async function domCounters(cdp) {
 const rafStats = (deltas) => {
   const s = stats(deltas)
   const interval = s.p50
-  return { ...s, interval, missed: deltas.filter(d => d > interval * 1.5).length }
+  const mean = deltas.reduce((a, b) => a + b, 0) / (deltas.length || 1)
+  return { ...s, interval, fps: Math.round(1000 / mean), missed: deltas.filter(d => d > interval * 1.5).length,
+    over120: deltas.filter(d => d > BUDGET_120 * 1.25).length }
 }
 
 async function probe(page) {
@@ -200,8 +207,11 @@ async function scrollMain(cdp, box, touch) {
   return box.room
 }
 
-const browser = await chromium.launch({ args: ['--enable-gpu', '--use-angle=vulkan', '--ignore-gpu-blocklist'] })
-const results = { base: BASE, at: new Date().toISOString(), cpuThrottleTouch: CPU, viewports: {} }
+const browser = await chromium.launch(HEADED
+  ? { headless: false, args: ['--ozone-platform=x11', '--enable-gpu', '--ignore-gpu-blocklist'] }
+  : { args: ['--enable-gpu', '--use-angle=vulkan', '--ignore-gpu-blocklist'] })
+const results = { base: BASE, at: new Date().toISOString(), headed: HEADED, cpuThrottleTouch: CPU, viewports: {} }
+let interval = 16.67  // replaced by the observed display interval after the first idle sample
 
 for (const vp of VIEWPORTS) {
   const ctx = await browser.newContext({
@@ -249,6 +259,7 @@ for (const vp of VIEWPORTS) {
   {
     const { buf, extra } = await traced(browser, page, () => rafSample(page, 180), `${vp.name}-idle`)
     const raf = rafStats(extra)
+    interval = raf.interval
     res.idle = { raf, stage: analyzeTrace(buf, raf.interval), probe: await probe(page) }
   }
   // scroll
@@ -258,7 +269,7 @@ for (const vp of VIEWPORTS) {
       await navigate(page, path); await page.waitForTimeout(2500)
       const target = await scrollTarget(page), room = target.room
       const { buf } = await traced(browser, page, () => scrollMain(cdp, target, vp.touch), `${vp.name}-scroll${path.replace(/\//g, '-')}`)
-      const stage = analyzeTrace(buf, 16.67)
+      const stage = analyzeTrace(buf, interval)
       if (stage) { stageRuns.push({ path, room, ...stage }); longest = Math.max(longest, stage.longestMainTask) }
     }
     // A clean rAF cadence during scroll, sampled on the longest route.
@@ -290,7 +301,7 @@ for (const vp of VIEWPORTS) {
     const long = await page.evaluate(() => window.__perfLong)
     const byPath = {}
     for (const t of long) byPath[t.path] = Math.max(byPath[t.path] ?? 0, t.dur)
-    res.nav = { raf, stage: analyzeTrace(buf, 16.67), longTasks: byPath, probe: await probe(page) }
+    res.nav = { raf, stage: analyzeTrace(buf, interval), longTasks: byPath, probe: await probe(page) }
   }
   // leak: sweep every route repeatedly; listeners, nodes, documents and WebGL
   // contexts must return to the same level each time we land back on Home.
@@ -325,18 +336,32 @@ for (const vp of VIEWPORTS) {
     })
     res.hidden = hidden
   }
+  // reduced motion: emulate the media query, then count what is still animating
+  // and how many rAF callbacks the app requests, on Home and the busiest routes.
+  {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    const rm = []
+    for (const path of ['/', '/costs', '/kanban', '/crew', '/pipeline']) {
+      await navigate(page, path); await page.waitForTimeout(1200)
+      const animations = await page.evaluate(() => document.getAnimations().filter(a => a.playState === 'running').length)
+      rm.push({ path, animations, rafPerSec: await appRafPerSec(page) })
+    }
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    res.reducedMotion = rm
+  }
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 }).catch(() => {})
   results.viewports[vp.name] = res
 
   const f = s => `${r2(s.p50)}/${r2(s.p95)}/${r2(s.worst)}`
-  console.log(`  idle    rAF ${f(res.idle.raf)} ms (interval ${r2(res.idle.raf.interval)}, missed ${res.idle.raf.missed})  stage ${res.idle.stage ? f(res.idle.stage.critical) : '-'}  main ${res.idle.stage ? f(res.idle.stage.main) : '-'}`)
-  console.log(`  scroll  rAF ${f(res.scroll.raf)} ms (missed ${res.scroll.raf.missed}/${res.scroll.raf.n})  stage-p95 worst route ${r2(res.scroll.criticalWorstP95)}  longest task ${res.scroll.longestMainTask}`)
+  console.log(`  idle    rAF ${f(res.idle.raf)} ms (interval ${r2(res.idle.raf.interval)}, ${res.idle.raf.fps}fps, missed ${res.idle.raf.missed}, >10.4ms ${res.idle.raf.over120})  stage ${res.idle.stage ? f(res.idle.stage.critical) : '-'}  main ${res.idle.stage ? f(res.idle.stage.main) : '-'}`)
+  console.log(`  scroll  rAF ${f(res.scroll.raf)} ms (${res.scroll.raf.fps}fps, missed ${res.scroll.raf.missed}/${res.scroll.raf.n}, >10.4ms ${res.scroll.raf.over120})  stage-p95 worst route ${r2(res.scroll.criticalWorstP95)}  longest task ${res.scroll.longestMainTask}`)
   for (const r of res.scroll.routes) console.log(`    ${r.path.padEnd(8)} room ${String(r.room).padStart(5)}  crit ${f(r.critical)}  main ${f(r.main)}  comp ${f(r.compositor)}  viz ${f(r.viz)}  gpu ${f(r.gpu)}  >8.3ms ${r.over8}/${r.bins}`)
-  console.log(`  nav     rAF ${f(res.nav.raf)} ms (missed ${res.nav.raf.missed})  longest task ${res.nav.stage ? r2(res.nav.stage.longestMainTask) : '-'}`)
+  console.log(`  nav     rAF ${f(res.nav.raf)} ms (${res.nav.raf.fps}fps, missed ${res.nav.raf.missed})  longest task ${res.nav.stage ? r2(res.nav.stage.longestMainTask) : '-'}`)
   console.log(`          long tasks >50ms by route: ${Object.entries(res.nav.longTasks).map(([p, d]) => `${p} ${d}`).join(', ') || 'none'}`)
   console.log(`  probe   home: dom ${res.idle.probe.dom} backdrop ${res.idle.probe.backdrop} anims ${res.idle.probe.animations} cls ${res.idle.probe.cls}  ·  after nav: webgl live ${res.nav.probe.webgl} created ${res.nav.probe.webglCreated}`)
   if (res.leak) console.log(`  leak    per sweep → home: ${res.leak.map(c => `nodes ${c.nodes} listeners ${c.listeners} docs ${c.documents} gl ${c.webgl} rAF/s ${c.rafPerSec}`).join('  |  ')}`)
   console.log(`  hidden  data-page-hidden=${res.hidden.pageHidden} running animations ${res.hidden.runningAnimations}`)
+  console.log(`  reduce  ${res.reducedMotion.map(r => `${r.path} anims ${r.animations} rAF/s ${r.rafPerSec}`).join('  ·  ')}`)
   await ctx.close()
 }
 

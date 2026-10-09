@@ -1,5 +1,7 @@
 // Focused trace: navigate to a route and name the longest main-thread tasks.
-// Usage: node scripts/trace-route.mjs /costs [--vp phone|desktop]
+// Usage: node scripts/trace-route.mjs /costs [--vp phone|desktop] [--profile]
+//   --profile also records a V8 CPU profile of the navigation and prints the
+//   hottest functions by self time (url:line:col resolves against .next/static).
 import { chromium } from 'playwright'
 import { writeFileSync } from 'node:fs'
 
@@ -26,11 +28,28 @@ await page.goto(BASE + '/', { waitUntil: 'networkidle' }).catch(() => {})
 await page.waitForTimeout(2000)
 if (vp.touch) await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 })
 
+const PROFILE = process.argv.includes('--profile')
+if (PROFILE) { await cdp.send('Profiler.enable'); await cdp.send('Profiler.setSamplingInterval', { interval: 100 }); await cdp.send('Profiler.start') }
 await browser.startTracing(page, { categories: ['devtools.timeline', 'disabled-by-default-devtools.timeline', 'disabled-by-default-devtools.timeline.invalidationTracking', 'toplevel', 'blink', 'v8'] })
 await page.evaluate(p => window.next.router.push(p), route)
 await page.waitForFunction(p => location.pathname === p, route, { timeout: 15000 }).catch(() => {})
 await page.waitForTimeout(2500)
 const buf = await browser.stopTracing()
+if (PROFILE) {
+  const { profile } = await cdp.send('Profiler.stop')
+  const dt = new Map()
+  const { samples, timeDeltas, nodes } = profile
+  const byId = new Map(nodes.map(n => [n.id, n]))
+  samples.forEach((id, i) => dt.set(id, (dt.get(id) ?? 0) + (timeDeltas[i] ?? 0) / 1000))
+  const self = new Map()
+  for (const [id, ms] of dt) {
+    const f = byId.get(id).callFrame
+    const key = `${f.functionName || '(anon)'}  ${f.url.replace(/^.*\/_next\//, '')}:${f.lineNumber + 1}:${f.columnNumber + 1}`
+    self.set(key, (self.get(key) ?? 0) + ms)
+  }
+  console.log('\n  hottest functions by self time:')
+  for (const [k, ms] of [...self].sort((a, b) => b[1] - a[1]).slice(0, 25)) console.log(`      ${ms.toFixed(1).padStart(7)} ms  ${k}`)
+}
 writeFileSync(`/home/mp/.hermes/profiles/jarvis/cache/scratch/mc-overnight/trace${route.replace(/\//g, '-')}-${VP}.json`, buf)
 
 const events = JSON.parse(buf.toString()).traceEvents
