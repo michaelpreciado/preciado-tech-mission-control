@@ -45,7 +45,7 @@
   /* Legible secondary text on glass (WCAG AA 4.5:1 on the tiers below) */
   --vg-text-mute: #8089a0;
   --vg-text-faint: #7a859d;
-  --vg-eyebrow: #9db4ec;
+  --vg-eyebrow: var(--pt-neon-bright);   /* was periwinkle #9db4ec (PT client brand) */
 
   /* Type floor */
   --vg-fs-min: 0.75rem;
@@ -134,11 +134,11 @@ html[data-motion='off'] {
      (#00d4ff) was split three ways: brand periwinkle (borders, headings,
      active nav), action blue (links, focus, primary buttons) and dodger
      neon (glows, live indicators only). */
-  --ob-brand: #9db4ec;
+  --ob-brand: var(--pt-neon-bright);
   --ob-action: #75b9ff;
   --ob-neon: var(--pt-dodger);
   --ob-peak: #f4f7fb;
-  --ob-hierarchy: #9db4ec;
+  --ob-hierarchy: var(--pt-neon-bright);
   --ob-sky: #75b9ff;
   --ob-azure: var(--pt-dodger);
   --ob-text: #f4f7fb;
@@ -8489,7 +8489,7 @@ html[data-motion="off"] .mc-studio-cursor { animation: none; }
 .boot-loading, .boot-fault-screen, .boot-overlay {
   display: flex; align-items: center; justify-content: center;
   min-height: 60vh; padding: 24px 12px;
-  font-family: var(--pt-font-mono), monospace; color: #9db4ec;
+  font-family: var(--pt-font-mono), monospace; color: var(--pt-neon-bright);
 }
 .boot-overlay {
   position: fixed; inset: 0; z-index: 150; min-height: 0;
@@ -8498,10 +8498,10 @@ html[data-motion="off"] .mc-studio-cursor { animation: none; }
 }
 .boot-overlay.boot-leaving { opacity: 0; pointer-events: none; }
 .boot-console { font-size: clamp(10px, 2.6vw, 14px); line-height: 1.9; letter-spacing: 0; }
-.boot-console .cyber-terminal-art { color: #9db4ec; opacity: .45; margin: 0 0 20px; }
-.boot-eyebrow, .boot-footer, .boot-skip { color: #9db4ec; opacity: .42; font-size: .8em; }
+.boot-console .cyber-terminal-art { color: var(--pt-neon-bright); opacity: .45; margin: 0 0 20px; }
+.boot-eyebrow, .boot-footer, .boot-skip { color: var(--pt-neon-bright); opacity: .42; font-size: .8em; }
 .boot-eyebrow { margin-bottom: 18px; letter-spacing: .12em; }
-.boot-readout { border-left: 1px solid #9db4ec30; padding-left: 18px; }
+.boot-readout { border-left: 1px solid color-mix(in srgb, var(--pt-neon-bright) 19%, transparent); padding-left: 18px; }
 .boot-row { display: flex; height: 1.9em; }
 .boot-line {
   display: inline-block; white-space: pre; overflow: hidden; width: calc(var(--boot-chars) * 1ch);
@@ -8513,17 +8513,17 @@ html[data-motion="off"] .mc-studio-cursor { animation: none; }
 .boot-skip { margin-top: 34px; font-size: var(--vg-fs-min); letter-spacing: .12em; }
 .boot-fault-panel { max-width: 100%; }
 .boot-frame {
-  margin: 0 0 24px; color: #9db4ec55; line-height: 1.7;
+  margin: 0 0 24px; color: color-mix(in srgb, var(--pt-neon-bright) 33%, transparent); line-height: 1.7;
   font-size: clamp(9px, 2vw, 15px); letter-spacing: 0; white-space: pre;
 }
-.boot-fault-status { color: #9db4ec; animation: boot-flicker 240ms steps(2, end) 2; }
+.boot-fault-status { color: var(--pt-neon-bright); animation: boot-flicker 240ms steps(2, end) 2; }
 .boot-error-word { color: #ff5f57; }
 .boot-fault-details { max-width: 46ch; font-size: 13px; }
-.boot-fault-details p { color: #9db4ecaa; }
+.boot-fault-details p { color: color-mix(in srgb, var(--pt-neon-bright) 67%, transparent); }
 .boot-reference { overflow-wrap: anywhere; }
-.boot-action { display: inline-block; padding: 12px 0; color: #9db4ec; background: transparent; border: 0; font: inherit; cursor: pointer; text-decoration: none; }
-.boot-action:hover { text-shadow: 0 0 12px #9db4ec80; }
-.boot-action:focus-visible { outline: 1px solid #9db4ec; outline-offset: 5px; }
+.boot-action { display: inline-block; padding: 12px 0; color: var(--pt-neon-bright); background: transparent; border: 0; font: inherit; cursor: pointer; text-decoration: none; }
+.boot-action:hover { text-shadow: 0 0 12px color-mix(in srgb, var(--pt-neon-bright) 50%, transparent); }
+.boot-action:focus-visible { outline: 1px solid var(--pt-neon-bright); outline-offset: 5px; }
 .boot-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @keyframes boot-type { from { width: 0; } }
 @keyframes boot-land { from { opacity: .16; } to { opacity: .78; } }
@@ -8589,7 +8589,7 @@ body:has([role="dialog"], dialog[open]) .boot-overlay { visibility: hidden; }
   box-sizing: border-box;
   width: 6px;
   height: 6px;
-  border: 0 solid #9db4ec;
+  border: 0 solid var(--pt-neon-bright);
   opacity: .55;
   pointer-events: none;
   user-select: none;
