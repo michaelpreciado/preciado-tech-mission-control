@@ -67,6 +67,8 @@ for (const [W, H] of WIDTHS) {
       const ctrls = [...document.querySelectorAll('a[href], button, [role="button"], [role="tab"], input:not([type=hidden]), select, textarea, summary')]
         .filter(el => visible(el) && !el.closest('[aria-hidden="true"], [inert]'))
         .filter(el => { const b = el.getBoundingClientRect(); return b.bottom > 0 && b.top < vh && b.right > 0 && b.left < vw })
+        // Content scrolled under the opaque fixed tab bar is occluded, not adjacent to it.
+        .filter(el => { const bar = document.querySelector('[data-mobile-nav]'); if (!bar || bar.contains(el)) return true; const top = bar.getBoundingClientRect().top; return top >= vh || el.getBoundingClientRect().bottom <= top + 0.5 })
         .filter(el => {
           if (el.tagName !== 'A') return true
           const p = el.parentElement
