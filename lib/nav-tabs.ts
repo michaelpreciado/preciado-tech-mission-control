@@ -41,6 +41,7 @@ export const NAV: NavSection[] = [
   ]},
   { section: 'Machine', items: [
     { id: '/system', label: 'System', icon: 'memory' },
+    { id: '/local-ai', label: 'Local AI', icon: 'memory' },
     { id: '/memory', label: 'Memory', icon: 'memory' },
     { id: '/setup', label: 'Setup', icon: 'setup' },
   ]},

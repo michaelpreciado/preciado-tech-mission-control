@@ -1,0 +1,7 @@
+.controls { display: flex; flex-wrap: wrap; align-items: end; gap: var(--pt-s-4); padding: var(--pt-s-4) var(--pt-s-5); }
+.controls > * { min-width: 0; }
+.meta { display: block; font-variant-numeric: tabular-nums; }
+.bar { display: block; height: 6px; margin-top: var(--pt-s-2); border-radius: 999px; background: color-mix(in srgb, var(--pt-text) 10%, transparent); overflow: hidden; }
+.bar > span { display: block; height: 100%; background: var(--pt-info); }
+.more { padding: var(--pt-s-3) var(--pt-s-5) var(--pt-s-4); }
+.source { display: block; margin-top: var(--pt-s-1); font-family: var(--pt-font-mono, ui-monospace, monospace); font-size: var(--pt-fs-xs); color: var(--pt-text-dim); word-break: break-all; }
