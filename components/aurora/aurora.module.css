@@ -47,9 +47,10 @@
 .skyLabels { display: flex; flex-direction: column; padding-top: 12px; }
 .skyLabels span { height: 24px; font: 400 11px/24px var(--aur-font-data); color: var(--aur-text-4); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .skyScroll { min-width: 0; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: var(--aur-line-strong) transparent; }
+.skyPlot { position: relative; width: 100%; min-width: 640px; }
 .sky { display: block; width: 100%; min-width: 640px; overflow: visible; }
 .hr { stroke: var(--aur-line-subtle); stroke-width: 1; }
-.hl { fill: var(--aur-text-4); font: 400 10.5px var(--aur-font-data); }
+.hl { position: absolute; margin-left: 4px; font: 400 11px/14px var(--aur-font-data); color: var(--aur-text-4); white-space: nowrap; pointer-events: none; }
 .halo { fill: var(--aur-accent); opacity: .75; }
 .failHalo { fill: var(--aur-error); opacity: .3; }
 .fail { fill: var(--aur-error); }

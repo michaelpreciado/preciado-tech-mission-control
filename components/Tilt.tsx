@@ -46,7 +46,8 @@ export function Tilt({ children, className = '', max = MAX }: { children: ReactN
     if (frame.current) cancelAnimationFrame(frame.current)
     const el = ref.current
     if (!el) return
-    el.style.transform = 'perspective(900px) rotateX(0deg) rotateY(0deg) translateZ(0)'
+    // Clear it: a resting 3D transform keeps the card on its own layer, with grayscale-resampled text.
+    el.style.transform = ''
   }, [])
 
   return (

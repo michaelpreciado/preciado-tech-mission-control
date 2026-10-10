@@ -174,9 +174,11 @@ body {
   letter-spacing: 0;
   color-scheme: dark;
   font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* J1: kerning only. text-rendering:optimizeLegibility is gone (it also forced ligatures;
+     auto re-wrapped the hero headline, font-kerning:normal alone is pixel-identical to it).
+     -webkit/-moz font-smoothing removed: both are no-ops outside macOS (A/B on Linux
+     Chromium produced byte-identical text), so the browser default stands. */
+  font-kerning: normal;
   /* Safe-area padding for notched devices */
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
@@ -240,23 +242,12 @@ html[data-theme="friday"] .mc-vignette {
   /* J1: gentle neutral vignette, no CRT crush, no green cast */
 }
 
-/* CRT curvature + jitter on the live area.
-   The glow is free (static text-shadow) and always on. The animated part is
-   not: crt-jitter transforms the whole scrollable pane ~11x/second forever, and
-   the shell filter forces the entire app into an offscreen buffer on every
-   paint. On a phone or foldable that is continuous full-screen recomposition
-   for a 0.4px wobble nobody can see, so both are gated to fine pointers —
-   the same battery trade public/rain.js already makes. */
+/* J1: no CRT motion on the live area. The old crt-jitter (a 0.4px translate of the whole
+   scroll pane) and crt-flicker animations and the .mc-shell contrast/saturate filter are
+   gone, as is the K4 override block that used to cancel them. Text is never inside a
+   filtered or sub-pixel-translated subtree, so it rasterizes on whole pixels. */
 html[data-theme="friday"] .mc-main {
   position: relative;
-}
-@media (pointer: fine) {
-  html[data-theme="friday"] .mc-shell {
-    filter: contrast(1.05) saturate(1.15);
-  }
-  html[data-theme="friday"] .mc-main {
-    animation: crt-flicker 3.2s infinite steps(60), crt-jitter 0.18s steps(2) infinite;
-  }
 }
 html[data-theme="friday"] .mc-main::after {
   content: '';
@@ -266,18 +257,6 @@ html[data-theme="friday"] .mc-main::after {
     linear-gradient(180deg, rgba(var(--pt-neon-rgb),0.04), transparent 20%, transparent 80%, rgba(var(--pt-neon-rgb),0.04));
   mix-blend-mode: screen;
 }
-@keyframes crt-flicker {
-  0%, 96%, 100% { opacity: 1; }
-  97% { opacity: 0.86; }
-  97.5% { opacity: 1; }
-  98% { opacity: 0.92; }
-  99% { opacity: 1; }
-}
-@keyframes crt-jitter {
-  0%, 100% { transform: translate(0,0); }
-  50% { transform: translate(0.4px, 0); }
-}
-
 /* Heading + value glow. Headings are white ink (Blue Matrix Glass); values keep the bright accent. */
 html[data-theme="friday"] h1,
 html[data-theme="friday"] h2 { color: var(--pt-mx-ink-head); }
@@ -2420,10 +2399,6 @@ a.mc-cell {
   color: var(--pt-neon-bright);
 }
 .mc-mobile-label { font-size: var(--vg-fs-min); opacity: 1; }
-
-@media (prefers-reduced-motion: reduce) {
-  html[data-theme="friday"] .mc-main { animation: none !important; }
-}
 
 /* ── Focus states for keyboard navigation ──────────────── */
 :focus-visible {
@@ -5855,16 +5830,8 @@ html[data-motion="off"] .mc-home-tile.tone-err::after {
   overscroll-behavior-y: contain;
 }
 
-/* Animated list-enter and hovers already run on transform/opacity; make sure
-   nothing forces a layout read on the hot path. */
-.mc-task,
-.mc-agent-card,
-.mc-cal-card,
-.mc-commit,
-.mc-kb-card,
-.mc-home-tile {
-  will-change: transform;
-}
+/* J1: no standing will-change on static cards. Hover transforms promote on demand;
+   a permanent layer per card only added compositor memory and pinned text to a layer. */
 
 /* Coarse pointers get zero backdrop-blur on the moving surface (blur is the
    single biggest frame-cost on phone GPUs). These already sit over dark fills.
@@ -8985,8 +8952,6 @@ html[data-theme='friday'] .mc-btn.ob-btn-confirm { border-color: transparent; ba
 
 /* K4: shared J1 chrome wins over legacy route skins, without changing layout. */
 html body, html body:has(.ob-home) { background: #07080b; }
-html[data-theme='friday'] .mc-shell { filter: none; }
-html[data-theme='friday'] .mc-main { animation: none; }
 html body .mc-main::after, html body .mc-main .v4-scanline { display: none; }
 html[data-theme='friday'] .mc-side { background: var(--ob-glass); }
 html body :is(button, input, select, textarea) { font-family: var(--pt-font-sans); }

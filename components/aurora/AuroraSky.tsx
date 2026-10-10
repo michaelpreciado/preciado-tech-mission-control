@@ -56,6 +56,7 @@ export function AuroraSky({ rows, nowHour, rangeHours = 24 }: Props) {
         {rows.map(r => <span key={r.agent} title={r.agent}>{r.agent}</span>)}
       </div>
       <div className={styles.skyScroll} ref={scroller}>
+        <div className={styles.skyPlot}>
         <svg className={styles.sky} style={{ height: H }} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label={label}>
           <defs>
             <filter id={glow} filterUnits="userSpaceOnUse" x={-60} y={-60} width={W + 120} height={H + 120}><feGaussianBlur stdDeviation="6" /></filter>
@@ -72,7 +73,6 @@ export function AuroraSky({ rows, nowHour, rangeHours = 24 }: Props) {
           {ticks.map(h => (
             <g key={h}>
               <line className={styles.hr} x1={x(h)} x2={x(h)} y1={8} y2={gridBottom} />
-              {h < rangeHours && <text className={styles.hl} x={x(h) + 4} y={gridBottom + 16}>{hh(h)}</text>}
             </g>
           ))}
           {nowX < W && <rect x={nowX} y={8} width={W - nowX} height={gridBottom - 8} fill={`url(#${future})`} />}
@@ -104,6 +104,11 @@ export function AuroraSky({ rows, nowHour, rangeHours = 24 }: Props) {
           <line className={styles.now} x1={nowX} x2={nowX} y1={4} y2={gridBottom} />
           <circle className={styles.nowDot} cx={nowX} cy={4} r={3} />
         </svg>
+        {/* J1: axis labels are HTML, not <text>: the SVG is stretched to the pane (preserveAspectRatio="none"), which squashed the glyphs. */}
+        {ticks.filter(h => h < rangeHours).map(h => (
+          <span key={h} className={styles.hl} style={{ left: `${(x(h) / W) * 100}%`, top: gridBottom + 5 }} aria-hidden="true">{hh(h)}</span>
+        ))}
+        </div>
       </div>
     </div>
   )
