@@ -235,7 +235,13 @@
   .nearWide { visibility: visible; }
   .callsign { flex: 0 1 auto; min-width: 0; }
   .chips { flex: 0 1 auto; min-width: 0; overflow: hidden; gap: 8px; }
-  .skyScroll { scroll-snap-type: x proximity; }
+  .skyScroll {
+    scroll-snap-type: x proximity; touch-action: pan-x pan-y; scrollbar-width: none;
+    /* Strands fade in under the lane labels at the left edge and out at the right. */
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, black 14px, black calc(100% - 4px), transparent);
+            mask-image: linear-gradient(90deg, transparent 0, black 14px, black calc(100% - 4px), transparent);
+  }
+  .skyScroll::-webkit-scrollbar { display: none; }
   .skyPlot { width: calc(100% * var(--sky-window)); min-width: 0; }
   .failMark { width: 44px; height: 44px; min-width: 44px; min-height: 44px; margin: -22px 0 0 -22px; }
   .skyNote { margin-left: 0; }
