@@ -12,8 +12,8 @@ import { Shell } from '@/components/Shell'
 import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister'
 import { ViewportSync } from '@/components/ViewportSync'
 import { getConfig } from '@/lib/config'
-import { buildAccentCss } from '@/lib/theme'
-import { buildTokenCss, buildFridayThemeCss, buildDensityCss } from '@/lib/tokens'
+import { buildAccentCss, paletteFor } from '@/lib/theme'
+import { buildTokenCss, buildFridayThemeCss, buildOmarchyThemeCss, buildDensityCss } from '@/lib/tokens'
 
 const sans = localFont({
   src: './fonts/instrument-sans-latin-wght-normal.woff2',
@@ -77,7 +77,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   const appearance = getConfig().appearance
   const accentCss = buildAccentCss(appearance.accentColor)
   return (
-    <html lang="en" className={`${sans.variable} ${mono.variable}`} data-theme="friday" data-density={appearance.density} data-motion={appearance.motion}>
+    <html lang="en" className={`${sans.variable} ${mono.variable}`} data-theme="friday" data-palette={paletteFor(appearance.accentColor)} data-density={appearance.density} data-motion={appearance.motion}>
       <head>
         <link rel="manifest" href="/manifest.json" />
         {/* Runtime API base for portable/cloud mode (MC_API_BASE env): lets one
@@ -87,7 +87,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           dangerouslySetInnerHTML={{ __html: `window.__MC_API_BASE__=${JSON.stringify(process.env.MC_API_BASE ?? '')};` }}
         />
         {/* Base design tokens first, then the runtime accent override LAST so it wins. */}
-        <style id="design-tokens">{buildTokenCss() + buildFridayThemeCss() + buildDensityCss()}</style>
+        <style id="design-tokens">{buildTokenCss() + buildFridayThemeCss() + buildOmarchyThemeCss() + buildDensityCss()}</style>
         {accentCss && <style id="friday-accent">{accentCss}</style>}
       </head>
       <body>

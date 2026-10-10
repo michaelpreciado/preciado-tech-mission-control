@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Button, Card, CardHead, Chip, Field, IconButton, Input, Row, Select, Segmented, Sheet, Stat, TextArea } from '@/components/ui'
 import { PageHeader } from '@/components/PageHeader'
+import { OMARCHY, OMARCHY_SEMANTIC } from '@/lib/tokens'
 import styles from './styleguide.module.css'
 
 function Specimen({ name, children }: { name: string; children: React.ReactNode }) {
@@ -36,6 +37,73 @@ function SheetSpecimens() {
         <Button variant="primary" onClick={() => setOpen(null)}>Done</Button>
       </Sheet>
     </>
+  )
+}
+
+
+const OMARCHY_SWATCHES: ReadonlyArray<{ name: string; hex: string; token: string }> = [
+  { name: 'darker', hex: OMARCHY.darkerBackground, token: '--pt-bg' },
+  { name: 'dark', hex: OMARCHY.darkBackground, token: '--pt-bg-soft' },
+  { name: 'background', hex: OMARCHY.background, token: '--pt-surface' },
+  { name: 'lighter', hex: OMARCHY.lighterBackground, token: '--pt-surface-2' },
+  { name: 'selection', hex: OMARCHY.selection, token: '--pt-selection' },
+  { name: 'muted', hex: OMARCHY.muted, token: '--pt-border*' },
+  { name: 'foreground', hex: OMARCHY.foreground, token: '--pt-text' },
+  { name: 'bright', hex: OMARCHY.brightForeground, token: '--pt-text-high' },
+  { name: 'dim', hex: OMARCHY.darkForeground, token: '--pt-text-dim' },
+  { name: 'accent', hex: OMARCHY.accent, token: '--pt-neon' },
+  { name: 'active tab', hex: OMARCHY.activeTab, token: '--pt-active-tab' },
+  { name: 'active border', hex: OMARCHY.activeBorder, token: '--pt-active-border' },
+]
+
+function ThemePanel({ title, palette, purist, swatches }: { title: string; palette?: 'omarchy'; purist?: boolean; swatches?: boolean }) {
+  return (
+    <div className={styles.themePanel} data-palette={palette} style={purist ? ({ '--pt-semantic-mode': 'purist' } as React.CSSProperties) : undefined}>
+      <div data-pt-semantic-root className={styles.themePanelInner}>
+        <h3 className={styles.themeTitle}>{title}</h3>
+        {swatches && <div className={styles.swatchGrid}>
+          {OMARCHY_SWATCHES.map(sw => (
+            <div key={sw.name} className={styles.swatch}>
+              <span className={styles.swatchChip} style={{ background: sw.hex }} />
+              <span className={styles.swatchMeta}>{sw.name}<br />{sw.hex}<br />{sw.token}</span>
+            </div>
+          ))}
+        </div>}
+        <div className={styles.themeLive}>
+          <span className={styles.liveLabel}>LIVE · computed from the --pt-* tokens of this panel</span>
+          <div className={styles.liveRow}>
+            <span className={styles.liveSwatch} style={{ background: 'var(--pt-bg)' }}>--pt-bg</span>
+            <span className={styles.liveSwatch} style={{ background: 'var(--pt-bg-soft)' }}>--pt-bg-soft</span>
+            <span className={styles.liveSwatch} style={{ background: 'var(--pt-neon)', color: 'var(--pt-bg)' }}>--pt-neon</span>
+            <span className={styles.liveSwatch} style={{ background: 'var(--pt-text)', color: 'var(--pt-bg)' }}>--pt-text</span>
+          </div>
+          <div className={styles.liveRow}>
+            <Chip tone="ok" icon="•">ok</Chip><Chip tone="warn" icon="•">warn</Chip><Chip tone="bad" icon="•">error</Chip><Chip tone="info" icon="•">info</Chip><Chip tone="accent" icon="•">accent</Chip>
+          </div>
+          <div className={styles.liveRow}>
+            <Button variant="primary">primary</Button><Button variant="ghost">ghost</Button><Button variant="danger">danger</Button><Button variant="confirm">confirm</Button>
+          </div>
+          <Card tone="raised" pad="md"><CardHead title="Card · raised" sub="border from --pt-card-border" right={<Chip tone="info">info</Chip>} /></Card>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ThemeCompare() {
+  const a = OMARCHY_SEMANTIC.adaptive
+  const p = OMARCHY_SEMANTIC.purist
+  return (
+    <Section title="Theme · current vs Omarchy (PT)">
+      <p className={styles.note}>Left: the active theme tokens. Right: the Omarchy palette, hex for hex from <code>/usr/share/omarchy/themes/lumon/colors.toml</code>. Semantic mode defaults to <code>adaptive</code> (ok {a.ok.hex} · warn {a.warn.hex} · error {a.error.hex}); <code>purist</code> is the literal monochrome set (ok {p.ok.hex} · warn {p.warn.hex} · error {p.error.hex}).</p>
+      <div className={styles.themeGrid}>
+        <ThemePanel title="CURRENT · active theme" />
+        <ThemePanel title="OMARCHY (PT) · --pt-semantic-mode: adaptive" palette="omarchy" swatches />
+      </div>
+      <div className={styles.themeGridSingle}>
+        <ThemePanel title="OMARCHY (PT) · --pt-semantic-mode: purist" palette="omarchy" purist />
+      </div>
+    </Section>
   )
 }
 
@@ -117,6 +185,7 @@ export default function StyleGuide() {
       <p className={styles.intro}>The living contract for the one Mission Control visual language. Variant names sit beside each specimen so a contributor can choose the shared primitive before writing new UI.</p>
 
       <div id="primitives" className={styles.content}>
+        <ThemeCompare />
         <GlassConcepts />
         <Section title="Card / CardHead">
           <div className={styles.gridThree}>

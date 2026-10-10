@@ -446,3 +446,188 @@ export function buildFridayThemeCss(): string {
 }
 `
 }
+
+/* ── Omarchy (Preciado Tech) palette ────────────────────────────────
+   Verbatim from /usr/share/omarchy/themes/lumon/colors.toml. Surfaces, text,
+   accent and chrome adopt these EXACTLY; ok/warn/error are the one deliberate
+   exception (see OMARCHY_SEMANTIC). */
+export const OMARCHY = {
+  accent: '#8bc9eb', selection: '#243d56', muted: '#304860',
+  background: '#16242d', darkBackground: '#101b21', darkerBackground: '#0b1216', lighterBackground: '#1b2d40',
+  foreground: '#d6e2ee', darkForeground: '#4d86b0', lightForeground: '#d6e2ee', brightForeground: '#f2fcff',
+  activeBorder: '#f2fcff', activeTab: '#6fb8e3',
+  red: '#4d86b0', yellow: '#6fa4c9', orange: '#8bc9eb', green: '#5e95bc', cyan: '#b4e4f6',
+  blue: '#6fb8e3', magenta: '#8bc9eb', brown: '#456475',
+  brightRed: '#73a6cb', brightYellow: '#9dcae5', brightGreen: '#86b7d8', brightCyan: '#d1eef8',
+  brightBlue: '#f2fcff', brightMagenta: '#b1d8ee',
+} as const
+
+export const OMARCHY_ACCENT = OMARCHY.accent
+/* Triplets for rgba(). Keep in sync with OMARCHY above. */
+const OMARCHY_RGB = {
+  accent: '139,201,235', bright: '242,252,255', text: '214,226,238', muted: '48,72,96',
+  dim: '77,134,176', action: '111,184,227', bg: '11,18,22', soft: '16,27,33', raised: '22,36,45', raised2: '27,45,64',
+} as const
+
+/* Lumon's red/green are blues, which would make error/warn/ok
+   indistinguishable. `adaptive` (default) keeps three distinguishable hues,
+   desaturated to sit calmly on #101b21; `purist` is the literal palette. */
+export const OMARCHY_SEMANTIC = {
+  adaptive: {
+    ok:    { hex: '#6dbf8b', ink: '#8fd3a8' },
+    warn:  { hex: '#d9b25f', ink: '#e6c981' },
+    error: { hex: '#d9726c', ink: '#e89a95' },
+    info:  { hex: OMARCHY.blue, ink: OMARCHY.cyan },
+  },
+  purist: {
+    ok:    { hex: OMARCHY.green, ink: OMARCHY.brightGreen },
+    warn:  { hex: OMARCHY.yellow, ink: OMARCHY.brightYellow },
+    error: { hex: OMARCHY.red, ink: OMARCHY.brightRed },
+    info:  { hex: OMARCHY.blue, ink: OMARCHY.cyan },
+  },
+} as const
+
+function omarchySemanticVars(mode: keyof typeof OMARCHY_SEMANTIC): string {
+  const s = OMARCHY_SEMANTIC[mode]
+  return `  --mc-ok: ${s.ok.hex}; --mc-warn: ${s.warn.hex}; --mc-crit: ${s.error.hex};
+  --pt-ok: ${s.ok.hex};       --pt-ok-ink: ${s.ok.ink};
+  --pt-warn: ${s.warn.hex};   --pt-warn-ink: ${s.warn.ink};
+  --pt-error: ${s.error.hex}; --pt-error-ink: ${s.error.ink};
+  --pt-info: ${s.info.hex};   --pt-info-ink: ${s.info.ink};
+  --pt-tl-red: ${s.error.hex}; --pt-tl-yellow: ${s.warn.hex}; --pt-tl-green: ${s.ok.hex};
+  --pt-btn-glass-confirm-top: ${s.ok.hex}2e; --pt-btn-glass-confirm-bottom: ${s.ok.hex}0f;
+  --pt-btn-glass-danger-top: ${s.error.hex}2e; --pt-btn-glass-danger-bottom: ${s.error.hex}0f;
+  --pt-btn-glass-ink-danger: ${s.error.ink}; --pt-btn-glass-ink-confirm: ${s.ok.ink};
+`
+}
+
+/**
+ * Emit the OMARCHY theme block. Selectors:
+ *  - `html[data-theme="omarchy"]`            literal theme switch
+ *  - `html[data-theme][data-palette=…]`      what the root layout stamps. The
+ *    structural theme stays `friday` (112+ globals.css rules key on it), so the
+ *    palette rides a second attribute at higher specificity.
+ *  - `[data-palette="omarchy"]`              any wrapper element (styleguide
+ *    side-by-side). Custom properties that were var()-resolved at :root are
+ *    re-declared here so they re-resolve against the new values.
+ * Switch: `--pt-semantic-mode: adaptive | purist` (one line, below).
+ */
+export function buildOmarchyThemeCss(): string {
+  const o = OMARCHY
+  const r = OMARCHY_RGB
+  return `html[data-theme="omarchy"],
+html[data-theme][data-palette="omarchy"],
+[data-palette="omarchy"] {
+  /* SEMANTIC MODE — adaptive (default): distinguishable green/amber/red.
+     purist: literal monochrome lumon values. Flip this one line. */
+  --pt-semantic-mode: adaptive;
+
+  /* raw lumon palette (colors.toml) */
+  --pt-omarchy-accent: ${o.accent}; --pt-omarchy-selection: ${o.selection}; --pt-omarchy-muted: ${o.muted};
+  --pt-omarchy-bg: ${o.background}; --pt-omarchy-bg-dark: ${o.darkBackground};
+  --pt-omarchy-bg-darker: ${o.darkerBackground}; --pt-omarchy-bg-lighter: ${o.lighterBackground};
+  --pt-omarchy-fg: ${o.foreground}; --pt-omarchy-fg-dark: ${o.darkForeground}; --pt-omarchy-fg-bright: ${o.brightForeground};
+  --pt-omarchy-active-border: ${o.activeBorder}; --pt-omarchy-active-tab: ${o.activeTab};
+  --pt-selection: ${o.selection}; --pt-muted: ${o.muted};
+  --pt-active-tab: ${o.activeTab}; --pt-active-border: ${o.activeBorder};
+
+  /* accent rgb triplets — other rules build rgba() from these */
+  --pt-neon-rgb: ${r.accent};
+  --pt-glow-rgb: ${r.accent};
+  --pt-neon-bright-rgb: ${r.bright};
+  --pt-text-rgb: ${r.text};
+  --pt-action-rgb: ${r.action};
+  --pt-action: ${o.activeTab};
+  --pt-dodger: ${o.activeTab};
+  --pt-bg-tint: ${o.darkBackground};
+
+  /* surfaces */
+  --pt-bg: ${o.darkerBackground};
+  --pt-bg-soft: ${o.darkBackground};
+  --pt-surface: rgba(${r.raised},0.82);
+  --pt-surface-2: rgba(${r.raised2},0.9);
+  --pt-bg-terminal: rgba(${r.soft},0.96);
+  --pt-bg-terminal-solid: ${o.darkBackground};
+  --pt-card-bg: rgba(${r.raised},0.82);
+  --pt-bg-gradient:
+    radial-gradient(ellipse at top, rgba(${r.raised2},0.55), transparent 55%),
+    linear-gradient(180deg, ${o.darkerBackground} 0%, ${o.darkBackground} 100%);
+
+  /* text */
+  --pt-text: ${o.foreground};
+  --pt-text-high: ${o.brightForeground};
+  --pt-text-dim: ${o.darkForeground};
+  --pt-text-mute: ${o.brown};
+
+  /* accent */
+  --pt-neon: ${o.accent};
+  --pt-neon-bright: ${o.brightForeground};
+  --pt-neon-deep: ${o.activeTab};
+  --pt-neon-glow: rgba(var(--pt-glow-rgb),0.45);
+  --pt-neon-glow-soft: rgba(var(--pt-glow-rgb),0.14);
+  --pt-neon-wash: rgba(var(--pt-neon-rgb),0.08);
+
+  /* hairlines derive from muted ${o.muted}; accent never paints structure */
+  --pt-border: rgba(${r.muted},0.85);
+  --pt-border-strong: rgba(${r.dim},0.6);
+  --pt-border-dim: rgba(${r.muted},0.45);
+  --pt-rule: rgba(${r.muted},0.6);
+  --pt-card-border: rgba(${r.muted},0.7);
+
+  /* glow / shadow — re-declared so they re-resolve against the rgb above */
+  --pt-glow-sm: 0 0 6px rgba(var(--pt-glow-rgb),0.4);
+  --pt-glow-md: 0 0 14px rgba(var(--pt-glow-rgb),0.4), 0 0 2px rgba(var(--pt-glow-rgb),0.7);
+  --pt-glow-lg: 0 0 28px rgba(var(--pt-glow-rgb),0.4), 0 0 6px rgba(var(--pt-glow-rgb),0.6), inset 0 0 18px rgba(var(--pt-glow-rgb),0.06);
+  --pt-glow-text: 0 0 6px rgba(var(--pt-neon-bright-rgb),0.4), 0 0 14px rgba(var(--pt-glow-rgb),0.3);
+  --pt-shadow-window: 0 24px 80px rgba(0,0,0,0.8), 0 0 24px rgba(var(--pt-glow-rgb),0.2);
+
+  /* mc-* / mp-* aliases (var()-resolved at :root, so re-declared) */
+  --mc-bg: ${o.darkerBackground}; --mc-bg-2: ${o.darkBackground};
+  --mc-surface: ${o.background}; --mc-panel: ${o.darkBackground}; --mc-surface-2: ${o.lighterBackground};
+  --mc-ink: ${o.foreground}; --mc-ink-dim: rgba(${r.text},0.72);
+  --mc-ink-mute: ${o.darkForeground}; --mc-ink-faint: ${o.brown};
+  --mc-line: rgba(${r.muted},0.7); --mc-line-2: ${o.muted};
+  --mc-neon: ${o.accent}; --mc-neon-bright: ${o.brightForeground}; --mc-neon-2: ${o.activeTab};
+  --mc-neon-deep: ${o.activeTab}; --mc-neon-rgb: ${r.accent}; --mc-bg-tint: ${o.darkBackground};
+  --mc-glass: rgba(${r.accent},0.06); --mc-glass-line: rgba(${r.muted},0.9);
+  --mp-bg: ${o.darkerBackground}; --mp-raised: ${o.darkBackground}; --mp-card: ${o.background};
+  --mp-ink: ${o.foreground}; --mp-ink-dim: rgba(${r.text},0.72); --mp-ink-mute: ${o.darkForeground}; --mp-ink-faint: ${o.brown};
+  --mp-line: rgba(${r.muted},0.7); --mp-line-2: ${o.muted};
+  --mp-accent: ${o.accent}; --mp-accent-rgb: ${r.accent};
+
+  /* glass button material */
+  --pt-btn-glass-fill: rgba(${r.bg},0.68); --pt-btn-glass-fill-hover: rgba(${r.bg},0.78); --pt-btn-glass-fill-disabled: rgba(${r.bg},0.84);
+  --pt-btn-glass-neutral-top: rgba(${r.text},0.05); --pt-btn-glass-neutral-bottom: rgba(${r.text},0.012);
+  --pt-btn-glass-primary-top: rgba(${r.action},0.30); --pt-btn-glass-primary-bottom: rgba(${r.action},0.12);
+  --pt-btn-glass-ink: ${o.brightForeground}; --pt-btn-glass-ink-disabled: ${o.darkForeground};
+  --pt-btn-glass-line-subtle: rgba(${r.muted},0.5); --pt-btn-glass-line-base: rgba(${r.muted},0.8); --pt-btn-glass-line-strong: rgba(${r.dim},0.6);
+  --pt-btn-glass-rim: inset 0 1px 0 rgba(${r.text},0.16), inset 0 -1px 0 rgba(${r.text},0.04);
+  --pt-btn-glass-rim-lit: inset 0 1px 0 rgba(${r.text},0.3), inset 0 -1px 0 rgba(${r.text},0.06);
+  --pt-btn-glass-bloom: 0 0 16px rgba(${r.accent},0.08);
+  --pt-btn-glass-focus: ${o.accent};
+
+  /* glass / environment */
+  --pt-mx-void: ${o.darkerBackground}; --pt-mx-graphite: ${o.darkerBackground}; --pt-mx-carbon: ${o.darkBackground};
+  --pt-mx-cyan: ${o.brightCyan}; --pt-mx-sky: ${o.accent}; --pt-mx-cyan-deep: ${o.selection};
+  --pt-mx-glass: rgba(${r.soft},0.72); --pt-mx-glass-hi: rgba(${r.raised},0.8); --pt-mx-glass-chrome: rgba(${r.bg},0.84);
+  --pt-mx-glass-edge: linear-gradient(90deg, rgba(${r.accent},0) 0%, rgba(${r.accent},0.38) 22%, rgba(${r.action},0.18) 60%, rgba(${r.action},0) 100%);
+  --pt-mx-glass-reflect: rgba(${r.action},0.085);
+  --pt-mx-glass-shadow: 0 18px 48px -24px rgba(0,0,0,0.85), 0 0 30px rgba(${r.accent},0.04);
+  --pt-mx-glass-shadow-hi: 0 22px 56px -22px rgba(0,0,0,0.9), 0 0 34px rgba(${r.accent},0.07);
+  --pt-mx-line-subtle: rgba(${r.muted},0.45); --pt-mx-line: rgba(${r.muted},0.7); --pt-mx-line-strong: rgba(${r.dim},0.6);
+  --pt-mx-ink-head: ${o.brightForeground}; --pt-mx-ink: ${o.foreground}; --pt-mx-ink-2: ${o.darkForeground}; --pt-mx-ink-meta: ${o.darkForeground};
+  --pt-mx-head-glow: 0 0 18px rgba(${r.accent},0.18);
+  --pt-mx-grid-line: rgba(${r.accent},0.035); --pt-mx-neural-line: rgba(${r.action},0.11);
+  --pt-mx-rain-1: ${o.darkBackground}; --pt-mx-rain-2: ${o.background}; --pt-mx-rain-3: ${o.lighterBackground};
+
+${omarchySemanticVars('adaptive')}}
+
+/* purist: style query on the switch above. A style query matches the nearest
+   ancestor's computed value, so it is applied one level down (body, or an
+   element marked data-pt-semantic-root inside a [data-palette] wrapper). */
+@container style(--pt-semantic-mode: purist) {
+  body, [data-pt-semantic-root] {
+${omarchySemanticVars('purist')}  }
+}
+`
+}

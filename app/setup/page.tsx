@@ -294,7 +294,7 @@ export default function SetupPage() {
                     onChange={e => set('appearance', 'accentColor', e.target.value)}
                   />
                 </div>
-                <em>recolors the entire neon token system · applies on next page load, no restart needed</em>
+                <em>recolors the entire neon token system · Omarchy (PT) swaps the whole palette · applies on next page load, no restart needed</em>
               </div>
             </div>
 

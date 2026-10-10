@@ -5,10 +5,13 @@
  * hex in /setup recolors the whole dashboard.
  */
 
+import { OMARCHY_ACCENT } from './tokens'
+
 export const DEFAULT_ACCENT = '#9db4ec'
 
 export const ACCENT_PRESETS = [
   { name: 'Periwinkle (PT)', hex: '#9db4ec' },
+  { name: 'Omarchy (PT)', hex: OMARCHY_ACCENT },
   { name: 'Neon pink', hex: '#ff10f0' },
   { name: 'Dodger blue', hex: '#1e90ff' },
   { name: 'Matrix green', hex: '#39ff14' },
@@ -16,6 +19,12 @@ export const ACCENT_PRESETS = [
   { name: 'Dodger', hex: '#1e90ff' },
   { name: 'Blood orange', hex: '#ff4d00' },
 ] as const
+
+/** The Omarchy preset is a whole palette, not just an accent: selecting it in
+ * /setup stamps `data-palette="omarchy"` on <html> (see app/layout.tsx). */
+export function paletteFor(accent: string): 'omarchy' | undefined {
+  return accent.toLowerCase() === OMARCHY_ACCENT ? 'omarchy' : undefined
+}
 
 export function isHexColor(v: string): boolean {
   return /^#[0-9a-fA-F]{6}$/.test(v)
@@ -43,7 +52,7 @@ const BLACK: [number, number, number] = [0, 0, 0]
  */
 export function buildAccentCss(accent: string): string {
   const hex = accent.toLowerCase()
-  if (!isHexColor(hex) || hex === DEFAULT_ACCENT) return ''
+  if (!isHexColor(hex) || hex === DEFAULT_ACCENT || paletteFor(hex)) return ''
   const rgb = hexToRgb(hex)
   const bright = mix(rgb, WHITE, 0.45)
   const deep = mix(rgb, BLACK, 0.3)
