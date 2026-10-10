@@ -4891,12 +4891,15 @@ body:has(.mc-costs-page) .mc-rain { display: none !important; }
   text-transform: uppercase; font-weight: 600;
   display: block; overflow: hidden; white-space: nowrap;
 }
-.mc-tile-label-track { display: inline-block; white-space: nowrap; will-change: transform; }
+/* J1: no standing will-change — the track is static unless .is-flowing marquees it. */
+.mc-tile-label-track { display: inline-block; white-space: nowrap; }
 /* Per-copy padding (not sibling margin) so the two copies are equidistant and
    translateX(-50%) is exactly one full cycle → seamless. */
 .mc-tile-label-track > span { display: inline-block; padding-right: 28px; }
 .mc-home-tile-label.is-flowing .mc-tile-label-track {
   animation: mc-label-flow 14s linear infinite;
+  /* Promote only while the marquee actually runs (J1). */
+  will-change: transform;
 }
 @keyframes mc-label-flow { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) {
