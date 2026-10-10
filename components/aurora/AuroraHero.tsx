@@ -1,5 +1,5 @@
 import { AuroraSky, type AuroraSkyRow } from './AuroraSky'
-import { AsciiHourRun, AsciiWordmark } from '../ascii-viz'
+import { AsciiWordmark } from '../ascii-viz'
 import styles from './aurora.module.css'
 
 type HeroProps = {
@@ -23,18 +23,18 @@ export function AuroraHero({ dateLabel, timeLabel, headline, error }: HeroProps)
 
 type SkyProps = {
   timeLabel: string
+  /** Server-formatted date ("Saturday, October 10"); its weekday labels the day boundary. */
+  dateLabel?: string
   rows: AuroraSkyRow[]
   nowHour: number
   idleAgents?: string[]
   skyAvailable?: boolean
 }
 
-/** The hour ruler under the phone glyph runs, one character per hour like the runs themselves. */
-const HOUR_RULER = '00    06    12    18    '
-
-/** Agent activity since local midnight. Desktop draws the SVG strands; phones get one
- *  glyph per hour per agent, which fits a 360px screen without sideways scrolling. */
-export function AuroraSkyPanel({ timeLabel, rows, nowHour, idleAgents = [], skyAvailable = true }: SkyProps) {
+/** Agent activity since local midnight: the strand timeline, the same SVG on every screen.
+ *  Phones pan a six-hour window of it with "now" pinned near the right edge. */
+export function AuroraSkyPanel({ timeLabel, dateLabel, rows, nowHour, idleAgents = [], skyAvailable = true }: SkyProps) {
+  const dayLabel = dateLabel ? dateLabel.split(/[ ,]/)[0].slice(0, 3) : undefined
   return (
     <section className={styles.skyPanel} data-glass="" aria-labelledby="home-agents">
       <div className={styles.panelHead}>
@@ -45,24 +45,8 @@ export function AuroraSkyPanel({ timeLabel, rows, nowHour, idleAgents = [], skyA
           <span className={styles.bootReady}>{skyAvailable ? `${rows.length} agent${rows.length === 1 ? '' : 's'} · now ${timeLabel}` : 'offline'}</span>
         </span>
       </div>
-      {skyAvailable && rows.length === 0 ? (
-        <AuroraSky rows={rows} nowHour={nowHour} />
-      ) : skyAvailable ? (
-        <>
-          <div className={styles.skyDesktop}><AuroraSky rows={rows} nowHour={nowHour} /></div>
-          <div className={styles.skyGlyphs}>
-            <ul aria-label="Agent activity by hour, today">
-              {rows.map(row => (
-                <li key={row.agent}>
-                  <span className={styles.glyphAgent}>{row.agent}</span>
-                  <AsciiHourRun spans={row.spans} nowHour={nowHour} label={row.agent} />
-                </li>
-              ))}
-            </ul>
-            <p className={styles.glyphRuler} aria-hidden="true"><span />{HOUR_RULER}</p>
-            <p className={styles.glyphKey}>▁ to █ = share of the hour busy · ✕ = failed run</p>
-          </div>
-        </>
+      {skyAvailable ? (
+        <AuroraSky rows={rows} nowHour={nowHour} dayLabel={dayLabel} />
       ) : (
         <div className={styles.skyEmpty} role="status">
           <strong>Agent activity is unavailable</strong>

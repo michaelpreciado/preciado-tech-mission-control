@@ -8542,7 +8542,7 @@ body:has([role="dialog"], dialog[open]) .boot-overlay { visibility: hidden; }
    (--mc-chart-*, lib/tokens.ts) so glyph charts and SVG/HTML charts read as one
    language: quiet series, one emphasis, the axis ink for captions. */
 .asciiviz-spark, .asciiviz-meter, .asciiviz-heat, .asciiviz-bars,
-.asciiviz-caption, .asciiviz-repo, .asciiviz-hours {
+.asciiviz-caption, .asciiviz-repo {
   font-family: var(--pt-font-mono, 'JetBrains Mono'), monospace;
   font-size: var(--vg-fs-min);
   line-height: 1.1;
@@ -8553,13 +8553,11 @@ body:has([role="dialog"], dialog[open]) .boot-overlay { visibility: hidden; }
   box-shadow: none;
   color: var(--mc-chart-quiet);
 }
-.asciiviz-spark, .asciiviz-meter, .asciiviz-bars, .asciiviz-hours { display: inline-block; white-space: pre; }
+.asciiviz-spark, .asciiviz-meter, .asciiviz-bars { display: inline-block; white-space: pre; }
 .asciiviz-heat { display: block; white-space: pre; }
 .asciiviz-bright, .asciiviz-value { color: var(--mc-chart-emph); }
 .asciiviz-faint, .asciiviz-caption { color: var(--mc-chart-axis); }
 .asciiviz-value, .asciiviz-caption { font-size: var(--vg-fs-min); }
-.asciiviz-fail { color: var(--pt-error); }
-.asciiviz-hours .asciiviz-faint { opacity: .55; }
 .asciiviz-density-0, .asciiviz-density-1 { color: var(--mc-chart-axis); }
 .asciiviz-density-2, .asciiviz-density-3 { color: var(--mc-chart-quiet); }
 .asciiviz-density-4, .asciiviz-density-5 { color: var(--mc-chart-emph); }

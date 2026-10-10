@@ -34,7 +34,8 @@ function age(fromIso: string | undefined, now: number): string | null {
   return `${Math.floor(m / 1440)}d`
 }
 
-/** AURORA Home: hero headline + per-agent sky + "Waiting on me" / "Broke" bands, all from live data. */
+/** AURORA Home: hero headline + status strip, the per-agent sky in the first fold, then the
+ *  NEEDS YOU / BROKE / MOVED bands — all from live data. */
 export function AuroraHome({ timeline, dateLabel, timeLabel }: { timeline: AgentTimeline; dateLabel: string; timeLabel: string }) {
   const router = useRouter()
   const { tasks, summary, error, now } = useKanbanSnapshot()
@@ -115,6 +116,14 @@ export function AuroraHome({ timeline, dateLabel, timeLabel }: { timeline: Agent
           },
         ]}
       />
+      <AuroraSkyPanel
+        timeLabel={timeLabel}
+        dateLabel={dateLabel}
+        rows={timeline.rows}
+        nowHour={timeline.nowHour}
+        idleAgents={timeline.idleAgents}
+        skyAvailable={timeline.available}
+      />
       <AuroraBands
         waiting={{
           anchor: 'home-needs',
@@ -147,13 +156,6 @@ export function AuroraHome({ timeline, dateLabel, timeLabel }: { timeline: Agent
           empty: summary ? { title: 'Nothing moved in the last 24 hours', hint: 'Cards appear here when they are created, started, finish or fail.' } : { title: error ? 'Task board unavailable' : 'Loading tasks…' },
           source: summary ? 'From card timestamps (created · started · completed), last 24 hours.' : undefined,
         }}
-      />
-      <AuroraSkyPanel
-        timeLabel={timeLabel}
-        rows={timeline.rows}
-        nowHour={timeline.nowHour}
-        idleAgents={timeline.idleAgents}
-        skyAvailable={timeline.available}
       />
     </div>
   )
