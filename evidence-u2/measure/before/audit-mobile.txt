@@ -1,0 +1,67 @@
+
+── phone · 375×812 ──
+✓ deck        main 375/375  doc 375/375
+✓ kanban      main 375/375  doc 375/375
+✓ calendar    main 375/375  doc 375/375
+✓ chat        main 375/375  doc 375/375
+✓ github      main 375/375  doc 375/375
+✓ costs       main 375/375  doc 375/375
+✓ projects    main 375/375  doc 375/375
+✓ pipeline    main 375/375  doc 375/375
+    console: Failed to load resource: the server responded with a status of 503 (Service Unavailable)
+✓ content-creation main 375/375  doc 375/375
+✓ memory      main 375/375  doc 375/375
+    overflowing: [object SVGAnimatedString]
+✓ team        main 375/375  doc 375/375
+✓ setup       main 375/375  doc 375/375
+
+── fold-cover · 386×866 ──
+✓ deck        main 386/386  doc 386/386
+✓ kanban      main 386/386  doc 386/386
+✓ calendar    main 386/386  doc 386/386
+✓ chat        main 386/386  doc 386/386
+✓ github      main 386/386  doc 386/386
+✓ costs       main 386/386  doc 386/386
+✓ projects    main 386/386  doc 386/386
+✓ pipeline    main 386/386  doc 386/386
+    console: Failed to load resource: the server responded with a status of 503 (Service Unavailable)
+✓ content-creation main 386/386  doc 386/386
+✓ memory      main 386/386  doc 386/386
+    overflowing: [object SVGAnimatedString]
+✓ team        main 386/386  doc 386/386
+✓ setup       main 386/386  doc 386/386
+
+── fold-inner · 944×978 ──
+✓ deck        main 872/872  doc 944/944
+✓ kanban      main 872/872  doc 944/944
+✓ calendar    main 872/872  doc 944/944
+✓ chat        main 872/872  doc 944/944
+✓ github      main 872/872  doc 944/944
+✓ costs       main 872/872  doc 944/944
+✓ projects    main 872/872  doc 944/944
+✓ pipeline    main 872/872  doc 944/944
+    console: Failed to load resource: the server responded with a status of 503 (Service Unavailable)
+✓ content-creation main 872/872  doc 944/944
+✓ memory      main 872/872  doc 944/944
+    overflowing: [object SVGAnimatedString]
+✓ team        main 872/872  doc 944/944
+✓ setup       main 872/872  doc 944/944
+
+── fold-inner-wide · 1038×1076 ──
+✓ deck        main 966/966  doc 1038/1038
+✓ kanban      main 966/966  doc 1038/1038
+✓ calendar    main 966/966  doc 1038/1038
+✓ chat        main 966/966  doc 1038/1038
+✓ github      main 966/966  doc 1038/1038
+✓ costs       main 966/966  doc 1038/1038
+✓ projects    main 966/966  doc 1038/1038
+✓ pipeline    main 966/966  doc 1038/1038
+    console: Failed to load resource: the server responded with a status of 503 (Service Unavailable)
+✓ content-creation main 966/966  doc 1038/1038
+✓ memory      main 966/966  doc 1038/1038
+    overflowing: [object SVGAnimatedString]
+✓ team        main 966/966  doc 1038/1038
+✓ setup       main 966/966  doc 1038/1038
+
+4 tab(s) with problems
+EXIT 1

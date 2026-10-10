@@ -1,0 +1,19 @@
+opened: Remove exl3 model, free space with C
+{
+ "manualTouchDrag_thread": {
+  "before": 25892,
+  "after": 25218,
+  "moved": true
+ },
+ "manualTouchDrag_control": {
+  "before": 0,
+  "after": 0,
+  "moved": false
+ },
+ "syntheticGesture_control": {
+  "before": 0,
+  "after": 0,
+  "moved": false
+ }
+}
+EXIT 0

@@ -1,0 +1,17 @@
+opening: Remove exl3 model, free space with Claud
+thread: {"rect":{"top":271,"bottom":566},"scrollTop":24951,"scrollH":25865,"clientH":296}
+--- ancestor chain ---
+ AgentConsole-module__3U6_Oq__messages.ChatSh overflowY=auto touch-action=auto overscrollY=auto pos=static h=295.906px st=24951/25865/296
+ ui-module__HvfwEW__card.ui-module__HvfwEW__c overflowY=hidden touch-action=auto overscrollY=auto pos=relative h=614.969px st=0/613/613
+ AgentConsole-module__3U6_Oq__console.ChatShe overflowY=visible touch-action=auto overscrollY=auto pos=static h=614.969px st=0/615/615
+ AgentConsole-module__3U6_Oq__page overflowY=visible touch-action=auto overscrollY=auto pos=static h=698px st=0/698/698
+ mc-main overflowY=hidden touch-action=auto overscrollY=contain pos=relative h=844px st=0/844/844
+ mc-shell overflowY=hidden touch-action=auto overscrollY=auto pos=relative h=844px st=0/844/844
+{
+ "before": 24951,
+ "afterTouch": 24951,
+ "afterWheel": 24415,
+ "afterDirect": 24115,
+ "docY": 0
+}
+EXIT 0

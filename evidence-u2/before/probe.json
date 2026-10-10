@@ -1,0 +1,162 @@
+{
+  "desktop 1440x1000": {
+    "panel": true,
+    "firstFold": {
+      "top": 1118,
+      "innerHeight": 1000,
+      "pass": false
+    },
+    "svg": {
+      "present": true,
+      "rendered": true,
+      "width": 998,
+      "height": 92,
+      "label": "Agent activity, 24 hours: friday 5 spans, jarvis 8 spans"
+    },
+    "nodes": 162,
+    "svgNodes": 74,
+    "scroller": null,
+    "overflow": {
+      "main": {
+        "scrollWidth": 1204,
+        "clientWidth": 1204,
+        "pass": true
+      },
+      "doc": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "pass": true
+      }
+    },
+    "shot": "/tmp/u2-shots/before/home-desktop-1440x1000.png",
+    "panelShot": "/tmp/u2-shots/before/panel-desktop-1440x1000.png"
+  },
+  "phone-390 390x844": {
+    "panel": true,
+    "firstFold": {
+      "top": 1392,
+      "innerHeight": 844,
+      "pass": false
+    },
+    "svg": {
+      "present": true,
+      "rendered": false,
+      "width": 0,
+      "height": 0,
+      "label": "Agent activity, 24 hours: friday 5 spans, jarvis 8 spans"
+    },
+    "nodes": 162,
+    "svgNodes": 74,
+    "scroller": null,
+    "overflow": {
+      "main": {
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "pass": true
+      },
+      "doc": {
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "pass": true
+      }
+    },
+    "shot": "/tmp/u2-shots/before/home-phone-390-390x844.png",
+    "panelShot": "/tmp/u2-shots/before/panel-phone-390-390x844.png"
+  },
+  "phone-360 360x800": {
+    "panel": true,
+    "firstFold": {
+      "top": 1383,
+      "innerHeight": 800,
+      "pass": false
+    },
+    "svg": {
+      "present": true,
+      "rendered": false,
+      "width": 0,
+      "height": 0,
+      "label": "Agent activity, 24 hours: friday 5 spans, jarvis 8 spans"
+    },
+    "nodes": 162,
+    "svgNodes": 74,
+    "scroller": null,
+    "overflow": {
+      "main": {
+        "scrollWidth": 360,
+        "clientWidth": 360,
+        "pass": true
+      },
+      "doc": {
+        "scrollWidth": 360,
+        "clientWidth": 360,
+        "pass": true
+      }
+    },
+    "shot": "/tmp/u2-shots/before/home-phone-360-360x800.png",
+    "panelShot": "/tmp/u2-shots/before/panel-phone-360-360x800.png"
+  },
+  "phone-414 414x896": {
+    "panel": true,
+    "firstFold": {
+      "top": 1395,
+      "innerHeight": 896,
+      "pass": false
+    },
+    "svg": {
+      "present": true,
+      "rendered": false,
+      "width": 0,
+      "height": 0,
+      "label": "Agent activity, 24 hours: friday 5 spans, jarvis 8 spans"
+    },
+    "nodes": 162,
+    "svgNodes": 74,
+    "scroller": null,
+    "overflow": {
+      "main": {
+        "scrollWidth": 414,
+        "clientWidth": 414,
+        "pass": true
+      },
+      "doc": {
+        "scrollWidth": 414,
+        "clientWidth": 414,
+        "pass": true
+      }
+    },
+    "shot": "/tmp/u2-shots/before/home-phone-414-414x896.png",
+    "panelShot": "/tmp/u2-shots/before/panel-phone-414-414x896.png"
+  },
+  "phone-430 430x932": {
+    "panel": true,
+    "firstFold": {
+      "top": 1397,
+      "innerHeight": 932,
+      "pass": false
+    },
+    "svg": {
+      "present": true,
+      "rendered": false,
+      "width": 0,
+      "height": 0,
+      "label": "Agent activity, 24 hours: friday 5 spans, jarvis 8 spans"
+    },
+    "nodes": 162,
+    "svgNodes": 74,
+    "scroller": null,
+    "overflow": {
+      "main": {
+        "scrollWidth": 430,
+        "clientWidth": 430,
+        "pass": true
+      },
+      "doc": {
+        "scrollWidth": 430,
+        "clientWidth": 430,
+        "pass": true
+      }
+    },
+    "shot": "/tmp/u2-shots/before/home-phone-430-430x932.png",
+    "panelShot": "/tmp/u2-shots/before/panel-phone-430-430x932.png"
+  }
+}

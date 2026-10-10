@@ -1,0 +1,31 @@
+
+── desktop · 1440×900 ──
+  idle    rAF 16.7/16.8/16.8 ms (interval 16.7, 60fps, missed 0, >10.4ms 180)  stage 1.9/2.29/3.1  main 0.9/1.24/3.1
+  scroll  rAF 16.7/16.8/16.8 ms (60fps, missed 0/150, >10.4ms 150)  stage-p95 worst route 10.08  longest task 29.79
+    /        room   444  crit 3.06/6.05/7.22  main 2.34/3.93/4.67  comp 0.74/1.25/2.3  viz 0.61/1.15/1.15  gpu 3.06/6.05/7.22  >8.3ms 0/40
+    /costs   room  6965  crit 3.06/10.08/16.7  main 2.86/8/16.7  comp 0.94/1.48/2.6  viz 0.61/0.91/1.5  gpu 2.93/6.06/16.69  >8.3ms 9/128
+    /kanban  room     0  crit 0.04/0.04/0.04  main 0.04/0.04/0.04  comp 0/0/0  viz 0/0/0  gpu 0/0/0  >8.3ms 0/1
+    /system  room  2960  crit 2.97/3.74/7.01  main 2.21/2.81/7.01  comp 0.78/1.19/1.45  viz 0.62/1.01/1.21  gpu 2.97/3.74/5.48  >8.3ms 0/126
+  nav     rAF 16.7/16.7/33.4 ms (60fps, missed 3)  longest task 34.15
+          long tasks >50ms by route: none
+  probe   home: dom 570 backdrop 0 anims 31 cls 0  ·  after nav: webgl live 0 created 0
+  leak    per sweep → home: nodes 946 listeners 503 docs 1 gl 0 rAF/s 0
+  hidden  data-page-hidden=true running animations 0
+  reduce  / anims 0 rAF/s 0  ·  /costs anims 0 rAF/s 0  ·  /kanban anims 0 rAF/s 0  ·  /crew anims 0 rAF/s 0  ·  /pipeline anims 0 rAF/s 0
+
+── phone · 390×844 · touch · cpu×4 ──
+  idle    rAF 16.7/16.8/16.8 ms (interval 16.7, 60fps, missed 0, >10.4ms 180)  stage 1.97/3.28/11.5  main 1.97/3.28/11.5
+  scroll  rAF 16.7/16.7/16.8 ms (60fps, missed 0/150, >10.4ms 150)  stage-p95 worst route 4.33  longest task 7.46
+    /        room   867  crit 3.15/4.33/10.52  main 3.15/4.33/10.52  comp 0.35/0.53/0.96  viz 0.62/0.85/1.05  gpu 1.44/1.79/2.76  >8.3ms 2/87
+    /costs   room  9208  crit 2.59/3.36/11.82  main 2.56/3.36/11.82  comp 0.29/0.45/0.9  viz 0.52/0.6/0.75  gpu 1.39/2.54/3.22  >8.3ms 1/141
+    /kanban  room     0  crit 0.35/0.35/0.35  main 0.03/0.03/0.03  comp 0.35/0.35/0.35  viz 0.12/0.12/0.12  gpu 0/0/0  >8.3ms 0/1
+    /system  room  4319  crit 2.98/4.24/5.36  main 2.97/4.24/5.36  comp 0.33/0.5/0.84  viz 0.53/0.82/1.24  gpu 1.32/2.42/3.15  >8.3ms 0/140
+  nav     rAF 16.7/33.3/133.4 ms (54fps, missed 42)  longest task 119.27
+          long tasks >50ms by route: /chat 79, /costs 50, /pipeline 52, /memory 119, /deliverables 63, /system 76, /setup 89, /styleguide 78
+  probe   home: dom 570 backdrop 0 anims 11 cls 0  ·  after nav: webgl live 0 created 0
+  leak    per sweep → home: nodes 937 listeners 499 docs 1 gl 0 rAF/s 0
+  hidden  data-page-hidden=true running animations 0
+  reduce  / anims 0 rAF/s 0  ·  /costs anims 0 rAF/s 0  ·  /kanban anims 0 rAF/s 0  ·  /crew anims 0 rAF/s 0  ·  /pipeline anims 0 rAF/s 0
+
+wrote /tmp/u2-measure/before/perf-frames.json
+EXIT 0

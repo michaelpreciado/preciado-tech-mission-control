@@ -1,0 +1,3 @@
+phone tap {"label":"jarvis: failed run at 07:42","focused":true,"box":[44,44],"tipOpacity":"1","ringAnim":"aurora-module__iFu-yW__skyRing","scrollLeft":258,"diamondCenterVsButton":0}
+reducedMotion=no-preference running panel animations: ["aurora-module__iFu-yW__skySweep","aurora-module__iFu-yW__skyLive","aurora-module__iFu-yW__skyRing"]
+reducedMotion=reduce running panel animations: []

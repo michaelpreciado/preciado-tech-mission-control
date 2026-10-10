@@ -1,0 +1,187 @@
+{
+  "desktop 1440x1000": {
+    "panel": true,
+    "firstFold": {
+      "top": 376,
+      "innerHeight": 1000,
+      "pass": true
+    },
+    "svg": {
+      "present": true,
+      "rendered": true,
+      "width": 870,
+      "height": 91,
+      "label": "Agent activity today, 00:00 to now 13:55: friday 5 bursts, 2h 25m busy, working now; jarvis 8 bursts, 2h 18m busy, 1 failed run"
+    },
+    "nodes": 84,
+    "svgNodes": 19,
+    "scroller": {
+      "scrollWidth": 870,
+      "clientWidth": 870,
+      "scrollLeft": 0,
+      "snap": "none"
+    },
+    "overflow": {
+      "main": {
+        "scrollWidth": 1204,
+        "clientWidth": 1204,
+        "pass": true
+      },
+      "doc": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "pass": true
+      }
+    },
+    "shot": "/home/mp/Documents/mc-lane-U2/evidence-u2/after/home-desktop-1440x1000.png",
+    "panelShot": "/home/mp/Documents/mc-lane-U2/evidence-u2/after/panel-desktop-1440x1000.png"
+  },
+  "phone-390 390x844": {
+    "panel": true,
+    "firstFold": {
+      "top": 408,
+      "innerHeight": 844,
+      "pass": true
+    },
+    "svg": {
+      "present": true,
+      "rendered": true,
+      "width": 1312,
+      "height": 91,
+      "label": "Agent activity today, 00:00 to now 13:56: friday 5 bursts, 2h 25m busy, working now; jarvis 8 bursts, 2h 18m busy, 1 failed run"
+    },
+    "nodes": 84,
+    "svgNodes": 19,
+    "scroller": {
+      "scrollWidth": 1312,
+      "clientWidth": 328,
+      "scrollLeft": 484,
+      "snap": "x"
+    },
+    "overflow": {
+      "main": {
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "pass": true
+      },
+      "doc": {
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "pass": true
+      }
+    },
+    "shot": "/home/mp/Documents/mc-lane-U2/evidence-u2/after/home-phone-390-390x844.png",
+    "panelShot": "/home/mp/Documents/mc-lane-U2/evidence-u2/after/panel-phone-390-390x844.png"
+  },
+  "phone-360 360x800": {
+    "panel": true,
+    "firstFold": {
+      "top": 404,
+      "innerHeight": 800,
+      "pass": true
+    },
+    "svg": {
+      "present": true,
+      "rendered": true,
+      "width": 1192,
+      "height": 91,
+      "label": "Agent activity today, 00:00 to now 13:56: friday 5 bursts, 2h 25m busy, working now; jarvis 8 bursts, 2h 18m busy, 1 failed run"
+    },
+    "nodes": 84,
+    "svgNodes": 19,
+    "scroller": {
+      "scrollWidth": 1192,
+      "clientWidth": 298,
+      "scrollLeft": 440,
+      "snap": "x"
+    },
+    "overflow": {
+      "main": {
+        "scrollWidth": 360,
+        "clientWidth": 360,
+        "pass": true
+      },
+      "doc": {
+        "scrollWidth": 360,
+        "clientWidth": 360,
+        "pass": true
+      }
+    },
+    "shot": "/home/mp/Documents/mc-lane-U2/evidence-u2/after/home-phone-360-360x800.png",
+    "panelShot": "/home/mp/Documents/mc-lane-U2/evidence-u2/after/panel-phone-360-360x800.png"
+  },
+  "phone-414 414x896": {
+    "panel": true,
+    "firstFold": {
+      "top": 411,
+      "innerHeight": 896,
+      "pass": true
+    },
+    "svg": {
+      "present": true,
+      "rendered": true,
+      "width": 1408,
+      "height": 91,
+      "label": "Agent activity today, 00:00 to now 13:56: friday 5 bursts, 2h 25m busy, working now; jarvis 8 bursts, 2h 18m busy, 1 failed run"
+    },
+    "nodes": 84,
+    "svgNodes": 19,
+    "scroller": {
+      "scrollWidth": 1408,
+      "clientWidth": 352,
+      "scrollLeft": 519,
+      "snap": "x"
+    },
+    "overflow": {
+      "main": {
+        "scrollWidth": 414,
+        "clientWidth": 414,
+        "pass": true
+      },
+      "doc": {
+        "scrollWidth": 414,
+        "clientWidth": 414,
+        "pass": true
+      }
+    },
+    "shot": "/home/mp/Documents/mc-lane-U2/evidence-u2/after/home-phone-414-414x896.png",
+    "panelShot": "/home/mp/Documents/mc-lane-U2/evidence-u2/after/panel-phone-414-414x896.png"
+  },
+  "phone-430 430x932": {
+    "panel": true,
+    "firstFold": {
+      "top": 414,
+      "innerHeight": 932,
+      "pass": true
+    },
+    "svg": {
+      "present": true,
+      "rendered": true,
+      "width": 1472,
+      "height": 91,
+      "label": "Agent activity today, 00:00 to now 13:56: friday 5 bursts, 2h 25m busy, working now; jarvis 8 bursts, 2h 18m busy, 1 failed run"
+    },
+    "nodes": 84,
+    "svgNodes": 19,
+    "scroller": {
+      "scrollWidth": 1472,
+      "clientWidth": 368,
+      "scrollLeft": 543,
+      "snap": "x"
+    },
+    "overflow": {
+      "main": {
+        "scrollWidth": 430,
+        "clientWidth": 430,
+        "pass": true
+      },
+      "doc": {
+        "scrollWidth": 430,
+        "clientWidth": 430,
+        "pass": true
+      }
+    },
+    "shot": "/home/mp/Documents/mc-lane-U2/evidence-u2/after/home-phone-430-430x932.png",
+    "panelShot": "/home/mp/Documents/mc-lane-U2/evidence-u2/after/panel-phone-430-430x932.png"
+  }
+}
