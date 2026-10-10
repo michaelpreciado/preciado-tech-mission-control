@@ -26,7 +26,7 @@ export const CATEGORICAL = [
   '#7c3aed', // violet
   '#6366f1', // indigo
   '#c2410c', // orange
-  '#9db4ec', // periwinkle
+  '#0d9488', // teal (was periwinkle — Preciado Tech's client brand, not MC's)
   '#e11d48', // red
 ] as const
 

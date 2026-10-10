@@ -60,7 +60,8 @@
   .cp-table, .cp-table tbody, .cp-table tr { display: block; }
   .cp-table tbody tr { border-bottom: 1px solid var(--pt-border); padding: 8px 0; }
   .cp-table td, .cp-table td:first-child { display: flex; justify-content: space-between; gap: 12px; width: auto; min-width: 0; white-space: normal; overflow-wrap: anywhere; border: 0; }
-  .cp-table td::before { content: attr(data-label); flex: 0 0 38%; text-align: left; color: var(--pt-text-mute); }
+  /* No td::before label here: Table (CostsPanel) renders its own head span when stacked, so a
+     pseudo-element label printed every column name twice. */
   .cp-table td > * { min-width: 0; flex-wrap: wrap; }
   .mc-pipeline { grid-auto-flow: row; grid-template-columns: minmax(0, 1fr); overflow: visible; }
   .mc-pipe-col { min-height: 0; }

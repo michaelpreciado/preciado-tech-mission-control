@@ -19,6 +19,7 @@
 import { useMemo, useState } from 'react'
 import { CATEGORICAL } from '@/lib/chart-colors'
 import type { CostDashboard, BillingMode } from '@/lib/types'
+import { MicroBars } from '../charts/MicroBars'
 import { billingMode } from '@/lib/collectors/costs-usage'
 
 const SEG_ORDER: BillingMode[] = ['metered', 'subscription', 'local', 'cloud-routed']
@@ -96,11 +97,27 @@ export default function BurnLandscape({ costs }: { costs: CostDashboard }) {
   const axis = ticks(max)
   const axisMax = axis[axis.length - 1]
 
-  const hovered = hover != null ? days[hover] : null
+  // With nothing hovered (always, on touch) the readout shows the latest day rather than a hint.
+  const hovered = days[hover ?? days.length - 1]
 
   return (
     <div className="cp-burn2d">
-      <svg viewBox="0 0 720 240" role="img"
+      {/* Phones: the same stacked series as HTML micro-bars, so labels keep real pixel sizes. */}
+      <div className="cp-burn2d-narrow">
+        <MicroBars
+          label={`Daily token burn over the last ${DAYS} days, stacked by billing mode`}
+          format={tok}
+          height={96}
+          bars={days.map(d => ({
+            key: d.date, value: d.total,
+            title: `${d.date}: ${d.total > 0 ? `${tok(d.total)} tokens` : 'no activity'}`,
+            segments: SEG_ORDER.map(k => ({ value: d.segs[k], color: SEG_COLOR[k] })),
+          }))}
+          axis={[days[0].date.slice(5), days[7].date.slice(5), 'today']}
+          empty={`No token activity logged in the last ${DAYS} days.`}
+        />
+      </div>
+      <svg className="cp-burn2d-wide" viewBox="0 0 720 240" role="img"
         aria-label={`Daily token burn over the last ${DAYS} days, by billing mode`}>
         {/* ── Horizontal gridlines + value ticks ── */}
         {axis.map(v => {
@@ -108,7 +125,7 @@ export default function BurnLandscape({ costs }: { costs: CostDashboard }) {
           return (
             <g key={v}>
               <line x1={44} y1={y} x2={706} y2={y}
-                stroke="var(--pt-border-dim)" strokeWidth={1}
+                stroke="var(--mc-chart-grid)" strokeWidth={1}
                 strokeDasharray={v === 0 ? undefined : '2 4'} />
               <text x={38} y={y + 3} textAnchor="end" className="cp-burn2d-tick">{tok(v)}</text>
             </g>
@@ -131,8 +148,8 @@ export default function BurnLandscape({ costs }: { costs: CostDashboard }) {
             <g key={d.date} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)} style={{ cursor: 'crosshair' }}>
               {/* Zero days: flat marker, never a silent gap */}
               {d.total === 0 && (
-                <rect x={x} y={209} width={w} height={2} fill="rgba(255,255,255,0.12)"
-                  stroke="var(--pt-border-dim)" strokeWidth={0.5} opacity={dim ? 0.3 : 1} rx={1} />
+                <rect x={x} y={209} width={w} height={2} fill="var(--mc-chart-empty)"
+                  stroke="var(--mc-chart-grid)" strokeWidth={0.5} opacity={dim ? 0.3 : 1} rx={1} />
               )}
               {rects}
               {/* Full-height hit target so thin/zero columns stay hoverable */}
@@ -146,18 +163,17 @@ export default function BurnLandscape({ costs }: { costs: CostDashboard }) {
 
       {/* ── Readout. Reserved height — hover must not reflow the chart. ── */}
       <div className="cp-iso-readout">
-        {hovered ? (
+        {hovered && (
           <>
-            <span className="cp-iso-date">{hovered.date}</span>
+            <span className="cp-iso-date">{hover == null ? `${hovered.date} · latest` : hovered.date}</span>
             <span className="cp-iso-total">{hovered.total > 0 ? `${tok(hovered.total)} tokens` : 'no activity'}</span>
             {SEG_ORDER.filter(k => hovered.segs[k] > 0).map(k => (
               <span key={k} className="cp-iso-seg">
                 <i style={{ background: SEG_COLOR[k] }} />{SEG_LABEL[k].toLowerCase()} {tok(hovered.segs[k])}
               </span>
             ))}
+            {hover == null && <span className="cp-iso-hint">hover a bar for that day&apos;s split</span>}
           </>
-        ) : (
-          <span className="cp-iso-hint">hover a bar for that day&apos;s split · axis in tokens processed</span>
         )}
       </div>
 

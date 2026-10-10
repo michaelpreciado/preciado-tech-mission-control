@@ -47,7 +47,7 @@ export const SEMANTIC = {
    These are NOT status colors; do not use them for ok/warn/error/info. */
 export const CATEGORICAL = {
   cat1: '#1e90ff', cat2: '#db2777', cat3: '#65a30d', cat4: '#7c3aed',
-  cat5: '#6366f1', cat6: '#c2410c', cat7: '#9db4ec', cat8: '#e11d48',
+  cat5: '#6366f1', cat6: '#c2410c', cat7: '#0d9488', cat8: '#e11d48',
   seq1: '#bae0ff', seq2: '#7cc0ff', seq3: '#3b9dff', seq4: '#1e90ff',
   seq5: '#0b7fe8', seq6: '#0369a1', seq7: '#075985',
 } as const
@@ -252,7 +252,7 @@ ${Object.entries(MATRIX).map(([name, value]) => `  --pt-mx-${name}: ${value};`).
   --mc-chart-axis: var(--pt-mx-ink-meta);
   --mc-chart-ink: var(--pt-mx-ink-2);
   --mc-chart-emph: var(--pt-dodger);
-  --mc-chart-quiet: rgba(var(--pt-dodger-rgb),0.4);
+  --mc-chart-quiet: rgba(var(--pt-dodger-rgb),0.5);
   --mc-chart-empty: rgba(255,255,255,0.08);
   --mc-chart-glow: 0 0 10px rgba(var(--pt-dodger-rgb),0.5);
 

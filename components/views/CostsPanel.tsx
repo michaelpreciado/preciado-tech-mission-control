@@ -6,6 +6,7 @@ import { TFrame, SectionRule, Window, EmptyTerminal, SkeletonPanel } from '../ui
 import dynamic from 'next/dynamic'
 import { Heatmap } from '../Viz'
 import { AsciiSpark, AsciiHeat } from '../ascii-viz'
+import { MicroBars } from '../charts/MicroBars'
 import { CATEGORICAL, STATUS } from '@/lib/chart-colors'
 import type { CostDashboard, BillingMode } from '@/lib/types'
 import { billingMode } from '@/lib/collectors/costs-usage'
@@ -219,12 +220,15 @@ function Stat({ value, label, sub, color = 'var(--pt-text-high)', size = 'md', g
  *  it does not cover. Kept uniform so a caveat is never mistaken for a footnote
  *  about a different figure. */
 function Note({ children }: { children: ReactNode }) {
+  // Phones clamp the caveat to two lines behind a toggle; the full text stays in the DOM.
+  const [open, setOpen] = useState(false)
   return (
-    <div style={{
-      padding: '8px 16px 11px', fontSize: 8.5, lineHeight: 1.75,
-      color: 'var(--pt-text-mute)', letterSpacing: '0.06em',
-      borderTop: '1px solid var(--pt-border-dim)',
-    }}>{children}</div>
+    <div className={`cp-note${open ? ' is-open' : ''}`}>
+      <div className="cp-note-body">{children}</div>
+      <button type="button" className="cp-note-more" aria-expanded={open} onClick={() => setOpen(o => !o)}>
+        {open ? 'less' : 'source & caveats'}
+      </button>
+    </div>
   )
 }
 
@@ -649,7 +653,7 @@ function ModelBurnChart({ groups, windowDays }: { groups: ModelChartGroup[]; win
                       <span>cache {row.cache > 0 ? tok(row.cache) : '—'}</span>
                       <span>req {row.requests == null ? '—' : count(row.requests)}</span>
                       <span>{windowDays}d {row.windowBillable > 0 ? tok(row.windowBillable) : 'idle'}</span>
-                      {group.showSpeed && <span style={{ color: CATEGORICAL[6] }}>{speed}</span>}
+                      {group.showSpeed && <span style={{ color: 'var(--mc-chart-ink)' }}>{speed}</span>}
                       {group.showCost && <span style={{ color: row.cost > 0 ? STATUS.warn : row.freeTier ? CATEGORICAL[2] : 'var(--pt-text-mute)' }}>{cost}</span>}
                     </div>
                   </div>
@@ -669,7 +673,6 @@ function ModelBurnChart({ groups, windowDays }: { groups: ModelChartGroup[]; win
 /* ── 5 · Activity: one bar per calendar day, colored by mode ────────── */
 
 function Activity({ costs, modeOf, now }: { costs: CostDashboard; modeOf: (m: string) => BillingMode; now: number | null }) {
-  const [hover, setHover] = useState<string | null>(null)
   const windowDays = finite(costs.dailyWindowDays) ? Math.max(0, Math.floor(costs.dailyWindowDays)) : 30
   const cu = costs.claudeUsage
   const xu = costs.codexUsage
@@ -706,9 +709,6 @@ function Activity({ costs, modeOf, now }: { costs: CostDashboard; modeOf: (m: st
     })
   }, [costs.daily, cu?.daily, xu?.daily, windowDays, modeOf, now])
 
-  const hoveredDay = days.find(day => day.date === hover)
-
-  const max = Math.max(...days.map(d => d.total), 1)
   const active = days.filter(d => d.total > 0).length
   const totals = days.reduce((a, d) => {
     (Object.keys(MODE_META) as BillingMode[]).forEach(k => { a[k] += d[k] })
@@ -726,39 +726,19 @@ function Activity({ costs, modeOf, now }: { costs: CostDashboard; modeOf: (m: st
             sub={pct(totals[k], grand)} />
         ))}
       </div>
-      <div style={{ padding: '4px 16px 2px' }}>
-        <div style={{ display: 'flex', gap: 1, alignItems: 'flex-end', height: 92 }}>
-          {days.map(d => (
-            <div key={d.date}
-              onMouseEnter={() => setHover(d.date)} onMouseLeave={() => setHover(null)}
-              title={`${d.date} · ${tok(d.total)}`}
-              style={{
-                flex: 1, minWidth: 0, height: '100%', display: 'flex', flexDirection: 'column',
-                justifyContent: 'flex-end', cursor: 'crosshair',
-                opacity: !hoveredDay || hover === d.date ? 1 : 0.4, transition: 'opacity .14s',
-              }}>
-              {order.map(k => {
-                const hgt = (d[k] / max) * 88
-                return hgt > 0 ? <div key={k} style={{
-                  height: Math.max(1.5, hgt),
-                  background: MODE_META[k].color,
-                  opacity: hover === d.date ? 1 : 0.78,
-                }} /> : null
-              })}
-              {d.total === 0 && <div style={{ height: 1, background: 'var(--pt-border-dim)' }} />}
-            </div>
-          ))}
-        </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between', marginTop: 6, fontSize: 8, color: 'var(--pt-text-mute)', letterSpacing: '0.1em', minHeight: 12 }}>
-          <span>{days[0]?.date.slice(5)}</span>
-          {hoveredDay && (
-            <span style={{ color: 'var(--pt-text-high)' }}>
-              {hoveredDay.date} · {hoveredDay.total > 0 ? tok(hoveredDay.total) : 'no activity'}
-              {order.filter(k => hoveredDay[k] > 0).map(k => ` · ${MODE_META[k].label.toLowerCase()} ${tok(hoveredDay[k])}`).join('')}
-            </span>
-          )}
-          <span>{days[days.length - 1]?.date.slice(5)}</span>
-        </div>
+      <MicroBars
+        label={`Tokens processed per day, last ${windowDays} days, stacked by billing mode`}
+        format={tok}
+        height={92}
+        bars={days.map(d => ({
+          key: d.date, value: d.total,
+          title: `${d.date} · ${d.total > 0 ? tok(d.total) : 'no activity'}${order.filter(k => d[k] > 0).map(k => ` · ${MODE_META[k].label.toLowerCase()} ${tok(d[k])}`).join('')}`,
+          segments: order.map(k => ({ value: d[k], color: MODE_META[k].color })),
+        }))}
+        axis={[days[0]?.date.slice(5) ?? '', days[Math.floor(days.length / 2)]?.date.slice(5) ?? '', days.at(-1)?.date.slice(5) ?? '']}
+        empty={`No tokens logged in the last ${windowDays} days.`}
+      />
+      <div style={{ padding: '0 16px 2px' }}>
         <div style={{ display: 'flex', gap: 16, padding: '9px 0 4px', flexWrap: 'wrap' }}>
           {order.filter(k => totals[k] > 0).map(k => (
             <span key={k} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 8, color: 'var(--pt-text-mute)', letterSpacing: '0.14em' }}>
@@ -779,7 +759,6 @@ function Activity({ costs, modeOf, now }: { costs: CostDashboard; modeOf: (m: st
 function CodexUsage({ costs, now }: { costs: CostDashboard; now: number | null }) {
   const usage = costs.codexUsage
   if (!usage) return null
-  const max = Math.max(...usage.daily.map(day => day.tokens), 1)
   const lastActivity = utcTimestamp(usage.lastActivityAt)
   return (
     <Window title="CODEX CLI · FLAT PLAN USAGE" meta={usage.planType ? `${planLabel(usage.planType)} · tokens only` : 'tokens only'}>
@@ -790,16 +769,14 @@ function CodexUsage({ costs, now }: { costs: CostDashboard; now: number | null }
         <Stat value={lastActivity} label="LAST ACTIVITY" size="sm" />
       </div>
       <WeeklyUsage limits={usage.rateLimits} now={now} />
-      <div style={{ padding: '4px 16px 12px' }}>
-        <div style={{ display: 'flex', gap: 1, alignItems: 'flex-end', height: 54 }} aria-label="Codex daily token activity">
-          {usage.daily.map(day => (
-            <div key={day.date} title={`${day.date} · ${tok(day.tokens)}`} style={{ flex: 1, minWidth: 0, height: `${Math.max(2, (day.tokens / max) * 52)}px`, background: CATEGORICAL[3], opacity: 0.82 }} />
-          ))}
-        </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between', marginTop: 5, fontSize: 8, color: 'var(--pt-text-mute)' }}>
-          <span>{usage.daily[0]?.date.slice(5) ?? '—'}</span><span>{usage.daily.at(-1)?.date.slice(5) ?? '—'}</span>
-        </div>
-      </div>
+      <MicroBars
+        label="Codex CLI tokens per day"
+        format={tok}
+        height={54}
+        bars={usage.daily.map(day => ({ key: day.date, value: day.tokens, title: `${day.date} · ${tok(day.tokens)}`, segments: [{ value: day.tokens, color: MODE_META.subscription.color }] }))}
+        axis={[usage.daily[0]?.date.slice(5) ?? '—', usage.daily[Math.floor(usage.daily.length / 2)]?.date.slice(5) ?? '', usage.daily.at(-1)?.date.slice(5) ?? '—']}
+        empty="No Codex CLI tokens logged in this window."
+      />
       <Note>CODEX CLI ROLLOUT LOGS · SUBSCRIPTION USAGE IS REPORTED AS TOKENS AND NEVER AS METERED SPEND.</Note>
     </Window>
   )
@@ -833,6 +810,9 @@ function sparkline(v: number[]): string {
   return v.map(x => finite(x) && finite(max) ? SPARK[Math.max(0, Math.min(7, Math.floor((x / max) * 7)))] : '·').join('')
 }
 
+/** Local inference carries the LOCAL billing-mode identity everywhere it is drawn. */
+const LOCAL = MODE_META.local.color
+
 function LocalAI({ costs, now }: { costs: CostDashboard; now: number | null }) {
   const lc = costs.localCompute
   if (!lc) return null
@@ -850,7 +830,6 @@ function LocalAI({ costs, now }: { costs: CostDashboard; now: number | null }) {
       return { date, tokens, requests: day?.requests ?? 0, avoided: rate != null ? tokens * rate / 1_000_000 : null }
     })
   }, [lc.daily, rate])
-  const maxDailyTokens = Math.max(1, ...dailyBurn.map(day => day.tokens))
   const todayBurn = dailyBurn[dailyBurn.length - 1]
   const last7 = dailyBurn.slice(-7)
   const weekTokens = last7.reduce((sum, day) => sum + day.tokens, 0)
@@ -859,7 +838,6 @@ function LocalAI({ costs, now }: { costs: CostDashboard; now: number | null }) {
   const last24Tokens = last24.reduce((sum, hour) => sum + hour.tokens, 0)
   const last24Requests = last24.reduce((sum, hour) => sum + hour.requests, 0)
   const last24Avoided = rate != null ? last24Tokens * rate / 1_000_000 : null
-  const maxHourlyTokens = Math.max(1, ...last24.map(hour => hour.tokens))
 
   return (
     <>
@@ -868,9 +846,9 @@ function LocalAI({ costs, now }: { costs: CostDashboard; now: number | null }) {
         <div style={{ padding: '14px 16px 12px', display: 'flex', gap: 28, flexWrap: 'wrap' }}>
           <Stat value={tok(lc.totalTokens)} label="TOKENS ALL-TIME" size="hero" color={CATEGORICAL[2]}
             sub={`${tok(lc.outputTokens)} generated · ${tok(lc.inputTokens)} prompt`} />
-          <Stat value={fixed(lc.medianTokensPerSec)} label="MEDIAN TOK/S" size="lg" color={CATEGORICAL[6]}
+          <Stat value={fixed(lc.medianTokensPerSec)} label="MEDIAN TOK/S" size="lg"
             sub={<>p95 {fixed(lc.p95TokensPerSec)} · mean {fixed(lc.avgTokensPerSec)}</>} />
-          <Stat value={hours(lc.generationSeconds)} label="TIME SPENT GENERATING" size="lg" color={CATEGORICAL[6]}
+          <Stat value={hours(lc.generationSeconds)} label="TIME SPENT GENERATING" size="lg"
             sub={`${count(lc.sampleCount)} sampled turns`} />
           <Stat value={rate != null ? money(lc.costAvoidedAllTimeUsd) : '—'} label="WOULD HAVE COST, METERED" size="lg" color={CATEGORICAL[2]}
             sub={rate != null ? `at ${money(rate)}/M` : 'no metered rate to compare'} />
@@ -893,33 +871,21 @@ function LocalAI({ costs, now }: { costs: CostDashboard; now: number | null }) {
       <SectionRule label="DAILY LOCAL AI BURN · LAST 14 DAYS" />
       <Window title="ON THIS RIG · TOKENS & API VALUE AVOIDED" meta="local inference · daily">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(150px, 100%), 1fr))', gap: 12, padding: '14px 16px 4px' }}>
-          <Stat value={tok(todayBurn.tokens)} label="TODAY · LOCAL TOKENS" size="lg" color={CATEGORICAL[6]}
+          <Stat value={tok(todayBurn.tokens)} label="TODAY · LOCAL TOKENS" size="lg" color={LOCAL}
             sub={`${count(todayBurn.requests)} requests`} />
-          <Stat value={tok(weekTokens)} label="7-DAY LOCAL TOKENS" size="lg" color={CATEGORICAL[6]} />
+          <Stat value={tok(weekTokens)} label="7-DAY LOCAL TOKENS" size="lg" color={LOCAL} />
           <Stat value={weekAvoided != null ? money(weekAvoided) : '—'} label="7-DAY API COST AVOIDED · EST." size="lg" color={CATEGORICAL[2]}
             sub={rate != null ? `at ${money(rate)}/M metered rate` : 'no metered rate to compare'} />
         </div>
-        <div className="cp-burn2d" style={{ paddingTop: 4 }}>
-          <svg viewBox="0 0 720 190" role="img" aria-label="Daily local AI tokens over the last 14 days">
-            {[0, 1, 2, 3].map(level => {
-              const y = 148 - level * 42
-              return <g key={level}><line x1="42" y1={y} x2="710" y2={y} stroke="var(--pt-border-dim)" strokeWidth="1" strokeDasharray={level ? '2 4' : undefined} /><text x="36" y={y + 3} textAnchor="end" className="cp-burn2d-tick">{tok(maxDailyTokens * level / 3)}</text></g>
-            })}
-            {dailyBurn.map((day, i) => {
-              const x = 50 + i * 47
-              const h = day.tokens ? Math.max(2, day.tokens / maxDailyTokens * 126) : 2
-              const y = 148 - h
-              return <g key={day.date}>
-                <title>{`${day.date}: ${count(day.tokens)} local tokens · ${count(day.requests)} requests${day.avoided != null ? ` · ${money(day.avoided)} estimated API cost avoided` : ''}`}</title>
-                <rect x={x} y={y} width="28" height={h} rx="2" fill={day.tokens ? 'url(#localBurnGradient)' : 'rgba(255,255,255,0.10)'} />
-                {i % 2 === 0 && <text x={x + 14} y="168" textAnchor="middle" className="cp-burn2d-day">{day.date.slice(5)}</text>}
-              </g>
-            })}
-            <defs><linearGradient id="localBurnGradient" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor={CATEGORICAL[2]} /><stop offset="100%" stopColor={CATEGORICAL[6]} stopOpacity="0.45" /></linearGradient></defs>
-          </svg>
-          <div className="mc-heatmap-legend" style={{ padding: '0 4px 10px' }}>
-            <span>DAILY LOCAL TOKENS</span><span style={{ marginLeft: 'auto' }}>{rate != null ? `EST. 7D AVOIDED · ${money(weekAvoided)}` : 'DOLLAR VALUE UNAVAILABLE · NO METERED BASELINE'}</span>
-          </div>
+        <MicroBars
+          label="Local AI tokens per day, last 14 days"
+          format={tok}
+          bars={dailyBurn.map(day => ({ key: day.date, value: day.tokens, title: `${day.date}: ${count(day.tokens)} local tokens · ${count(day.requests)} requests${day.avoided != null ? ` · ${money(day.avoided)} estimated API cost avoided` : ''}` }))}
+          axis={[dailyBurn[0].date.slice(5), dailyBurn[7].date.slice(5), 'today']}
+          empty="No local inference logged in the last 14 days."
+        />
+        <div className="mc-heatmap-legend" style={{ padding: '0 16px 10px' }}>
+          <span>DAILY LOCAL TOKENS · UTC DAYS</span><span style={{ marginLeft: 'auto' }}>{rate != null ? `EST. 7D AVOIDED · ${money(weekAvoided)}` : 'DOLLAR VALUE UNAVAILABLE · NO METERED BASELINE'}</span>
         </div>
         <Note>API VALUE IS A COUNTERFACTUAL ESTIMATE, NOT CASH SAVED OR AVOIDED ELECTRICITY COST. IT PRICES LOCAL TOKENS AT THE LOG-DERIVED METERED RATE; SUBSCRIPTION USAGE IS EXCLUDED. POWER / ENERGY COST IS NOT INCLUDED.</Note>
       </Window>
@@ -927,32 +893,20 @@ function LocalAI({ costs, now }: { costs: CostDashboard; now: number | null }) {
       <SectionRule label="LOCAL AI BURN · ROLLING 24 HOURS" />
       <Window title="LAST 24 HOURS · HOURLY LOCAL USAGE" meta="rolling window · this rig only">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(150px, 100%), 1fr))', gap: 12, padding: '14px 16px 4px' }}>
-          <Stat value={tok(last24Tokens)} label="LOCAL TOKENS · 24H" size="lg" color={CATEGORICAL[6]} />
-          <Stat value={count(last24Requests)} label="REQUESTS · 24H" size="lg" color={CATEGORICAL[6]} />
+          <Stat value={tok(last24Tokens)} label="LOCAL TOKENS · 24H" size="lg" color={LOCAL} />
+          <Stat value={count(last24Requests)} label="REQUESTS · 24H" size="lg" />
           <Stat value={last24Avoided != null ? money(last24Avoided) : '—'} label="API VALUE · EST. 24H" size="lg" color={CATEGORICAL[2]}
             sub={rate != null ? `at ${money(rate)}/M metered rate` : 'no metered rate to compare'} />
         </div>
-        <div className="cp-burn2d" style={{ paddingTop: 4 }}>
-          <svg viewBox="0 0 720 190" role="img" aria-label="Local AI tokens by hour over the rolling last 24 hours">
-            {[0, 1, 2, 3].map(level => {
-              const y = 148 - level * 42
-              return <g key={level}><line x1="42" y1={y} x2="710" y2={y} stroke="var(--pt-border-dim)" strokeWidth="1" strokeDasharray={level ? '2 4' : undefined} /><text x="36" y={y + 3} textAnchor="end" className="cp-burn2d-tick">{tok(maxHourlyTokens * level / 3)}</text></g>
-            })}
-            {last24.map((hour, i) => {
-              const x = 50 + i * (660 / Math.max(1, last24.length - 1))
-              const h = hour.tokens ? Math.max(2, hour.tokens / maxHourlyTokens * 126) : 2
-              const y = 148 - h
-              return <g key={hour.hour}>
-                <title>{`${new Date(hour.hour).toISOString().slice(0, 13)}:00 UTC: ${count(hour.tokens)} local tokens · ${count(hour.requests)} requests`}</title>
-                <rect x={x} y={y} width="18" height={h} rx="2" fill={hour.tokens ? 'url(#localBurn24Gradient)' : 'rgba(255,255,255,0.10)'} />
-                {i % 3 === 0 && <text x={x + 9} y="168" textAnchor="middle" className="cp-burn2d-day">{hour.hour.slice(11, 13)}</text>}
-              </g>
-            })}
-            <defs><linearGradient id="localBurn24Gradient" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor={CATEGORICAL[2]} /><stop offset="100%" stopColor={CATEGORICAL[6]} stopOpacity="0.45" /></linearGradient></defs>
-          </svg>
-          <div className="mc-heatmap-legend" style={{ padding: '0 4px 10px' }}>
-            <span>UTC HOUR · LAST 24 HOURS</span><span style={{ marginLeft: 'auto' }}>{last24Avoided != null ? `EST. API VALUE · ${money(last24Avoided)}` : 'DOLLAR VALUE UNAVAILABLE · NO METERED BASELINE'}</span>
-          </div>
+        <MicroBars
+          label="Local AI tokens by hour, rolling last 24 hours"
+          format={tok}
+          bars={last24.map(hour => ({ key: hour.hour, value: hour.tokens, title: `${new Date(hour.hour).toISOString().slice(0, 13)}:00 UTC: ${count(hour.tokens)} local tokens · ${count(hour.requests)} requests` }))}
+          axis={last24.length ? [`${last24[0].hour.slice(11, 13)}:00`, `${last24[Math.floor(last24.length / 2)].hour.slice(11, 13)}:00`, 'now'] : ['', '', '']}
+          empty="No local inference logged in the last 24 hours."
+        />
+        <div className="mc-heatmap-legend" style={{ padding: '0 16px 10px' }}>
+          <span>UTC HOUR · LAST 24 HOURS</span><span style={{ marginLeft: 'auto' }}>{last24Avoided != null ? `EST. API VALUE · ${money(last24Avoided)}` : 'DOLLAR VALUE UNAVAILABLE · NO METERED BASELINE'}</span>
         </div>
         <Note>ROLLING 24 HOURS FROM LOGGED LOCAL INFERENCE TIMESTAMPS, GROUPED BY UTC HOUR. API VALUE IS A COUNTERFACTUAL ESTIMATE, NOT CASH SAVED; EXCLUDES SUBSCRIPTION USE AND ELECTRICITY COST.</Note>
       </Window>
@@ -975,12 +929,12 @@ function LocalAI({ costs, now }: { costs: CostDashboard; now: number | null }) {
         {spark.length > 1 && (
           <Window title="THROUGHPUT TREND" meta={`${count(lc.sampleCount)} samples`}>
             <div style={{ padding: '14px 16px' }}>
-              <div style={{ fontSize: 21, fontFamily: 'var(--font-mono)', color: CATEGORICAL[6], lineHeight: 1.2, wordBreak: 'break-all', textShadow: `0 0 8px ${CATEGORICAL[6]}55` }}>
+              <div style={{ fontSize: 21, fontFamily: 'var(--font-mono)', color: 'var(--mc-chart-emph)', lineHeight: 1.2, wordBreak: 'break-all', textShadow: 'var(--mc-chart-glow)' }}>
                 {sparkline(spark)}
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between', marginTop: 9, fontSize: 8, color: 'var(--pt-text-mute)', letterSpacing: '0.1em' }}>
                 <span>{lc.dailyThroughput[0]?.date}</span>
-                <span style={{ color: CATEGORICAL[6] }}>{fixed(Math.max(...spark), 0)} peak · {fixed(spark.reduce((s, v) => s + v, 0) / spark.length)} avg tok/s</span>
+                <span style={{ color: 'var(--mc-chart-ink)' }}>{fixed(Math.max(...spark), 0)} peak · {fixed(spark.reduce((s, v) => s + v, 0) / spark.length)} avg tok/s</span>
                 <span>{lc.dailyThroughput[lc.dailyThroughput.length - 1]?.date}</span>
               </div>
             </div>

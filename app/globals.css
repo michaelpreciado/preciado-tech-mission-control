@@ -4796,20 +4796,45 @@ body:has(.mc-costs-page) .mc-rain { display: none !important; }
   font-family: var(--font-mono);
   font-size: var(--vg-fs-min);
   letter-spacing: 0;
-  fill: var(--pt-text-mute);
+  fill: var(--mc-chart-axis);
 }
 .cp-burn2d-day {
   font-family: var(--font-mono);
   font-size: var(--vg-fs-min);
   letter-spacing: 0;
-  fill: var(--pt-text-mute);
+  fill: var(--mc-chart-axis);
   transition: fill 140ms var(--pt-ease);
 }
 .cp-burn2d-day.is-on { fill: var(--pt-neon-bright); }
+.cp-burn2d-narrow { display: none; }
+/* Below ~560px the 720-unit viewBox shrinks its 13px ticks to ~6px: swap to micro-bars. */
+@media (max-width: 560px) {
+  .cp-burn2d-narrow { display: block; margin: 0 -16px; }
+  .cp-burn2d svg.cp-burn2d-wide { display: none; }
+  .cp-iso-hint { display: none; }
+}
 
 @media (max-width: 820px) {
   .cp-burn2d { padding: 10px 10px 2px; }
   .cp-burn2d-tick { font-size: var(--vg-fs-min); }
+}
+
+/* Provenance notes (CostsPanel <Note>). Desktop shows them whole; phones clamp to
+   two lines behind a 44px toggle so caveats stay one tap away without burying the numbers. */
+.cp-note { padding: 8px 16px 11px; font-size: var(--vg-fs-min); line-height: 1.7; color: var(--pt-text-mute); letter-spacing: .04em; border-top: 1px solid var(--pt-border-dim); }
+.cp-note-more { display: none; }
+/* Stat rows (CostsPanel <Stat>) pair up on phones instead of stacking one per row. */
+@media (max-width: 560px) {
+  .cp-panel .mc-window > div:has(> .cp-stat) { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px !important; }
+}
+@media (max-width: 820px) {
+  .cp-note { padding-bottom: 2px; }
+  .cp-note:not(.is-open) .cp-note-body { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+  .cp-note-more {
+    display: inline-flex; align-items: center; min-height: 44px; padding: 0; border: 0; background: none;
+    color: var(--mc-chart-emph); font: 500 var(--vg-fs-min)/1 var(--pt-font-mono); letter-spacing: .02em; cursor: pointer;
+  }
+  .cp-note-more:focus-visible { outline: 2px solid var(--mc-chart-emph); outline-offset: 2px; }
 }
 
 
