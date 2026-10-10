@@ -68,7 +68,7 @@
 .taskButton.taskButton:focus-visible { outline: 2px solid var(--pt-neon); outline-offset: -2px; }
 .taskTitle { font: 600 14.5px/1.35 var(--pt-font-sans); letter-spacing: -.005em; color: var(--pt-mx-ink-head); overflow-wrap: anywhere; }
 .taskButton > span { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
-.taskMeta { max-width: 100%; font: 400 11.5px/1.4 var(--pt-font-mono); color: var(--pt-mx-ink-meta); overflow-wrap: anywhere; }
+.taskMeta { max-width: 100%; font: 400 12px/1.4 var(--pt-font-mono); color: var(--pt-mx-ink-meta); overflow-wrap: anywhere; }
 .taskMeta::before { content: '> '; color: rgba(var(--pt-dodger-rgb), .7); }
 .dragging { opacity: .5; }
 .dropReady { outline: 1px dashed rgba(var(--pt-dodger-rgb), .45); outline-offset: -1px; }
@@ -103,7 +103,7 @@
 
 @media (max-width: 600px) {
   .toolbar { gap: var(--pt-s-3); }
-  .filters.filters { width: 100%; }
+  .filters.filters { width: 100%; gap: 8px; }
   .filters > button { flex: 1; padding-inline: var(--pt-s-1); font-size: 12.5px; }
   .toolbar > button { margin-left: auto; }
   .formGrid { grid-template-columns: minmax(0, 1fr); }

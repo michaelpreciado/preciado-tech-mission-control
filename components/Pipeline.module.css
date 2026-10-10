@@ -62,6 +62,6 @@
 /* Radar palette is supplied by lib/pt/theme.ts on the page. */
 .radar { color: var(--pt-text-primary); background: var(--pt-bg-void); }
 .radar section { background: var(--pt-glass-fill); border-color: var(--pt-glass-border); }
-.freshness { display: inline-block; padding: 2px 7px; border: 1px solid var(--pt-accent-blue); border-radius: 4px; color: var(--pt-accent-blue); font-family: var(--pt-font-mono); font-size: 11px; }
+.freshness { display: inline-block; padding: 2px 7px; border: 1px solid var(--pt-accent-blue); border-radius: 4px; color: var(--pt-accent-blue); font-family: var(--pt-font-mono); font-size: 12px; }
 .freshness[data-freshness="stale"] { border-style: dashed; }
 .freshness[data-freshness="unknown"], .freshness[data-freshness="error"] { color: var(--pt-text-muted); border-color: currentColor; }

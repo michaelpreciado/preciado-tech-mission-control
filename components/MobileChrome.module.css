@@ -9,7 +9,8 @@
 
 @media (max-width: 719px) {
   .tabbar {
-    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+    /* 8px between cells so adjacent targets never touch; each cell stays >= 60px wide at 360. */
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); column-gap: 8px; padding-inline: 4px;
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
     padding-bottom: env(safe-area-inset-bottom, 0px);
     background-color: rgba(6, 8, 10, .97);

@@ -2110,8 +2110,13 @@ h1 {
 
   /* Section heads */
   .mc-ascii-head { flex-wrap: wrap; gap: 4px; font-size: var(--vg-fs-min); }
-  .mc-window-head { flex-wrap: wrap; gap: 6px; }
-  .mc-window-meta { font-size: var(--vg-fs-min); }
+  /* Phone window head: dots + title share row one, meta takes its own row below.
+     The title used to sit beside an unshrinkable meta and, with overflow-wrap:
+     anywhere, broke "CLAUDE CODE" into a column of two-letter fragments. */
+  .mc-window-head { flex-wrap: wrap; gap: 4px 10px; }
+  .mc-window-title { flex: 1 1 0; min-width: 0; letter-spacing: .08em; overflow-wrap: break-word; }
+  .mc-window-meta { flex: 1 0 100%; order: 3; margin-left: 0; padding-left: 34px; font-size: var(--vg-fs-min); letter-spacing: .04em; overflow-wrap: break-word; }
+  .mc-window-head .mc-window-meta + .mc-win-float-btn { margin-left: 0; }
 
   /* Kanban — single column on mobile */
   .mc-kanban { grid-template-columns: 1fr; }
@@ -8398,7 +8403,7 @@ html[data-motion="off"] .mc-studio-cursor { animation: none; }
 .mc-more-heading .mc-more-title { margin: 0; }
 .mc-more-sheet { overscroll-behavior: contain; }
 @media (max-width: 560px) {
-  .mc-window-title { min-width: 0; overflow-wrap: anywhere; letter-spacing: .1em; }
+  .mc-window-title { min-width: 0; overflow-wrap: break-word; letter-spacing: .08em; }
   .mc-setup-actions.sticky { position: static; }
 }
 /* Compact project cards need their full title width on desktop too. */
@@ -8508,9 +8513,11 @@ html[data-motion='reduced'] .boot-line, html[data-motion='off'] .boot-line { opa
 /* Dialogs can live inside the shell's own stacking context. Yield the
    decorative overlay entirely while one is open, including native dialogs. */
 body:has([role="dialog"], dialog[open]) .boot-overlay { visibility: hidden; }
-/* W2-J · text-only data visualization, periwinkle ink. */
+/* W2-J · text-only data visualization. Inked from the shared chart tokens
+   (--mc-chart-*, lib/tokens.ts) so glyph charts and SVG/HTML charts read as one
+   language: quiet series, one emphasis, the axis ink for captions. */
 .asciiviz-spark, .asciiviz-meter, .asciiviz-heat, .asciiviz-bars,
-.asciiviz-caption, .asciiviz-repo {
+.asciiviz-caption, .asciiviz-repo, .asciiviz-hours {
   font-family: var(--pt-font-mono, 'JetBrains Mono'), monospace;
   font-size: var(--vg-fs-min);
   line-height: 1.1;
@@ -8519,19 +8526,32 @@ body:has([role="dialog"], dialog[open]) .boot-overlay { visibility: hidden; }
   letter-spacing: 0;
   text-shadow: none;
   box-shadow: none;
-  color: var(--vg-eyebrow);
+  color: var(--mc-chart-quiet);
 }
-.asciiviz-spark, .asciiviz-meter, .asciiviz-bars { display: inline-block; white-space: pre; }
+.asciiviz-spark, .asciiviz-meter, .asciiviz-bars, .asciiviz-hours { display: inline-block; white-space: pre; }
 .asciiviz-heat { display: block; white-space: pre; }
-.asciiviz-bright, .asciiviz-value { color: rgba(157,180,236,.85); }
-.asciiviz-faint, .asciiviz-caption { color: var(--vg-eyebrow); }
+.asciiviz-bright, .asciiviz-value { color: var(--mc-chart-emph); }
+.asciiviz-faint, .asciiviz-caption { color: var(--mc-chart-axis); }
 .asciiviz-value, .asciiviz-caption { font-size: var(--vg-fs-min); }
-.asciiviz-density-0, .asciiviz-density-1 { color: rgba(157,180,236,.30); }
-.asciiviz-density-2, .asciiviz-density-3 { color: var(--vg-eyebrow); }
-.asciiviz-density-4, .asciiviz-density-5 { color: rgba(157,180,236,.85); }
+.asciiviz-fail { color: var(--pt-error); }
+.asciiviz-hours .asciiviz-faint { opacity: .55; }
+.asciiviz-density-0, .asciiviz-density-1 { color: var(--mc-chart-axis); }
+.asciiviz-density-2, .asciiviz-density-3 { color: var(--mc-chart-quiet); }
+.asciiviz-density-4, .asciiviz-density-5 { color: var(--mc-chart-emph); }
+/* Figlet wordmarks (lib/wordmarks.ts). Box-drawing glyphs sit outside the
+   self-hosted mono subset, so the whole block uses one system monospace stack:
+   every cell comes from the same face and the strokes stay joined. The font
+   scales to the container (0.6em advance per column) so rows never wrap. */
+.asciiviz-wordmark { display: block; container-type: inline-size; max-width: 100%; }
+.asciiviz-wordmark > span {
+  display: block; width: max-content; white-space: pre;
+  font-family: ui-monospace, 'SF Mono', Menlo, 'DejaVu Sans Mono', 'Noto Sans Mono', 'Liberation Mono', monospace;
+  font-size: min(var(--wm-max, 14px), calc(100cqi / (var(--wm-cols) * 0.62)));
+  line-height: 1; letter-spacing: 0; font-weight: 400; font-variant-ligatures: none;
+}
 .asciiviz-telemetry { min-width: 0; text-align: center; }
-.asciiviz-telemetry .asciiviz-meter { margin-top: 6px; font-size: var(--vg-fs-min); color: var(--vg-eyebrow); }
-.asciiviz-telemetry .asciiviz-bright { color: var(--vg-eyebrow); }
+.asciiviz-telemetry .asciiviz-meter { margin-top: 6px; font-size: var(--vg-fs-min); color: var(--mc-chart-axis); }
+.asciiviz-telemetry .asciiviz-bright { color: var(--mc-chart-emph); }
 .asciiviz-burn { display: inline-block; margin-left: 12px; }
 .asciiviz-inset { margin: 10px 16px; overflow-x: auto; }
 .asciiviz-repo { margin-top: 5px; white-space: nowrap; }
