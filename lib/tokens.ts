@@ -245,6 +245,17 @@ ${Object.entries(MATRIX).map(([name, value]) => `  --pt-mx-${name}: ${value};`).
   --mc-seq-5: ${CATEGORICAL.seq5}; --mc-seq-6: ${CATEGORICAL.seq6};
   --mc-seq-7: ${CATEGORICAL.seq7};
 
+  /* chart language — every graph reads from these: one grid colour, one axis
+     ink, one emphasis colour (the current/latest mark), one quiet tone for the
+     rest of the series. Identity hues stay in --mc-cat-*; this is structure. */
+  --mc-chart-grid: var(--pt-mx-line-subtle);
+  --mc-chart-axis: var(--pt-mx-ink-meta);
+  --mc-chart-ink: var(--pt-mx-ink-2);
+  --mc-chart-emph: var(--pt-dodger);
+  --mc-chart-quiet: rgba(var(--pt-dodger-rgb),0.4);
+  --mc-chart-empty: rgba(255,255,255,0.08);
+  --mc-chart-glow: 0 0 10px rgba(var(--pt-dodger-rgb),0.5);
+
   /* status (reserved meaning, never categorical) */
   --mc-ok: ${SEMANTIC.ok.hex}; --mc-warn: ${SEMANTIC.warn.hex}; --mc-crit: ${SEMANTIC.error.hex};
 

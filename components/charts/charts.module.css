@@ -1,0 +1,31 @@
+/* Shared chart presentation. Colours come only from --mc-chart-* (structure)
+   and --mc-cat-* (identity); see lib/tokens.ts. */
+
+.mbars { margin: 0; padding: 10px 16px 12px; min-width: 0; font-family: var(--pt-font-mono); font-variant-numeric: tabular-nums; }
+
+.head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 8px; font-size: 12px; line-height: 1.2; color: var(--mc-chart-axis); }
+.head b { font-weight: 600; color: var(--mc-chart-ink); }
+.latest b { color: var(--mc-chart-emph); }
+
+/* Grid: baseline, peak line and a dashed midline, all one colour. */
+.plot {
+  display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); align-items: end; gap: 2px;
+  background:
+    linear-gradient(var(--mc-chart-grid), var(--mc-chart-grid)) top / 100% 1px no-repeat,
+    linear-gradient(var(--mc-chart-grid), var(--mc-chart-grid)) bottom / 100% 1px no-repeat,
+    repeating-linear-gradient(90deg, var(--mc-chart-grid) 0 3px, transparent 3px 7px) center / 100% 1px no-repeat;
+}
+.bar {
+  display: flex; flex-direction: column-reverse; overflow: hidden;
+  height: max(2px, calc(var(--v) * 100%)); min-width: 0;
+  border-radius: 2px 2px 0 0; background: var(--mc-chart-quiet);
+}
+.bar > span { display: block; min-height: 1px; opacity: .72; }
+.zero { height: 2px; background: var(--mc-chart-empty); border-radius: 1px; }
+.emph { background: var(--mc-chart-emph); box-shadow: var(--mc-chart-glow); }
+.emph > span { opacity: 1; }
+
+.axis { display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; line-height: 1; color: var(--mc-chart-axis); }
+
+.empty { margin: 0; padding: 14px 16px; font: 400 13px/1.45 var(--pt-font-mono); color: var(--mc-chart-axis); }
+.empty span { color: var(--mc-chart-ink); }

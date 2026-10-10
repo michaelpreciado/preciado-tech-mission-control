@@ -1,4 +1,8 @@
 /** Text-only charts; safe to render in either server or client components. */
+import type { CSSProperties } from 'react'
+import { WORDMARKS, type WordmarkId } from '@/lib/wordmarks'
+import { hourCoverage, type HourSpan } from '@/lib/glyph-series'
+
 const SPARK = '▁▂▃▄▅▆▇█'
 const HEAT = ' .:*#@'
 const clamp = (value: number) => Math.max(0, Math.min(1, value))
@@ -52,4 +56,29 @@ export function AsciiBars({ values, max, width = 20 }: { values: number[]; max: 
     return `${'▇'.repeat(filled).padEnd(size, ' ')} ${labels[index].padStart(labelWidth, ' ')}`
   })
   return <span className="asciiviz-bars" role="img" aria-label={`Bars, maximum ${max}: ${values.join(', ')}`}><span aria-hidden="true">{rows.join('\n')}</span></span>
+}
+
+/** Pre-rendered figlet wordmark (lib/wordmarks.ts). The block scales its font to the
+ *  container so the rows never wrap; screen readers get the plain word. */
+export function AsciiWordmark({ id, className = '' }: { id: WordmarkId; className?: string }) {
+  const mark = WORDMARKS[id]
+  return <span className={`asciiviz-wordmark ${className}`} role="img" aria-label={mark.text} style={{ '--wm-cols': mark.cols } as CSSProperties}>
+    <span aria-hidden="true">{mark.rows.join('\n')}</span>
+  </span>
+}
+
+/** One glyph per hour: · = idle, ▁..█ = share of the hour busy, ✕ = a failed run.
+ *  Hours after `nowHour` render blank so the future never reads as idle. */
+export function AsciiHourRun({ spans, nowHour, hours = 24, label }: { spans: HourSpan[]; nowHour: number; hours?: number; label: string }) {
+  const cover = hourCoverage(spans, hours)
+  const failed = new Set(spans.filter(s => s.failed).map(s => Math.min(hours - 1, Math.floor(s.start))))
+  const busy = cover.filter(v => v > 0).length
+  return <span className="asciiviz-hours" role="img" aria-label={`${label}: active in ${busy} of the last ${Math.min(hours, Math.ceil(nowHour))} hours${failed.size ? `, ${failed.size} failed run hour${failed.size === 1 ? '' : 's'}` : ''}`}>
+    <span aria-hidden="true">{cover.map((v, h) => {
+      if (failed.has(h)) return <span key={h} className="asciiviz-fail">✕</span>
+      if (h > nowHour) return <span key={h}> </span>
+      if (v <= 0) return <span key={h} className="asciiviz-faint">·</span>
+      return <span key={h} className={h === Math.floor(nowHour) ? 'asciiviz-bright' : undefined}>{SPARK[Math.max(0, Math.min(7, Math.ceil(v * 8) - 1))]}</span>
+    })}</span>
+  </span>
 }
