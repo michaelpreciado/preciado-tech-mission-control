@@ -4,15 +4,18 @@ import { useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useKanbanSnapshot } from '../KanbanSnapshot'
 import { useFeedRows } from '../ActionFeed'
-import { AuroraHero } from './AuroraHero'
-import { AuroraBands, type BandItem } from './AuroraBands'
+import { AuroraHero, AuroraSkyPanel } from './AuroraHero'
+import { AuroraBands, StatusStrip, type BandItem, type BandTone } from './AuroraBands'
 import { heroHeadline } from '@/lib/aurora-copy'
-import { isUnassigned, needsYouTasks, stateWord } from '@/lib/flight-strip'
+import { hourBuckets, isUnassigned, movedTasks, needsYouTasks, stateWord, type MovedKind } from '@/lib/flight-strip'
+import { sparkGlyphs } from '@/lib/glyph-series'
 import type { AgentTimeline } from '@/lib/agent-timeline'
 import styles from './aurora.module.css'
 
 const SHOWN = 5
 const SKY_REFRESH_MS = 60_000
+const MOVED_WORD: Record<MovedKind, string> = { done: 'Done', failed: 'Failed', started: 'Started', created: 'Created' }
+const MOVED_TONE: Record<MovedKind, BandTone> = { done: 'ok', failed: 'error', started: 'info', created: 'muted' }
 
 /** "Agent gateway :18789" -> "the agent gateway" for use mid-sentence. */
 function nameClause(name: string): string {
@@ -56,6 +59,21 @@ export function AuroraHome({ timeline, dateLabel, timeLabel }: { timeline: Agent
     }
   }), [tasks, now])
 
+  const moved = useMemo(() => (summary ? movedTasks(tasks, now) : []), [summary, tasks, now])
+  const movedItems = useMemo<BandItem[]>(() => moved.slice(0, SHOWN).map(m => {
+    const callsign = isUnassigned(m.task.assignee) ? 'unassigned' : String(m.task.assignee)
+    const since = age(new Date(m.at).toISOString(), now)
+    return {
+      id: `moved:${m.task.id}`,
+      tone: MOVED_TONE[m.kind],
+      title: m.task.title,
+      meta: [{ text: MOVED_WORD[m.kind] }, { text: callsign }, ...(since ? [{ text: since === 'just now' ? since : `${since} ago`, num: true }] : [])],
+      href: `/kanban?task=${encodeURIComponent(m.task.id)}`,
+    }
+  }), [moved, now])
+  // Moves per hour across the window, oldest first — the trend glyphs under the MOVED count.
+  const movedPerHour = useMemo(() => hourBuckets(moved.map(m => m.at), now, 12), [moved, now])
+
   const broke = useMemo(() => {
     const items: BandItem[] = []
     const clauses: string[] = []
@@ -82,21 +100,25 @@ export function AuroraHome({ timeline, dateLabel, timeLabel }: { timeline: Agent
   const waiting = summary ? summary.needsYou : null
   const headline = heroHeadline({ waiting, broken: broke.clauses, boardError: !!error })
 
+  const brokeCount = health || data ? broke.items.length : null
   return (
     <div className={styles.home}>
-      <AuroraHero
-        dateLabel={dateLabel}
-        timeLabel={timeLabel}
-        headline={headline}
-        error={error && !summary ? error : null}
-        rows={timeline.rows}
-        nowHour={timeline.nowHour}
-        idleAgents={timeline.idleAgents}
-        skyAvailable={timeline.available}
+      <AuroraHero dateLabel={dateLabel} timeLabel={timeLabel} headline={headline} error={error && !summary ? error : null} />
+      <StatusStrip
+        cells={[
+          { key: 'needs', label: 'Needs you', value: waiting, href: '#home-needs', tone: 'alert', hint: 'blocked · failed · review' },
+          { key: 'broke', label: 'Broke', value: brokeCount, href: '#home-broke', tone: 'error', hint: 'services · cron · collectors' },
+          { key: 'live', label: 'Running', value: summary ? summary.runningLive : null, href: '/kanban', tone: 'live', hint: 'live workers now' },
+          {
+            key: 'moved', label: 'Moved · 24h', value: summary ? moved.length : null, href: '#home-moved', hint: 'cards that changed',
+            trend: summary && moved.length > 0 ? { glyphs: sparkGlyphs(movedPerHour), label: `Card moves per hour, last 12 hours, oldest first: ${movedPerHour.join(', ')}` } : undefined,
+          },
+        ]}
       />
       <AuroraBands
         waiting={{
-          title: 'Waiting on me',
+          anchor: 'home-needs',
+          wordmark: 'needsYou',
           count: waiting,
           linkLabel: 'Open board',
           href: '/kanban',
@@ -105,14 +127,33 @@ export function AuroraHome({ timeline, dateLabel, timeLabel }: { timeline: Agent
           empty: summary ? { title: 'Nothing is waiting on you', hint: 'Blocked, failed and review cards appear here.' } : { title: error ? 'Task board unavailable' : 'Loading tasks…', hint: error ? 'Nothing is being hidden. The last read failed.' : undefined },
         }}
         broke={{
-          title: 'Broke',
-          count: health || data ? broke.items.length : null,
+          anchor: 'home-broke',
+          wordmark: 'broke',
+          count: brokeCount,
           countTone: 'error',
           linkLabel: 'System',
           href: '/system',
           items: broke.items,
           empty: health ? { title: 'Nothing is broken', hint: 'Down services and failed jobs appear here.' } : { title: 'Checking system health…' },
         }}
+        moved={{
+          anchor: 'home-moved',
+          wordmark: 'moved',
+          count: summary ? moved.length : null,
+          linkLabel: 'Board',
+          href: '/kanban',
+          items: movedItems,
+          more: moved.length > movedItems.length ? { count: moved.length - movedItems.length, label: 'more moved today', href: '/kanban' } : undefined,
+          empty: summary ? { title: 'Nothing moved in the last 24 hours', hint: 'Cards appear here when they are created, started, finish or fail.' } : { title: error ? 'Task board unavailable' : 'Loading tasks…' },
+          source: summary ? 'From card timestamps (created · started · completed), last 24 hours.' : undefined,
+        }}
+      />
+      <AuroraSkyPanel
+        timeLabel={timeLabel}
+        rows={timeline.rows}
+        nowHour={timeline.nowHour}
+        idleAgents={timeline.idleAgents}
+        skyAvailable={timeline.available}
       />
     </div>
   )

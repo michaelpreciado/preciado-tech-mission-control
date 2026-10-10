@@ -156,3 +156,30 @@ test('buildRoster consumes the canonical projection and retains unknown identiti
   assert.equal(roster.unowned.count, 1)
   assert.equal(buildRoster(null).unowned.count, null)
 })
+
+test('movedTasks keeps each card\'s latest move inside the window, newest first', async () => {
+  const { movedTasks, hourBuckets, MOVED_WINDOW_MS } = await import('../lib/flight-strip.ts')
+  const H = 3_600_000
+  const tasks = [
+    task({ id: 'a', status: 'done', createdAt: iso(30 * H), startedAt: iso(5 * H), completedAt: iso(2 * H) }),
+    task({ id: 'b', status: 'failed', createdAt: iso(3 * H), startedAt: iso(1 * H) }),
+    task({ id: 'c', status: 'running', createdAt: iso(10 * H), startedAt: iso(9 * H) }),
+    task({ id: 'd', status: 'todo', createdAt: iso(4 * H) }),
+    task({ id: 'old', status: 'done', createdAt: iso(90 * H), completedAt: iso(48 * H) }),
+    task({ id: 'nostamp', status: 'todo' }),
+    task({ id: 'future', status: 'todo', createdAt: new Date(NOW + 10 * H).toISOString() }),
+  ]
+  const moved = movedTasks(tasks, NOW)
+  assert.deepEqual(moved.map(m => [m.task.id, m.kind]), [['b', 'failed'], ['a', 'done'], ['d', 'created'], ['c', 'started']])
+  assert.equal(moved[0].at, NOW - H)
+  assert.deepEqual(movedTasks([], NOW), [])
+  assert.equal(movedTasks(tasks, NOW, 90 * 60_000).length, 1)
+  assert.equal(MOVED_WINDOW_MS, 24 * H)
+
+  const buckets = hourBuckets(moved.map(m => m.at), NOW, 24)
+  assert.equal(buckets.length, 24)
+  assert.equal(buckets.reduce((s, v) => s + v, 0), 4)
+  assert.equal(buckets[23 - 1], 1) // b, 1h ago
+  assert.equal(buckets[23 - 9], 1) // c, 9h ago
+  assert.deepEqual(hourBuckets([NOW + H, NOW - 30 * H], NOW, 24), new Array(24).fill(0))
+})

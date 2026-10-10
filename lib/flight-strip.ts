@@ -138,6 +138,45 @@ export function needsYouTasks(tasks: HermesTask[], max = 6): HermesTask[] {
     .slice(0, max)
 }
 
+export type MovedKind = 'done' | 'failed' | 'started' | 'created'
+export type MovedEvent = { task: HermesTask; kind: MovedKind; at: number }
+export const MOVED_WINDOW_MS = 24 * 60 * 60 * 1000
+
+const isoMs = (v?: string) => { const ms = v ? Date.parse(v) : NaN; return Number.isFinite(ms) ? ms : null }
+
+/** What moved on the board inside the window, newest first — one row per task, its latest
+ *  move. Read only from the card's own timestamps (completedAt, startedAt, createdAt); a
+ *  failed card's last start is reported as the failure. Nothing is inferred beyond that. */
+export function movedTasks(tasks: HermesTask[], now: number, windowMs = MOVED_WINDOW_MS): MovedEvent[] {
+  const from = now - windowMs
+  const out: MovedEvent[] = []
+  for (const task of tasks) {
+    const marks: [MovedKind, number | null][] = [
+      ['done', isoMs(task.completedAt)],
+      [task.status === 'failed' ? 'failed' : 'started', isoMs(task.startedAt)],
+      ['created', isoMs(task.createdAt)],
+    ]
+    let best: MovedEvent | null = null
+    for (const [kind, at] of marks) {
+      // A minute of clock skew between the board and this machine is not "the future".
+      if (at == null || at < from || at > now + 60_000) continue
+      if (!best || at > best.at) best = { task, kind, at }
+    }
+    if (best) out.push(best)
+  }
+  return out.sort((a, b) => b.at - a.at)
+}
+
+/** Count epoch-ms marks into `hours` hourly buckets ending at `now`, oldest first. */
+export function hourBuckets(times: number[], now: number, hours = 24): number[] {
+  const out = new Array<number>(hours).fill(0)
+  for (const t of times) {
+    const back = Math.floor((now - t) / 3_600_000)
+    if (back >= 0 && back < hours) out[hours - 1 - back]++
+  }
+  return out
+}
+
 export function upNextTasks(tasks: HermesTask[], max = 3): HermesTask[] {
   return tasks
     .filter(t => laneFor(t.status) === 'up_next')
