@@ -84,12 +84,17 @@ export function AuroraSky({ rows, nowHour, rangeHours = 24, dayLabel }: Props) {
       <div className={styles.skyScroll} ref={scroller} data-sky-scroll="">
         <div className={styles.skyPlot}>
           <div className={styles.axis} aria-hidden="true">
-            {/* Ticks just behind the cursor give way to its clock label. */}
-            {ticks.filter(h => h === 0 || h <= nowHour - 2 || h >= nowHour + 0.4).map(h => (
-              <span key={h} className={h % 6 === 0 ? styles.tickMajor : styles.tick} style={{ left: pct(h, rangeHours) }}>
+            {/* Ticks just behind the cursor give way to its clock label: within 2h on the full
+                day, within 1h on the panning phone window (CSS picks which applies). */}
+            {ticks.map(h => {
+              const behind = nowHour - h
+              const near = h > 0 && behind > -0.4 && behind < 2 ? (behind < 1.1 ? styles.nearTight : styles.nearWide) : ''
+              return (
+              <span key={h} className={`${h % 6 === 0 ? styles.tickMajor : styles.tick} ${near}`} style={{ left: pct(h, rangeHours) }}>
                 {h === 0 && dayLabel ? <><b>{dayLabel}</b> 00</> : String(h).padStart(2, '0')}
               </span>
-            ))}
+              )
+            })}
             <span className={styles.nowTag} style={{ left: now }}>{clock(nowHour)}</span>
           </div>
           <div className={styles.field} style={{ height: H }}>

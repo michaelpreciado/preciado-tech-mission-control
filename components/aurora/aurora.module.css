@@ -71,6 +71,7 @@
 .tick, .tickMajor { position: absolute; bottom: 8px; margin-left: 5px; font: 400 12px/1 var(--aur-font-data); color: var(--mc-chart-axis); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .tick { opacity: .6; }
 .tickMajor { color: var(--mc-chart-ink); }
+.nearWide, .nearTight { visibility: hidden; }
 .tickMajor b { margin-right: 4px; font-weight: 600; color: var(--aur-accent); text-transform: uppercase; letter-spacing: .06em; }
 .nowTag { position: absolute; z-index: 3; bottom: 4px; transform: translateX(calc(-100% - 8px)); padding: 2px 5px; border-radius: 4px; font: 500 12px/1 var(--aur-font-data); color: var(--aur-now); font-variant-numeric: tabular-nums; background: color-mix(in srgb, var(--aur-bg) 88%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--aur-accent) 40%, transparent); }
 
@@ -230,7 +231,8 @@
   .skyWrap { --sky-lane: 46px; grid-template-columns: minmax(0, 1fr); gap: 0; }
   .skyLabels { position: absolute; z-index: 5; top: calc(var(--sky-axis) + 1px); left: 0; right: 0; padding: 0; pointer-events: none; }
   .lane { flex-direction: row; justify-content: flex-start; align-items: flex-start; gap: 10px; padding: 2px 0 0 2px; text-align: left; }
-  .callsign, .chips { padding: 1px 5px; border-radius: 4px; background: color-mix(in srgb, var(--aur-bg) 62%, transparent); }
+  .callsign, .chips { padding: 1px 2px; text-shadow: 0 0 4px var(--aur-bg), 0 0 8px var(--aur-bg); }
+  .nearWide { visibility: visible; }
   .callsign { flex: 0 1 auto; min-width: 0; }
   .chips { flex: 0 1 auto; min-width: 0; overflow: hidden; gap: 8px; }
   .skyScroll { scroll-snap-type: x proximity; }
