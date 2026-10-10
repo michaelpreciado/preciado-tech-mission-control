@@ -18,7 +18,7 @@
   scrollbar-width: none;
   background-color: var(--pt-mx-glass-chrome);
   background-image:
-    linear-gradient(180deg, rgba(30, 144, 255, .05), transparent 22%),
+    linear-gradient(180deg, rgba(var(--pt-dodger-rgb), .05), transparent 22%),
     var(--pt-mx-glass-sheen);
   border-right: 1px solid var(--pt-mx-line-subtle);
   box-shadow: 18px 0 40px -30px rgba(0, 0, 0, .9);
@@ -33,7 +33,7 @@
   left: calc(232px - 1px);
   width: 1px;
   height: 46vh;
-  background: linear-gradient(180deg, rgba(0, 229, 255, .45), rgba(30, 144, 255, .14) 45%, transparent);
+  background: linear-gradient(180deg, rgba(0, 229, 255, .45), rgba(var(--pt-dodger-rgb), .14) 45%, transparent);
   pointer-events: none;
 }
 @supports (height: 100dvh) { .sidebar { height: 100dvh; } }
@@ -41,7 +41,7 @@
 .collapsed::after { left: calc(64px - 1px); }
 
 .mark { display: flex; align-items: center; gap: 10px; min-height: var(--mbg-tap); padding: 0 8px; color: var(--pt-mx-ink-head); text-decoration: none; }
-.mark svg { flex: none; color: var(--pt-dodger); filter: drop-shadow(0 0 6px rgba(30, 144, 255, .55)); }
+.mark svg { flex: none; color: var(--pt-dodger); filter: drop-shadow(0 0 6px rgba(var(--pt-dodger-rgb), .55)); }
 .markCopy { display: grid; gap: 3px; min-width: 0; }
 .markName { font: 600 13.5px/1.1 var(--pt-font-mono); letter-spacing: -.01em; }
 .markHost { color: var(--pt-mx-ink-meta); font: 500 11px/1 var(--pt-font-mono); letter-spacing: .02em; }
@@ -58,7 +58,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.groupLabel span { color: rgba(30, 144, 255, .6); }
+.groupLabel span { color: rgba(var(--pt-dodger-rgb), .6); }
 .group:first-child .groupLabel { margin-top: 0; }
 
 .link {
@@ -82,10 +82,15 @@
 .link.active {
   color: var(--pt-mx-ink-head);
   background-color: transparent;
-  background-image: linear-gradient(90deg, rgba(30, 144, 255, .16), rgba(30, 144, 255, .03) 70%, transparent);
+  background-image: linear-gradient(90deg, rgba(var(--pt-dodger-rgb), .16), rgba(var(--pt-dodger-rgb), .03) 70%, transparent);
   border-color: var(--pt-mx-line);
 }
-.link.active svg { color: var(--pt-dodger); opacity: 1; filter: drop-shadow(0 0 5px rgba(30, 144, 255, .6)); }
+/* Omarchy: active tab fill and border come from the palette's own tokens. */
+:global(html[data-theme][data-palette="omarchy"]) .link.active {
+  background-image: linear-gradient(90deg, color-mix(in srgb, var(--pt-active-tab) 16%, transparent), color-mix(in srgb, var(--pt-active-tab) 3%, transparent) 70%, transparent);
+  border-color: var(--pt-active-border);
+}
+.link.active svg { color: var(--pt-dodger); opacity: 1; filter: drop-shadow(0 0 5px rgba(var(--pt-dodger-rgb), .6)); }
 /* Selected: a lit edge on the rail, like a status LED behind glass. */
 .link.active::before {
   content: '';
@@ -96,7 +101,7 @@
   width: 2px;
   border-radius: 0 2px 2px 0;
   background: var(--pt-dodger);
-  box-shadow: 0 0 10px rgba(30, 144, 255, .9), 0 0 2px rgba(0, 229, 255, .9);
+  box-shadow: 0 0 10px rgba(var(--pt-dodger-rgb), .9), 0 0 2px rgba(0, 229, 255, .9);
 }
 .caret {
   flex: none;
@@ -121,7 +126,7 @@
 .sys div { display: flex; justify-content: space-between; gap: 8px; }
 .sys dt { color: var(--pt-mx-ink-meta); }
 .sys dd { display: inline-flex; align-items: center; gap: 7px; margin: 0; color: var(--pt-mx-ink-2); }
-.sysDot { width: 5px; height: 5px; border-radius: 50%; background: var(--pt-dodger); box-shadow: 0 0 6px rgba(30, 144, 255, .9); }
+.sysDot { width: 5px; height: 5px; border-radius: 50%; background: var(--pt-dodger); box-shadow: 0 0 6px rgba(var(--pt-dodger-rgb), .9); }
 .sys [data-state='syncing'] .sysDot { background: var(--pt-mx-ink-meta); box-shadow: none; }
 .sys [data-state='degraded'] .sysDot { background: var(--pt-warn); box-shadow: 0 0 6px rgba(254, 188, 46, .7); }
 

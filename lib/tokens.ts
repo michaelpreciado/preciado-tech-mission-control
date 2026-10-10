@@ -258,7 +258,7 @@ ${Object.entries(MATRIX).map(([name, value]) => `  --pt-mx-${name}: ${value};`).
   /* dodger blue: glows/halos/rain/live only. Borders+text use the periwinkle accent. */
   --pt-glow-rgb: ${NEON_RGB};
   --pt-action: ${ACTION_DEFAULT}; --pt-action-rgb: ${ACTION_RGB};
-  --pt-dodger: ${NEON_DEFAULT};
+  --pt-dodger: ${NEON_DEFAULT}; --pt-dodger-rgb: ${NEON_RGB};
   --pt-text-rgb: 244,247,251;
   --pt-bg-tint: #0a0d16;
 
@@ -538,7 +538,7 @@ html[data-theme][data-palette="omarchy"],
   --pt-text-rgb: ${r.text};
   --pt-action-rgb: ${r.action};
   --pt-action: ${o.activeTab};
-  --pt-dodger: ${o.activeTab};
+  --pt-dodger: ${o.activeTab}; --pt-dodger-rgb: ${r.action};
   --pt-bg-tint: ${o.darkBackground};
 
   /* surfaces */

@@ -16,7 +16,7 @@
   --mbg-ink: #e9eef6;
   --mbg-ink-2: #a3aec0;
   --mbg-ink-3: #8390a4;
-  --mbg-dodger: #1e90ff;
+  --mbg-dodger: var(--pt-dodger);
   --mbg-dodger-ink: #6cb4ff;
   --mbg-amber: #f2b54b;
   --mbg-red: #ff6e6e;
@@ -24,7 +24,7 @@
   --mbg-cyan: #4fd8ff;
   --mbg-edge: rgba(94, 178, 255, .20);
   --mbg-edge-hi: rgba(79, 216, 255, .55);
-  --mbg-sheen: linear-gradient(90deg, transparent, rgba(79, 216, 255, .45) 35%, rgba(30, 144, 255, .25) 70%, transparent);
+  --mbg-sheen: linear-gradient(90deg, transparent, rgba(79, 216, 255, .45) 35%, rgba(var(--pt-dodger-rgb), .25) 70%, transparent);
   --mbg-glass-1: rgba(8, 16, 28, .76);
   --mbg-glass-1-hover: rgba(12, 24, 42, .86);
   --mbg-glass-2: rgba(6, 12, 22, .72);
@@ -51,11 +51,19 @@ html[data-theme="friday"], html[data-theme="friday"] body {
 }
 html[data-theme="friday"] body {
   background-image:
-    radial-gradient(1200px 620px at 78% -14%, rgba(30, 144, 255, .10), transparent 62%),
+    radial-gradient(1200px 620px at 78% -14%, rgba(var(--pt-dodger-rgb), .10), transparent 62%),
     radial-gradient(900px 560px at -10% 110%, rgba(0, 229, 255, .045), transparent 60%),
     linear-gradient(180deg, #07090b 0%, #050506 55%, #0a0a0b 100%);
   background-attachment: fixed;
   font-family: var(--mbg-sans);
+}
+/* Omarchy: same two light sources, but the base ramp comes from the palette's
+   darker-background family instead of the default near-black. */
+html[data-theme][data-palette="omarchy"] body {
+  background-image:
+    radial-gradient(1200px 620px at 78% -14%, rgba(var(--pt-dodger-rgb), .10), transparent 62%),
+    radial-gradient(900px 560px at -10% 110%, rgba(var(--pt-neon-rgb), .045), transparent 60%),
+    linear-gradient(180deg, var(--pt-omarchy-bg-darker) 0%, var(--pt-omarchy-bg-darker) 55%, var(--pt-omarchy-bg-dark) 100%);
 }
 
 /* The legacy CRT treatment (filter on the shell, flicker on main, scanline and
@@ -93,7 +101,7 @@ html body .mc-main::after, html[data-theme="friday"] .mc-main::after { display: 
 [role="dialog"] button.mc-btn.mc-btn-primary,
 [role="dialog"] button.mc-btn.mc-btn-primary:disabled,
 [role="dialog"] button.mc-btn.mc-btn-primary[aria-busy="true"] {
-  opacity: 1; background: var(--mbg-dodger, #1e90ff); color: #04101c;
+  opacity: 1; background: var(--mbg-dodger); color: #04101c;
   border-color: #7cc4ff; min-height: var(--mbg-tap, 44px); font-weight: 600;
   text-shadow: none; filter: none;
 }

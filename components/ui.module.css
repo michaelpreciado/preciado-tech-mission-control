@@ -130,8 +130,8 @@ section.card { content-visibility: auto; contain-intrinsic-size: auto 400px; }
 .textArea:focus,
 .select:focus {
   outline: none;
-  border-color: rgba(30, 144, 255, 0.7);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.45), 0 0 0 3px rgba(30, 144, 255, 0.16), 0 0 18px -6px rgba(30, 144, 255, 0.6);
+  border-color: rgba(var(--pt-dodger-rgb), 0.7);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.45), 0 0 0 3px rgba(var(--pt-dodger-rgb), 0.16), 0 0 18px -6px rgba(var(--pt-dodger-rgb), 0.6);
 }
 
 .input:disabled,
@@ -178,7 +178,7 @@ section.card { content-visibility: auto; contain-intrinsic-size: auto 400px; }
 
 .segmentedItem:hover { color: var(--pt-mx-ink-head); background: rgba(255, 255, 255, 0.04); }
 .segmentedItemSelected,
-.segmentedItemSelected:hover { background: linear-gradient(180deg, rgba(30, 144, 255, 0.24), rgba(30, 144, 255, 0.1)); border-color: rgba(30, 144, 255, 0.5); color: var(--pt-mx-ink-head); box-shadow: inset 0 1px 0 rgba(191, 225, 255, 0.18), 0 0 14px -6px rgba(30, 144, 255, 0.8); }
+.segmentedItemSelected:hover { background: linear-gradient(180deg, rgba(var(--pt-dodger-rgb), 0.24), rgba(var(--pt-dodger-rgb), 0.1)); border-color: rgba(var(--pt-dodger-rgb), 0.5); color: var(--pt-mx-ink-head); box-shadow: inset 0 1px 0 rgba(191, 225, 255, 0.18), 0 0 14px -6px rgba(var(--pt-dodger-rgb), 0.8); }
 .segmentedItem:focus-visible { outline: 2px solid var(--pt-border-dim); outline-offset: 1px; }
 
 .chip {

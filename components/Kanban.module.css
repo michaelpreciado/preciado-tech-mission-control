@@ -35,9 +35,9 @@
 .taskCard::before { content: ''; position: absolute; left: 0; top: 14px; bottom: 14px; width: 2px; border-radius: 0 2px 2px 0; background: var(--rail); z-index: 1; pointer-events: none; }
 .taskCard[data-status='blocked'], .taskCard[data-status='failed'] { --rail: var(--pt-error); }
 .taskCard[data-status='review'] { --rail: var(--pt-warn); }
-.taskCard[data-status='ready'] { --rail: rgba(30, 144, 255, .55); }
+.taskCard[data-status='ready'] { --rail: rgba(var(--pt-dodger-rgb), .55); }
 .taskCard[data-status='running'], .taskCard[data-status='in_progress'] { --rail: var(--pt-dodger); }
-.taskCard[data-status='running']::before, .taskCard[data-status='in_progress']::before { box-shadow: 0 0 10px rgba(30, 144, 255, .9); }
+.taskCard[data-status='running']::before, .taskCard[data-status='in_progress']::before { box-shadow: 0 0 10px rgba(var(--pt-dodger-rgb), .9); }
 .taskCard[data-status='running']::after, .taskCard[data-status='in_progress']::after {
   content: ''; position: absolute; top: 0; left: 0; width: 38%; height: 1px; z-index: 1; pointer-events: none;
   background: linear-gradient(90deg, transparent, rgba(0, 229, 255, .85), transparent);
@@ -69,10 +69,10 @@
 .taskTitle { font: 600 14.5px/1.35 var(--pt-font-sans); letter-spacing: -.005em; color: var(--pt-mx-ink-head); overflow-wrap: anywhere; }
 .taskButton > span { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
 .taskMeta { max-width: 100%; font: 400 11.5px/1.4 var(--pt-font-mono); color: var(--pt-mx-ink-meta); overflow-wrap: anywhere; }
-.taskMeta::before { content: '> '; color: rgba(30, 144, 255, .7); }
+.taskMeta::before { content: '> '; color: rgba(var(--pt-dodger-rgb), .7); }
 .dragging { opacity: .5; }
-.dropReady { outline: 1px dashed rgba(30, 144, 255, .45); outline-offset: -1px; }
-.dropOver { background: rgba(30, 144, 255, .08); }
+.dropReady { outline: 1px dashed rgba(var(--pt-dodger-rgb), .45); outline-offset: -1px; }
+.dropOver { background: rgba(var(--pt-dodger-rgb), .08); }
 .empty { margin: 0; padding: var(--pt-s-4); color: var(--pt-text-dim); font-size: var(--pt-fs-sm); }
 .muted { color: var(--pt-text-dim); font-size: var(--pt-fs-sm); }
 .errorPanel { gap: var(--pt-s-2); align-items: flex-start; }
@@ -116,7 +116,7 @@
   .laneRail .laneTitle { gap: var(--pt-s-1); padding-inline: var(--pt-s-2); font-size: var(--pt-fs-sm); }
   .laneRail .laneBody { min-height: 0; padding: 0; }
   .laneRail .laneTitle { opacity: .6; }
-  .laneNeeds .laneHeader { border-color: var(--pt-mx-line); box-shadow: inset 0 -2px 0 var(--pt-dodger), 0 6px 18px -10px rgba(30, 144, 255, .6); }
+  .laneNeeds .laneHeader { border-color: var(--pt-mx-line); box-shadow: inset 0 -2px 0 var(--pt-dodger), 0 6px 18px -10px rgba(var(--pt-dodger-rgb), .6); }
   .laneHeader { position: static; }
 }
 

@@ -132,8 +132,8 @@ test('NeuralUplink module has no unused keyframes', () => {
 test('rain and accent tokens are unchanged', () => {
   const g = strip(globals)
   assert.match(g, /--mc-rain-head: #c4e2ff;/)
-  assert.match(g, /--mc-rain-trail: rgba\(30, 144, 255, \.26\);/)
-  assert.match(g, /--mc-rain-glow: rgba\(30, 144, 255, \.52\);/)
+  assert.match(g, /--mc-rain-trail: rgba\(var\(--pt-dodger-rgb\), \.26\);/)
+  assert.match(g, /--mc-rain-glow: rgba\(var\(--pt-dodger-rgb\), \.52\);/)
   assert.match(g, /--mc-rain-head: color\(display-p3 \.78 \.89 1\);/)
   assert.match(g, /--mc-rain-trail: color\(display-p3 \.16 \.58 1 \/ \.28\);/)
   assert.match(g, /--mc-rain-glow: color\(display-p3 \.16 \.58 1 \/ \.56\);/)
