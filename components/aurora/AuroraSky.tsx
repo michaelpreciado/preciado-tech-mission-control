@@ -74,9 +74,12 @@ export function AuroraSky({ rows, nowHour, rangeHours = 24, dayLabel }: Props) {
             <span className={styles.callsign}>{s.live && <i className={styles.liveDot} />}{row.agent}</span>
             <span className={styles.chips}>
               {s.bursts > 0
-                ? <><span><b>{s.bursts}</b> burst{s.bursts === 1 ? '' : 's'}</span><span><b>{Math.round(s.share * 100)}%</b> busy</span></>
-                : <span>no activity logged</span>}
-              {s.fails > 0 && <span className={styles.failChip}><i />{s.fails} failed</span>}
+                ? <>
+                    <span className={styles.chip}><b>{s.bursts}</b><span className={styles.wide}> burst{s.bursts === 1 ? '' : 's'}</span><span className={styles.narrow}>×</span></span>
+                    <span className={styles.chip}><b>{Math.round(s.share * 100)}%</b><span className={styles.wide}> busy</span></span>
+                  </>
+                : <span className={styles.chip}>no activity logged</span>}
+              {s.fails > 0 && <span className={`${styles.chip} ${styles.failChip}`}><i />{s.fails}<span className={styles.wide}> failed</span></span>}
             </span>
           </li>
         ))}

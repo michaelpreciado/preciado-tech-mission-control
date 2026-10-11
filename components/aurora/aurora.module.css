@@ -60,6 +60,7 @@
 .liveDot { flex: none; width: 6px; height: 6px; border-radius: var(--aur-radius-full); background: var(--aur-now); box-shadow: 0 0 0 2px color-mix(in srgb, var(--aur-accent) 30%, transparent), 0 0 8px var(--aur-accent-glow); }
 .chips { display: flex; flex-wrap: nowrap; gap: 10px; font: 400 12px/14px var(--aur-font-data); color: var(--aur-text-4); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .chips b { font-weight: 500; color: var(--aur-text-3); }
+.narrow { display: none; }
 .failChip { display: inline-flex; align-items: center; gap: 5px; color: var(--aur-error); }
 .failChip i { width: 6px; height: 6px; background: var(--aur-error); transform: rotate(45deg); }
 
@@ -237,7 +238,11 @@
      small and quiet, never competing with the strands. Full detail stays in title/aria. */
   .callsign { flex: 0 1 auto; min-width: 0; font: 500 10.5px/13px var(--aur-font-data); gap: 4px; letter-spacing: 0; }
   .liveDot { width: 5px; height: 5px; box-shadow: 0 0 0 1px color-mix(in srgb, var(--aur-accent) 30%, transparent), 0 0 6px var(--aur-accent-glow); }
-  .chips { flex: 0 1 auto; min-width: 0; overflow: hidden; gap: 6px; font: 400 9.5px/12px var(--aur-font-data); letter-spacing: .01em; }
+  .chips { flex: 0 1 auto; min-width: 0; overflow: hidden; gap: 7px; font: 400 9.5px/12px var(--aur-font-data); letter-spacing: .01em; }
+  /* Phone: words out, glyphs in — the lane is an annotation band, not a readout. */
+  .wide { display: none; }
+  .narrow { display: inline; }
+  .chips b { color: var(--aur-text-4); }
   .failChip { gap: 3px; }
   .failChip i { width: 4px; height: 4px; }
   .skyScroll {

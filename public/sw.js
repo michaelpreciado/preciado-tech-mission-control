@@ -6,7 +6,7 @@
  *   - Static hashed assets (_next/static) are stale-while-revalidate.
  *   - Bump this comment/cache name to force a clean rollout.
  */
-const CACHE = 'friday-mc-v1'
+const CACHE = 'friday-mc-v2'
 const API_PREFIXES = ['/api/']
 
 self.addEventListener('install', (event) => {
