@@ -230,11 +230,16 @@
      while the strands pan beneath them. */
   .skyWrap { --sky-lane: 46px; grid-template-columns: minmax(0, 1fr); gap: 0; }
   .skyLabels { position: absolute; z-index: 5; top: calc(var(--sky-axis) + 1px); left: 0; right: 0; padding: 0; pointer-events: none; }
-  .lane { flex-direction: row; justify-content: flex-start; align-items: flex-start; gap: 10px; padding: 2px 0 0 2px; text-align: left; }
-  .callsign, .chips { padding: 1px 2px; text-shadow: 0 0 4px var(--aur-bg), 0 0 8px var(--aur-bg); }
+  .lane { flex-direction: row; justify-content: flex-start; align-items: baseline; gap: 6px; padding: 1px 0 0 2px; text-align: left; }
+  .callsign, .chips { padding: 0 2px; text-shadow: 0 0 4px var(--aur-bg), 0 0 8px var(--aur-bg); }
   .nearWide { visibility: visible; }
-  .callsign { flex: 0 1 auto; min-width: 0; }
-  .chips { flex: 0 1 auto; min-width: 0; overflow: hidden; gap: 8px; }
+  /* Phone: the lane labels float over the top band of the plot, so they read as annotations —
+     small and quiet, never competing with the strands. Full detail stays in title/aria. */
+  .callsign { flex: 0 1 auto; min-width: 0; font: 500 10.5px/13px var(--aur-font-data); gap: 4px; letter-spacing: 0; }
+  .liveDot { width: 5px; height: 5px; box-shadow: 0 0 0 1px color-mix(in srgb, var(--aur-accent) 30%, transparent), 0 0 6px var(--aur-accent-glow); }
+  .chips { flex: 0 1 auto; min-width: 0; overflow: hidden; gap: 6px; font: 400 9.5px/12px var(--aur-font-data); letter-spacing: .01em; }
+  .failChip { gap: 3px; }
+  .failChip i { width: 4px; height: 4px; }
   .skyScroll {
     scroll-snap-type: x proximity; touch-action: pan-x pan-y; scrollbar-width: none;
     /* Strands fade in under the lane labels at the left edge and out at the right. */
