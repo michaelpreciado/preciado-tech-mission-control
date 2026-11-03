@@ -8,7 +8,7 @@ html .mc-main .v4-kicker.cyber-route {
   gap: 20px;
   border: 1px solid var(--pt-border-dim);
   border-left: 2px solid var(--pt-neon);
-  background: linear-gradient(100deg, rgba(0, 173, 255, .065), transparent 65%);
+  background: linear-gradient(100deg, rgba(var(--pt-launcher-accent-rgb, 0,173,255), .065), transparent 65%);
   box-sizing: border-box;
   pointer-events: none;
   font: 400 12px/1.5 var(--pt-font-mono), monospace;
@@ -29,11 +29,11 @@ html .mc-main .cyber-route:not(.v4-corners)::after { display: none; }
 .cyber-route-copy { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
 .mc-main .mc-window-head,
 .mc-main .mc-tcol-head {
-  background-image: linear-gradient(100deg, rgba(0, 173, 255, .07), transparent 60%, rgba(240, 120, 198, .04));
+  background-image: linear-gradient(100deg, rgba(var(--pt-launcher-accent-rgb, 0,173,255), .07), transparent 60%, rgba(240, 120, 198, .04));
 }
 .mc-main .mc-window { border-color: var(--ob-border); }
 .mc-side .mc-side-label { color: var(--cyber-pink); opacity: .85; }
-.mc-side .mc-nav-item.is-active { box-shadow: inset -3px 0 var(--cyber-pink), 0 0 12px rgba(30, 144, 255, .2); }
+.mc-side .mc-nav-item.is-active { box-shadow: inset -3px 0 var(--cyber-pink), 0 0 12px rgba(var(--pt-launcher-accent-rgb, 30,144,255), .2); }
 .mc-main .mc-ascii-head .label { border-right: 3px solid var(--cyber-pink); }
 @media (max-width: 560px) {
   html .mc-main .v4-kicker.cyber-route { min-height: 66px; padding: 9px 10px; gap: 12px; margin-bottom: 14px; }
@@ -51,7 +51,7 @@ html .mc-main .cyber-route:not(.v4-corners)::after { display: none; }
 .cyber-terminal-art.is-compact { margin-bottom: 5px; font-size: 10px; }
 .mc-empty .cyber-terminal-art + .mc-empty-glyph { display: none; }
 .mc-window.is-floating { border: 1px solid var(--ob-border); }
-.mc-window.is-floating .mc-window-head { background: linear-gradient(100deg, rgba(0,173,255,.09), rgba(240,120,198,.06)); }
+.mc-window.is-floating .mc-window-head { background: linear-gradient(100deg, rgba(var(--pt-launcher-accent-rgb, 0,173,255), .09), rgba(240,120,198,.06)); }
 .mc-main :is(.mc-task, .mc-kb-card, .mc-pipe-card, .mc-repo, .mc-cal-card, .mc-setup-group, .mc-studio, .mc-signal-card),
 .cyber-agent-deck,
 :is(.cc-listpane, .cc-threadpane, .mc-drawer, .mc-more-sheet, .mc-login-card) {
@@ -62,20 +62,20 @@ html .mc-main .cyber-route:not(.v4-corners)::after { display: none; }
 }
 .mc-main :is(input:not([type="checkbox"]):not([type="radio"]):not([type="color"]), textarea, select),
 .mc-drawer :is(input, textarea, select), .mc-login-card input {
-  border-radius: 3px;
+  border-radius: var(--pt-radius-input, 3px);
   caret-color: var(--cyber-pink);
 }
 .mc-main :is(input, textarea, select):focus-visible,
 .mc-drawer :is(input, textarea, select):focus-visible {
   outline: 2px solid var(--pt-neon-bright); outline-offset: 2px;
 }
-.mc-main .mc-btn, .mc-more-sheet .mc-btn { border-radius: 999px; }
+.mc-main .mc-btn, .mc-more-sheet .mc-btn { border-radius: var(--pt-radius-btn, 999px); }
 .mc-main .mc-btn-primary { box-shadow: none; }
-.mc-main :is(.mc-task-tag, .mc-agent-chip, .mc-week-mode button), .cc-pill { border-radius: 3px; }
+.mc-main :is(.mc-task-tag, .mc-agent-chip, .mc-week-mode button), .cc-pill { border-radius: var(--pt-radius-row, 3px); }
 .cc-bubble.is-assistant { border-left: 2px solid var(--pt-neon); }
 .cc-bubble.is-user { border-left: 2px solid var(--cyber-pink); }
 .cc-composer { border-top-color: color-mix(in srgb, var(--cyber-pink) 45%, transparent); }
-.cyber-agent-deck { border-radius: 6px; }
+.cyber-agent-deck { border-radius: var(--pt-radius-card, 6px); }
 .mc-setup-group-head { color: var(--cyber-pink); }
 .mc-week-dayhead { border-bottom-color: color-mix(in srgb, var(--cyber-pink) 35%, transparent); }
 .mc-mobile-nav { border-top-color: color-mix(in srgb, var(--cyber-pink) 60%, transparent); }
@@ -93,21 +93,21 @@ html .mc-main .v4-kicker.cyber-route { min-height: 134px; gap: 24px; }
   display: flex; align-items: center; gap: 28px;
   margin: 8px 0 18px; padding: 18px 22px;
   border-block: 1px solid var(--pt-border);
-  background: linear-gradient(90deg, rgba(157,180,236,.08), #07080b);
+  background: linear-gradient(90deg, rgba(var(--pt-launcher-accent-rgb, 157,180,236), .08), var(--pt-launcher-bg, #07080b));
   pointer-events: none;
 }
 .cyber-wordmark pre {
   flex: 0 0 auto; margin: 0; color: var(--pt-ascii-bright);
   font: clamp(4px, 1.05vw, 8px)/1.15 var(--pt-font-mono), monospace;
   letter-spacing: 0; font-variant-ligatures: none;
-  text-shadow: 0 0 12px rgba(157,180,236,.35); white-space: pre;
+  text-shadow: 0 0 12px rgba(var(--pt-launcher-accent-rgb, 157,180,236), .35); white-space: pre;
 }
 .cyber-wordmark .cyber-wordmark-slant { display: none; }
 .cyber-portrait {
   width: 56ch; margin: 0; padding: 0;
   font: clamp(3px, .9vw, 7px)/1.02 var(--pt-font-mono), monospace;
   letter-spacing: 0; font-variant-ligatures: none; white-space: pre;
-  color: rgba(157,180,236,.55); background: #07080b;
+  color: rgba(var(--pt-launcher-accent-rgb, 157,180,236), .55); background: var(--pt-launcher-bg, #07080b);
   text-shadow: none; pointer-events: none;
 }
 @media (width < 700px) {
@@ -132,9 +132,9 @@ html .mc-main .v4-kicker.cyber-route { min-height: 134px; gap: 24px; }
 /* W2-H: terminal ink is independent of status/accent colors. The W2-G
    HomeDeck portrait retains its original metrics and mid-opacity ink. */
 :root {
-  --pt-ascii-bright: rgba(157,180,236,.85);
-  --pt-ascii-mid: rgba(157,180,236,.55);
-  --pt-ascii-faint: rgba(157,180,236,.30);
+  --pt-ascii-bright: rgba(var(--pt-launcher-accent-rgb, 157,180,236), .85);
+  --pt-ascii-mid: rgba(var(--pt-launcher-accent-rgb, 157,180,236), .55);
+  --pt-ascii-faint: rgba(var(--pt-launcher-accent-rgb, 157,180,236), .30);
 }
 html body :is(.cyber-route, .cyber-route-art,
   .cyber-terminal-art, .cyber-horizon, .v4-console) {
@@ -148,7 +148,7 @@ html body .mc-main .v4-kicker.cyber-route {
   color: var(--pt-ascii-mid);
   line-height: 1.15;
   font-size: clamp(10px, 1vw, 12px);
-  background: linear-gradient(100deg, rgba(157,180,236,.065), #07080b 65%);
+  background: linear-gradient(100deg, rgba(var(--pt-launcher-accent-rgb, 157,180,236), .065), var(--pt-launcher-bg, #07080b) 65%);
   border-left-color: var(--pt-ascii-mid);
 }
 html body :is(.cyber-route-art, .cyber-terminal-art) {

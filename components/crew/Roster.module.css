@@ -36,7 +36,7 @@
 
 /* Phase A: live rows carry a breathing rail; rows take the strong hairline on hover. */
 .row > *:first-child { position: relative; }
-.run > *:first-child::after { content: ''; position: absolute; left: -3px; top: 8px; bottom: 8px; width: 3px; border-radius: 2px; background: var(--pt-dodger); box-shadow: 0 0 12px rgba(30, 144, 255, .9); animation: roster-live 2.6s var(--pt-ease) infinite; pointer-events: none; }
+.run > *:first-child::after { content: ''; position: absolute; left: -3px; top: 8px; bottom: 8px; width: 3px; border-radius: 2px; background: var(--pt-dodger); box-shadow: 0 0 12px rgba(var(--pt-launcher-accent-rgb, 30,144,255), .9); animation: roster-live 2.6s var(--pt-ease) infinite; pointer-events: none; }
 @keyframes roster-live { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
 .row:hover > * { border-color: var(--pt-mx-line-strong); }
 .title { letter-spacing: -.02em; }

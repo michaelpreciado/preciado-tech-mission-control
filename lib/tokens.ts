@@ -642,3 +642,243 @@ ${omarchySemanticVars('purist')}  }
 }
 `
 }
+
+/* ── OmaLauncher (phone home screen) palette ────────────────────────
+   Measured from Michael's OmaLauncher footage (720x1562 frames,
+   artifacts/launcher-theme/reference/). Slate glass, cyan structure: unlike
+   friday, accent DOES paint borders here. Signal cyan is glow/live only. */
+export const OMALAUNCHER = {
+  bg: '#16222b', deep: '#101a22', deepest: '#0b1216',
+  card: '#253340', raisedHover: '#1f3240',
+  accent: '#6fb8e3', bright: '#b4e4f6', accentDeep: '#4d86b0', signal: '#4fe3ff',
+  text: '#d6e2ee', textHigh: '#f2fcff', dim: '#4d86b0', mute: '#304860',
+  /* Measured dim/mute fall under 4.5:1 as copy on cards (3.6 / 1.5), so text
+     tokens use these lifted steps of the same hue; dim/mute stay structural. */
+  textDim: '#7aa3c4', textMute: '#6a9cc2',
+} as const
+
+/* Triplets for rgba(). Keep in sync with OMALAUNCHER above. */
+export const OMALAUNCHER_RGB = {
+  bg: '22,34,43', deep: '16,26,34', deepest: '11,18,22',
+  card: '37,51,64', raisedHover: '31,50,64', control: '70,110,140',
+  accent: '111,184,227', bright: '180,228,246', accentDeep: '77,134,176', signal: '79,227,255',
+  text: '214,226,238', textHigh: '242,252,255', mute: '48,72,96',
+} as const
+
+export const OMALAUNCHER_SEMANTIC = {
+  ok:    { hex: '#4fd6a0', ink: '#8ce8c1' },
+  warn:  { hex: '#e8b45a', ink: '#f2cd8a' },
+  error: { hex: '#ff6b6b', ink: '#ff9d9d' },
+  info:  { hex: OMALAUNCHER.accent, ink: OMALAUNCHER.bright },
+} as const
+
+/* Shape: cards 14, rows/chips/buttons/inputs 10, pills 999. */
+export const OMALAUNCHER_RADIUS = { card: '14px', row: '10px', btn: '10px', input: '10px', pill: '999px', sm: '8px' } as const
+
+/**
+ * Emit the LAUNCHER theme block. Same selector shape as buildOmarchyThemeCss():
+ * the structural theme stays `friday`; the palette rides data-palette at higher
+ * specificity, and any [data-palette="launcher"] wrapper re-scopes it (styleguide).
+ * Re-declares the --mbg-* (matrix-blue.css) and --aur-* (aurora.css) layers too,
+ * since their :root values are literals, not var()s.
+ */
+export function buildLauncherThemeCss(): string {
+  const o = OMALAUNCHER
+  const r = OMALAUNCHER_RGB
+  const s = OMALAUNCHER_SEMANTIC
+  const rad = OMALAUNCHER_RADIUS
+  const line = { strong: `rgba(${r.accent},0.30)`, base: `rgba(${r.accent},0.18)`, subtle: `rgba(${r.accent},0.10)` }
+  const glass = `rgba(${r.card},0.62)`
+  const glassHi = `rgba(${r.card},0.72)`
+  const glassLo = `rgba(${r.card},0.55)`
+  const highlight = `inset 0 1px 0 rgba(${r.bright},0.06)`
+  const glow = `0 0 12px rgba(${r.signal},0.35)`
+  return `html[data-theme="friday"][data-palette="launcher"],
+html[data-theme][data-palette="launcher"],
+[data-palette="launcher"] {
+  --pt-semantic-mode: adaptive;
+  color-scheme: dark;
+
+  /* raw launcher palette (measured) */
+  --pt-launcher-bg: ${o.bg}; --pt-launcher-deep: ${o.deep}; --pt-launcher-deepest: ${o.deepest};
+  --pt-launcher-card: ${o.card}; --pt-launcher-raised-hover: ${o.raisedHover};
+  --pt-launcher-accent: ${o.accent}; --pt-launcher-bright: ${o.bright}; --pt-launcher-accent-deep: ${o.accentDeep};
+  --pt-launcher-signal: ${o.signal};
+  --pt-launcher-text: ${o.text}; --pt-launcher-text-high: ${o.textHigh};
+  --pt-launcher-dim: ${o.dim}; --pt-launcher-mute: ${o.mute};
+  --pt-launcher-text-dim: ${o.textDim}; --pt-launcher-text-mute: ${o.textMute};
+  /* consumer hooks for lib/pt/theme.ts inline vars (pipeline radar, deliverables) */
+  --pt-launcher-page: transparent; --pt-launcher-glass: ${glass}; --pt-launcher-line: ${line.base};
+  --pt-launcher-well: rgba(${r.deep},0.6);
+  /* rgb hooks: hardcoded literals elsewhere read these with their original
+     value as the var() fallback, so friday renders unchanged */
+  --pt-launcher-card-rgb: ${r.card}; --pt-launcher-signal-rgb: ${r.signal};
+  --pt-launcher-accent-rgb: ${r.accent}; --pt-launcher-bright-rgb: ${r.bright};
+  --pt-launcher-control-rgb: ${r.control};
+  --pt-launcher-bg-rgb: ${r.bg}; --pt-launcher-deep-rgb: ${r.deep}; --pt-launcher-deepest-rgb: ${r.deepest};
+  --pt-selection: rgba(${r.accent},0.24); --pt-muted: ${o.mute};
+  --pt-active-tab: ${o.accent}; --pt-active-border: ${o.bright};
+
+  /* shape */
+  --pt-radius-card: ${rad.card}; --pt-radius-row: ${rad.row}; --pt-radius-btn: ${rad.btn};
+  --pt-radius-input: ${rad.input}; --pt-radius-pill: ${rad.pill};
+  --pt-r-sm: ${rad.sm}; --pt-r-md: ${rad.row}; --pt-r-lg: ${rad.card}; --pt-r-pill: ${rad.pill};
+  --ob-radius-control: ${rad.btn}; --ob-radius-card: ${rad.card};
+  --pt-ls-kicker: 0.14em;
+  --cyber-pink: ${o.accent};
+
+  /* accent rgb triplets — other rules build rgba() from these */
+  --pt-neon-rgb: ${r.accent};
+  --pt-glow-rgb: ${r.signal};
+  --pt-neon-bright-rgb: ${r.bright};
+  --pt-text-rgb: ${r.text};
+  --pt-action-rgb: ${r.accent};
+  --pt-action: ${o.accent};
+  --pt-dodger: ${o.accent}; --pt-dodger-rgb: ${r.accent};
+  --pt-bg-tint: ${o.deep};
+
+  /* surfaces — cards are glass (#253340 at 55–72%), never opaque */
+  --pt-bg: ${o.bg};
+  --pt-bg-soft: ${o.deep};
+  --pt-surface: ${glass};
+  --pt-surface-2: ${glassHi};
+  --pt-bg-terminal: rgba(${r.deep},0.78);
+  --pt-bg-terminal-solid: ${o.deep};
+  --pt-card-bg: ${glass};
+  --pt-bg-gradient: linear-gradient(180deg, ${o.bg} 0%, ${o.deep} 100%);
+
+  /* text */
+  --pt-text: ${o.text};
+  --pt-text-high: ${o.textHigh};
+  --pt-text-dim: ${o.textDim};
+  --pt-text-mute: ${o.textMute};
+
+  /* accent — signal cyan is glow/live only, never copy */
+  --pt-neon: ${o.accent};
+  --pt-neon-bright: ${o.bright};
+  --pt-neon-deep: ${o.accentDeep};
+  --pt-neon-glow: rgba(${r.signal},0.35);
+  --pt-neon-glow-soft: rgba(${r.signal},0.12);
+  --pt-neon-wash: rgba(${r.accent},0.08);
+
+  /* borders — cyan paints structure, three tiers */
+  --pt-border: ${line.base};
+  --pt-border-strong: ${line.strong};
+  --pt-border-dim: ${line.subtle};
+  --pt-rule: ${line.subtle};
+  --pt-card-border: ${line.base};
+  --pt-card-rim: ${highlight};
+
+  /* glow / shadow — glow on live/active only; no black drop shadow on cards */
+  --pt-glow-sm: 0 0 6px rgba(${r.signal},0.3);
+  --pt-glow-md: ${glow};
+  --pt-glow-lg: ${glow};
+  --pt-glow-text: none;
+  --pt-glow-live: ${glow};
+  --pt-shadow-window: ${highlight};
+  --pt-scanline: none;
+
+  /* mc-* / mp-* aliases (var()-resolved at :root, so re-declared) */
+  --mc-bg: ${o.bg}; --mc-bg-2: ${o.deep};
+  --mc-surface: ${glass}; --mc-panel: ${o.deep}; --mc-surface-2: ${glassHi};
+  --mc-ink: ${o.text}; --mc-ink-dim: ${o.textDim};
+  --mc-ink-mute: ${o.textMute}; --mc-ink-faint: ${o.accentDeep};
+  --mc-line: ${line.subtle}; --mc-line-2: ${line.base};
+  --mc-neon: ${o.accent}; --mc-neon-bright: ${o.bright}; --mc-neon-2: ${o.accent};
+  --mc-neon-deep: ${o.accentDeep}; --mc-neon-rgb: ${r.accent}; --mc-bg-tint: ${o.deep};
+  --mc-glass: rgba(${r.accent},0.06); --mc-glass-line: ${line.base};
+  --mc-chart-grid: ${line.subtle}; --mc-chart-axis: ${o.textMute}; --mc-chart-ink: ${o.textDim};
+  --mc-chart-emph: ${o.accent}; --mc-chart-quiet: rgba(${r.accent},0.5);
+  --mc-chart-empty: rgba(${r.accent},0.15); --mc-chart-glow: ${glow};
+  --mp-bg: ${o.bg}; --mp-raised: ${o.deep}; --mp-card: ${glass};
+  --mp-ink: ${o.text}; --mp-ink-dim: ${o.textDim}; --mp-ink-mute: ${o.textMute}; --mp-ink-faint: ${o.accentDeep};
+  --mp-line: ${line.subtle}; --mp-line-2: ${line.base};
+  --mp-accent: ${o.accent}; --mp-accent-rgb: ${r.accent};
+
+  /* glass button material — 10px, cyan hairline, no bloom */
+  --pt-btn-glass-fill: ${glassLo}; --pt-btn-glass-fill-hover: rgba(${r.raisedHover},0.85); --pt-btn-glass-fill-disabled: rgba(${r.deep},0.7);
+  --pt-btn-glass-neutral-top: rgba(${r.bright},0.04); --pt-btn-glass-neutral-bottom: rgba(${r.bright},0.01);
+  --pt-btn-glass-primary-top: rgba(${r.accent},0.30); --pt-btn-glass-primary-bottom: rgba(${r.accent},0.14);
+  --pt-btn-glass-ink: ${o.textHigh}; --pt-btn-glass-ink-disabled: ${o.textMute};
+  --pt-btn-glass-line-subtle: ${line.subtle}; --pt-btn-glass-line-base: ${line.base}; --pt-btn-glass-line-strong: ${line.strong};
+  --pt-btn-glass-rim: ${highlight};
+  --pt-btn-glass-rim-lit: inset 0 1px 0 rgba(${r.bright},0.14);
+  --pt-btn-glass-shadow: none;
+  --pt-btn-glass-bloom: none;
+  --pt-btn-glass-focus: ${o.accent};
+
+  /* glass / environment (--pt-mx-*) */
+  --pt-mx-void: ${o.bg}; --pt-mx-graphite: ${o.deep}; --pt-mx-carbon: ${o.deepest};
+  --pt-mx-cyan: ${o.signal}; --pt-mx-sky: ${o.accent}; --pt-mx-cyan-deep: ${o.mute};
+  --pt-mx-glass: ${glass}; --pt-mx-glass-hi: ${glassHi}; --pt-mx-glass-chrome: rgba(${r.deep},0.82);
+  --pt-mx-glass-sheen: none;
+  --pt-mx-glass-rim: ${highlight};
+  --pt-mx-glass-edge: none;
+  --pt-mx-glass-reflect: transparent;
+  --pt-mx-glass-shadow: ${highlight};
+  --pt-mx-glass-shadow-hi: ${highlight};
+  --pt-mx-line-subtle: ${line.subtle}; --pt-mx-line: ${line.base}; --pt-mx-line-strong: ${line.strong};
+  --pt-mx-ink-head: ${o.textHigh}; --pt-mx-ink: ${o.text}; --pt-mx-ink-2: ${o.textDim}; --pt-mx-ink-meta: ${o.textMute};
+  --pt-mx-head-glow: none;
+  --pt-mx-grid-line: rgba(${r.accent},0.03); --pt-mx-neural-line: rgba(${r.accent},0.07);
+  --pt-mx-rain-1: ${o.deep}; --pt-mx-rain-2: ${o.bg}; --pt-mx-rain-3: ${o.raisedHover};
+
+  /* matrix-blue.css layer (--mbg-*) */
+  --mbg-void: ${o.bg}; --mbg-deck: ${o.deep}; --mbg-deck-2: ${o.bg};
+  --mbg-rule: ${line.subtle}; --mbg-rule-strong: ${line.base};
+  --mbg-ink: ${o.text}; --mbg-ink-2: ${o.textDim}; --mbg-ink-3: ${o.textMute};
+  --mbg-dodger-ink: ${o.bright};
+  --mbg-amber: ${s.warn.hex}; --mbg-red: ${s.error.hex}; --mbg-green: ${s.ok.hex}; --mbg-cyan: ${o.signal};
+  --mbg-edge: ${line.base}; --mbg-edge-hi: rgba(${r.signal},0.45);
+  --mbg-sheen: none;
+  --mbg-glass-1: ${glass}; --mbg-glass-1-hover: rgba(${r.raisedHover},0.82);
+  --mbg-glass-2: ${glassLo}; --mbg-glass-3: rgba(${r.deep},0.96); --mbg-solid-3: ${o.deep};
+  --mbg-inset: ${highlight};
+
+  /* aurora.css layer (--aur-*) */
+  --aur-ink-0: ${o.bg}; --aur-ink-1: ${o.deep}; --aur-ink-2: ${o.deepest}; --aur-ink-3: ${o.raisedHover}; --aur-ink-4: ${o.card};
+  --aur-bg: ${o.bg};
+  --aur-surface-hover: rgba(${r.raisedHover},0.6);
+  --aur-accent-strong: ${o.bright}; --aur-accent-deep: ${o.accentDeep}; --aur-accent-ink: ${o.deepest};
+  --aur-accent-wash: rgba(${r.accent},0.07); --aur-accent-glow: rgba(${r.signal},0.35);
+  --aur-ok: ${s.ok.hex}; --aur-warn: ${s.warn.hex}; --aur-error: ${s.error.hex};
+  --aur-error-wash: rgba(255,107,107,0.09); --aur-stale: ${o.textMute};
+  --aur-bloom-1: transparent; --aur-bloom-2: transparent;
+  --aur-glass-bg: ${glassLo}; --aur-glass-border: ${line.subtle};
+  --aur-highlight: ${highlight};
+  --aur-fill-faint: rgba(${r.accent},0.04);
+  --aur-now: ${o.bright};
+  --aur-radius-sm: ${rad.row}; --aur-radius-md: ${rad.card}; --aur-radius-lg: ${rad.card};
+
+  /* globals.css layers (--vg-* ramp/semantic, --ob-* home, --glass-* tiers) */
+  --vg-blue-1: ${o.deepest}; --vg-blue-2: ${o.deep}; --vg-blue-3: ${o.bg}; --vg-blue-4: ${o.raisedHover};
+  --vg-blue-5: ${o.card}; --vg-blue-6: ${o.mute}; --vg-blue-7: ${o.accentDeep}; --vg-blue-8: ${o.accent};
+  --vg-blue-11: ${o.textHigh};
+  --vg-electric-periwinkle: ${o.accent}; --vg-electric-azure: ${o.accent};
+  --vg-electric-glow: rgba(${r.signal},0.35);
+  --vg-violet: ${o.accent}; --vg-violet-deep: ${o.mute}; --vg-violet-glow: rgba(${r.accent},0.3);
+  --vg-text-mute: ${o.textMute}; --vg-text-faint: ${o.textMute};
+  --vg-ok-fg: ${s.ok.hex}; --vg-ok-bg: rgba(79,214,160,0.10); --vg-ok-border: rgba(79,214,160,0.34); --vg-ok-glow: rgba(79,214,160,0.35);
+  --vg-warn-fg: ${s.warn.hex}; --vg-warn-bg: rgba(232,180,90,0.10); --vg-warn-border: rgba(232,180,90,0.40); --vg-warn-glow: rgba(232,180,90,0.35);
+  --vg-danger-fg: ${s.error.hex}; --vg-danger-bg: rgba(255,107,107,0.10); --vg-danger-border: rgba(255,107,107,0.40); --vg-danger-glow: rgba(255,107,107,0.38);
+  --mc-rain-head: ${o.bright};
+  --ob-bg-0: ${o.deepest}; --ob-bg-1: ${o.deep}; --ob-peak: ${o.textHigh};
+  --ob-text: ${o.textHigh}; --ob-text-2: ${o.text}; --ob-text-3: ${o.textDim}; --ob-text-4: ${o.textMute};
+  --ob-page-ambience: radial-gradient(ellipse 80% 60% at 50% 30%, rgba(${r.accent},0.05), transparent 65%);
+  --glass-1-fill: rgba(${r.deep},0.86); --glass-1-rim: ${line.base}; --glass-1-shadow: ${highlight};
+  --glass-2-fill: ${glass}; --glass-2-rim: ${line.base}; --glass-2-shadow: ${highlight};
+  --glass-3-fill: rgba(${r.deep},0.96); --glass-3-rim: ${line.strong}; --glass-3-shadow: ${highlight};
+
+  /* semantic — adaptive: ok/warn/error stay distinguishable */
+  --mc-ok: ${s.ok.hex}; --mc-warn: ${s.warn.hex}; --mc-crit: ${s.error.hex};
+  --pt-ok: ${s.ok.hex};       --pt-ok-ink: ${s.ok.ink};
+  --pt-warn: ${s.warn.hex};   --pt-warn-ink: ${s.warn.ink};
+  --pt-error: ${s.error.hex}; --pt-error-ink: ${s.error.ink};
+  --pt-info: ${s.info.hex};   --pt-info-ink: ${s.info.ink};
+  --pt-tl-red: ${s.error.hex}; --pt-tl-yellow: ${s.warn.hex}; --pt-tl-green: ${s.ok.hex};
+  --pt-btn-glass-confirm-top: ${s.ok.hex}2e; --pt-btn-glass-confirm-bottom: ${s.ok.hex}0f;
+  --pt-btn-glass-danger-top: ${s.error.hex}2e; --pt-btn-glass-danger-bottom: ${s.error.hex}0f;
+  --pt-btn-glass-ink-danger: ${s.error.ink}; --pt-btn-glass-ink-confirm: ${s.ok.ink};
+}
+`
+}

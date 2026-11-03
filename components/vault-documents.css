@@ -21,11 +21,11 @@
 .mc-vault-doc {
   display: flex; flex-direction: column; gap: 6px; height: 100%; padding: 10px 12px;
   border: 1px solid var(--pt-border-dim); border-radius: var(--pt-r-md);
-  background: var(--pt-bg, #07080b); text-decoration: none; overflow-wrap: anywhere;
+  background: var(--pt-bg, var(--pt-launcher-bg, #07080b)); text-decoration: none; overflow-wrap: anywhere;
   transition: border-color .2s ease, box-shadow .2s ease;
 }
-.mc-vault-doc:hover, .mc-vault-doc:focus-visible { border-color: var(--pt-neon, #9db4ec); box-shadow: var(--pt-glow-sm); }
-.mc-vault-doc:focus-visible { outline: 2px solid var(--pt-neon, #9db4ec); outline-offset: 2px; }
+.mc-vault-doc:hover, .mc-vault-doc:focus-visible { border-color: var(--pt-neon, var(--pt-launcher-accent, #9db4ec)); box-shadow: var(--pt-glow-sm); }
+.mc-vault-doc:focus-visible { outline: 2px solid var(--pt-neon, var(--pt-launcher-accent, #9db4ec)); outline-offset: 2px; }
 .mc-vault-doc-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 12px; }
 .mc-vault-updated { font-size: 9px; color: var(--pt-text-dim); }
 .mc-vault-folder { font-size: 10px; color: var(--pt-text-dim); }

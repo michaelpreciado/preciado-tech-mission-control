@@ -8,6 +8,7 @@
   background: var(--pt-card-bg);
   color: var(--pt-text);
   overflow: hidden;
+  box-shadow: var(--pt-card-rim, none);
   backdrop-filter: blur(12px);
 }
 
@@ -99,7 +100,7 @@ section.card { content-visibility: auto; contain-intrinsic-size: auto 400px; }
   width: 100%;
   border: 1px solid var(--pt-mx-line);
   border-radius: var(--pt-r-md);
-  background: rgba(4, 6, 8, 0.62);
+  background: rgba(var(--pt-launcher-deep-rgb, 4,6,8), 0.62);
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.45);
   color: var(--pt-mx-ink);
   font: inherit;
@@ -312,7 +313,7 @@ section.card { content-visibility: auto; contain-intrinsic-size: auto 400px; }
   position: absolute;
   inset: 0;
   border: 0;
-  background: rgba(2, 6, 12, .78);
+  background: rgba(var(--pt-launcher-deep-rgb, 2,6,12), .78);
 }
 
 .sheet {
@@ -324,8 +325,8 @@ section.card { content-visibility: auto; contain-intrinsic-size: auto 400px; }
   max-height: 72vh;
   border: 1px solid var(--pt-border-dim);
   border-radius: var(--pt-r-lg) var(--pt-r-lg) var(--pt-r-md) var(--pt-r-md);
-  border-color: rgba(90, 210, 255, .32);
-  background: rgba(7, 13, 23, .97);
+  border-color: rgba(var(--pt-launcher-accent-rgb, 90,210,255), .32);
+  background: rgba(var(--pt-launcher-deep-rgb, 7,13,23), .97);
   color: var(--pt-text);
   overflow: hidden;
   backdrop-filter: blur(16px);

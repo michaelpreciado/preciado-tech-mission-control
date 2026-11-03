@@ -5,11 +5,13 @@
  * hex in /setup recolors the whole dashboard.
  */
 
-import { OMARCHY_ACCENT } from './tokens'
+import { OMARCHY_ACCENT, OMALAUNCHER } from './tokens'
 
 export const DEFAULT_ACCENT = '#9db4ec'
+export const LAUNCHER_ACCENT = OMALAUNCHER.accent
 
 export const ACCENT_PRESETS = [
+  { name: 'Launcher (phone)', hex: LAUNCHER_ACCENT },
   { name: 'Periwinkle (PT)', hex: '#9db4ec' },
   { name: 'Omarchy (PT)', hex: OMARCHY_ACCENT },
   { name: 'Neon pink', hex: '#ff10f0' },
@@ -20,10 +22,13 @@ export const ACCENT_PRESETS = [
   { name: 'Blood orange', hex: '#ff4d00' },
 ] as const
 
-/** The Omarchy preset is a whole palette, not just an accent: selecting it in
- * /setup stamps `data-palette="omarchy"` on <html> (see app/layout.tsx). */
-export function paletteFor(accent: string): 'omarchy' | undefined {
-  return accent.toLowerCase() === OMARCHY_ACCENT ? 'omarchy' : undefined
+/** The Launcher and Omarchy presets are whole palettes, not just accents:
+ * selecting one in /setup stamps `data-palette` on <html> (see app/layout.tsx). */
+export function paletteFor(accent: string): 'launcher' | 'omarchy' | undefined {
+  const hex = accent.toLowerCase()
+  if (hex === LAUNCHER_ACCENT) return 'launcher'
+  if (hex === OMARCHY_ACCENT) return 'omarchy'
+  return undefined
 }
 
 export function isHexColor(v: string): boolean {

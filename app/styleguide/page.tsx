@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Button, Card, CardHead, Chip, Field, IconButton, Input, Row, Select, Segmented, Sheet, Stat, TextArea } from '@/components/ui'
 import { PageHeader } from '@/components/PageHeader'
-import { OMARCHY, OMARCHY_SEMANTIC } from '@/lib/tokens'
+import { OMALAUNCHER, OMALAUNCHER_SEMANTIC, OMARCHY, OMARCHY_SEMANTIC } from '@/lib/tokens'
 import styles from './styleguide.module.css'
 
 function Specimen({ name, children }: { name: string; children: React.ReactNode }) {
@@ -56,13 +56,13 @@ const OMARCHY_SWATCHES: ReadonlyArray<{ name: string; hex: string; token: string
   { name: 'active border', hex: OMARCHY.activeBorder, token: '--pt-active-border' },
 ]
 
-function ThemePanel({ title, palette, purist, swatches }: { title: string; palette?: 'omarchy'; purist?: boolean; swatches?: boolean }) {
+function ThemePanel({ title, palette, purist, swatches }: { title: string; palette?: 'omarchy' | 'launcher'; purist?: boolean; swatches?: boolean }) {
   return (
     <div className={styles.themePanel} data-palette={palette} style={purist ? ({ '--pt-semantic-mode': 'purist' } as React.CSSProperties) : undefined}>
       <div data-pt-semantic-root className={styles.themePanelInner}>
         <h3 className={styles.themeTitle}>{title}</h3>
         {swatches && <div className={styles.swatchGrid}>
-          {OMARCHY_SWATCHES.map(sw => (
+          {(palette === 'launcher' ? LAUNCHER_SWATCHES : OMARCHY_SWATCHES).map(sw => (
             <div key={sw.name} className={styles.swatch}>
               <span className={styles.swatchChip} style={{ background: sw.hex }} />
               <span className={styles.swatchMeta}>{sw.name}<br />{sw.hex}<br />{sw.token}</span>
@@ -90,6 +90,81 @@ function ThemePanel({ title, palette, purist, swatches }: { title: string; palet
   )
 }
 
+const LAUNCHER_SWATCHES: ReadonlyArray<{ name: string; hex: string; token: string }> = [
+  { name: 'page', hex: OMALAUNCHER.bg, token: '--pt-bg' },
+  { name: 'deep', hex: OMALAUNCHER.deep, token: '--pt-bg-soft' },
+  { name: 'deepest', hex: OMALAUNCHER.deepest, token: '--pt-mx-carbon' },
+  { name: 'card', hex: OMALAUNCHER.card, token: '--pt-card-bg (62%)' },
+  { name: 'raised hover', hex: OMALAUNCHER.raisedHover, token: '--pt-btn-glass-fill-hover' },
+  { name: 'accent', hex: OMALAUNCHER.accent, token: '--pt-neon' },
+  { name: 'bright', hex: OMALAUNCHER.bright, token: '--pt-neon-bright' },
+  { name: 'deep accent', hex: OMALAUNCHER.accentDeep, token: '--pt-neon-deep' },
+  { name: 'signal', hex: OMALAUNCHER.signal, token: '--pt-glow-rgb (live only)' },
+  { name: 'body', hex: OMALAUNCHER.text, token: '--pt-text' },
+  { name: 'high', hex: OMALAUNCHER.textHigh, token: '--pt-text-high' },
+  { name: 'dim', hex: OMALAUNCHER.dim, token: '--pt-launcher-dim' },
+  { name: 'mute', hex: OMALAUNCHER.mute, token: '--pt-launcher-mute' },
+]
+
+const LAUNCHER_CREW = [
+  { name: 'jarvis', state: 'live', age: '19m', live: true },
+  { name: 'friday', state: 'idle', age: '15h', live: false },
+  { name: 'forge', state: 'idle', age: '5d', live: false },
+] as const
+
+function LauncherPalette() {
+  const s = OMALAUNCHER_SEMANTIC
+  return (
+    <Section title="Launcher palette (OmaLauncher)">
+      <p className={styles.note}>Measured from the phone home screen (<code>artifacts/launcher-theme/reference/</code>). Slate glass, cyan structure: borders are cyan-tinted in three tiers, signal cyan glows only on live state. Shape: card 14 · row/chip/button/input 10 · pill 999. Semantic stays distinguishable: ok {s.ok.hex} · warn {s.warn.hex} · error {s.error.hex} · info {s.info.hex}. Copy uses lifted dim/mute ({OMALAUNCHER.textDim} / {OMALAUNCHER.textMute}); the measured {OMALAUNCHER.dim} / {OMALAUNCHER.mute} stay structural.</p>
+      <div className={styles.launcherScope} data-palette="launcher">
+        <div className={styles.swatchGrid}>
+          {LAUNCHER_SWATCHES.map(sw => (
+            <div key={sw.name} className={styles.swatch}>
+              <span className={styles.swatchChip} style={{ background: sw.hex }} />
+              <span className={styles.swatchMeta}>{sw.name}<br />{sw.hex}<br />{sw.token}</span>
+            </div>
+          ))}
+        </div>
+        <div className={styles.launcherGrid}>
+          <Specimen name="card · 14px · glass, no drop shadow">
+            <Card pad="md" className={styles.launcherCard}>
+              <span className={styles.lxKicker}>claude code limits</span>
+              <div className={styles.lxMeter}><span>5h session</span><span className={styles.lxNum}>5%</span></div>
+              <span className={styles.lxBar}><span style={{ width: '5%' }} /></span>
+              <span className={styles.lxMeta}>resets in 33m 28s</span>
+              <div className={styles.lxMeter}><span>week</span><span className={styles.lxNum}>62%</span></div>
+              <span className={styles.lxBar}><span style={{ width: '62%' }} /></span>
+            </Card>
+          </Specimen>
+          <div className={styles.launcherStack}>
+            <Specimen name="row · 10px"><div className={styles.lxRow}><span>flash-next-coder-iq1_m</span><span className={styles.lxNum}>15.0/16G</span></div></Specimen>
+            <Specimen name="chip · 10px / pill · 999px">
+              <span className={styles.lxChip}>pipeline 310</span>
+              <span className={styles.lxPill}>6 awaiting</span>
+              <Chip tone="ok">ok</Chip><Chip tone="warn">warn</Chip><Chip tone="bad">error</Chip>
+            </Specimen>
+            <Specimen name="status rows · 6px dot · glow on live only">
+              <div className={styles.lxStatusList}>
+                {LAUNCHER_CREW.map(c => (
+                  <div key={c.name} className={styles.lxStatus}>
+                    <span className={styles.lxDot} data-live={c.live || undefined} />
+                    <span>{c.name}</span>
+                    <span className={styles.lxMeta}>{c.state}</span>
+                    <span className={styles.lxNum}>{c.age}</span>
+                  </div>
+                ))}
+              </div>
+            </Specimen>
+            <Specimen name="progress · 3px · accent on 15% track"><span className={styles.lxBar} style={{ width: '100%' }}><span style={{ width: '41%' }} /></span></Specimen>
+            <Specimen name="button / input · 10px"><Button variant="ghost">Open</Button><Input aria-label="Launcher input specimen" placeholder="open an app or ask pi…" /></Specimen>
+          </div>
+        </div>
+      </div>
+    </Section>
+  )
+}
+
 function ThemeCompare() {
   const a = OMARCHY_SEMANTIC.adaptive
   const p = OMARCHY_SEMANTIC.purist
@@ -102,6 +177,10 @@ function ThemeCompare() {
       </div>
       <div className={styles.themeGridSingle}>
         <ThemePanel title="OMARCHY (PT) · --pt-semantic-mode: purist" palette="omarchy" purist />
+      </div>
+      <div className={styles.themeGrid}>
+        <ThemePanel title="CURRENT · active theme" />
+        <ThemePanel title="LAUNCHER (OmaLauncher) · measured from phone frames" palette="launcher" swatches />
       </div>
     </Section>
   )
@@ -185,6 +264,7 @@ export default function StyleGuide() {
       <p className={styles.intro}>The living contract for the one Mission Control visual language. Variant names sit beside each specimen so a contributor can choose the shared primitive before writing new UI.</p>
 
       <div id="primitives" className={styles.content}>
+        <LauncherPalette />
         <ThemeCompare />
         <GlassConcepts />
         <Section title="Card / CardHead">

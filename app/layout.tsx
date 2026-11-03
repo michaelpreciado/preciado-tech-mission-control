@@ -7,13 +7,14 @@ import './vf/cyberpunk.css'
 import './w2l.css'
 import './styles/matrix-blue.css'
 import './styles/aurora.css'
+import './styles/launcher.css'
 import localFont from 'next/font/local'
 import { Shell } from '@/components/Shell'
 import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister'
 import { ViewportSync } from '@/components/ViewportSync'
 import { getConfig } from '@/lib/config'
 import { buildAccentCss, paletteFor } from '@/lib/theme'
-import { buildTokenCss, buildFridayThemeCss, buildOmarchyThemeCss, buildDensityCss } from '@/lib/tokens'
+import { buildTokenCss, buildFridayThemeCss, buildOmarchyThemeCss, buildLauncherThemeCss, buildDensityCss } from '@/lib/tokens'
 
 const sans = localFont({
   src: './fonts/instrument-sans-latin-wght-normal.woff2',
@@ -66,7 +67,7 @@ export const viewport: Viewport = {
   // (100dvh chrome stays put) instead of reflowing the whole layout —
   // the single biggest Android scroll-jank fix for a 100dvh app shell.
   interactiveWidget: 'resizes-content',
-  themeColor: '#010407',
+  themeColor: '#16222b',
   colorScheme: 'dark',
 }
 
@@ -87,7 +88,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           dangerouslySetInnerHTML={{ __html: `window.__MC_API_BASE__=${JSON.stringify(process.env.MC_API_BASE ?? '')};` }}
         />
         {/* Base design tokens first, then the runtime accent override LAST so it wins. */}
-        <style id="design-tokens">{buildTokenCss() + buildFridayThemeCss() + buildOmarchyThemeCss() + buildDensityCss()}</style>
+        <style id="design-tokens">{buildTokenCss() + buildFridayThemeCss() + buildOmarchyThemeCss() + buildLauncherThemeCss() + buildDensityCss()}</style>
         {accentCss && <style id="friday-accent">{accentCss}</style>}
       </head>
       <body>

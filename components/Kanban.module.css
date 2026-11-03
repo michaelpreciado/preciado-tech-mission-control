@@ -40,7 +40,7 @@
 .taskCard[data-status='running']::before, .taskCard[data-status='in_progress']::before { box-shadow: 0 0 10px rgba(var(--pt-dodger-rgb), .9); }
 .taskCard[data-status='running']::after, .taskCard[data-status='in_progress']::after {
   content: ''; position: absolute; top: 0; left: 0; width: 38%; height: 1px; z-index: 1; pointer-events: none;
-  background: linear-gradient(90deg, transparent, rgba(0, 229, 255, .85), transparent);
+  background: linear-gradient(90deg, transparent, rgba(var(--pt-launcher-accent-rgb, 0,229,255), .85), transparent);
   animation: kb-scan 3.4s linear infinite;
 }
 @keyframes kb-scan { from { transform: translate3d(-100%, 0, 0); } to { transform: translate3d(270%, 0, 0); } }

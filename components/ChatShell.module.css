@@ -34,7 +34,7 @@
 .shell :global(.mc-btn-primary) {
   border-color: var(--ob-action);
   background: var(--ob-action);
-  color: #07080b;
+  color: var(--pt-launcher-bg, #07080b);
 }
 
 .shell :global(.mc-btn:hover:not(:disabled)),
@@ -48,7 +48,7 @@
 
 .shell :global(.mc-btn-primary:hover:not(:disabled)) {
   background: var(--ob-action);
-  color: #07080b;
+  color: var(--pt-launcher-bg, #07080b);
 }
 
 .shell :global(.mc-btn):focus-visible,

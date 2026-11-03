@@ -52,7 +52,7 @@ html[data-theme="friday"], html[data-theme="friday"] body {
 html[data-theme="friday"] body {
   background-image:
     radial-gradient(1200px 620px at 78% -14%, rgba(var(--pt-dodger-rgb), .10), transparent 62%),
-    radial-gradient(900px 560px at -10% 110%, rgba(0, 229, 255, .045), transparent 60%),
+    radial-gradient(900px 560px at -10% 110%, rgba(var(--pt-launcher-accent-rgb, 0,229,255), .045), transparent 60%),
     linear-gradient(180deg, #07090b 0%, #050506 55%, #0a0a0b 100%);
   background-attachment: fixed;
   font-family: var(--mbg-sans);
@@ -96,7 +96,7 @@ html body .mc-main::after, html[data-theme="friday"] .mc-main::after { display: 
 /* Task drawer: the primary action is always solid and never dimmed, and the action row stays in view. */
 [role="dialog"] [aria-label="Task actions"] {
   position: sticky; top: 0; z-index: 2; padding-block: 8px;
-  background: var(--mbg-solid-3, rgb(7, 13, 23));
+  background: var(--mbg-solid-3, rgba(var(--pt-launcher-deep-rgb, 7,13,23), 1));
 }
 [role="dialog"] button.mc-btn.mc-btn-primary,
 [role="dialog"] button.mc-btn.mc-btn-primary:disabled,
