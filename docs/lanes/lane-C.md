@@ -106,6 +106,23 @@ node node_modules/.bin/next build
 
 Do NOT restart the systemd service. Do NOT edit `app/globals.css`. Do NOT commit — the orchestrator merges.
 
+## UPDATED COORDINATION NOTES (read these — they override anything above)
+
+- **You are in a git worktree at `/home/mp/mc-lane-c`** (branch `lane-c`), branched from
+  **`dbe8684` feat(aurora): widget-theme sweep — flat shell + all routes (Lane A)**. Lane A already swept
+  every route, including yours, and all gates were green at that commit. Your job is therefore
+  **depth + correctness on your routes**, not a fresh rewrite: read Lane A's `docs/lane-a-report.md`
+  first, then verify each of your routes against plan §2 and fix what is shallow, wrong or missing.
+- **NEVER edit `app/globals.css`** (or `lib/tokens.ts`, `lib/theme.ts`, `app/styles/**`, `app/vf/**`,
+  `app/w2l.css`). Lane B runs in parallel and both of you writing that file guarantees an unmergeable
+  conflict. Instead put your route rules in the CSS Modules listed above (`components/calendar.module.css`,
+  `content.module.css`, `github.module.css`, `memory.module.css`, `setup.module.css`, `login.module.css`,
+  plus `ChatShell.module.css` / `Pipeline.module.css`), and **list every `globals.css` block you replaced**
+  in your report as `line | selector | reason`. The orchestrator deletes them all in one post-merge pass.
+- `node_modules` is a symlink to the main checkout and `data/` was copied in — do not run `npm install`,
+  do not touch `data/`, do not run any `git` write command (no `add`, `commit`, `stash`, `checkout`),
+  and **do not restart the systemd service**. Just leave your edits in the worktree.
+
 ## Return format
 
 Write `docs/lane-c-report.md`: files changed, primitives used, raw gate output, and the list of `globals.css`

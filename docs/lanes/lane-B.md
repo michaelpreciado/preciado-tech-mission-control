@@ -34,6 +34,24 @@ primitives Lane A shipped (component names, CSS class names, props) and use them
 
 Do not touch Lane A's or Lane C's files.
 
+## UPDATED COORDINATION NOTES (read these — they override anything above)
+
+- **You are in a git worktree at `/home/mp/mc-lane-b`** (branch `lane-b`), branched from
+  **`dbe8684` feat(aurora): widget-theme sweep — flat shell + all routes (Lane A)**. Lane A already swept
+  every route, including yours, and all gates were green at that commit. Your job is therefore
+  **depth + correctness on your routes**, not a fresh rewrite: read Lane A's `docs/lane-a-report.md`
+  first, then verify each of your routes against plan §2 and fix what is shallow, wrong or missing.
+- **NEVER edit `app/globals.css`** (or `lib/tokens.ts`, `lib/theme.ts`, `app/styles/**`, `app/vf/**`,
+  `app/w2l.css`). Lane C runs in parallel and both of you writing that file guarantees an unmergeable
+  conflict. Instead: put your route rules in **your own CSS Modules** (all new/extended modules stay
+  entirely within `components/views/costs.module.css`, `components/system.module.css`,
+  `components/local-ai.module.css`, `components/Kanban.module.css`), and **list every `globals.css`
+  block you replaced** in your report as `line | selector | reason`. The orchestrator deletes them all
+  in one post-merge pass.
+- `node_modules` is a symlink to the main checkout and `data/` was copied in — do not run `npm install`,
+  do not touch `data/`, do not run any `git` write command (no `add`, `commit`, `stash`, `checkout`),
+  and **do not restart the systemd service**. Just leave your edits in the worktree.
+
 ## Work
 
 Implement plan **§2** for `/kanban`, `/system`, `/costs`, `/local-ai` and every **issue in §4 tagged `B`**.
