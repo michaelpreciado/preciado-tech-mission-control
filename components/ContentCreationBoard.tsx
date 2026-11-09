@@ -77,7 +77,7 @@ function IdeaCard({ idea, onDispatch, dispatching, expanded, onToggle }: IdeaCar
           {idea.video && (
             <div className="mc-content-section">
               <h4>VIDEO HOOK</h4>
-              <div className="mc-pipe-row">🎥 {idea.video}</div>
+              <div className="mc-pipe-row">▸ {idea.video}</div>
             </div>
           )}
           {idea.shot_list?.length > 0 && (
@@ -109,12 +109,12 @@ function IdeaCard({ idea, onDispatch, dispatching, expanded, onToggle }: IdeaCar
           <div className="mc-pipe-when">{idea.updated_at ? fmtDate(idea.updated_at) : ''}</div>
         </div>
       ) : (
-        idea.video && <div className="mc-pipe-row">🎥 {idea.video}</div>
+        idea.video && <div className="mc-pipe-row">▸ {idea.video}</div>
       )}
       <div className="mc-content-card-foot">
         {idea.dispatched ? (
           <span className="mc-pipe-approval approved">
-            ✓ Dispatched{idea.dispatchedAt ? ` · ${fmtDate(idea.dispatchedAt)}` : ''}
+            > Dispatched{idea.dispatchedAt ? ` · ${fmtDate(idea.dispatchedAt)}` : ''}
           </span>
         ) : (
           <Button variant="primary" loading={dispatching} onClick={() => onDispatch(idea)}>
@@ -288,7 +288,7 @@ export function ContentCreationBoard() {
 
   return (
     <>
-      {error && <div className="mc-pipe-error">⚠ Content ideas store unreachable — {error}</div>}
+      {error && <div className="mc-pipe-error">× content ideas store unreachable — {error}</div>}
 
       {ideas.length === 0 && !error ? (
         <EmptyState
@@ -352,7 +352,7 @@ export function ContentCreationBoard() {
               <option value="updated">sort: updated</option>
             </select>
             <Button variant="ghost" loading={bulking} disabled={!stats.open} onClick={() => void bulkDispatch()}>
-              ⚡ Top 3
+              > Top 3
             </Button>
             <span className="mc-content-count">{visible.length} / {stats.total}</span>
           </div>

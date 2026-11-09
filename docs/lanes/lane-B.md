@@ -36,7 +36,7 @@ Do not touch Lane A's or Lane C's files.
 
 ## UPDATED COORDINATION NOTES (read these — they override anything above)
 
-- **You are in a git worktree at `/home/mp/mc-lane-b`** (branch `lane-b`), branched from
+- **You are in a git worktree at `/home/mp/Documents/mc-lane-b`** (branch `lane-b`), branched from
   **`dbe8684` feat(aurora): widget-theme sweep — flat shell + all routes (Lane A)**. Lane A already swept
   every route, including yours, and all gates were green at that commit. Your job is therefore
   **depth + correctness on your routes**, not a fresh rewrite: read Lane A's `docs/lane-a-report.md`

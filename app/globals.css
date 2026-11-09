@@ -4697,6 +4697,8 @@ html[data-theme="friday"] .mc-main::-webkit-scrollbar-thumb { background: rgba(2
   display: flex;
   align-items: baseline;
   min-width: 0;
+  width: 100%;
+  max-width: 100%;
   margin: 10px 0 6px;
   overflow: hidden;
   color: var(--pt-border-strong);
