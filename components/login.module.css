@@ -1,0 +1,17 @@
+/* /login — one flat widget. Mono type, 1px hairlines, no shadow / blur / gradient. */
+.page { display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 120px); padding: 24px; font-family: var(--pt-font-mono); }
+.card { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 340px; padding: 28px 24px; border: 1px solid var(--pt-card-border); border-radius: var(--pt-radius-card, 16px); background: var(--pt-card-bg); box-shadow: none; }
+.logo { display: block; margin: 0 auto; border-radius: var(--pt-radius-row, 10px); }
+.rule { height: 0; margin: 4px 0; border: 0; border-top: 1px solid var(--pt-border); }
+.brand { color: var(--pt-neon); font-size: 20px; font-weight: 600; letter-spacing: .08em; }
+.kicker { margin-bottom: 6px; color: var(--pt-text-mute); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
+.label { margin-top: 4px; color: var(--pt-text-dim); font-size: 12px; }
+.input { width: 100%; min-height: 44px; padding: 11px 12px; border: 1px solid var(--pt-border); border-radius: var(--pt-radius-input, 10px); background: var(--pt-bg); color: var(--pt-text-high); font: 400 15px var(--pt-font-mono); }
+.input:focus { outline: none; border-color: var(--pt-action); box-shadow: none; }
+.btn { min-height: 44px; margin-top: 8px; padding: 11px 14px; border: 1px solid var(--pt-action); border-radius: var(--pt-radius-btn, 10px); background: var(--pt-action); color: var(--pt-bg); font: 600 13px var(--pt-font-mono); cursor: pointer; }
+.btn:focus-visible { outline: 2px solid var(--pt-action); outline-offset: 2px; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btnGhost { border-color: var(--pt-border); background: transparent; color: var(--pt-text-dim); }
+.actions { display: flex; flex-direction: column; gap: 8px; }
+.error { margin: 0; color: var(--pt-error-ink); font-size: 13px; }
+.muted { margin: 0; color: var(--pt-text-dim); font-size: 13px; }

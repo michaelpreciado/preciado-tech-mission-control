@@ -4,7 +4,6 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import type { MissionData } from '@/lib/types'
 import { apiFetch, apiUrl } from '@/lib/api-base'
 import type { BusEvent } from '@/lib/telemetry-types'
-import { ORB_OVERLAY_COOLDOWN_MS, parseOrbOverlayEvent, type OrbOverlay } from '@/lib/orb-overlay'
 
 const BUS_EVENT_NAMES = [
   'task.created', 'task.assigned', 'task.progress', 'task.done', 'task.failed', 'task.completed', 'task.closed', 'task.merge', 'task.merged',
@@ -25,15 +24,7 @@ type LiveCtx = {
   refresh: () => Promise<void>
 }
 
-export type OrbActivitySignal = {
-  lastEventAt: number | null
-  runningTaskCount: number
-  now: number
-  overlay: OrbOverlay | null
-}
-
 const Ctx = createContext<LiveCtx>({ data: null, isLive: false, isLoading: true, error: null, lastUpdated: null, events: [], eventStream: 'connecting', refresh: async () => {} })
-const OrbActivityCtx = createContext<OrbActivitySignal>({ lastEventAt: null, runningTaskCount: 0, now: 0, overlay: null })
 
 // Module-level deduplication: store the parsed JSON promise (not the Response)
 // to avoid the body-already-consumed bug when multiple callers await the same promise.
@@ -49,14 +40,9 @@ export function LiveDataProvider({ children }: { children: React.ReactNode }) {
   const [lastUpdated, setLastUpdated] = useState<number | null>(null)
   const inFlight = useRef<AbortController | null>(null)
   const rafId = useRef<number | null>(null)
-  const lastSseEventRef = useRef<number | null>(null)
   const seenEventIdsRef = useRef<Set<number>>(new Set())
   const [events, setEvents] = useState<BusEvent[]>([])
   const [eventStream, setEventStream] = useState<EventStreamState>('connecting')
-  const [activityClock, setActivityClock] = useState(0)
-  const [orbOverlay, setOrbOverlay] = useState<OrbOverlay | null>(null)
-  const lastOrbOverlayAtRef = useRef<number | null>(null)
-  const orbOverlayTimerRef = useRef<number | null>(null)
 
   const refresh = useCallback(async () => {
     // Use cached data if still fresh (SWR pattern)
@@ -156,8 +142,6 @@ export function LiveDataProvider({ children }: { children: React.ReactNode }) {
     const onVisible = () => {
       if (document.visibilityState === 'visible') {
         void refreshThrottled()
-        const last = lastSseEventRef.current
-        if (last != null && Date.now() - last <= 20_000) setActivityClock(Date.now())
       }
     }
     const onOnline = () => void refreshThrottled()
@@ -178,8 +162,6 @@ export function LiveDataProvider({ children }: { children: React.ReactNode }) {
     let lastEvt = 0
     const onBusEvent = (message: MessageEvent<string>) => {
       const now = Date.now()
-      lastSseEventRef.current = now
-      if (document.visibilityState === 'visible') setActivityClock(now)
       try {
         const event = JSON.parse(message.data) as BusEvent
         if (typeof event.id === 'number' && !seenEventIdsRef.current.has(event.id)) {
@@ -189,21 +171,9 @@ export function LiveDataProvider({ children }: { children: React.ReactNode }) {
             if (oldest !== undefined) seenEventIdsRef.current.delete(oldest)
           }
           setEvents(previous => [event, ...previous].slice(0, MAX_LIVE_EVENTS))
-
-          const parsedOverlay = parseOrbOverlayEvent(event, now)
-          const lastOverlayAt = lastOrbOverlayAtRef.current
-          if (parsedOverlay && (lastOverlayAt == null || now - lastOverlayAt >= ORB_OVERLAY_COOLDOWN_MS)) {
-            lastOrbOverlayAtRef.current = now
-            setOrbOverlay(parsedOverlay)
-            if (orbOverlayTimerRef.current != null) window.clearTimeout(orbOverlayTimerRef.current)
-            orbOverlayTimerRef.current = window.setTimeout(() => {
-              setOrbOverlay(null)
-              orbOverlayTimerRef.current = null
-            }, parsedOverlay.until - now)
-          }
         }
       } catch {
-        // Keepalive frames and non-JSON bus messages still count as stream activity.
+        // Keepalive frames and non-JSON bus messages are ignored.
       }
       if (now - lastEvt < 6000) return
       lastEvt = now
@@ -217,24 +187,14 @@ export function LiveDataProvider({ children }: { children: React.ReactNode }) {
       es.onerror = () => setEventStream('stale')
     } catch { /* noop */ }
 
-    // Only tick while an SSE event can still affect the orb. This makes the
-    // 20-second active expiry timely without a permanent provider heartbeat.
-    const activityTimer = window.setInterval(() => {
-      if (document.visibilityState !== 'visible') return
-      const last = lastSseEventRef.current
-      if (last != null && Date.now() - last <= 20_000) setActivityClock(Date.now())
-    }, 1_000)
-
     return () => {
       clearInterval(timer)
-      clearInterval(activityTimer)
       document.removeEventListener('visibilitychange', onVisible)
       window.removeEventListener('online', onOnline)
       window.removeEventListener('offline', onOffline)
       es?.close()
       inFlight.current?.abort()
       if (rafId.current) cancelAnimationFrame(rafId.current)
-      if (orbOverlayTimerRef.current != null) window.clearTimeout(orbOverlayTimerRef.current)
     }
   }, [refresh, refreshThrottled])
 
@@ -242,24 +202,9 @@ export function LiveDataProvider({ children }: { children: React.ReactNode }) {
     data, isLive, isLoading, error, lastUpdated, events, eventStream, refresh
   }), [data, isLive, isLoading, error, lastUpdated, events, eventStream, refresh])
 
-  const orbActivity = useMemo<OrbActivitySignal>(() => ({
-    lastEventAt: lastSseEventRef.current,
-    runningTaskCount: data?.kanban?.runningTasks ?? 0,
-    now: activityClock,
-    overlay: orbOverlay,
-  }), [activityClock, data?.kanban?.runningTasks, orbOverlay])
-
-  return (
-    <Ctx.Provider value={contextValue}>
-      <OrbActivityCtx.Provider value={orbActivity}>{children}</OrbActivityCtx.Provider>
-    </Ctx.Provider>
-  )
+  return <Ctx.Provider value={contextValue}>{children}</Ctx.Provider>
 }
 
 export function useLiveData() {
   return useContext(Ctx)
-}
-
-export function useOrbActivity() {
-  return useContext(OrbActivityCtx)
 }

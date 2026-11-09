@@ -80,7 +80,7 @@ function MoreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
       <button type="button" className={styles.scrim} aria-label="Close navigation sheet" onClick={onClose} />
       <div className={styles.sheet} ref={sheetRef} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
         <div className={styles.head}>
-          <h2>More</h2>
+          <h2>phone:~$ ls</h2>
           <button type="button" className={styles.close} onClick={onClose} aria-label="Close more destinations">Close</button>
         </div>
         <button
@@ -135,7 +135,7 @@ export function MobileChrome() {
   )
 
   useEffect(() => {
-    const mobileChrome = window.matchMedia('(max-width: 719px)')
+    const mobileChrome = window.matchMedia('(max-width: 820px)')
     const foldInner = window.matchMedia(FOLD_INNER_MEDIA_QUERY)
     const closeOnLayoutChange = () => { if (!mobileChrome.matches || foldInner.matches) setMoreOpen(false) }
     closeOnLayoutChange()

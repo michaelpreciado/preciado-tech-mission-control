@@ -12,7 +12,20 @@ export const THEME_TOKENS = Object.freeze({
   'font.mono': '"JetBrains Mono", monospace',
 } as const)
 
-/** CSS consumers generate variables from the same values, without a second palette. */
-export const THEME_CSS_VARIABLES: Readonly<Record<string, string>> = Object.freeze(
-  Object.fromEntries(Object.entries(THEME_TOKENS).map(([key, value]) => [`--pt-${key.replaceAll('.', '-')}`, value])),
-)
+/**
+ * CSS consumer hooks for the web adapters (pipeline radar, deliverables, revenue).
+ *
+ * Web never re-declares the palette or the font stack: the design tokens in
+ * `lib/tokens.ts` own `--pt-font-*` (next/font faces) and every colour, so the
+ * native-only values above (Geist, literal JetBrains Mono, #00d4ff) must not
+ * leak into the cascade. The `--pt-launcher-*` names are the only hooks these
+ * surfaces read; they resolve to the widget tokens.
+ */
+export const THEME_CSS_VARIABLES: Readonly<Record<string, string>> = Object.freeze({
+  '--pt-launcher-glass': 'var(--pt-card-bg)',
+  '--pt-launcher-line': 'var(--pt-border)',
+  '--pt-launcher-well': 'var(--pt-bg)',
+  '--pt-launcher-text': 'var(--pt-text)',
+  '--pt-launcher-text-dim': 'var(--pt-text-dim)',
+  '--pt-launcher-accent': 'var(--pt-neon)',
+})

@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { Button, SkeletonPanel, Window } from './ui'
+import { Button, Divider, SkeletonPanel, Window } from './ui'
 import { obsidianLink, type VaultData } from '@/lib/vault-links'
 import { apiFetch } from '@/lib/api-base'
 import './vault-documents.css'
@@ -55,7 +55,7 @@ export function VaultDocuments() {
       {data.groups.map(group => {
         const docs = data.docs.filter(doc => doc.group === group)
         return <section className="mc-vault-group" key={group} aria-label={`${group} documents`}>
-          <h3 className="mc-vault-group-head">{group}<span>{docs.length}</span></h3>
+          <Divider as="h3" label={`${group.toLowerCase()} ${docs.length}`} />
           <ul className="mc-vault-list">
             {docs.map(doc => <li key={doc.path}>
               <a className="mc-vault-doc" href={obsidianLink(data.vaultDir, doc.path)}>

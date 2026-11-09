@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { apiFetch } from '@/lib/api-base'
 import type { Bot, BotsSnapshot } from '@/lib/collectors/bots'
 import { Button, Card, CardHead, Chip, Field, IconButton, Input, Row, Select, Sheet, Stat } from '../ui'
-import styles from '../AgentConsole.module.css'
+import styles from '../ChatShell.module.css'
 
 export function ago(ts: number | null): string {
   if (!ts) return 'No activity yet'
@@ -20,7 +20,7 @@ type PostAction = (body: Record<string, unknown>) => Promise<ActionResult>
 
 type BotDisplayMetadata = { displayName: string; role: string }
 
-const BOT_DISPLAY_METADATA: Readonly<Record<string, BotDisplayMetadata>> = {
+export const BOT_DISPLAY_METADATA: Readonly<Record<string, BotDisplayMetadata>> = {
   default: { displayName: 'Pepper', role: 'Legal' },
   jarvis: { displayName: 'Jarvis', role: 'Orchestrator' },
   friday: { displayName: 'Friday', role: 'System' },
@@ -31,7 +31,11 @@ const BOT_DISPLAY_METADATA: Readonly<Record<string, BotDisplayMetadata>> = {
   scout: { displayName: 'Scout', role: 'Lead Assistant' },
 }
 
-const HIDDEN_BOT_PROFILES = new Set(['mctest', 'ui-probe', '.deleted'])
+export const HIDDEN_BOT_PROFILES = new Set(['mctest', 'ui-probe', '.deleted'])
+
+export function botDisplay(name: string): BotDisplayMetadata {
+  return BOT_DISPLAY_METADATA[name] ?? { displayName: name, role: '' }
+}
 
 function ConfirmAction({ label, actionLabel = label, word, disabled, danger, ready = true, children, onRun }: {
   label: string; actionLabel?: string; word?: string; disabled?: boolean; danger?: boolean; ready?: boolean
@@ -174,7 +178,7 @@ export function BotsPanel({ selected, onSelect, disabled, management, onManage, 
       {!data && !error && <p className={styles.notice} role="status">Loading bots…</p>}
       <Button className={styles.allBots} active={!selected} disabled={disabled} onClick={() => onSelect('')}>All conversations <span aria-hidden="true">›</span></Button>
       {visibleBots.map(b => {
-        const display = BOT_DISPLAY_METADATA[b.name] ?? { displayName: b.name, role: '' }
+        const display = botDisplay(b.name)
         const label = display.role ? `${display.displayName} (${display.role})` : display.displayName
         return <Row key={b.name} className={styles.botRow} title={<Button className={styles.botIdentity} active={selected === b.name} disabled={disabled} onClick={() => onSelect(b.name)} aria-label={`Conversations with ${label}, gateway ${b.gateway.status}`}>
           <span className={styles.dot} role="img" data-status={b.gateway.status} title={`Gateway ${b.gateway.status}`} aria-label={`Gateway ${b.gateway.status}`} />

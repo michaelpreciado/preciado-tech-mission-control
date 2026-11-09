@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import { AsciiWordmark } from '../ascii-viz'
-import type { WordmarkId } from '@/lib/wordmarks'
+import { Divider, Glyph, Verdict, type GlyphName } from '../ui'
+import { MiniHist } from '../charts/MiniHist'
 import styles from './aurora.module.css'
 
 export type BandAction = { label: string; href: string; primary?: boolean }
@@ -11,7 +11,7 @@ export type BandItem = {
   description?: string | null
   meta?: { text: string; num?: boolean }[]
   actions?: BandAction[]
-  /** Status dot (Broke / Moved bands). */
+  /** Status glyph (Broke / Moved bands). */
   tone?: BandTone
   /** Whole row is the link (compact rows, no action buttons). */
   href?: string
@@ -20,7 +20,8 @@ export type BandItem = {
 type BandProps = {
   /** Anchor the status strip scrolls to. */
   anchor: string
-  wordmark: WordmarkId
+  /** Divider label, lowercase: `-- needs you 2 ------`. */
+  label: string
   count: number | null
   countTone?: 'error'
   linkLabel: string
@@ -34,19 +35,20 @@ type BandProps = {
   variant: 'waiting' | 'broke' | 'moved'
 }
 
-const DOT: Record<BandTone, string> = { error: styles.dotErr, warn: styles.dotWarn, ok: styles.dotOk, info: styles.dotInfo, muted: '' }
+/** done `>` · failed `×` · started `↻` · created `·`; amber × is degraded, red × is down. */
+const GLYPH: Record<BandTone, GlyphName> = { error: 'err', warn: 'fail', ok: 'ok', info: 'retry', muted: 'idle' }
 
-function Band({ anchor, wordmark, count, countTone, linkLabel, href, items, more, empty, source, variant }: BandProps) {
+function Band({ anchor, label, count, countTone, linkLabel, href, items, more, empty, source, variant }: BandProps) {
   const dotted = variant !== 'waiting'
+  const lit = count !== null && count > 0 ? (countTone === 'error' ? styles.countErr : variant === 'waiting' ? styles.countWarn : '') : ''
   return (
-    <article id={anchor} className={`${styles.band} ${styles[variant]}`} data-glass="" aria-labelledby={`${anchor}-h`}>
+    <article id={anchor} className={`mc-widget ${styles.band} ${styles[variant]}`} aria-labelledby={`${anchor}-h`}>
       <header>
-        <h2 id={`${anchor}-h`}><AsciiWordmark id={wordmark} className={styles.bandMark} /></h2>
-        {count !== null && <span className={`${styles.count} ${countTone === 'error' && count > 0 ? styles.countErr : ''}`}>{count}</span>}
-        <Link href={href}>{linkLabel}</Link>
+        <Divider as="h2" id={`${anchor}-h`} className={styles.bandDivider} label={<>{label}{count !== null && <> <span className={`${styles.count} ${lit}`}>{count}</span></>}</>} />
+        <Link href={href}>{linkLabel.toLowerCase()} ›</Link>
       </header>
       {items.length === 0 ? (
-        <div className={styles.empty}><strong>{empty.title}</strong>{empty.hint}</div>
+        <div className={styles.empty}><strong><Glyph g={variant === 'waiting' ? 'ok' : 'idle'} /> {empty.title.toLowerCase()}</strong>{empty.hint}</div>
       ) : (
         <ul className={styles.list}>
           {items.map(it => {
@@ -59,7 +61,7 @@ function Band({ anchor, wordmark, count, countTone, linkLabel, href, items, more
                 )}
               </div>
             )
-            const dot = dotted && <i className={`${styles.dot} ${DOT[it.tone ?? 'muted']}`} aria-hidden="true" />
+            const dot = dotted && <Glyph g={GLYPH[it.tone ?? 'muted']} className={styles.dot} />
             if (it.href) return (
               <li key={it.id} className={`${styles.item} ${styles.itemLink}`}>
                 <Link href={it.href}>{dot}{main}<span className={styles.chevR} aria-hidden="true">›</span></Link>
@@ -108,23 +110,26 @@ export type StatusCell = {
   value: number | null
   href: string
   tone?: 'alert' | 'error' | 'live'
-  /** Glyph trend under the number, e.g. moves per hour. */
-  trend?: { glyphs: string; label: string }
+  /** Mini histogram under the number, e.g. moves per hour (oldest first). */
+  trend?: { values: number[]; label: string }
   hint: string
 }
 
-/** The first fold on a phone: four counts that answer "what needs me, what broke, what moved". */
+const CELL_TONE = { alert: 'warn', error: 'crit', live: undefined } as const
+
+/** The first fold on a phone: four verdict numerals that answer "what needs me, what broke,
+ *  what moved". A lit cell is the only colour on the strip; zero stays quiet. */
 export function StatusStrip({ cells }: { cells: StatusCell[] }) {
   return (
     <nav className={styles.strip} aria-label="Status at a glance">
       {cells.map(c => {
-        const lit = c.value != null && c.value > 0 && c.tone
+        const lit = c.value != null && c.value > 0 && c.tone ? c.tone : null
         return (
-          <a key={c.key} href={c.href} className={`${styles.cell} ${lit ? styles[`cell_${c.tone}`] : ''}`}>
-            <span className={styles.cellLabel}>{c.label}</span>
-            <span className={`${styles.cellValue} ${styles.num}`}>{c.value ?? '—'}</span>
+          <a key={c.key} href={c.href} className={`mc-widget mc-widget--tight ${styles.cell}`} data-lit={lit ?? undefined}>
+            <Verdict className={styles.cellValue} tone={lit ? CELL_TONE[lit] : undefined}>{c.value ?? '—'}</Verdict>
+            <span className={styles.cellLabel}>{lit === 'live' && <Glyph g="live" />}{c.label.toLowerCase()}</span>
             {c.trend
-              ? <span className={styles.cellTrend} role="img" aria-label={c.trend.label}><span aria-hidden="true">{c.trend.glyphs}</span></span>
+              ? <MiniHist values={c.trend.values} days={c.trend.values.length} label={c.trend.label} className={styles.cellTrend} />
               : <span className={styles.cellHint}>{c.hint}</span>}
           </a>
         )

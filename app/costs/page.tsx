@@ -10,7 +10,7 @@ const CostsPanel = dynamic(() => import('@/components/views/CostsPanel').then(m 
 export default function CostsPage() {
   return (
     <div className="mc-costs-page">
-      <PageHeader eyebrow="~/costs · USAGE-STATE" title="COSTS" subtitle="Model usage, billing, and burn" />
+      <PageHeader command="costs --summary" eyebrow="usage state" title="costs" subtitle="Model usage, billing, and burn" />
       <CostsPanel />
     </div>
   )

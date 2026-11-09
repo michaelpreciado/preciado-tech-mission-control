@@ -12,8 +12,6 @@
     "seed-demo": "node scripts/seed-demo.mjs"
   },
   "dependencies": {
-    "@react-three/drei": "^10.7.7",
-    "@react-three/fiber": "^9.7.0",
     "@tailwindcss/postcss": "^4.2.4",
     "d3-force": "^3.0.0",
     "d3-selection": "^3.0.0",
@@ -22,8 +20,7 @@
     "next": "^16.2.10",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "tailwindcss": "^4.2.1",
-    "three": "^0.185.1"
+    "tailwindcss": "^4.2.1"
   },
   "devDependencies": {
     "@types/d3-force": "^3.0.10",

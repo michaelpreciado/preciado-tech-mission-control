@@ -36,23 +36,29 @@ export default function GlobalError({
       width: 100%;
       padding: var(--pt-s-8);
       text-align: center;
-      border-radius: var(--pt-r-lg);
-      border: 1px solid color-mix(in srgb, var(--pt-error) 30%, transparent);
-      background: color-mix(in srgb, var(--pt-error) 8%, var(--pt-surface));
-      box-shadow: var(--pt-glow-sm);
+      text-align: left;
+      border-radius: var(--pt-radius-card, var(--pt-r-lg));
+      border: 1px solid var(--pt-card-border);
+      background: var(--pt-card-bg);
+      font-family: var(--pt-font-mono);
+    }
+    .ge-prompt {
+      margin: 0 0 var(--pt-s-3);
+      font-size: 13px;
+      color: var(--pt-neon);
     }
     .ge-mark {
       margin-bottom: var(--pt-s-4);
       font-family: var(--pt-font-mono);
-      font-size: 3rem;
+      font-size: 2rem;
       line-height: 1;
       color: var(--pt-error);
     }
     .ge-title {
       margin: 0 0 var(--pt-s-2);
       font-family: var(--pt-font-mono);
-      font-weight: 700;
-      font-size: var(--pt-fs-h3);
+      font-weight: 400;
+      font-size: 15px;
       color: var(--pt-error-ink);
     }
     .ge-copy {
@@ -74,16 +80,14 @@ export default function GlobalError({
       padding: var(--pt-s-3) var(--pt-s-6);
       font-family: var(--pt-font-mono);
       font-size: var(--pt-fs-sm);
-      font-weight: 600;
-      color: var(--pt-error-ink);
-      border-radius: var(--pt-r-md);
-      border: 1px solid color-mix(in srgb, var(--pt-error) 40%, transparent);
-      background: color-mix(in srgb, var(--pt-error) 20%, transparent);
-      transition: background var(--pt-dur-fast) var(--pt-ease);
+      font-weight: 400;
+      color: var(--pt-bg);
+      border-radius: var(--pt-radius-btn, var(--pt-r-md));
+      border: 1px solid var(--pt-neon);
+      background: var(--pt-neon);
     }
-    .ge-btn:hover {
-      background: color-mix(in srgb, var(--pt-error) 32%, transparent);
-    }
+    .ge-btn:hover { background: var(--pt-neon-bright); }
+    .ge-btn:focus-visible { outline: 2px solid var(--pt-neon); outline-offset: 2px; }
   `
 
   return (
@@ -95,16 +99,15 @@ export default function GlobalError({
       <body className="ge-body">
         <div className="ge-screen">
           <div className="ge-panel">
-            <div className="ge-mark" aria-hidden="true">
-              &#x25A3;
-            </div>
-            <h2 className="ge-title">Critical System Failure</h2>
+            <p className="ge-prompt" aria-hidden="true">friday:~$ reboot</p>
+            <div className="ge-mark" aria-hidden="true">×</div>
+            <h2 className="ge-title">critical system failure</h2>
             <p className="ge-copy">
               Mission Control hit a fault boundary. Reboot the interface when ready.
             </p>
             {error.digest && <div className="ge-ref">ref: {error.digest}</div>}
             <button onClick={reset} className="ge-btn">
-              Reboot Interface
+              reboot interface
             </button>
           </div>
         </div>

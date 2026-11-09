@@ -11,7 +11,7 @@ const SystemPage = dynamic(() => import('@/components/views/SystemPage'), {
 
 export default function SystemRoute() {
   return <div className={styles.page}>
-    <PageHeader eyebrow="~/system · RIG-STATE" title="SYSTEM" subtitle="This machine, its services, and the health of your data." />
+    <PageHeader host="friday" command="uname -n" eyebrow="rig state" title="system" subtitle="This machine, its services, and the health of your data." />
     <SystemPage />
   </div>
 }

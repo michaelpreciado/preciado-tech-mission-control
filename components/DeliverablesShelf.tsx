@@ -6,6 +6,7 @@ import type { Deliverable, DeliverablesIndex, DeliverableContent } from '@/lib/p
 import { compatibleDeliverables, deliverablesDisplay, contentPath, matchingContent } from '@/lib/pt/deliverables-display.mjs'
 import { obsidianLink } from '@/lib/vault-links'
 import { THEME_CSS_VARIABLES } from '@/lib/pt/theme'
+import { Prompt } from './ui'
 import './deliverables.css'
 
 export function DeliverablesShelf() {
@@ -60,7 +61,7 @@ export function DeliverablesShelf() {
     window.history.replaceState(null, '', row.webPath)
   }
   return <main className="pt-deliverables" style={THEME_CSS_VARIABLES as CSSProperties}>
-    <header><p className="pt-eyebrow">PRECIADO TECH · REVIEW SHELF</p><h1>Deliverables</h1><p>Reports, client notes, and review evidence.</p></header>
+    <header><Prompt host="desk" cmd="deliverables" as="p" className="pt-eyebrow" /><div className="mc-verdict">{view.count ?? '—'}<small>artifacts</small></div><p className="pt-lede">Reports, client notes, and review evidence.</p></header>
     <div className="pt-shelf-tools"><p role="status">{view.count ?? '—'} items · {view.lastKnown ? 'last known · ' : ''}{view.label}{!view.complete ? ' · partial coverage' : ''}</p><label>Find an artifact<input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Title, client, or state" /></label></div>
     {error && <p role="alert">{error === 'access_denied' ? 'Sign in to view deliverables.' : 'Refresh failed. Displayed rows are last known.'}</p>}
     <div className="pt-shelf-layout"><section aria-label="Artifacts" className="pt-shelf-list">

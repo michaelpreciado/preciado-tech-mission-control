@@ -1,0 +1,33 @@
+/* Status line at the head of every route: flat, one slate hairline, mono.
+   The accent paints the prompt; state is a .mc-glyph, never a glowing dot. */
+
+.bar {
+  display: flex;
+  align-items: baseline;
+  gap: 2ch;
+  min-height: 28px;
+  margin: 0 0 16px;
+  padding: 4px 0 8px;
+  border-bottom: 1px solid var(--pt-border);
+  color: var(--pt-text-dim);
+  font: 400 13px/1.5 var(--pt-font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  user-select: none;
+}
+
+.prompt { min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--pt-neon); }
+.host { color: var(--pt-neon); }
+.cmd { color: var(--pt-neon-bright); }
+
+.meta { display: inline-flex; align-items: baseline; gap: 2ch; margin-left: auto; color: var(--pt-text-mute); }
+.status { color: var(--pt-text-dim); }
+.age { font-variant-numeric: tabular-nums; }
+
+@media (max-width: 1200px) {
+  .build { display: none; }
+}
+@media (max-width: 820px) {
+  .bar { gap: 1ch; margin-bottom: 12px; }
+  .status { display: none; }
+}

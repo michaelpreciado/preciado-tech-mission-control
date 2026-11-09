@@ -4,12 +4,13 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { SimulationNodeDatum } from 'd3-force'
 import { select } from 'd3-selection'
 import { zoom as d3Zoom, type ZoomTransform } from 'd3-zoom'
-import { Window, SkeletonPanel, EmptyTerminal, Clamp, Button, fmtDate } from '../ui'
+import { Prompt, SkeletonPanel, EmptyTerminal, Clamp, Button, fmtDate } from '../ui'
 import { MemoryStream } from './MemoryStream'
 import { useUiSettings } from '../ui-settings'
 import { CATEGORICAL } from '@/lib/chart-colors'
 import type { MemoryGraph as MemoryGraphData, MemoryGraphNode } from '@/lib/types'
 import { apiFetch } from '@/lib/api-base'
+import styles from '../memory.module.css'
 import { MEMORY_GRAPH_WIDTH as WIDTH, MEMORY_GRAPH_HEIGHT as HEIGHT, settleMemoryGraph, type LayoutEdge, type LayoutPosition } from '@/lib/memory-layout'
 
 const POLL_MS = 180_000
@@ -196,11 +197,8 @@ export function MemoryGraphView() {
   if (!data.totalNotes) return <EmptyTerminal label="no vault configured — see /setup" />
 
   return (
-    <Window
-      tag="◈"
-      title="OBSIDIAN NODE GRAPH"
-      meta={`${data.connectedNotes}/${data.totalNotes} notes connected`}
-    >
+    <section className={`mc-widget ${styles.memory}`} aria-label="Memory graph">
+      <Prompt host="desk" cmd="memory --graph" meta={`${data.connectedNotes}/${data.totalNotes} notes connected`} />
       <div className="mc-mem-toolbar v4-entry">
         <input
           type="search"
@@ -355,7 +353,7 @@ export function MemoryGraphView() {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    OPEN IN OBSIDIAN ↗
+                    &gt; open in obsidian ↗
                   </a>
                 )}
                 {selected.excerpt
@@ -368,7 +366,7 @@ export function MemoryGraphView() {
                 <div>click a node to preview its excerpt</div>
                 {recentNotes.length > 0 && (
                   <div className="mc-mem-recent">
-                    <div className="mc-mem-recent-label">RECENTLY UPDATED</div>
+                    <div className="mc-mem-recent-label">recently updated</div>
                     {recentNotes.map(n => (
                       <button
                         key={n.id}
@@ -388,6 +386,6 @@ export function MemoryGraphView() {
         </div>
         </>
       )}
-    </Window>
+    </section>
   )
 }

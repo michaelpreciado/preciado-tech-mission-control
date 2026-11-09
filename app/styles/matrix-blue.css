@@ -1,88 +1,56 @@
-/* Matrix Blue Glass — production tokens and page-level material.
-   Imported last so it wins over the legacy layers. Component surfaces live in
-   their own CSS modules and read these tokens.
-   Glass tiers:
-     0 page     blue-black gradient + one static masked SVG texture (no animation)
-     1 content  translucent, no blur (strips, cards, tiles)
-     2 chrome   translucent + 12px blur (rail, lane headers, answers)
-     3 overlay  >=.94 alpha + 16px blur; opaque when blur is unsupported */
+/* Matrix Blue layer (--mbg-*): sizes, tap targets and type steps, plus colour
+   aliases onto the token block. The friday block in lib/tokens.ts pins the
+   flat widget values; the Launcher palette re-declares its own. */
 
 :root {
-  --mbg-void: #03060b;
-  --mbg-deck: #0b1017;
-  --mbg-deck-2: #111824;
-  --mbg-rule: #1b2431;
-  --mbg-rule-strong: #2a3647;
-  --mbg-ink: #e9eef6;
-  --mbg-ink-2: #a3aec0;
-  --mbg-ink-3: #8390a4;
+  --mbg-void: var(--pt-bg);
+  --mbg-deck: var(--pt-card-bg);
+  --mbg-deck-2: var(--pt-surface-2);
+  --mbg-rule: var(--pt-border);
+  --mbg-rule-strong: var(--pt-border-strong);
+  --mbg-ink: var(--pt-text);
+  --mbg-ink-2: var(--pt-text-dim);
+  --mbg-ink-3: var(--pt-text-mute);
   --mbg-dodger: var(--pt-dodger);
-  --mbg-dodger-ink: #6cb4ff;
-  --mbg-amber: #f2b54b;
-  --mbg-red: #ff6e6e;
-  --mbg-green: #45d08c;
-  --mbg-cyan: #4fd8ff;
-  --mbg-edge: rgba(94, 178, 255, .20);
-  --mbg-edge-hi: rgba(79, 216, 255, .55);
-  --mbg-sheen: linear-gradient(90deg, transparent, rgba(79, 216, 255, .45) 35%, rgba(var(--pt-dodger-rgb), .25) 70%, transparent);
-  --mbg-glass-1: rgba(8, 16, 28, .76);
-  --mbg-glass-1-hover: rgba(12, 24, 42, .86);
-  --mbg-glass-2: rgba(6, 12, 22, .72);
-  --mbg-glass-3: rgba(7, 13, 23, .95);
-  --mbg-solid-3: #070d17;
-  --mbg-inset: inset 0 1px 0 rgba(140, 210, 255, .08), inset 0 0 0 1px rgba(255, 255, 255, .015);
+  --mbg-dodger-ink: var(--pt-neon-bright);
+  --mbg-amber: var(--pt-warn);
+  --mbg-red: var(--pt-error);
+  --mbg-green: var(--pt-ok);
+  --mbg-cyan: var(--pt-mx-cyan);
+  --mbg-edge: var(--pt-border);
+  --mbg-edge-hi: var(--pt-border-strong);
+  --mbg-sheen: none;
+  --mbg-glass-1: var(--pt-card-bg);
+  --mbg-glass-1-hover: var(--pt-surface-2);
+  --mbg-glass-2: var(--pt-card-bg);
+  --mbg-solid-3: var(--pt-card-bg);
+  --mbg-inset: none;
   --mbg-tap: 44px;
-  --mbg-rail-w: 232px;
   --mbg-tabbar-h: 60px;
   --mbg-t-xs: .75rem;
   --mbg-t-sm: .8125rem;
   --mbg-t-md: .9375rem;
   --mbg-t-lg: 1.125rem;
-  --mbg-t-xl: 1.5rem;
   --mbg-t-2xl: clamp(1.75rem, 1.2rem + 1.8vw, 2.5rem);
-  --mbg-sans: var(--mbg-font-sans, "Instrument Sans"), "Noto Sans", system-ui, sans-serif;
-  --mbg-mono: var(--mbg-font-mono, "JetBrains Mono"), ui-monospace, monospace;
+  --mbg-sans: var(--pt-font-sans);
+  --mbg-mono: var(--pt-font-mono);
 }
 
-/* Page: near-black base with two faint light sources. The animated depth
-   (grid, data columns, neural field) is components/atmosphere/Atmosphere.tsx. */
+/* Page: pure black, no image. Palettes recolour --pt-mx-void. */
 html[data-theme="friday"], html[data-theme="friday"] body {
-  background-color: var(--pt-mx-void, #050506);
+  background-color: var(--pt-mx-void);
+  background-image: none;
 }
-html[data-theme="friday"] body {
-  background-image:
-    radial-gradient(1200px 620px at 78% -14%, rgba(var(--pt-dodger-rgb), .10), transparent 62%),
-    radial-gradient(900px 560px at -10% 110%, rgba(var(--pt-launcher-accent-rgb, 0,229,255), .045), transparent 60%),
-    linear-gradient(180deg, #07090b 0%, #050506 55%, #0a0a0b 100%);
-  background-attachment: fixed;
-  font-family: var(--mbg-sans);
-}
-/* Omarchy: same two light sources, but the base ramp comes from the palette's
-   darker-background family instead of the default near-black. */
-html[data-theme][data-palette="omarchy"] body {
-  background-image:
-    radial-gradient(1200px 620px at 78% -14%, rgba(var(--pt-dodger-rgb), .10), transparent 62%),
-    radial-gradient(900px 560px at -10% 110%, rgba(var(--pt-neon-rgb), .045), transparent 60%),
-    linear-gradient(180deg, var(--pt-omarchy-bg-darker) 0%, var(--pt-omarchy-bg-darker) 55%, var(--pt-omarchy-bg-dark) 100%);
-}
+html[data-theme="friday"] body { font-family: var(--pt-font-mono); }
 
 /* The legacy CRT treatment (filter on the shell, flicker on main, scanline and
-   vignette layers) would defeat backdrop-filter and add motion. Neutralised here;
+   vignette layers) would defeat backdrop blur and add motion. Neutralised here;
    the components themselves are left intact. */
 html[data-theme="friday"] body .mc-shell { filter: none; }
 html[data-theme="friday"] body .mc-shell .mc-main { animation: none; }
-html[data-theme="friday"] body .v4-scanline,
-html[data-theme="friday"] body .mc-scanlines,
-html[data-theme="friday"] body .mc-vignette { display: none; }
+html[data-theme="friday"] body .v4-scanline { display: none; }
 
-html[data-theme="friday"] body :focus-visible { outline: 2px solid var(--mbg-cyan); outline-offset: 2px; }
-
-/* Main column: keep content clear of the mobile tab bar (safe-area aware). */
-@media (max-width: 719px) {
-  html body .mc-shell .mc-main {
-    padding-bottom: calc(var(--mbg-tabbar-h) + 28px + env(safe-area-inset-bottom, 0px)) !important;
-  }
-}
+html[data-theme="friday"] body :focus-visible { outline: 2px solid var(--pt-neon); outline-offset: 2px; }
 
 @media (prefers-reduced-motion: reduce) {
   html[data-theme="friday"] body *, html[data-theme="friday"] body *::before, html[data-theme="friday"] body *::after {
@@ -96,23 +64,22 @@ html body .mc-main::after, html[data-theme="friday"] .mc-main::after { display: 
 /* Task drawer: the primary action is always solid and never dimmed, and the action row stays in view. */
 [role="dialog"] [aria-label="Task actions"] {
   position: sticky; top: 0; z-index: 2; padding-block: 8px;
-  background: var(--mbg-solid-3, rgba(var(--pt-launcher-deep-rgb, 7,13,23), 1));
+  background: var(--mbg-solid-3);
 }
 [role="dialog"] button.mc-btn.mc-btn-primary,
 [role="dialog"] button.mc-btn.mc-btn-primary:disabled,
 [role="dialog"] button.mc-btn.mc-btn-primary[aria-busy="true"] {
-  opacity: 1; background: var(--mbg-dodger); color: #04101c;
-  border-color: #7cc4ff; min-height: var(--mbg-tap, 44px); font-weight: 600;
-  text-shadow: none; filter: none;
+  opacity: 1; background: var(--pt-neon); color: var(--pt-bg);
+  border-color: var(--pt-neon); min-height: var(--mbg-tap, 44px); font-weight: 500; filter: none;
 }
-[role="dialog"] button.mc-btn.mc-btn-primary:disabled { background: #14497f; color: #eaf4ff; }
+[role="dialog"] button.mc-btn.mc-btn-primary:disabled { background: var(--pt-neon-deep); color: var(--pt-text-high); }
 
 /* No perpetual loops on work surfaces: static caret instead of a blink. */
 html body .aprompt-empty { animation: none; opacity: 1; }
 
-@media (max-width: 719px) {
+@media (max-width: 820px) {
   html body .mc-main button:not([class*="iconButton"]) { min-height: var(--mbg-tap, 44px) !important; }
 }
 
 /* Palette secondary text: lifted so composited contrast clears 4.5:1. */
-html body .cmdp-sub { color: var(--mbg-ink-2, #b8c9da); }
+html body .cmdp-sub { color: var(--mbg-ink-2); }

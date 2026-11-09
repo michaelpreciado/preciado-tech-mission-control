@@ -12,25 +12,20 @@
  *   - "nice" axis ticks that round UP past the max (no bar escaping its scale)
  *   - zero days rendered as flat markers, not silent gaps
  *   - hover readout that never reflows the chart
- * Colors are the shared CATEGORICAL palette (lib/chart-colors) so the chart
- * reads as part of Mission Control, not a one-off.
+ * Colors are BILLING_MODE_COLOR (lib/chart-colors): three blues plus slate,
+ * matching the launcher widget palette; amber stays reserved for overage.
  */
 
 import { useMemo, useState } from 'react'
-import { CATEGORICAL } from '@/lib/chart-colors'
+import { BILLING_MODE_COLOR } from '@/lib/chart-colors'
 import type { CostDashboard, BillingMode } from '@/lib/types'
 import { MicroBars } from '../charts/MicroBars'
 import { billingMode } from '@/lib/collectors/costs-usage'
 
 const SEG_ORDER: BillingMode[] = ['metered', 'subscription', 'local', 'cloud-routed']
-const SEG_COLOR: Record<BillingMode, string> = {
-  metered: CATEGORICAL[0],        // blue — brand accent
-  subscription: CATEGORICAL[3],   // violet
-  local: CATEGORICAL[2],          // lime
-  'cloud-routed': CATEGORICAL[5], // orange
-}
+const SEG_COLOR: Record<BillingMode, string> = BILLING_MODE_COLOR
 const SEG_LABEL: Record<BillingMode, string> = {
-  metered: 'METERED', subscription: 'SUBSCRIPTION', local: 'LOCAL', 'cloud-routed': 'CLOUD-ROUTED',
+  metered: 'metered', subscription: 'subscription', local: 'local', 'cloud-routed': 'cloud-routed',
 }
 
 function tok(n: number): string {
@@ -142,7 +137,7 @@ export default function BurnLandscape({ costs }: { costs: CostDashboard }) {
             const h = (d.segs[k] / axisMax) * 190
             y -= h
             return <rect key={k} x={x} y={y} width={w} height={Math.max(h, 0.5)}
-              fill={SEG_COLOR[k]} opacity={dim ? 0.28 : 1} rx={1.5} />
+              fill={SEG_COLOR[k]} opacity={dim ? 0.28 : 1} rx={1} />
           })
           return (
             <g key={d.date} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)} style={{ cursor: 'crosshair' }}>
@@ -169,7 +164,7 @@ export default function BurnLandscape({ costs }: { costs: CostDashboard }) {
             <span className="cp-iso-total">{hovered.total > 0 ? `${tok(hovered.total)} tokens` : 'no activity'}</span>
             {SEG_ORDER.filter(k => hovered.segs[k] > 0).map(k => (
               <span key={k} className="cp-iso-seg">
-                <i style={{ background: SEG_COLOR[k] }} />{SEG_LABEL[k].toLowerCase()} {tok(hovered.segs[k])}
+                <i style={{ background: SEG_COLOR[k] }} />{SEG_LABEL[k]} {tok(hovered.segs[k])}
               </span>
             ))}
             {hover == null && <span className="cp-iso-hint">hover a bar for that day&apos;s split</span>}
@@ -181,7 +176,7 @@ export default function BurnLandscape({ costs }: { costs: CostDashboard }) {
         {SEG_ORDER.filter(k => days.some(d => d.segs[k] > 0)).map(k => (
           <span key={k}><i style={{ background: SEG_COLOR[k] }} />{SEG_LABEL[k]}</span>
         ))}
-        <span className="cp-iso-proj">2D STACKED · TOKENS PROCESSED PER DAY</span>
+        <span className="cp-iso-proj">stacked · tokens processed per day</span>
       </div>
     </div>
   )

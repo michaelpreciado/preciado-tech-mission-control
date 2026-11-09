@@ -1,0 +1,14 @@
+/* /memory — the node graph and detail panel on flat widget surfaces.
+   The graph's own rules still live in globals (.mc-mem-*); this module only
+   restates the surfaces the widget theme changes: svg well, detail card,
+   selected-node stroke, toolbar spacing. Mono, no shadow / blur / glow. */
+.memory { display: flex; flex-direction: column; gap: 10px; font-family: var(--pt-font-mono); }
+.memory :global(.mc-mem-toolbar), .memory :global(.mc-mem-tags), .memory :global(.mc-mem-legend) { padding-inline: 0; }
+.memory :global(.mc-mem-body) { padding-inline: 0; padding-bottom: 0; }
+.memory :global(.mc-mem-svg-wrap) { border: 1px solid var(--pt-border); border-radius: var(--pt-radius-row, 10px); background: var(--pt-card-bg); }
+.memory :global(.mc-mem-detail) { border: 1px solid var(--pt-border); border-radius: var(--pt-radius-row, 10px); background: var(--pt-card-bg); box-shadow: none; backdrop-filter: none; }
+.memory :global(.mc-mem-node-shape) { stroke: var(--pt-bg); }
+.memory :global(.mc-mem-node.is-selected .mc-mem-node-shape), .memory :global(.mc-mem-node:hover .mc-mem-node-shape) { stroke: var(--pt-neon); stroke-width: 2; filter: none; }
+.memory :global(.mc-mem-legend-item), .memory :global(.mc-mem-recent-label) { text-transform: lowercase; letter-spacing: 0; }
+.memory :global(.mc-mem-open) { border-color: var(--pt-border); border-radius: var(--pt-radius-btn, 10px); }
+.memory :global(.mc-mem-search) { font-family: var(--pt-font-mono); }

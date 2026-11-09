@@ -1,7 +1,7 @@
 .page, .workspace, .detail, .revenue {
   min-width: 0;
   max-width: 100%;
-  font-family: var(--pt-font-ui);
+  font-family: var(--pt-font-mono);
   font-size: var(--pt-fs-body);
   overflow-wrap: anywhere;
 }
@@ -25,13 +25,13 @@
 .note { padding: var(--pt-s-3) var(--pt-s-4); margin: 0; color: var(--pt-text-dim); font-size: var(--pt-fs-sm); line-height: var(--pt-lh-ui); }
 .error { color: var(--pt-error-ink); padding: var(--pt-s-4); margin: 0; font-size: var(--pt-fs-sm); }
 .revenueClient { border-bottom: 1px solid var(--pt-border-dim); }
+.documents :global(.mc-prompt) button { min-height: 32px; padding: 2px 10px; }
 .mobileFilter { display: none; }
 .documents { margin-top: var(--pt-s-5); }
 /* The vault is owned elsewhere; keep its legacy surface behind a disclosure. */
 .documents :global(.mc-vault-panel) { margin: 0; border: 0; box-shadow: none; background: none; }
 .documents :global(.mc-window-head) { display: none; }
 .documents :global(.mc-vault-doc), .documents :global(.mc-vault-doc:hover) { box-shadow: none; border-color: var(--pt-border-dim); }
-.documents :global(.mc-vault-group-head) { font-family: var(--pt-font-ui); font-size: var(--pt-fs-sm); letter-spacing: normal; text-transform: none; color: var(--pt-text); }
 .documents :global(.mc-vault-path), .documents :global(.mc-vault-folder), .documents :global(.mc-vault-file), .documents :global(.mc-vault-updated) { font-size: var(--pt-fs-xs); }
 @media (min-width: 1000px) {
   .stages { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -45,7 +45,7 @@
   .revenueDock { position: sticky; top: var(--pt-s-5); max-height: calc(100dvh - var(--pt-s-10)); overflow-y: auto; }
   .revenue .metrics { grid-template-columns: minmax(0, 1fr); }
 }
-@media (max-width: 600px) {
+@media (max-width: 520px) {
   .workspace, .stages, .metrics { grid-template-columns: minmax(0, 1fr); }
   .mobileFilter { display: block; }
   .stageFilter { display: grid; width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); border-radius: var(--pt-r-lg); }
@@ -59,9 +59,10 @@
   .attentionList { grid-template-columns: minmax(0, 1fr); }
 }
 
-/* Radar palette is supplied by lib/pt/theme.ts on the page. */
-.radar { color: var(--pt-launcher-text, var(--pt-text-primary)); background: var(--pt-launcher-page, var(--pt-bg-void)); }
-.radar section { background: var(--pt-launcher-glass, var(--pt-glass-fill)); border-color: var(--pt-launcher-line, var(--pt-glass-border)); }
-.freshness { display: inline-block; padding: 2px 7px; border: 1px solid var(--pt-launcher-accent, var(--pt-accent-blue)); border-radius: var(--pt-radius-row, 4px); color: var(--pt-launcher-accent, var(--pt-accent-blue)); font-family: var(--pt-font-mono); font-size: 12px; }
+/* Radar palette: the --pt-launcher-* hooks come from lib/pt/theme.ts and resolve to the widget tokens. */
+.radar { color: var(--pt-launcher-text, var(--pt-text)); background: var(--pt-launcher-page, transparent); }
+.radar section { border: 1px solid var(--pt-launcher-line, var(--pt-border)); border-radius: var(--pt-radius-card, 16px); background: var(--pt-launcher-glass, var(--pt-card-bg)); box-shadow: none; }
+.radar h2 { margin: 0; }
+.freshness { display: inline-block; padding: 2px 7px; border: 1px solid var(--pt-launcher-accent, var(--pt-neon)); border-radius: var(--pt-radius-row, 4px); color: var(--pt-launcher-accent, var(--pt-neon)); font-family: var(--pt-font-mono); font-size: 12px; }
 .freshness[data-freshness="stale"] { border-style: dashed; }
-.freshness[data-freshness="unknown"], .freshness[data-freshness="error"] { color: var(--pt-launcher-text-dim, var(--pt-text-muted)); border-color: currentColor; }
+.freshness[data-freshness="unknown"], .freshness[data-freshness="error"] { color: var(--pt-launcher-text-dim, var(--pt-text-dim)); border-color: currentColor; }

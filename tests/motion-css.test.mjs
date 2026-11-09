@@ -25,12 +25,9 @@ test('shared motion pause/kill rules live in exactly one file', () => {
   }
 })
 
-test('observer watches only opt-in widgets, and the widgets opt in', () => {
+test('observer watches only opt-in widgets', () => {
   const lib = read('lib/motion-visibility.ts')
   assert.match(lib, /MOTION_WIDGET_SELECTOR = '\[data-motion-widget\]'/)
-  for (const file of ['components/CoreOrb.tsx', 'components/views/HoloHud3D.tsx', 'components/NeuralUplink.tsx', 'components/HoloRing.tsx']) {
-    assert.match(read(file), /data-motion-widget/, file)
-  }
 })
 
 test('persistent backdrop blur is limited to the cockpit plus four overlays', () => {
@@ -119,29 +116,17 @@ test('launch film fallback forces the visible end state', () => {
   }
 })
 
-test('NeuralUplink module has no unused keyframes', () => {
-  const css = strip(read('components/NeuralUplink.module.css'))
-  const names = [...css.matchAll(/@keyframes\s+([\w-]+)/g)].map(m => m[1])
-  assert.ok(names.length > 0)
-  for (const name of names) {
-    const used = [...css.matchAll(/animation(?:-name)?\s*:\s*([^;}]+)/g)].some(m => new RegExp(`(^|\\s)${name}(\\s|$)`).test(m[1]))
-    assert.ok(used, `@keyframes ${name} is unused`)
-  }
-})
-
-test('rain and accent tokens are unchanged', () => {
+test('the rain is gone and the widget accent tokens are pinned', () => {
   const g = strip(globals)
-  assert.match(g, /--mc-rain-head: #c4e2ff;/)
-  assert.match(g, /--mc-rain-trail: rgba\(var\(--pt-dodger-rgb\), \.26\);/)
-  assert.match(g, /--mc-rain-glow: rgba\(var\(--pt-dodger-rgb\), \.52\);/)
-  assert.match(g, /--mc-rain-head: color\(display-p3 \.78 \.89 1\);/)
-  assert.match(g, /--mc-rain-trail: color\(display-p3 \.16 \.58 1 \/ \.28\);/)
-  assert.match(g, /--mc-rain-glow: color\(display-p3 \.16 \.58 1 \/ \.56\);/)
+  assert.doesNotMatch(g, /--mc-rain-(head|trail|glow)\s*:/)
   const tokens = read('lib/tokens.ts')
   assert.match(tokens, /NEON_DEFAULT = '#1e90ff'/)
   assert.match(tokens, /ACCENT_DEFAULT = '#9db4ec'/)
   assert.match(tokens, /ACTION_DEFAULT = '#75b9ff'/)
   assert.match(tokens, /bg:\s+'#000000'/)
+  assert.match(tokens, /accent: '#3B82F6'/)
+  assert.match(tokens, /card: '#0A0F1A'/)
+  assert.match(tokens, /line: '#1E293B'/)
 })
 
 test('containment is applied by exact owners, not class-substring matching', () => {
@@ -150,20 +135,7 @@ test('containment is applied by exact owners, not class-substring matching', () 
   for (const file of allCss) {
     for (const { sel, body } of rules(strip(read(file)))) if (/(?:^|[;\s])contain\s*:[^;]*\bpaint\b/.test(body)) owners.push(`${file}: ${sel}`)
   }
-  assert.deepEqual(owners.sort(), ['app/globals.css: .mc-hud3d', 'components/HomeWorkspace.module.css: .obCard'])
-  const home = rules(strip(read('components/HomeWorkspace.module.css')))
-  for (const cls of ['.obCardHeader', '.obCardBody']) {
-    const own = home.filter(r => r.sel.split(',').map(x => x.trim()).includes(cls))
-    assert.ok(own.length, cls)
-    for (const r of own) assert.doesNotMatch(r.body, /contain\s*:/, `${cls} must not be contained`)
-  }
-})
-
-test('NeuralUplink renders only classes that its module styles', () => {
-  const css = strip(read('components/NeuralUplink.module.css'))
-  const used = new Set([...read('components/NeuralUplink.tsx').matchAll(/styles\.(\w+)/g)].map(m => m[1]))
-  assert.ok(used.has('scan'))
-  for (const name of used) assert.match(css, new RegExp(`(^|[\\s,}])\\.${name}\\b`, 'm'), `.${name} is rendered but unstyled`)
+  assert.deepEqual(owners.sort(), ['app/globals.css: .mc-hud3d'])
 })
 
 // ---- v4 lane: an !important animation starter must be inert in reduced / off / OS reduce ----

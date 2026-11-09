@@ -206,11 +206,7 @@ export function Window({ tag, title, meta, children, style, className = '', fram
       onDoubleClick={floating ? dock : undefined}
       {...(floating ? drag : {})}
     >
-      <div className="mc-window-dots" aria-hidden="true">
-        <span className="mc-window-dot mc-window-dot--red" />
-        <span className="mc-window-dot mc-window-dot--amber" />
-        <span className="mc-window-dot mc-window-dot--green" />
-      </div>
+      <span className="mc-window-prompt" aria-hidden="true">desk:~$</span>
       <div className="mc-window-title">
         {tag && <span className="mc-win-tag">{tag}</span>}
         <span>{title}</span>
@@ -234,11 +230,7 @@ export function Window({ tag, title, meta, children, style, className = '', fram
       <>
         <div className="mc-window mc-window-ghost" style={style}>
           <div className="mc-window-head">
-            <div className="mc-window-dots" aria-hidden="true">
-              <span className="mc-window-dot mc-window-dot--red" />
-              <span className="mc-window-dot mc-window-dot--amber" />
-              <span className="mc-window-dot mc-window-dot--green" />
-            </div>
+            <span className="mc-window-prompt" aria-hidden="true">desk:~$</span>
             <div className="mc-window-title">
               {tag && <span className="mc-win-tag">{tag}</span>}
               <span>{title}</span>
@@ -347,7 +339,7 @@ export function Clamp({ text, lines = 2, label = 'FULL TEXT', className }: {
       {open && mounted && createPortal(
         <div className="mc-modal-overlay" onClick={() => setOpen(false)}>
           <div className="mc-modal" role="dialog" aria-modal="true" aria-label={label} onClick={e => e.stopPropagation()}>
-            <button className="mc-modal-close" aria-label="Close preview" onClick={() => setOpen(false)}>✕</button>
+            <button className="mc-modal-close" aria-label="Close preview" onClick={() => setOpen(false)}>×</button>
             <h3>{label}</h3>
             <div className="mc-preview-body">{text}</div>
           </div>
@@ -362,7 +354,7 @@ export function EmptyTerminal({ label }: { label: string }) {
   return (
     <div className="mc-window" style={{ padding: 24, textAlign: 'center' }}>
       <AsciiTerminalArt />
-      <div style={{ fontSize: 10, letterSpacing: '0.22em', color: 'var(--pt-text-mute)', textTransform: 'uppercase' }}>{label}</div>
+      <div style={{ fontSize: 12, color: 'var(--pt-text-mute)' }}>{label.toLowerCase()}</div>
     </div>
   )
 }

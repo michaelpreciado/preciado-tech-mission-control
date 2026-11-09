@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, type CSSProperties } from 'react'
-import { LEVELS, capSpans, clock, failMarks, laneStats, span, spanLevels, strandPaths } from '@/lib/sky-geometry'
+import { capSpans, clock, failMarks, laneStats, span, spanLevels, strandPaths } from '@/lib/sky-geometry'
 import styles from './aurora.module.css'
 
 export type AuroraSkyRow = { agent: string; spans: { start: number; end: number; failed?: boolean; n?: number }[] }
@@ -29,16 +29,14 @@ const WINDOW_H = 6
 /** "Now" opens this far across the visible window. Mirrored by the snap anchor in CSS. */
 const NOW_AT = 0.85
 
-/** Stroke stack per intensity level: outer bloom, inner bloom, core — widths in px (non-scaling).
- *  The bloom is stacked strokes at falling opacity, never an SVG blur filter. */
-const STACK: [outer: number, inner: number, core: number][] = [[10, 5, 1.5], [14, 6.5, 2.25], [20, 9, 3.25]]
-const LAYER = ['bloomOuter', 'bloomInner', 'core'] as const
+/** One flat core stroke per intensity level (quiet / steady / hot), widths in px (non-scaling). */
+const STROKE = [1.5, 2.25, 3.25] as const
 
 const pct = (h: number, range: number) => `${(Math.min(range, Math.max(0, h)) / range) * 100}%`
 
-/** Per-agent activity timeline. Each agent is a lane: busy bursts glow as strands whose weight
- *  follows message density, silence is a dotted baseline, failures are diamonds, and a "now"
- *  cursor splits the day from the hatched future. */
+/** Per-agent activity timeline. Each agent is a lane: busy bursts are flat strands whose weight
+ *  follows message density, silence is a dotted baseline, failures are × marks, and a "now"
+ *  cursor splits the day from the dimmed future. */
 export function AuroraSky({ rows, nowHour, rangeHours = 24, dayLabel }: Props) {
   const scroller = useRef<HTMLDivElement>(null)
 
@@ -101,8 +99,8 @@ export function AuroraSky({ rows, nowHour, rangeHours = 24, dayLabel }: Props) {
             <span className={styles.nowTag} style={{ left: now }}>{clock(nowHour)}</span>
           </div>
           <div className={styles.field} style={{ height: H }}>
+            {ticks.map(h => h > 0 && <i key={h} className={h % 6 === 0 ? styles.ruleMajor : styles.rule} style={{ left: pct(h, rangeHours) }} aria-hidden="true" />)}
             <div className={styles.future} style={{ left: now }} aria-hidden="true" />
-            <div className={styles.trail} style={{ right: `calc(100% - ${now})` }} aria-hidden="true"><i /></div>
             {lanes.map(({ row }, i) => (
               <i key={row.agent} className={styles.baseline} style={{ top: i * LANE + STRAND_Y, width: now }} aria-hidden="true" />
             ))}
@@ -112,10 +110,7 @@ export function AuroraSky({ rows, nowHour, rangeHours = 24, dayLabel }: Props) {
                 return (
                   <g key={row.agent}>
                     {d.map((path, lv) => path ? (
-                      <g key={lv} className={styles[`lv${lv}`]}>
-                        {LAYER.map((layer, k) => <path key={layer} className={styles[layer]} d={path} strokeWidth={STACK[lv][k]} />)}
-                        {lv === LEVELS - 1 && <path className={styles.filament} d={path} strokeWidth={1} />}
-                      </g>
+                      <path key={lv} className={styles[`lv${lv}`]} d={path} strokeWidth={STROKE[Math.min(lv, STROKE.length - 1)]} />
                     ) : null)}
                   </g>
                 )
@@ -131,7 +126,7 @@ export function AuroraSky({ rows, nowHour, rangeHours = 24, dayLabel }: Props) {
                 style={{ left: pct(f.at, rangeHours), top: i * LANE + STRAND_Y }}
                 aria-label={`${row.agent}: ${f.count > 1 ? `${f.count} failed runs` : 'failed run'} at ${clock(f.at)}`}
               >
-                <i className={styles.diamond} />
+                <i className={styles.diamond} aria-hidden="true" />
                 {f.count > 1 && <b className={styles.failCount}>×{f.count}</b>}
                 <span className={styles.failTip} aria-hidden="true">{clock(f.at)} · {f.count > 1 ? `${f.count} failed runs` : 'run failed'}</span>
               </button>

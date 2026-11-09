@@ -1,7 +1,7 @@
 'use client'
 
 import { useLiveData } from '../LiveDataProvider'
-import { Window, EmptyTerminal, SkeletonPanel, fmtDate, Clamp } from '../ui'
+import { Prompt, EmptyTerminal, SkeletonPanel, fmtDate, Clamp } from '../ui'
 
 /* ── Memory Stream ────────────────────────────────────── */
 
@@ -12,7 +12,8 @@ export function MemoryStream() {
   if (!memory.length) return <EmptyTerminal label="no memory entries" />
 
   return (
-    <Window tag="⊡" title="STEWARDSHIP LEDGER" meta={`${memory.length} entries`}>
+    <section className="mc-widget" aria-label="Stewardship ledger">
+      <Prompt host="desk" cmd="memory --ledger" meta={`${memory.length} entries`} />
       <div>
         {memory.map(m => (
           <div key={m.id} className="mc-commit">
@@ -25,6 +26,6 @@ export function MemoryStream() {
           </div>
         ))}
       </div>
-    </Window>
+    </section>
   )
 }

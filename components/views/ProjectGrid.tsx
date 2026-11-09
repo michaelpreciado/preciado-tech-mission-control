@@ -2,8 +2,7 @@
 
 import { useState } from 'react'
 import { useLiveData } from '../LiveDataProvider'
-import { Window, EmptyTerminal, SkeletonPanel } from '../ui'
-import { Tilt } from '../Tilt'
+import { EmptyTerminal, Glyph, Prompt, SkeletonPanel } from '../ui'
 
 /* ── Projects Grid ────────────────────────────────────── */
 
@@ -24,17 +23,17 @@ export function ProjectGrid({ limit }: { limit?: number } = {}) {
 
   return (
     <div className="mc-tile-grid mc-tile-grid--tri v4-group">
-      <div className="mc-kb-sync" style={{ gridColumn: '1 / -1' }}>{projects.length} projects</div>
+      <div style={{ gridColumn: '1 / -1' }}><Prompt host="desk" cmd="clients" meta={`${projects.length} projects`} /></div>
       {projects.map(p => {
         const todo = p.todo ?? []
         const openCount = todo.filter(t => t.status !== 'done').length
         const expanded = open.has(p.id)
         return (
-          <Tilt key={p.id} className="mc-proj-tilt">
-            <Window tag="▤" title={p.name}>
+          <section key={p.id} className="mc-widget mc-widget--tight" aria-label={p.name}>
+            <Prompt host="desk" cmd={p.name} as="h3" />
               <div className="mc-tile-body">
               <div className="mc-tile-head">
-                <span className="mc-led" />
+                <Glyph g="ok" />
                 <span className="mc-tile-status" title={p.signal}>{p.signal.toUpperCase()}</span>
                 <span className="mc-tile-right">{p.kind}</span>
               </div>
@@ -70,8 +69,7 @@ export function ProjectGrid({ limit }: { limit?: number } = {}) {
                 <div className="mc-tile-foot">{p.github.openIssues} open issues</div>
               )}
             </div>
-            </Window>
-          </Tilt>
+          </section>
         )
       })}
     </div>

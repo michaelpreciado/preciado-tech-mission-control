@@ -8,8 +8,7 @@ import { KanbanSnapshotProvider } from './KanbanSnapshot'
 import { MobileChrome } from './MobileChrome'
 import { Sidebar as OmniBridgeSidebar } from './Sidebar'
 import { MotionVisibility } from './MotionVisibility'
-import { Atmosphere } from './atmosphere/Atmosphere'
-import { PromptBar } from './atmosphere/PromptBar'
+import { PromptBar } from './PromptBar'
 import { UiSettingsContext, DEFAULT_UI_SETTINGS, useUiSettings, type UiSettings } from './ui-settings'
 
 const CommandPalette = dynamic(() => import('./CommandPalette').then(m => m.CommandPalette), { ssr: false })
@@ -41,7 +40,6 @@ export function Shell({ appName, appTagline, ui, children }: { appName: string; 
       </a>
       <KanbanSnapshotProvider>
       <MotionVisibility />
-      <Atmosphere />
 
       <div className={`mc-shell${pathname === '/' ? ' is-home' : ''}`}>
         <OmniBridgeSidebar />

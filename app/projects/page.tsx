@@ -9,7 +9,7 @@ const ProjectGrid = dynamic(() => import('@/components/views/ProjectGrid').then(
 export default function ProjectsPage() {
   return (
     <>
-      <PageHeader eyebrow="~/clients · BUILD-STATE" title="CLIENTS" subtitle="Active client workspaces and delivery repos" />
+      <PageHeader command="clients" title="CLIENTS" subtitle="Active client workspaces and delivery repos" />
       <ProjectGrid />
     </>
   )

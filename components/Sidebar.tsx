@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { Icon } from './icons'
+import { Glyph } from './ui'
 import { useKanbanSnapshot } from './KanbanSnapshot'
 import { useLiveData } from './LiveDataProvider'
 import { useUiSettings } from './ui-settings'
@@ -12,8 +13,10 @@ import { blockedLabelFor } from '@/lib/pt/blocked-labels.mjs'
 import styles from './Sidebar.module.css'
 
 const SIDEBAR_STORAGE_KEY = 'omniBridge.sidebar.collapsed'
-/** Tablet / unfolded-inner band: icon rail instead of the phone layout. Mirrored verbatim in app/styles/fold.css and Sidebar.module.css. */
-export const FOLD_INNER_MEDIA_QUERY = '(min-width: 720px) and (max-width: 1100px), (min-width: 720px) and (max-width: 1400px) and (pointer: coarse)'
+const BUILD = process.env.NEXT_PUBLIC_BUILD ?? ''
+/** Tablet / unfolded-inner band: 64px icon rail instead of the phone tab bar. Mirrored verbatim in app/styles/fold.css and Sidebar.module.css. */
+export const FOLD_INNER_MEDIA_QUERY = '(min-width: 821px) and (max-width: 1100px), (min-width: 821px) and (max-width: 1400px) and (pointer: coarse)'
+const SYS_GLYPH = { online: 'live', syncing: 'retry', degraded: 'fail' } as const
 
 function isRouteActive(pathname: string, href: string) {
   return href === '/' ? pathname === '/' : pathname.startsWith(href)
@@ -89,7 +92,6 @@ export function Sidebar() {
                 >
                   <Icon name={item.icon} size={18} />
                   <span className={styles.label}>{item.label}</span>
-                  {active && <span className={styles.caret} aria-hidden="true" />}
                   {count > 0 && <span className={styles.count} aria-label={`${count} need you`}>{count}</span>}
                 </Link>
               )
@@ -100,8 +102,8 @@ export function Sidebar() {
 
       <div className={styles.foot}>
         <dl className={`${styles.label} ${styles.sys}`} aria-hidden="true">
-          <div data-state={sysState}><dt>status</dt><dd><b className={styles.sysDot} />{sysState}</dd></div>
-          <div><dt>build</dt><dd>2026.10</dd></div>
+          <div data-state={sysState}><dt>status</dt><dd><Glyph g={SYS_GLYPH[sysState]} />{sysState}</dd></div>
+          {BUILD && <div><dt>build</dt><dd>{BUILD}</dd></div>}
         </dl>
         <button
           type="button"

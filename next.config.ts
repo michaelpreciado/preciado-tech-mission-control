@@ -18,12 +18,6 @@ const nextConfig: NextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
-  experimental: {
-    // Keep client side-effect-free; three/drei/fiber ship many named exports and
-    // @react-three/drei especially pulls subpath modules — optimize so only the
-    // named exports a route actually imports survive into the bundle.
-    optimizePackageImports: ['three', '@react-three/fiber', '@react-three/drei'],
-  },
   redirects: async () => [
     // /team was removed — the Bots page supersedes it. Land stale bookmarks somewhere real.
     { source: '/team', destination: '/bots', permanent: true },

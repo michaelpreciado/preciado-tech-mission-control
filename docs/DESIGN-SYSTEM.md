@@ -1,63 +1,92 @@
 # Mission Control design system
 
-The shared UI vocabulary lives in `components/ui.tsx`, with component-owned recipes in `components/ui.module.css`. The [styleguide route](/styleguide) is the rendered contract and shows every supported variant.
+Since 2026-11-09 the whole app is the **launcher widget look** (`docs/widget-theme-reference.md`,
+plan: `docs/polish-plan-2026-11-09.md`): pure black page, flat `#0A0F1A` cards on one `#1E293B`
+hairline, 16px radius, `#3B82F6` accent, JetBrains Mono everywhere except verdict numerals
+(Instrument Sans), `desk:~$` prompts, `-- label ----` dividers and `> · × ↻ ↑ ↓` status glyphs.
+No blur, glow, gradient, vignette, scanline, rain or bloom anywhere.
 
-## Primitives
+The [styleguide route](/styleguide) is the rendered contract; its **Widgets** section shows every
+primitive below, followed by the Launcher / Omarchy palette comparisons and the legacy primitives.
 
-- `Button` — shared text action; use `primary`, `ghost`, `danger`, or `confirm`.
-- `Card` and `CardHead` — panel/surface and its title row; `Card` supports `default`, `raised`, and `sunken` tones plus `none`, `sm`, and `md` padding.
-- `Field`, `Input`, `TextArea`, and `Select` — labelled form rows and native iOS-vocabulary fields. `Select` stays a real native `<select>` for mobile pickers.
-- `Segmented` — controlled keyboard-accessible radio group with `sm` and `md` sizes.
-- `Chip` — small metadata/status pill with `neutral`, `info`, `ok`, `warn`, `bad`, and `accent` tones.
-- `IconButton` — square icon-only action; `aria-label` is required.
-- `Stat` — metric block with `hero`, `lg`, and `md` sizes and optional `Sparkline` series.
-- `Row` — semantic list row; it renders an anchor for `href`, a button for `onClick`, and a div otherwise.
-- `Sheet` — bottom sheet/modal with focus trap, Escape and backdrop close, `main[inert]`, and focus restoration. `auto` and `tall` sizes are supported.
-- `SectionHead`, `TFrame`, `SectionRule`, `Window`, `SkeletonPanel`, `Clamp`, `EmptyTerminal`, `SectionTitle`, and `Badge` remain available for backwards compatibility.
+## Tokens
 
-## Tokens in use
+`lib/tokens.ts` is the single source of truth. `WIDGET`, `WIDGET_RGB`, `WIDGET_SEMANTIC` and
+`WIDGET_RADIUS` hold the measured values; `buildFridayThemeCss()` emits them into
+`html[data-theme="friday"]` (the structural theme, always on). Every legacy alias layer
+(`--mc-*`, `--mp-*`, `--pt-mx-*`, `--mbg-*`, `--aur-*`, `--ob-*`, `--glass-*`, `--vg-*`,
+`--pt-btn-glass-*`) resolves to the flat value there, and every effect token
+(`--pt-glow-*`, `--pt-shadow-window`, `--pt-scanline`, `--*-sheen`, `--*-blur`) is `none`.
 
-Component CSS consumes the `--pt-*` custom properties emitted by `lib/tokens.ts`: surfaces (`--pt-bg*`, `--pt-surface*`, `--pt-card-*`), text (`--pt-text*`), accent and semantic colors (`--pt-neon*`, `--pt-info*`, `--pt-ok*`, `--pt-warn*`, `--pt-error*`), spacing (`--pt-s-*`), radii (`--pt-r-*`), typography (`--pt-font-*`, `--pt-fs-*`, `--pt-lh-*`), borders (`--pt-border*`), and motion (`--pt-dur-*`, `--pt-ease-*`). Do not introduce component-local color, spacing, radius, or type constants.
+| role | token | friday value |
+|---|---|---|
+| page | `--pt-bg` | `#000000` |
+| card | `--pt-card-bg` / `--pt-surface` | `#0A0F1A` |
+| raised row | `--pt-surface-2` | `#111827` |
+| hairline | `--pt-border` / `--pt-card-border` | `#1E293B` (dim `#152033`, strong `#334155`) |
+| accent | `--pt-neon` / `--pt-dodger` | `#3B82F6` (bright `#60A5FA`, deep `#1D4ED8`) |
+| one highlight per card | `--pt-mx-cyan` / `--mc-seg-cyan` | `#00A3FF` — never a border |
+| text | `--pt-text` / `--pt-text-dim` / `--pt-text-mute` | `#FFFFFF` / `#94A3B8` / `#64748B` |
+| semantic | `--pt-ok` / `--pt-warn` / `--pt-error` | `#22C55E` (all clear only) / `#F59E0B` / `#EF4444` |
+| chart | `--mc-seg-on` / `--mc-seg-off` | accent / `#111C33` |
+| radius | `--pt-radius-card` / `-row` / `-btn` | 16px / 10px / 10px |
+| verdict size | `--pt-fs-verdict` | `clamp(28px, 4vw, 44px)` |
+| rgba fills | `--pt-bg-rgb` / `--pt-card-rgb` | `0,0,0` / `10,15,26` |
+
+Accent presets (`lib/theme.ts`): **Widget (default)** `#3b82f6` emits no override block;
+**Launcher slate** and **Omarchy** stamp `data-palette` on `<html>` and re-declare their own
+palettes at higher specificity; the rest go through `buildAccentCss()`.
+
+## Widget primitives
+
+CSS lives at the end of `app/globals.css`; React wrappers are in `components/ui.tsx` and
+`components/charts/`. Use these instead of a route-local recipe.
+
+| markup | React | use |
+|---|---|---|
+| `.mc-widget` (`--tight`) | — (or `<Card>`) | every card |
+| `.mc-prompt` (`--foot`) | `<Prompt host cmd meta foot as>` | card header `desk:~$ kanban`; footer `↻ 15s` |
+| `.mc-divider` | `<Divider label as>` | `-- needs you 2 ------`; `as="h2"` when it titles a section |
+| `.mc-verdict` | `<Verdict unit tone>` | the one sans numeral per card |
+| `.mc-kv` / `.mc-kv-row` | `<Kv keyWidth>` + `<KvRow k v r>` | aligned `done  3 today  67 wk` rows |
+| `.mc-segbar` (`--thin`) | `<SegBar value max segments tone thin autoTone>` | flat segmented bars; `autoTone` = amber ≥85, red ≥95 |
+| `.mc-hist` | `<MiniHist values days>` | 14-day / 24-hour mini histograms |
+| `.mc-dots` | — | day/week/month dot progress |
+| `.mc-glyph[data-g]` | `<Glyph g label>` | `run ▶` `idle ·` `fail ×`(amber) `err ×`(red) `retry ↻` `up ↑` `down ↓` `ok >` `live ●`(cyan) `todo ○` |
+| `.mc-wrow` | `<WRow g right dim href onClick>` | glyph + ellipsised title + right meta |
+
+`.mc-led` is retired (kept as a flat 6px dot until the last callers move to `<Glyph>`).
+`PageHeader` renders a `desk:~$ <command>` prompt over a mono title; its subtitle hides ≤820px.
+`Window` renders a `desk:~$` prompt instead of traffic lights.
+
+## Shell and breakpoints
+
+One ladder: **1400 / 1200 / 980 / 820 / 520**, plus `(pointer: coarse)` and reduced motion.
+Shell geometry lives in `app/styles/fold.css`:
+
+- ≥1101px (fine pointer): 232px black rail (`Sidebar.module.css`), content beside it.
+- 821–1100px, or coarse pointers up to 1400px: 64px icon rail (`FOLD_INNER_MEDIA_QUERY`).
+- ≤820px: bottom tab bar (`MobileChrome.module.css`) and the More sheet; content is padded clear of it.
+
+`components/PromptBar.tsx` is the status line under every route: `friday:~$ <route>`, live-data
+glyph, sync age.
 
 ## Adoption rules
 
-1. Any button = `<Button>` from `components/ui` or `<IconButton>`. Never a raw `<button>` with hand-rolled pill styling.
-2. Any panel/surface = `<Card>`. Any metric = `<Stat>`. Any list row = `<Row>`. Any status pill = `<Chip>`. Any modal = `<Sheet>`.
-3. New component-specific styling goes in that component's own `*.module.css`. `app/globals.css` is coordinator-owned and must not be edited by feature work.
-4. Colors/spacing/radii/type ALWAYS come from `var(--pt-*)` tokens.
+1. Any card = `.mc-widget` (or `<Card>`, which carries the same recipe). Header = `<Prompt>`; section break = `<Divider>`.
+2. Any metric = `<Verdict>` (one per card) or a `<KvRow>`. Any bar = `<SegBar>`; any trend = `<MiniHist>`. No SVG gradients.
+3. Any status = `<Glyph>`. Amber only for real thresholds (≥85% usage, failed); red only for errors / down; green only for all clear.
+4. Any button = `<Button>` (`primary` = solid accent with black ink; `ghost` = card fill + hairline) or `<IconButton>`.
+5. Mono everywhere; sans only on `.mc-verdict`, `Stat` hero/lg values and the home headline. Lowercase labels; uppercase only for a card's proper-noun title (`CLAUDE`, `BOT DESK`).
+6. Colors/spacing/radii/type always come from `var(--pt-*)` tokens. No hex literals, `box-shadow` (focus rings excepted), `backdrop-filter`, `text-shadow` or `gradient()` in component CSS.
 
 ## CSS ownership
 
-`app/globals.css` is coordinator-owned. Feature work must not edit it. New component styling belongs in the component's CSS Module; page-only layout belongs in that page's CSS Module. The primitive layer is the only owner of new shared recipes.
+`app/globals.css` is coordinator-owned (the token aliases, the shared button material, the
+widget primitives and the legacy route rules still awaiting a move). Feature work does not edit
+it: new component styling goes in the component's CSS Module, page-only layout in that page's
+module, and a list of globals rules to delete goes in the PR description.
 
-## Button material: Blue Matrix Glass
-
-The shared button material is **Edge Light**, a dark translucent body with a lit inner rim, hairline border and soft ambient depth. Primary uses dodger glass; ghost is neutral; danger is red and confirm is green. The existing sizing, capsule shapes, props and ARIA behavior are preserved. Loading retains readable variant ink; disabled gets a defined dark surface. Touch devices omit backdrop blur while retaining gradients and lighting. Reduced motion removes transitions and press scaling.
-
-`BUTTON_GLASS` in `lib/tokens.ts` emits the `--pt-btn-glass-*` material tokens. The final Lane D layer in `app/globals.css` owns shared and legacy button paint without changing layout. This is the explicitly authorized button-material exception to the globals ownership rule above. IconButton and Segmented retain their component-owned geometry.
-
-The [button study](/styleguide#button-glass) compares **A · Frosted Deck**, **B · Edge Light (installed)** and **C · Liquid Fill**, each in sm/md contexts on panel and ambient rain backgrounds. See [BUTTONS.md](./BUTTONS.md) for exact recipes, the winner decision, token inventory, contrast measurements and verification limits. Edge Light primary/ghost labels measure 11.73:1 / 16.81:1 on the panel; the conservative white-backdrop bounds are 5.83:1 / 6.85:1.
-
-## Home controls (H2)
-
-Home's composer, SEND, History/New chat, quick-prompt chips, header actions, model picker and Neural Uplink metric links consume the existing `--pt-btn-glass-*` Edge Light tokens in their CSS Modules. This preserves the existing native controls, event handlers, props and ARIA contract. Breakpoint rules own sizing only; a single module material group owns the Home control paint.
-
-The composer and secondary actions use neutral tinted gradients over the translucent glass fill, a 12px blur with 120% saturation (including the WebKit prefix), inner specular rim and soft shadow. SEND uses the dodger primary gradient and light ink. The former terminal-cyan SEND color is removed; restoring it would require an explicit, documented owner exception to the single-accent rule. Control hairlines use exactly `.06` for disabled/subtle, `.10` for base and `.18` for hover/focus. Existing card fills, borders and highlights remain on their protected `--ob-*` recipes.
-
-Feedback uses the existing 200ms duration and `cubic-bezier(.4,0,.2,1)`. Coarse pointers omit backdrop filters for these controls and the Home/Neural Uplink glass surfaces, retaining fill, gradient and rim. Reduced motion removes control transitions and press movement. Disabled controls retain defined fill and ink rather than whole-control opacity.
-
-At phone widths (≤600px), the empty hero targets `calc(100svh - 160px)` (684px minimum at 390×844; content may expand it), with 8px vertical welcome/message padding, a 180px ring, 16px composer top padding and 12px chip spacing. The four chips retain 44px touch targets. Greeting, rotating readouts, one-tap prompts, model picker, orb/dock, brackets and every mobile `order:` declaration remain intact.
-
-H2 token audit: HomeWorkspace raw hex occurrences **72 → 0**; system-gray declarations **8 → 0** (the earlier five-rule tally excluded hover/other occurrences). No tokens were added. Legacy colors now use existing surface, ink, semantic and glass roles. Both default and Friday inherit the same glass material.
-
-Contrast calculated from the canonical sRGB tokens and alpha compositing: composer/secondary label **6.85:1**, primary SEND label **5.83:1**, using a white backdrop and the brightest gradient stop as the conservative bound. On an opaque RGB(10,12,15) panel these are **17.02:1 / 11.90:1**. These are material calculations, not screenshot samples. Live 390px dimensions, first-section position and scrollWidth remain unverified in this lane because the execution sandbox denies both local server binding (`listen EPERM`) and Chromium startup (`setsockopt EPERM`).
-
-## Phone chrome (H3)
-
-Only `@media (max-width: 620px)` changes the shared chrome. In `components/ui.module.css`, `.bridgeStrip` is a non-wrapping, horizontally scrollable row with 8px padding/bottom margin and 4px gaps; `.bridgeStrip > .chip` uses 4px inline padding and the 12px kicker token. All chips, warning states and the NEXT date remain rendered. `.pageHeader` uses 12px padding and 8px bottom margin, `.pageHeaderEyebrow` has a 4px bottom margin, and `.pageHeader p` is hidden. The subtitle remains in the DOM for desktop but `display: none` also removes it from the mobile accessibility tree. Eyebrow, title and optional actions remain visible; headers with actions or wrapping titles may be taller.
-
-The explicitly authorized H3 exception to globals ownership adds `.mc-main .mc-cockpit` descendant overrides in `app/globals.css`. These outrank the legacy phone grid in the later-loaded `w2l.css`: `.mc-cockpit-row` becomes a single flex row, `.mc-stats` stays inline, stat tiles and refresh use 32px sizing, and `.mc-live-badge` remains inline. Brand text can wrap within its slot. The cockpit scrolls horizontally for large counts, narrow screens or long branding instead of clipping values. The refresh target is reduced from 44px to 32px on phones to fit this compact row. All sizing uses existing `--pt-*` tokens; glass paint and coarse-pointer blur rules are unchanged.
-
-At 390px, estimated heights are bridge **82 → 46px**, cockpit **64 → 42px**, and the action-free chat page header **145 → about 75px**. With the smaller margins and existing 12px top inset, chat content should start around **199px**, previously 349px. These are CSS calculations at the default 16px root font size, not browser measurements. Local server binding was denied (`listen EPERM`), so rendered phone and 1440px desktop geometry could not be verified. A source comparison confirms all CSS outside the new 620px media blocks is unchanged; desktop rules, all component markup and `HomeWorkspace.module.css` remain identical.
-
-Validation: `npx tsc --noEmit` and `npm run build -- --webpack` passed. The default `npm run build` remained at the Turbopack compilation stage for several minutes and was stopped; that build path is unverified. Both edited CSS files parse successfully and contain zero prefixed backdrop-filter declarations. Raw hex line counts are unchanged (`ui.module.css`: 0; `globals.css`: 186).
+`tests/motion-css.test.mjs` is the gate for the motion contract: the single blur-kill rule,
+`data-motion` / OS reduced-motion fallbacks for the boot and launch film, and the widget accent
+tokens.

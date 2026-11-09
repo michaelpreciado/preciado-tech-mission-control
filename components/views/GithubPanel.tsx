@@ -1,13 +1,15 @@
 'use client'
 
 import { useLiveData } from '../LiveDataProvider'
-import { TFrame, SectionHead, Window, EmptyTerminal, SkeletonPanel, fmtDate } from '../ui'
+import { Divider, EmptyTerminal, Glyph, Prompt, SkeletonPanel, fmtDate } from '../ui'
 import { Heatmap } from '../Viz'
 import { AsciiBars } from '../ascii-viz'
 import { ConnectCard } from './shared'
+import styles from '../github.module.css'
 
 /* ── GitHub Panel ─────────────────────────────────────── */
 
+/* Language colours are identity colours (GitHub's own), not theme colours. */
 const LANG_COLORS: Record<string, string> = {
   TypeScript: '#3178c6', JavaScript: '#f1e05a', Python: '#3572A5', HTML: '#e34c26',
   CSS: '#563d7c', Swift: '#F05138', Shell: '#89e051', Rust: '#dea584', Go: '#00ADD8',
@@ -86,135 +88,122 @@ export function GithubPanel() {
   const month = last30.reduce((s, d) => s + d.contributionCount, 0)
 
   const heroStats = [
-    { label: 'CONTRIBUTIONS · 1Y', value: total.toLocaleString() },
-    { label: 'LAST 30 DAYS', value: month.toLocaleString() },
-    { label: 'STREAK', value: `${streak}d` },
-    { label: 'STARS', value: totalStars.toLocaleString() },
-    { label: 'OPEN ISSUES', value: totalIssues.toLocaleString() },
-    { label: 'OPEN PRS', value: totalPrs.toLocaleString() },
+    { label: 'contributions · 1y', value: total.toLocaleString() },
+    { label: 'last 30 days', value: month.toLocaleString() },
+    { label: 'streak', value: `${streak}d` },
+    { label: 'stars', value: totalStars.toLocaleString() },
+    { label: 'open issues', value: totalIssues.toLocaleString() },
+    { label: 'open prs', value: totalPrs.toLocaleString() },
   ]
 
+  const syncText = gh.syncedAt ? (ghSyncStale ? `sync stale · ${ghSyncAgo}` : `synced ${ghSyncAgo}`) : 'sync unknown'
+
   return (
-    <>
-      <div className="mc-gh-stats v4-group">
+    <div className={styles.page}>
+      <div className={styles.stats}>
         {heroStats.map(s => (
-          <div key={s.label} className="mc-gh-stat">
-            <div className="val">{s.value}</div>
-            <div className="lbl">{s.label}</div>
+          <div key={s.label} className={styles.stat}>
+            <div className={styles.val}>{s.value}</div>
+            <div className={styles.lbl}>{s.label}</div>
           </div>
         ))}
-        <a className="mc-gh-profile" href={`https://github.com/${gh.username}`} target="_blank" rel="noreferrer">
+        <a className={styles.profile} href={`https://github.com/${gh.username}`} target="_blank" rel="noreferrer">
           @{gh.username} ↗
         </a>
       </div>
 
       {heatData.length > 0 && (
-        <Window tag="▦" title="GITHUB · CONTRIBUTIONS"
-          meta={<>
-            <span className="mc-gh-live"><span className={`mc-led ${ghSyncStale ? 'amber' : gh.syncedAt ? 'green' : ''}`} /> {gh.syncedAt ? ghSyncStale ? 'STALE' : 'SYNCED' : 'SYNC UNKNOWN'}{gh.syncedAt ? ` · synced ${fmtDate(gh.syncedAt)}` : ''}</span>
-            {gh.syncedAt && (
-              <span
-                className={`mc-gh-sync${ghSyncStale ? ' is-stale' : ''}`}
-                style={ghSyncStale ? { color: 'var(--pt-warn-ink)' } : undefined}
-                title={`GitHub data synced ${fmtDate(gh.syncedAt)}`}
-                aria-label={ghSyncStale ? `GitHub sync is stale, ${ghSyncAgo}` : `GitHub synced ${ghSyncAgo}`}
-              >
-                {' '}· {ghSyncStale ? 'SYNC STALE' : 'synced'} {ghSyncAgo}
-              </span>
-            )}
-            <span style={{ color: 'var(--pt-neon-bright)', textShadow: 'var(--pt-glow-sm)' }}> · {total} in the last year · {streak}-day streak{gh.streakNote ? ` (${gh.streakNote})` : ''}</span>
-          </>}>
-          <div className="mc-gh-heatmap-wrap">
-            <div className="mc-gh-day-labels">
-              <span /><span>Mon</span><span /><span>Wed</span><span /><span>Fri</span><span />
+        <section className="mc-widget" aria-label="Contributions">
+          <Prompt host="desk" cmd="github --contributions" meta={
+            <span
+              className={ghSyncStale ? styles.stale : undefined}
+              title={gh.syncedAt ? `GitHub data synced ${fmtDate(gh.syncedAt)}` : undefined}
+              aria-label={ghSyncStale ? `GitHub sync is stale, ${ghSyncAgo}` : `GitHub ${syncText}`}
+            ><Glyph g={ghSyncStale ? 'fail' : gh.syncedAt ? 'ok' : 'idle'} /> {syncText}</span>
+          } />
+          <p className={styles.summary}>{total.toLocaleString()} in the last year · {streak}-day streak{gh.streakNote ? ` (${gh.streakNote})` : ''}</p>
+          <div className={styles.heatWrap}>
+            <div className={styles.dayLabels}>
+              <span /><span>mon</span><span /><span>wed</span><span /><span>fri</span><span />
             </div>
-            <div className="mc-gh-heatmap-inner">
-              <div className="mc-gh-month-labels">
+            <div className={styles.heatInner}>
+              <div className={styles.monthLabels}>
                 {monthLabels.map((m, i) => (
-                  <span key={i} style={{ left: `calc(${(m.weekIndex / weeks.length) * 100}%)` }}>{m.label}</span>
+                  <span key={i} style={{ left: `calc(${(m.weekIndex / weeks.length) * 100}%)` }}>{m.label.toLowerCase()}</span>
                 ))}
               </div>
               <Heatmap data={heatData} />
             </div>
           </div>
-          <div className="mc-heatmap-legend">
-            <span>LESS</span>
-            <span className="scale">
-              <span className="lvl-0" /><span className="lvl-1" /><span className="lvl-2" /><span className="lvl-3" /><span className="lvl-4" />
+          <div className={styles.legend}>
+            <span>less</span>
+            <span className={styles.scale} aria-hidden="true">
+              <span className={styles.lvl0} /><span className={styles.lvl1} /><span className={styles.lvl2} /><span className={styles.lvl3} /><span className={styles.lvl4} />
             </span>
-            <span>MORE</span>
-            <span style={{ marginLeft: 'auto' }}>WINDOW · 365D</span>
+            <span>more</span>
+            <span className={styles.window}>window · 365d</span>
           </div>
-        </Window>
+        </section>
       )}
 
-      <div className="w2l-github-columns"><section aria-label="Repositories">
-      <SectionHead label={`GITHUB / REPOSITORIES · ${repos.length} MOST RECENT`} />
-      {repos.length === 0 ? (
-        <div className="mc-empty is-compact">
-          <div className="mc-empty-glyph">▤</div>
-          <div className="mc-empty-title">NO REPOSITORIES</div>
-          <p className="mc-empty-desc">No public repositories are currently being surfaced for @{gh.username}.</p>
-        </div>
-      ) : (
-      <div className="mc-repo-grid v4-group">
-        {repos.map(repo => (
-          <TFrame key={repo.name}><a className="mc-repo-card" href={repo.url} target="_blank" rel="noreferrer">
-            <div className="mc-repo-head">
-              <span className="mc-repo-name" title={repo.name}>{repo.name}</span>
-              {repo.private && <span className="mc-repo-private">PRIVATE</span>}
+      <div className={styles.columns}>
+        <section aria-label="Repositories">
+          <Divider label={`repositories ${repos.length}`} />
+          {repos.length === 0 ? (
+            <p className={styles.empty}>· no repositories — nothing public is being surfaced for @{gh.username}.</p>
+          ) : (
+            <div className={styles.repoGrid}>
+              {repos.map(repo => (
+                <a key={repo.name} className={styles.repoCard} href={repo.url} target="_blank" rel="noreferrer">
+                  <div className={styles.repoHead}>
+                    <span className={styles.repoName} title={repo.name}>{repo.name}</span>
+                    {repo.private && <span className={styles.private}>private</span>}
+                  </div>
+                  {repo.description && <div className={styles.repoDesc} title={repo.description}>{repo.description}</div>}
+                  <div className={styles.repoMeta}>
+                    {repo.language && (
+                      <span className={styles.lang}>
+                        <span className={styles.dot} style={{ background: LANG_COLORS[repo.language] ?? 'var(--pt-text-mute)' }} />
+                        {repo.language}
+                      </span>
+                    )}
+                    {repo.stars > 0 && <span>★ {repo.stars}</span>}
+                    {repo.openIssues > 0 && <span>◉ {repo.openIssues}</span>}
+                    {(repo.openPrs ?? 0) > 0 && <span>⇄ {repo.openPrs}</span>}
+                    <span className={styles.when}>{pushedAgo(repo.pushedAt)}</span>
+                  </div>
+                </a>
+              ))}
             </div>
-            {repo.description && <div className="mc-repo-desc" title={repo.description}>{repo.description}</div>}
-            <div className="mc-repo-meta">
-              {repo.language && (
-                <span className="mc-repo-lang">
-                  <span className="dot" style={{ background: LANG_COLORS[repo.language] ?? '#8b949e' }} />
-                  {repo.language}
-                </span>
-              )}
-              {repo.stars > 0 && <span>★ {repo.stars}</span>}
-              {repo.openIssues > 0 && <span>◉ {repo.openIssues}</span>}
-              {(repo.openPrs ?? 0) > 0 && <span>⇄ {repo.openPrs}</span>}
-              <span className="when">{pushedAgo(repo.pushedAt)}</span>
+          )}
+        </section>
+
+        <section aria-label="Recent activity" className="mc-widget">
+          <Prompt host="desk" cmd="github --events" meta={`${(gh.recentEvents ?? []).length} events`} />
+          {topActivity.length > 0 && <div className="asciiviz-inset">
+            <div className="asciiviz-caption">top repos · events in current feed</div>
+            {topActivity.map(([repo, count]) => <div className="asciiviz-repo" key={repo}>
+              <span className="asciiviz-repo-name" title={repo}>{repo}</span>{' '}<AsciiBars values={[count]} max={topActivity[0][1]} />
+            </div>)}
+          </div>}
+          {(gh.recentEvents ?? []).length === 0 ? (
+            <p className={styles.empty}>· no recent events — push, PR and issue activity appears here as it happens.</p>
+          ) : (
+            <div>
+              {(gh.recentEvents ?? []).slice(0, 10).map((ev, i) => {
+                const pretty = EVENT_LABELS[ev.type] ?? { label: ev.type.replace(/Event$/, '').toLowerCase(), glyph: '·' }
+                return (
+                  <div key={ev.key || i} className={styles.commit}>
+                    <span className={styles.sha}>{pretty.glyph} {pretty.label}</span>
+                    <span className={styles.repo}>{ev.repo}</span>
+                    <span className={styles.commitWhen}>{fmtDate(ev.createdAt)}</span>
+                  </div>
+                )
+              })}
             </div>
-          </a></TFrame>
-        ))}
+          )}
+        </section>
       </div>
-      )}
-
-      </section><section aria-label="Recent activity">
-      <SectionHead label="GITHUB / RECENT ACTIVITY" />
-      <Window tag="◉" title="RECENT EVENTS" meta={`${(gh.recentEvents ?? []).length} events`}>
-        {topActivity.length > 0 && <div className="asciiviz-inset">
-          <div className="asciiviz-caption">TOP REPOS · EVENTS IN CURRENT FEED</div>
-          {topActivity.map(([repo, count]) => <div className="asciiviz-repo" key={repo}>
-            <span className="asciiviz-repo-name" title={repo}>{repo}</span>{' '}<AsciiBars values={[count]} max={topActivity[0][1]} />
-          </div>)}
-        </div>}
-        {(gh.recentEvents ?? []).length === 0 ? (
-          <div className="mc-empty is-compact">
-            <div className="mc-empty-glyph">◉</div>
-            <div className="mc-empty-title">NO RECENT EVENTS</div>
-            <p className="mc-empty-desc">Push, PR and issue activity will appear here as it happens.</p>
-          </div>
-        ) : (
-        <div>
-          {(gh.recentEvents ?? []).slice(0, 10).map((ev, i) => {
-            const pretty = EVENT_LABELS[ev.type] ?? { label: ev.type.replace(/Event$/, '').toLowerCase(), glyph: '·' }
-            return (
-              <div key={ev.key || i} className="mc-commit">
-                <span className="sha">{pretty.glyph} {pretty.label}</span>
-                <div>
-                  <div className="repo">{ev.repo}</div>
-                </div>
-                <span className="when">{fmtDate(ev.createdAt)}</span>
-              </div>
-            )
-          })}
-        </div>
-        )}
-      </Window>
-      </section></div>
-    </>
+    </div>
   )
 }

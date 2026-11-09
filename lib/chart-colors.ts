@@ -35,8 +35,21 @@ export const SEQUENTIAL = [
   '#bae0ff', '#7cc0ff', '#3b9dff', '#1e90ff', '#0b7fe8', '#0369a1', '#075985',
 ] as const
 
-/** Reserved state colors — always paired with an icon or label, never color alone. */
-export const STATUS = { ok: '#28c840', warn: '#febc2e', crit: '#ff5f57' } as const
+/** Reserved state colors — always paired with an icon or label, never color alone.
+ *  These read the theme tokens (--mc-ok / --mc-warn / --mc-crit) so the widget
+ *  palette and the opt-in palettes reskin them; they are CSS values, not hexes,
+ *  so never feed them to glow(). */
+export const STATUS = { ok: 'var(--mc-ok)', warn: 'var(--mc-warn)', crit: 'var(--mc-crit)' } as const
+
+/** Billing-mode identity on the widget theme: three blues plus slate, never
+ *  summed or ranked against each other. Amber is reserved for real overage
+ *  (STATUS.warn), so no mode owns it. CSS values — usable in style and SVG fill. */
+export const BILLING_MODE_COLOR = {
+  metered: 'var(--mc-chart-emph)',        // #3B82F6 accent
+  subscription: 'var(--mc-chart-quiet)',  // #1D4ED8 deep
+  local: 'var(--pt-neon-bright)',         // #60A5FA bright
+  'cloud-routed': 'var(--mc-chart-axis)', // #64748B slate — not ours, not free
+} as const
 
 /** Nth categorical slot, clamped — callers must not cycle past the end. */
 export function catColor(i: number): string {

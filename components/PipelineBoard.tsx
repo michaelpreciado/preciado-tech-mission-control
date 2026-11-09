@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { RadarRecord } from '@/lib/pt/pipeline'
-import { Button, Card, CardHead, Chip, Row, Segmented, Sheet, Stat, fmtDate } from './ui'
+import { Button, Card, CardHead, Chip, Divider, Prompt, Row, Segmented, Sheet, Stat, fmtDate } from './ui'
 import { ClientDocsLink } from './VaultDocuments'
 import { apiUrl } from '@/lib/api-base'
 import { ClientSummary, previewUrl, RevenuePipeline, STAGES } from './RevenuePipeline'
@@ -31,7 +31,7 @@ export function PipelineBoard() {
     for (const name of ['task.created', 'task.progress', 'task.done', 'task.failed', 'pipeline_update']) events.addEventListener(name, invalidate as EventListener)
     return () => events.close()
   }, [refresh])
-  if (!data && !error) return <Card><CardHead title="Pipeline radar" /><p className={styles.note} role="status">Loading pipeline…</p></Card>
+  if (!data && !error) return <Card><Prompt host="desk" cmd="pipeline" /><p className={styles.note} role="status">Loading pipeline…</p></Card>
   const records = data?.records ?? []
   const selected = records.find(record => record.id === selectedId)
   const visible = new Set(data?.display.recordIds ?? [])
@@ -44,7 +44,8 @@ export function PipelineBoard() {
         <Button onClick={() => void refresh()}>Refresh</Button>
       </div>
       <Card as="section" aria-label="Needs attention">
-        <CardHead title="Needs attention" sub="Full-store attention. Unfinished work unchanged for 7+ days is stale; only explicit gates request your decision." right={<Chip tone="info">{data?.attentionCount ?? '—'}</Chip>} />
+        <Prompt host="desk" cmd="pipeline --attention" meta={`${data?.attentionCount ?? '—'} need you`} />
+        <p className={styles.note}>Full-store attention. Unfinished work unchanged for 7+ days is stale; only explicit gates request your decision.</p>
         <div className={styles.metrics}>
           <Stat label="Pending decisions" value={data?.pendingDecisionCount ?? '—'} />
           <Stat label="Blocked active records" value={data?.blockedCount ?? '—'} />
@@ -56,7 +57,8 @@ export function PipelineBoard() {
         {data?.attentionCount === 0 && <p className={styles.note}>No attention recorded in this snapshot.</p>}
       </Card>
       <Card as="section" aria-label="Pipeline evidence summary">
-        <CardHead title="Build and outreach evidence" sub="Independent facts across the full store, including dated history." />
+        <Divider label="build and outreach evidence" />
+        <p className={styles.note}>Independent facts across the full store, including dated history.</p>
         <div className={styles.metrics}>
           <Stat label="Build complete" value={data ? data.evidenceCounts.build.complete ?? 0 : '—'} />
           <Stat label="Review approved" value={data ? data.evidenceCounts.review.approved ?? 0 : '—'} />
@@ -76,7 +78,8 @@ export function PipelineBoard() {
           const items = records.filter(record => record.stage === col.stage && visible.has(record.id))
           const total = data?.counts[col.stage]
           return <Card as="section" key={col.stage} className={`${styles.stage} ${filter !== 'all' && filter !== col.stage ? styles.filteredOut : ''}`}>
-            <CardHead title={col.label} sub={`${data?.activeCounts[col.stage] ?? '—'} active`} right={<Chip tone="info">{total ?? '—'}</Chip>} />
+            <Divider as="h2" label={`${col.label.toLowerCase()} ${total ?? '—'}`} />
+            <p className={styles.note}>{data?.activeCounts[col.stage] ?? '—'} active</p>
             {total !== undefined && items.length < total && <p className={styles.note}>Showing {items.length} of {total} records</p>}
             {items.map(clientRow)}
             {total === 0 && <p className={styles.note}>No records at this stage.</p>}

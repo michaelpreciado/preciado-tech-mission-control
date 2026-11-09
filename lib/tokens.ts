@@ -304,6 +304,8 @@ ${Object.entries(MATRIX).map(([name, value]) => `  --pt-mx-${name}: ${value};`).
   --pt-dodger: ${NEON_DEFAULT}; --pt-dodger-rgb: ${NEON_RGB};
   --pt-text-rgb: 244,247,251;
   --pt-bg-tint: #0a0d16;
+  /* rgb triplets for rgba() fills (scrims, translucent cards) */
+  --pt-bg-rgb: 0,0,0; --pt-card-rgb: 16,19,24;
 
   /* core surfaces — two elevations */
   --pt-bg: ${SURFACE.bg};
@@ -471,7 +473,7 @@ export function buildFridayThemeCss(): string {
   --pt-dodger: ${w.accent}; --pt-dodger-rgb: ${r.accent}; --pt-glow-rgb: ${r.accent};
   --pt-neon-glow: transparent; --pt-neon-glow-soft: transparent; --pt-neon-wash: rgba(${r.accent},0.08);
   /* surfaces */
-  --pt-bg: ${w.bg}; --pt-bg-soft: ${w.bgSoft}; --pt-bg-tint: ${w.bg};
+  --pt-bg: ${w.bg}; --pt-bg-soft: ${w.bgSoft}; --pt-bg-tint: ${w.bg}; --pt-bg-rgb: 0,0,0; --pt-card-rgb: ${r.card};
   --pt-surface: ${w.card}; --pt-surface-2: ${w.card2}; --pt-card-bg: ${w.card};
   --pt-bg-terminal: ${w.card}; --pt-bg-terminal-solid: ${w.card};
   --pt-bg-gradient: none;
@@ -542,6 +544,7 @@ export function buildFridayThemeCss(): string {
   --pt-btn-glass-line-subtle: ${w.lineDim}; --pt-btn-glass-line-base: ${w.line}; --pt-btn-glass-line-strong: ${w.lineStrong};
   --pt-btn-glass-rim: none; --pt-btn-glass-rim-lit: none; --pt-btn-glass-shadow: none; --pt-btn-glass-bloom: none;
   --pt-btn-glass-press-shadow: none; --pt-btn-glass-blur: none; --pt-btn-glass-focus: ${w.accent};
+  --pt-btn-glass-ink-danger: ${s.error.ink}; --pt-btn-glass-ink-confirm: ${w.accentBright};
   /* compat alias for the undefined var still read by CostsPanel (Lane B removes the usages) */
   --font-mono: var(--pt-font-mono);
   /* type */

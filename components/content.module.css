@@ -1,0 +1,62 @@
+/* /content-creation (de-emphasised route, still deep-linkable) — one flat card recipe
+   across the idea board, studio and signal feed. The legacy rules still live in globals
+   (.mc-pipe-card / .mc-studio-* / .mc-signal-*); this module restates them on the widget
+   tokens with enough specificity to win. Green is "all clear" only, so the studio actions
+   take the primary accent. Mono, no glow / gradient / 1.5px neon borders. */
+.content { display: grid; gap: 12px; min-width: 0; font-family: var(--pt-font-mono); }
+.nav { display: flex; flex-wrap: wrap; gap: 8px; }
+.nav a { display: inline-flex; align-items: center; min-height: 44px; }
+
+:global(.mc-main) .content :global(.mc-pipe-card),
+:global(.mc-main) .content :global(.mc-studio-inputs),
+:global(.mc-main) .content :global(.mc-studio-output),
+:global(.mc-main) .content :global(.mc-pipe-card.mc-signal-card) {
+  border: 1px solid var(--pt-card-border);
+  border-radius: var(--pt-radius-card, 16px);
+  background: var(--pt-card-bg);
+  box-shadow: none;
+  transform: none;
+}
+:global(.mc-main) .content :global(.mc-pipe-card:hover) { border-color: var(--pt-border-strong); transform: none; }
+:global(.mc-main) .content :global(.mc-studio-panel-title),
+:global(.mc-main) .content :global(.mc-studio-output-head) { color: var(--pt-neon); letter-spacing: .08em; text-shadow: none; }
+
+/* progress bars → flat slate track, accent fill */
+:global(.mc-main) .content :global(.mc-pipe-bar) { border: 0; background: var(--mc-seg-off); border-radius: 1px; }
+:global(.mc-main) .content :global(.mc-pipe-bar > span) { background: var(--pt-neon); box-shadow: none; }
+
+/* fields + selects: mono */
+:global(.mc-main) .content :global(.mc-studio-field input),
+:global(.mc-main) .content :global(.mc-studio-field textarea),
+:global(.mc-main) .content :global(.mc-content-select) { font-family: var(--pt-font-mono); border-radius: var(--pt-radius-input, 10px); }
+:global(.mc-main) .content :global(.mc-studio-field input:focus),
+:global(.mc-main) .content :global(.mc-studio-field textarea:focus),
+:global(.mc-main) .content :global(.mc-content-select:focus) { border-color: var(--pt-neon); box-shadow: none; outline: none; }
+
+/* actions: primary accent, not matrix green */
+:global(.mc-main) .content :global(.mc-studio-btn),
+:global(.mc-main) .content :global(.mc-studio-copybtn) {
+  min-height: 44px;
+  border: 1px solid var(--pt-action);
+  border-radius: var(--pt-radius-btn, 10px);
+  background: var(--pt-action);
+  color: var(--pt-bg);
+  font-family: var(--pt-font-mono);
+  letter-spacing: 0;
+}
+:global(.mc-main) .content :global(.mc-studio-btn:hover:not(:disabled)),
+:global(.mc-main) .content :global(.mc-studio-copybtn:hover:not(:disabled)) { background: var(--pt-neon-bright); color: var(--pt-bg); }
+:global(.mc-main) .content :global(.mc-studio-empty) { color: var(--pt-text-dim); }
+
+/* prompt output card: no grid wash; wrap long lines instead of scrolling the page */
+:global(.mc-main) .content :global(.mc-studio-prompt-card) { background: var(--pt-card-bg); }
+:global(.mc-main) .content :global(.mc-prompt-out) { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* signal chips */
+:global(.mc-main) .content :global(.mc-signal-chip) { border-color: var(--pt-border); background: var(--pt-card-bg); letter-spacing: 0; }
+:global(.mc-main) .content :global(.mc-signal-chip:hover) { border-color: var(--pt-border-strong); color: var(--pt-text-high); }
+:global(.mc-main) .content :global(.mc-signal-chip.active) { border-color: var(--pt-action); background: var(--pt-action); color: var(--pt-bg); box-shadow: none; }
+
+@media (max-width: 520px) {
+  :global(.mc-main) .content :global(.mc-studio-prompt-card) { min-height: 0; }
+}

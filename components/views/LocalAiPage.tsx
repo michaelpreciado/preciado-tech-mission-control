@@ -1,10 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Button, Card, CardHead, Chip, Field, Row, Select, Stat, type ChipTone } from '@/components/ui'
-import { apiFetch } from '@/lib/api-base'
-import type { LocalAiSnapshot, ProbeResult, Recipe } from '@/lib/collectors/local-ai'
+import { useMemo, useState } from 'react'
+import { Button, Divider, Field, Glyph, Kv, KvRow, Prompt, Select, WRow } from '@/components/ui'
+import { SegBar } from '@/components/charts/SegBar'
+import { useLiveData } from '@/components/LiveDataProvider'
+import type { ProbeResult, Recipe } from '@/lib/collectors/local-ai'
 import { GATEWAY_PORT_FIRST, GATEWAY_PORT_LAST } from '@/lib/local-ai-constants'
+import { LocalAiTop, useLocalAi } from './LocalAiTop'
 import sys from '@/components/system.module.css'
 import styles from '@/components/local-ai.module.css'
 
@@ -12,64 +14,45 @@ const POLL_MS = 15_000
 const STALE_MS = 60_000
 const RECIPE_PAGE = 40
 
-const mem = (mib: number) => mib < 1024 ? `${mib} MiB` : `${(mib / 1024).toFixed(1)} GiB`
-const gib = (mib: number) => `${(mib / 1024).toFixed(1)} GiB`
-const sizeGb = (n: number | null) => n == null ? 'size not listed' : `${n.toFixed(1)} GB`
+const mem = (mib: number) => mib < 1024 ? `${mib}M` : `${(mib / 1024).toFixed(1)}G`
+const sizeGb = (n: number | null) => n == null ? '—' : `${n.toFixed(1)}G`
 
-function probeTone(p: ProbeResult<unknown>): ChipTone { return p.state === 'ok' ? 'ok' : p.state === 'empty' ? 'warn' : 'bad' }
-function probeLabel(p: ProbeResult<unknown>) { return p.state === 'ok' ? 'Read' : p.state === 'empty' ? 'Empty' : 'Unavailable' }
+/** `> read` / `· empty` / `× unavailable` for a probe, as the widget head's right slot. */
+function ProbeState({ probe, empty = 'empty' }: { probe: ProbeResult<unknown>; empty?: string }) {
+  return <span className={sys.fresh}>
+    {probe.state === 'ok' ? <><Glyph g="ok" /> read</> : probe.state === 'empty' ? <><Glyph g="idle" /> {empty}</> : <><Glyph g="fail" /> unavailable</>}
+  </span>
+}
 
 /** Names the source and the reason whenever a probe is not a clean read. */
 function Provenance({ probe }: { probe: ProbeResult<unknown> }) {
   return <>
-    {probe.reason && <p className={sys.notice}>{probe.state === 'unavailable' ? 'Could not read' : 'Read, but empty'}: {probe.reason}.</p>}
-    <p className={sys.note}>Source <code className={styles.source}>{probe.source}</code></p>
+    {probe.reason && <p className={sys.notice}>{probe.state === 'unavailable' ? 'could not read' : 'read, but empty'}: {probe.reason}.</p>}
+    <p className={styles.source}>src {probe.source}</p>
   </>
 }
 
 const PROXY_FIELDS: [string, string][] = [
-  ['phase', 'Phase'], ['resident', 'Resident model'], ['target', 'Target model'], ['owned', 'Proxy owns residency'],
-  ['recovery_required', 'Recovery required'], ['last_error', 'Last error'], ['rollback_error', 'Rollback error'],
+  ['phase', 'phase'], ['resident', 'resident'], ['target', 'target'], ['owned', 'owned'],
+  ['recovery_required', 'recovery'], ['last_error', 'last err'], ['rollback_error', 'rollbk err'],
 ]
-const show = (v: unknown) => v === null || v === undefined ? 'none' : typeof v === 'object' ? JSON.stringify(v) : String(v)
+/** One-line value for a key/value row; objects are summarised, never dumped as JSON. */
+function show(v: unknown): string {
+  if (v === null || v === undefined || v === '') return 'none'
+  if (Array.isArray(v)) return `${v.length} item${v.length === 1 ? '' : 's'}`
+  if (typeof v === 'object') return Object.keys(v).join(', ') || 'empty'
+  return String(v)
+}
 
 export default function LocalAiPage() {
-  const [snap, setSnap] = useState<LocalAiSnapshot | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [refreshing, setRefreshing] = useState(false)
-  const [now, setNow] = useState(0)
+  const state = useLocalAi(POLL_MS)
+  const { snap, error, refreshing, refresh, now } = state
+  const lc = useLiveData().data?.costs?.localCompute
   const [hardware, setHardware] = useState('machine')
   const [expanded, setExpanded] = useState(false)
-  const inflight = useRef<AbortController | null>(null)
-
-  const refresh = useCallback(async () => {
-    if (inflight.current) return
-    const ctl = new AbortController()
-    inflight.current = ctl
-    setRefreshing(true)
-    try {
-      const res = await apiFetch('/api/local-ai', { signal: AbortSignal.any([ctl.signal, AbortSignal.timeout(20_000)]) })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const json = await res.json() as LocalAiSnapshot
-      if (!json?.catalog || !json.gpu || !json.engines || !json.ports || !json.proxy) throw new Error('Unexpected response')
-      if (!ctl.signal.aborted) { setSnap(json); setError(null) }
-    } catch (e) {
-      if (!ctl.signal.aborted) setError(e instanceof Error ? e.message : 'Unavailable')
-    } finally {
-      if (inflight.current === ctl) { inflight.current = null; if (!ctl.signal.aborted) { setRefreshing(false); setNow(Date.now()) } }
-    }
-  }, [])
-
-  useEffect(() => {
-    void refresh()
-    const timer = window.setInterval(() => { setNow(Date.now()); if (!document.hidden) void refresh() }, POLL_MS)
-    const onVisible = () => { if (!document.hidden) void refresh() }
-    document.addEventListener('visibilitychange', onVisible)
-    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', onVisible); inflight.current?.abort(); inflight.current = null }
-  }, [refresh])
 
   const catalog = snap?.catalog.data
-  const machineGroups = catalog?.groups.filter(g => g.thisMachine) ?? []
+  const machineGroups = useMemo(() => catalog?.groups.filter(g => g.thisMachine) ?? [], [catalog])
   // "This machine" only means something if a GPU was read AND a group matched it; otherwise fall back to all.
   const effectiveHardware = hardware === 'machine' && !machineGroups.length ? 'all' : hardware
   // One filtered array feeds both the headline count and the rendered list.
@@ -85,77 +68,91 @@ export default function LocalAiPage() {
   const engines = snap?.engines.data ?? []
   const cards = snap?.gpu.data.cards ?? []
   const apps = snap?.gpu.data.apps ?? []
-  const proxy = snap?.proxy
-  const proxyBody = proxy?.data?.body ?? null
+  const proxyBody = snap?.proxy.data?.body ?? null
   const stale = !snap || now - Date.parse(snap.generatedAt) > STALE_MS
 
-  const proxyValue = !proxy ? '—' : proxy.state === 'unavailable' ? 'Unreachable' : proxy.state === 'empty' ? 'No state' : proxyBody?.resident ? 'Model resident' : 'No model resident'
-  const proxyTone: ChipTone = !proxy || proxy.state !== 'ok' ? 'warn' : 'neutral'
-
-  if (!snap) return <Card as="section" pad="md" role="status" aria-live="polite">{error ? `Local AI snapshot unavailable: ${error}. Nothing has been read.` : 'Reading the stack…'}</Card>
+  if (!snap) return <section className="mc-widget" role="status" aria-live="polite">
+    <Prompt host="desk" cmd="localai top" />
+    {error ? <WRow g="fail">snapshot unavailable: {error}. nothing has been read.</WRow> : <WRow g="retry" dim>reading the stack…</WRow>}
+  </section>
 
   return <div className={sys.content} aria-live="polite" aria-relevant="text additions">
-    <Card as="section">
-      <CardHead title="Stack at a glance" sub="Every number below is counted from the list under it."
-        right={<><Chip tone={error || stale ? 'warn' : 'ok'}>{error ? 'Refresh failed' : stale ? 'Stale' : 'Fresh'}</Chip>
-          <Button variant="primary" loading={refreshing} onClick={() => void refresh()} aria-label="Refresh local AI data">Refresh</Button></>} />
-      {error && <p className={sys.notice}>Refresh failed: {error}. Showing the last snapshot from {new Date(snap.generatedAt).toLocaleTimeString()}.</p>}
-      <div className={sys.stats}>
-        <Stat label="Engines running" value={snap.engines.state === 'unavailable' ? 'Unavailable' : engines.length} sub={snap.engines.state === 'unavailable' ? 'docker could not be read' : 'Containers labelled io.omarchy.local-ai'} tone={snap.engines.state === 'unavailable' ? 'warn' : 'neutral'} />
-        <Stat label="Gateway ports in use" value={snap.ports.state === 'unavailable' ? 'Unavailable' : `${activePorts.length} / ${snap.ports.data.length}`} sub={`${GATEWAY_PORT_FIRST}–${GATEWAY_PORT_LAST}`} />
-        <Stat label="GPUs read" value={snap.gpu.state === 'unavailable' ? 'Unavailable' : cards.length} sub={snap.gpu.state === 'unavailable' ? 'nvidia-smi failed' : `${apps.length} process${apps.length === 1 ? '' : 'es'} holding VRAM`} />
-        <Stat label="Residency proxy · 8932" value={proxyValue} tone={proxyTone} sub={proxy?.state === 'ok' ? 'Reported by /status' : proxy?.reason ?? ''} />
-        <Stat label="Recipes in catalog" value={snap.catalog.state === 'unavailable' ? 'Unavailable' : catalog?.recipes.length ?? 0} sub={catalog?.hardwareGroups ? `${catalog.hardwareGroups} hardware groups` : undefined} />
+    <div className={styles.stack}>
+      <LocalAiTop lc={lc} state={state} />
+      <div className={styles.controlsRow}>
+        <span className={sys.fresh}>{error ? <><Glyph g="fail" /> refresh failed</> : stale ? <><Glyph g="fail" /> stale</> : <><Glyph g="ok" /> fresh</>}</span>
+        <Button variant="primary" loading={refreshing} onClick={() => void refresh()} aria-label="Refresh local AI data">Refresh</Button>
       </div>
-    </Card>
+      {error && <p className={sys.notice}>refresh failed: {error}. showing the snapshot from {new Date(snap.generatedAt).toLocaleTimeString()}.</p>}
+    </div>
 
-    <Card as="section">
-      <CardHead title="GPU residency" sub="Memory per card, then every process nvidia-smi reports holding VRAM." right={<Chip tone={probeTone(snap.gpu)}>{probeLabel(snap.gpu)}</Chip>} />
-      <Provenance probe={snap.gpu} />
-      {cards.length > 0 && <div className={sys.stats}>
-        {cards.map(c => <Stat key={c.index} label={`GPU ${c.index} · ${c.name}`} value={`${c.totalMiB > 0 ? (c.usedMiB / c.totalMiB * 100).toFixed(0) : '—'}%`}
-          sub={<><span className={styles.meta}>{gib(c.usedMiB)} / {gib(c.totalMiB)} VRAM</span><span className={styles.bar} aria-hidden="true"><span style={{ width: `${Math.min(100, c.totalMiB > 0 ? c.usedMiB / c.totalMiB * 100 : 0)}%` }} /></span></>} />)}
+    <section className={`mc-widget ${sys.widget}`} aria-label="GPU residency">
+      <header className={sys.head}><Prompt as="h2" host="desk" cmd="nvidia-smi" /><div className={sys.headRight}><ProbeState probe={snap.gpu} /></div></header>
+      {cards.length > 0 && <div className={sys.top}>
+        {cards.map(c => {
+          const p = c.totalMiB > 0 ? c.usedMiB / c.totalMiB * 100 : null
+          return <div key={c.index} className={styles.row}>
+            <span className={sys.k} title={c.name}>{c.name.match(/\b(\d{4})\b/)?.[1] ?? `gpu${c.index}`}</span>
+            {p == null ? <span className={sys.na}>—</span> : <SegBar value={p} autoTone label={`GPU ${c.index} ${c.name} VRAM`} />}
+            <span className={sys.v}>{p == null ? '—' : `${Math.round(p)}%`} <span className={sys.dim}>{mem(c.usedMiB)}/{mem(c.totalMiB)}</span></span>
+          </div>
+        })}
       </div>}
-      {snap.gpu.state === 'ok' && (apps.length
-        ? apps.map(a => <Row key={`${a.pid}-${a.usedMiB}-${a.process}`} className={sys.row} title={a.process || `pid ${a.pid}`} sub={<span className={sys.line}>pid {a.pid}</span>} trailing={<Chip>{mem(a.usedMiB)}</Chip>} />)
-        : <p className={sys.note}>nvidia-smi reports no processes holding VRAM.</p>)}
-      {snap.gpu.state === 'ok' && <p className={sys.note}>The compute-apps query does not say which card a process is on, so processes are listed separately from cards.</p>}
-    </Card>
+      {snap.gpu.state === 'ok' && <>
+        <Divider label={`vram procs ${apps.length}`} />
+        {apps.length
+          ? apps.map(a => <WRow key={`${a.pid}-${a.usedMiB}-${a.process}`} g="run" right={mem(a.usedMiB)} title={`pid ${a.pid}`}>{a.process || `pid ${a.pid}`} <span className={sys.dim}>{a.pid}</span></WRow>)
+          : <WRow g="idle" dim>no processes holding vram</WRow>}
+        <p className={sys.note}>compute-apps does not say which card a process is on, so processes are listed apart from cards.</p>
+      </>}
+      <Provenance probe={snap.gpu} />
+    </section>
 
-    <Card as="section">
-      <CardHead title="Residency proxy" sub="The guarded proxy in front of Strata and EXL3. Up is not the same as loaded." right={<Chip tone={probeTone(snap.proxy)}>{probeLabel(snap.proxy)}</Chip>} />
-      <Provenance probe={snap.proxy} />
+    <section className={`mc-widget ${sys.widget}`} aria-label="Residency proxy">
+      <header className={sys.head}><Prompt as="h2" host="desk" cmd="curl :8932/status" /><div className={sys.headRight}><ProbeState probe={snap.proxy} empty="no state" /></div></header>
       {proxyBody && (() => {
         const known = PROXY_FIELDS.filter(([k]) => k in proxyBody)
         const extra = Object.keys(proxyBody).filter(k => !PROXY_FIELDS.some(([f]) => f === k) && k !== 'history' && typeof proxyBody[k] !== 'object')
+        const bad = (k: string) => (k === 'last_error' || k === 'rollback_error' || k === 'recovery_required') && !!proxyBody[k]
         return <>
-          {!proxyBody.resident && <p className={sys.note}>/status answered, but no model is resident. Nothing is loaded.</p>}
-          {[...known.map(([k, label]) => [k, label] as const), ...extra.map(k => [k, k] as const)].map(([k, label]) =>
-            <Row key={k} className={sys.row} title={label} trailing={<Chip tone={(k === 'last_error' || k === 'rollback_error') && proxyBody[k] ? 'bad' : k === 'recovery_required' && proxyBody[k] ? 'bad' : 'neutral'}>{show(proxyBody[k])}</Chip>} />)}
+          {!proxyBody.resident && <WRow g="idle" dim>/status answered, but no model is resident</WRow>}
+          <Kv keyWidth="10ch">
+            {[...known, ...extra.map(k => [k, k] as [string, string])].map(([k, label]) =>
+              <KvRow key={k} k={label} v={<span className={bad(k) ? styles.bad : undefined} title={show(proxyBody[k])}>{show(proxyBody[k])}</span>} r="" />)}
+          </Kv>
         </>
       })()}
-      {proxy?.data && !proxyBody && proxy.data.raw && <p className={sys.note}>Unparsed response: {proxy.data.raw}</p>}
-    </Card>
+      {snap.proxy.data && !proxyBody && snap.proxy.data.raw && <p className={sys.note}>unparsed response: {snap.proxy.data.raw}</p>}
+      <p className={sys.note}>the guarded proxy in front of strata and exl3. up is not the same as loaded.</p>
+      <Provenance probe={snap.proxy} />
+    </section>
 
-    <Card as="section">
-      <CardHead title="Running engines" sub="Containers carrying the local-ai label." right={<Chip tone={probeTone(snap.engines)}>{snap.engines.state === 'empty' ? 'None running' : probeLabel(snap.engines)}</Chip>} />
+    <section className={`mc-widget ${sys.widget}`} aria-label="Engines and gateway ports">
+      <header className={sys.head}><Prompt as="h2" host="desk" cmd="localai ps" /><div className={sys.headRight}><ProbeState probe={snap.engines} empty="none running" /></div></header>
+      <Divider label={`engines ${engines.length}`} />
+      {engines.length
+        ? engines.map(e => <div key={e.name} className={sys.item}>
+          <WRow g={/^up\b/i.test(e.status) ? 'run' : 'fail'} right={e.role}>{e.name}</WRow>
+          <span className={sys.sub}>{e.status.toLowerCase()} · {e.image}</span>
+        </div>)
+        : <WRow g="idle" dim>no containers carry the local-ai label</WRow>}
       <Provenance probe={snap.engines} />
-      {engines.map(e => <Row key={e.name} className={sys.row} title={e.name} sub={<><span className={sys.line}>{e.image}</span><span className={sys.line}>{e.status}</span></>} trailing={<Chip tone="info">{e.role}</Chip>} />)}
-    </Card>
-
-    <Card as="section">
-      <CardHead title="Gateway ports" sub={`${GATEWAY_PORT_FIRST}–${GATEWAY_PORT_LAST} are reserved for Local AI gateways.`}
-        right={<Chip tone={snap.ports.state === 'ok' ? 'neutral' : 'bad'}>{snap.ports.state === 'ok' ? `${activePorts.length} in use` : 'Unavailable'}</Chip>} />
-      <Provenance probe={snap.ports} />
+      <Divider label={`ports ${snap.ports.state === 'ok' ? `${activePorts.length}/${snap.ports.data.length}` : '—'}`} />
       {snap.ports.state === 'ok' && (activePorts.length
-        ? activePorts.map(p => <Row key={p.port} className={sys.row} title={`127.0.0.1:${p.port}`} sub={<span className={sys.line}>listening</span>} trailing={<Chip tone="ok">In use</Chip>} />)
-        : <p className={sys.note}>None of the {snap.ports.data.length} ports is listening.</p>)}
-    </Card>
+        ? activePorts.map(p => <WRow key={p.port} g="ok" right="listening">127.0.0.1:{p.port}</WRow>)
+        : <WRow g="idle" dim>none of {GATEWAY_PORT_FIRST}–{GATEWAY_PORT_LAST} is listening</WRow>)}
+      <Provenance probe={snap.ports} />
+    </section>
 
-    <Card as="section">
-      <CardHead title="Recipe catalog" sub={catalog?.path ? `Read from ${catalog.path}` : 'No catalog read'} right={<Chip tone={probeTone(snap.catalog)}>{probeLabel(snap.catalog)}</Chip>} />
+    <section className={`mc-widget ${sys.widget}`} aria-label="Recipe catalog">
+      <header className={sys.head}><Prompt as="h2" host="desk" cmd="localai recipes" /><div className={sys.headRight}><ProbeState probe={snap.catalog} /></div></header>
+      {catalog && <Kv keyWidth="8ch">
+        <KvRow k="path" v={<span title={catalog.path ?? undefined}>{catalog.path ?? 'none'}</span>} r="" />
+        <KvRow k="shape" v={catalog.shape ?? '—'} r={`schema ${catalog.schemaVersion ?? '—'}`} />
+        <KvRow k="registry" v={catalog.registryCommit?.slice(0, 12) ?? 'not stated'} r={`${catalog.hardwareGroups} groups`} />
+        {catalog.alternates.map(a => <KvRow key={a.path} k="copy" v={<span title={a.path}>{a.path}</span>} r={`${a.recipeCount ?? '?'} recipes`} />)}
+      </Kv>}
       <Provenance probe={snap.catalog} />
-      {catalog && <p className={sys.note}>Shape: {catalog.shape} · schema {catalog.schemaVersion ?? 'not stated'} · registry {catalog.registryCommit?.slice(0, 12) ?? 'not stated'}{catalog.arrayGroups ? ` · ${catalog.arrayGroups} groups held a bare array` : ''}{catalog.alternates.map(a => ` · other copy ${a.path} holds ${a.recipeCount ?? 'unreadable'} recipes`).join('')}</p>}
       {catalog && catalog.recipes.length > 0 && <>
         <div className={styles.controls}>
           <Field label="Hardware">
@@ -165,14 +162,15 @@ export default function LocalAiPage() {
               {catalog.groups.map(g => <option key={g.key} value={g.key}>{g.name || g.key} · {g.recipeCount}</option>)}
             </Select>
           </Field>
-          <Chip tone="accent">{recipes.length} recipe{recipes.length === 1 ? '' : 's'}</Chip>
         </div>
-        {hardware === 'machine' && !machineGroups.length && <p className={sys.notice}>No GPU read from nvidia-smi matched a catalog group, so all hardware is shown.</p>}
-        {shown.map(r => <Row key={`${r.hardware}/${r.id}`} className={sys.row} title={r.name}
-          sub={<><span className={sys.line}>{r.id}</span><span className={sys.line}>{[r.family, r.engine, r.format].filter(Boolean).join(' · ')}</span></>}
-          trailing={<Chip>{sizeGb(r.sizeGb)} · {r.cards ?? '?'} card{r.cards === 1 ? '' : 's'}{r.minDriver ? ` · driver ${r.minDriver}+` : ''}</Chip>} />)}
+        {hardware === 'machine' && !machineGroups.length && <p className={sys.notice}>no gpu read from nvidia-smi matched a catalog group, so all hardware is shown.</p>}
+        <Divider label={`recipes ${recipes.length}`} />
+        {shown.map(r => <div key={`${r.hardware}/${r.id}`} className={sys.item}>
+          <WRow g="idle" right={`${sizeGb(r.sizeGb)} · ${r.cards ?? '?'}c`} title={r.id}>{r.name}</WRow>
+          <span className={sys.sub}>{[r.family, r.engine, r.format, r.minDriver ? `driver ${r.minDriver}+` : ''].filter(Boolean).join(' · ')}</span>
+        </div>)}
         {recipes.length > shown.length && <div className={styles.more}><Button variant="ghost" onClick={() => setExpanded(true)}>Show all {recipes.length} (showing {shown.length})</Button></div>}
       </>}
-    </Card>
+    </section>
   </div>
 }

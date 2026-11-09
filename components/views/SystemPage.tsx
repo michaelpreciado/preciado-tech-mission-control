@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLiveData } from '@/components/LiveDataProvider'
-import { Button, Card, CardHead, Chip, Row, Stat, type ChipTone } from '@/components/ui'
+import { Button, Divider, Glyph, Kv, KvRow, Prompt, WRow, type GlyphName } from '@/components/ui'
+import { SegBar } from '@/components/charts/SegBar'
+import { MiniHist } from '@/components/charts/MiniHist'
 import { apiFetch } from '@/lib/api-base'
 import type { HostMetrics } from '@/lib/host-metrics'
 import type { BotsSnapshot } from '@/lib/collectors/bots'
@@ -12,6 +14,8 @@ import styles from '@/components/system.module.css'
 const POLL_MS = 30_000
 const STALE_MS = 120_000
 const FILE_IDS = new Set(['kanban-db', 'pipeline-store', 'cron-jobs'])
+/** Launcher widget thresholds: amber at 85 %, red at 95 %. */
+const TONE = { warn: 85, crit: 95 }
 type Resource<T> = { data: T | null; error: string | null }
 type Resources = {
   host: Resource<HostMetrics>
@@ -21,43 +25,100 @@ type Resources = {
 }
 const empty = { data: null, error: null }
 const finite = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n)
-const pct = (n: unknown) => finite(n) ? `${n.toFixed(1)}%` : 'Unavailable'
-const temp = (n: unknown) => finite(n) ? `${n.toFixed(0)}°C` : 'Unavailable'
-const gib = (n: number) => `${(n / 1024 ** 3).toFixed(1)} GiB`
-const capacity = (used: unknown, total: unknown, multiplier = 1) => finite(used) && finite(total) && total > 0
-  ? `${gib(used * multiplier)} / ${gib(total * multiplier)}` : 'Used / total unavailable'
-const series = (values?: number[]) => values && values.length > 1 && values.every(finite) ? values : undefined
+const pct0 = (n: unknown) => finite(n) ? `${Math.round(n)}%` : '—'
+const deg = (n: unknown) => finite(n) ? `${Math.round(n)}°` : ''
+/** `40G`, `119G`, `512M` — the widget's compact capacity. */
+function size(bytes: unknown) {
+  if (!finite(bytes) || bytes < 0) return ''
+  const g = bytes / 1024 ** 3
+  if (g >= 1024) return `${(g / 1024).toFixed(1)}T`
+  if (g >= 10) return `${Math.round(g)}G`
+  if (g >= 1) return `${g.toFixed(1)}G`
+  return `${Math.round(bytes / 1024 ** 2)}M`
+}
+/** `38B`, `1.2K`, `4.0M` per second. */
+function rate(bps: unknown) {
+  if (!finite(bps) || bps < 0) return '—'
+  if (bps < 1024) return `${Math.round(bps)}B`
+  if (bps < 1024 ** 2) return `${(bps / 1024).toFixed(1)}K`
+  return `${(bps / 1024 ** 2).toFixed(1)}M`
+}
+/** `5070` from "NVIDIA GeForce RTX 5070 Ti"; falls back to `gpu0`. */
+function gpuLabel(name: string, index: number) {
+  return name.match(/\b(\d{4})\b/)?.[1] ?? `gpu${index}`
+}
+function mountLabel(mount: string) {
+  return mount === '/' ? 'disk' : mount.split('/').filter(Boolean).pop()?.slice(0, 6) || mount
+}
+/** Down-sample a 1 Hz history into `slots` averaged buckets for a MiniHist. */
+function buckets(values: number[] | undefined, slots: number) {
+  const v = (values ?? []).filter(finite)
+  if (v.length <= slots) return v
+  const per = v.length / slots
+  return Array.from({ length: slots }, (_, i) => {
+    const part = v.slice(Math.floor(i * per), Math.floor((i + 1) * per))
+    return part.reduce((a, b) => a + b, 0) / Math.max(1, part.length)
+  })
+}
 function timestamp(value?: string | number | null) {
   const ms = typeof value === 'number' ? value : value ? Date.parse(value) : NaN
   return Number.isFinite(ms) ? ms : null
 }
 function date(value?: string | number | null) {
   const ms = timestamp(value)
-  return ms === null ? 'Not reported' : new Date(ms).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' })
+  return ms === null ? 'not reported' : new Date(ms).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' })
 }
 function stale(value: string | number | null | undefined, now: number) {
   const ms = timestamp(value)
   return ms === null || now - ms > STALE_MS
 }
 function uptime(seconds?: number | null) {
-  if (!finite(seconds)) return 'Not reported'
+  if (!finite(seconds)) return '—'
   const minutes = Math.floor(seconds / 60)
-  return `${Math.floor(minutes / 1440)}d ${Math.floor(minutes / 60) % 24}h ${minutes % 60}m`
+  const d = Math.floor(minutes / 1440)
+  const h = Math.floor(minutes / 60) % 24
+  return d > 0 ? `${d}d ${h}h` : `${h}h ${minutes % 60}m`
 }
-function tone(state: string): ChipTone {
+type Severity = 'bad' | 'warn' | 'muted' | 'ok' | 'neutral'
+/** missing/unavailable are absences (muted `·`), stopped is amber `×`, down is red `×`. */
+function severity(state: string): Severity {
   if (['up', 'running', 'ok', 'available'].includes(state)) return 'ok'
   if (['down', 'auth-fail', 'failed'].includes(state)) return 'bad'
-  if (['warn', 'degraded', 'stale', 'stopped', 'unavailable', 'missing'].includes(state)) return 'warn'
+  if (['warn', 'degraded', 'stale', 'stopped'].includes(state)) return 'warn'
+  if (['missing', 'unavailable', 'unknown'].includes(state)) return 'muted'
   return 'neutral'
 }
-function Status({ state }: { state: string }) {
-  return <Chip tone={tone(state)}>{state === 'up' ? 'Up' : state === 'warn' ? 'Needs attention' : state === 'auth-fail' ? 'Auth failed' : state.charAt(0).toUpperCase() + state.slice(1)}</Chip>
-}
+const GLYPH: Record<Severity, GlyphName> = { ok: 'ok', bad: 'err', warn: 'fail', muted: 'idle', neutral: 'idle' }
+const glyphFor = (state: string) => GLYPH[severity(state)]
+const stateWord = (state: string) => state === 'warn' ? 'needs attention' : state === 'auth-fail' ? 'auth failed' : state
 function Freshness({ at, error, now }: { at?: string | number | null; error?: string | null; now: number }) {
-  return <Chip tone={error || stale(at, now) ? 'warn' : 'ok'}>{error ? 'Refresh failed' : !timestamp(at) ? 'No timestamp' : stale(at, now) ? 'Stale' : 'Fresh'}</Chip>
+  if (error) return <span className={styles.fresh}><Glyph g="fail" /> refresh failed</span>
+  if (!timestamp(at)) return <span className={styles.fresh}><Glyph g="idle" /> no timestamp</span>
+  return stale(at, now)
+    ? <span className={styles.fresh}><Glyph g="fail" /> stale</span>
+    : <span className={styles.fresh}><Glyph g="ok" /> fresh</span>
 }
 function Notice({ resource, label }: { resource: Resource<unknown>; label: string }) {
-  return resource.error ? <p className={styles.notice}>{label}: {resource.error}.{resource.data ? ' Showing the last received data.' : ' No data available.'}</p> : null
+  return resource.error ? <p className={styles.notice}>{label}: {resource.error}.{resource.data ? ' showing the last received data.' : ' no data available.'}</p> : null
+}
+/** A widget head: prompt left, freshness/actions right; the right slot wraps under the prompt on phones. */
+function Head({ cmd, right }: { cmd: string; right?: React.ReactNode }) {
+  return <header className={styles.head}><Prompt as="h2" host="friday" cmd={cmd} />{right ? <div className={styles.headRight}>{right}</div> : null}</header>
+}
+/** `cpu [segbar] 44% 64°` */
+function Meter({ k, value, right, label }: { k: string; value: number | null; right: React.ReactNode; label: string }) {
+  return <>
+    <span className={styles.k}>{k}</span>
+    {value == null ? <span className={styles.na}>—</span> : <SegBar value={value} autoTone={TONE} label={label} />}
+    <span className={`${styles.v} ${value != null && value >= TONE.crit ? styles.crit : value != null && value >= TONE.warn ? styles.warn : ''}`}>{right}</span>
+  </>
+}
+/** `thr` — one segment per logical core, toned by that core's own load. */
+function Threads({ cores }: { cores: number[] }) {
+  return <div className={`mc-segbar ${styles.thr}`} style={{ '--n': cores.length } as React.CSSProperties} role="img"
+    aria-label={`${cores.length} threads, ${cores.filter(c => c >= 15).length} busy`}>
+    {cores.map((c, i) => <i key={i} className={c >= TONE.crit ? `on ${styles.segCrit}` : c >= TONE.warn ? `on ${styles.segWarn}` : c >= 15 ? 'on' : undefined} />)}
+  </div>
 }
 
 /** Extra sources stay local; mission telemetry and SSE are owned by LiveDataProvider. */
@@ -147,7 +208,7 @@ export default function SystemPage() {
   const mounts = host?.mounts.length ? host.mounts : telemetry?.disk ? [{ mount: '/', device: '', ...telemetry.disk }] : []
   const freshest = Math.max(timestamp(sample?.t) ?? 0, timestamp(telemetry?.generatedAt) ?? 0) || null
   const services = useMemo(() => [...(health?.services ?? [])].sort((a, b) => {
-    const rank = (status: string) => tone(status) === 'bad' ? 0 : status === 'up' ? 2 : 1
+    const rank = (status: string) => severity(status) === 'bad' ? 0 : status === 'up' ? 2 : 1
     return rank(a.status) - rank(b.status)
   }), [health])
   const issues = services.filter(s => s.status !== 'up')
@@ -178,88 +239,125 @@ export default function SystemPage() {
     if (updates.length) setChanges(current => [...updates, ...current].slice(0, 6))
   }, [states])
 
+  const cpuNow = host?.sampling && finite(sample?.cpuPct) ? sample.cpuPct : null
+  const memPct = memory ? memory.used / memory.total * 100 : null
+  const load1 = finite(telemetry?.cpu?.load1) ? telemetry.cpu.load1 : finite(sample?.load1) ? sample.load1 : null
+  const threads = host?.static.threads || telemetry?.cpu?.cores || sample?.cores.length || null
+  const cpuHist = host?.sampling ? buckets(host.history.cpu, 30) : []
+  const cpuPeak = cpuHist.length ? Math.max(...cpuHist) : null
+
   return <>
     <div className={styles.content} aria-live="polite" aria-relevant="text additions">
-      <Card as="section">
-        <CardHead title={host?.static.hostname || 'Machine identity unavailable'} sub={host?.static.cpuModel || 'Processor model not reported'}
-          right={<><Freshness at={freshest} error={resources.host.error || error} now={now} /><Button variant="primary" loading={refreshing} onClick={() => void refresh()} aria-label="Refresh system data">Refresh</Button></>} />
-        <dl className={styles.identity}>
-          <div><dt>Kernel</dt><dd>{host?.static.kernel || 'Not reported'}</dd></div>
-          <div><dt>OS distribution</dt><dd>Not exposed</dd></div>
-          <div><dt>Uptime</dt><dd>{uptime(host?.uptimeSec)}</dd></div>
-          <div><dt>Load average · 1 / 5 / 15 min</dt><dd>{telemetry?.cpu ? [telemetry.cpu.load1, telemetry.cpu.load5, telemetry.cpu.load15].map(n => finite(n) ? n.toFixed(2) : '—').join(' / ') : finite(sample?.load1) ? `${sample.load1.toFixed(2)} / — / —` : 'Not reported'}</dd></div>
-          <div><dt>Freshest hardware sample</dt><dd>{date(freshest)}</dd></div>
-          <div><dt>Live updates</dt><dd>{eventStream === 'live' ? 'Connected' : eventStream === 'connecting' ? 'Connecting' : 'Disconnected'} · polls every 30s</dd></div>
-        </dl>
-        <Notice resource={resources.host} label="Rig telemetry" />
-        <p className={styles.note}>Rig sampled {date(sample?.t)} · Summary sampled {date(telemetry?.generatedAt)}. Samples older than 2 minutes are marked stale.</p>
-      </Card>
-
-      <Card as="section">
-        <CardHead title="Vitals" sub="Sparklines show the sampler’s available history, up to 2 minutes."
-          right={<Freshness at={sample?.t ?? telemetry?.generatedAt} error={resources.host.error || error} now={now} />} />
-        {error && <p className={styles.notice}>Shared telemetry could not refresh: {error}. {data ? 'Showing the last received summary.' : 'No summary available.'}</p>}
-        <div className={styles.stats}>
-          <Stat label="CPU usage" value={host?.sampling ? pct(sample?.cpuPct) : 'Unavailable'} sub={host?.sampling ? 'Across all logical cores' : 'Waiting for a measured CPU sample'} series={host?.sampling ? series(host.history.cpu) : undefined} />
-          <Stat label="Memory" value={memory ? pct(memory.used / memory.total * 100) : 'Unavailable'} sub={memory ? capacity(memory.used, memory.total, 1024) : 'Memory usage not reported'} series={sample && sample.memTotalKb > 0 ? series(host?.history.mem) : undefined} />
-          {gpus.length ? gpus.map((gpu, index) => <Stat key={gpu.index} label={`GPU ${gpu.index} · ${gpu.name}`} value={pct(gpu.utilPct)}
-            sub={<><span className={styles.line}>VRAM {capacity(gpu.memUsedMb, gpu.memTotalMb, 1024 ** 2)}</span><span className={styles.line}>{temp(gpu.tempC)}</span></>}
-            series={sample?.gpus.length ? series(host?.history.gpu[index]) : undefined} />) : <Stat label="GPU" value="Unavailable" sub="No GPU metrics reported" />}
-          {mounts.length ? mounts.map(mount => <Stat key={mount.mount} label={`Disk · ${mount.mount}`} value={mount.totalBytes > 0 ? pct(mount.usedBytes / mount.totalBytes * 100) : 'Unavailable'} sub={capacity(mount.usedBytes, mount.totalBytes)} />) : <Stat label="Disk" value="Unavailable" sub="No mount usage reported" />}
+      <section className={`mc-widget ${styles.widget}`} aria-label="Machine vitals">
+        <Head cmd="top" right={<><Freshness at={freshest} error={resources.host.error || error} now={now} /><Button variant="primary" loading={refreshing} onClick={() => void refresh()} aria-label="Refresh system data">Refresh</Button></>} />
+        <p className={styles.ident} title={host?.static.cpuModel || undefined}>{host?.static.hostname || 'host unavailable'} · {host?.static.kernel || 'kernel not reported'}{host?.static.cpuModel ? ` · ${host.static.cpuModel}` : ''}</p>
+        {error && <p className={styles.notice}>shared telemetry could not refresh: {error}. {data ? 'showing the last received summary.' : 'no summary available.'}</p>}
+        <Notice resource={resources.host} label="rig telemetry" />
+        <div className={styles.top}>
+          <Meter k="cpu" value={cpuNow} label="CPU usage" right={<>{pct0(cpuNow)} <span className={styles.dim}>{deg(sample?.cpuTempC)}</span></>} />
+          <span className={styles.k}>2m</span>
+          {cpuHist.length > 1 ? <MiniHist values={cpuHist} days={cpuHist.length} label={`CPU usage over the last 2 minutes, peak ${pct0(cpuPeak)}`} /> : <span className={styles.na}>waiting for samples</span>}
+          <span className={styles.v}>{cpuPeak != null ? <><Glyph g="up" />{pct0(cpuPeak)}</> : ''}</span>
+          <span className={styles.k}>load</span>
+          <span className={styles.wide}>{load1 != null ? load1.toFixed(2) : '—'}{telemetry?.cpu ? <span className={styles.dim}> {[telemetry.cpu.load5, telemetry.cpu.load15].map(n => finite(n) ? n.toFixed(2) : '—').join(' ')}</span> : null}</span>
+          <span className={styles.v}>{threads ? `${threads} thr` : ''}</span>
+          {gpus.map(gpu => <Meter key={gpu.index} k={gpuLabel(gpu.name, gpu.index)} value={finite(gpu.utilPct) ? gpu.utilPct : null} label={`GPU ${gpu.index} ${gpu.name} usage`}
+            right={<>{pct0(gpu.utilPct)} <span className={styles.dim}>{deg(gpu.tempC)}</span></>} />)}
+          {gpus.map(gpu => gpu.memTotalMb > 0 ? <Meter key={`vram-${gpu.index}`} k={`vram${gpus.length > 1 ? gpu.index : ''}`} value={gpu.memUsedMb / gpu.memTotalMb * 100} label={`GPU ${gpu.index} memory`}
+            right={<>{pct0(gpu.memUsedMb / gpu.memTotalMb * 100)} <span className={styles.dim}>{size(gpu.memUsedMb * 1024 ** 2)}</span></>} /> : null)}
+          <Meter k="mem" value={memPct} label="Memory usage" right={<>{pct0(memPct)} <span className={styles.dim}>{memory ? size(memory.used * 1024) : ''}</span></>} />
+          {mounts.map(mount => {
+            const p = mount.totalBytes > 0 ? mount.usedBytes / mount.totalBytes * 100 : null
+            return <Meter key={mount.mount} k={mountLabel(mount.mount)} value={p} label={`Disk ${mount.mount}`} right={<>{pct0(p)} <span className={styles.dim}>{size(mount.usedBytes)}</span></>} />
+          })}
+          <span className={styles.k}>net</span>
+          <span className={styles.wide}>{sample && host?.sampling ? <><Glyph g="down" />{rate(sample.netRxBps)} <Glyph g="up" />{rate(sample.netTxBps)}</> : '—'}</span>
+          <span className={styles.v} />
+          {sample?.cores.length ? <>
+            <span className={styles.k}>thr</span>
+            <Threads cores={sample.cores} />
+            <span className={styles.v}>{sample.cores.filter(c => c >= 15).length}/{sample.cores.length}</span>
+          </> : null}
         </div>
-        {sample?.cores.length ? <details className={styles.details}><summary>Per-core CPU · {sample.cores.length} logical cores</summary><div className={styles.cores}>{sample.cores.map((value, index) => <Stat key={index} label={`Core ${index}`} value={pct(value)} />)}</div></details> : <p className={styles.note}>Per-core CPU usage is not available.</p>}
-      </Card>
+        <Divider label="pressure" />
+        <Kv keyWidth="7ch">
+          <KvRow k="swap" v={sample && sample.swapTotalKb > 0 ? size(sample.swapUsedKb * 1024) : 'none'} r={sample && sample.swapTotalKb > 0 ? pct0(sample.swapUsedKb / sample.swapTotalKb * 100) : ''} />
+          <KvRow k="psi" v={`cpu ${pct0(sample?.psiCpu)}  mem ${pct0(sample?.psiMem)}  io ${pct0(sample?.psiIo)}`} r="" />
+          <KvRow k="procs" v={finite(sample?.procsRunning) ? `${sample.procsRunning} running` : '—'} r={finite(sample?.ctxPerSec) ? `${Math.round(sample.ctxPerSec).toLocaleString()} ctx/s` : ''} />
+        </Kv>
+        <Prompt host="friday" foot meta={`up ${uptime(host?.uptimeSec)}`} />
+      </section>
 
-      <Card as="section">
-        <CardHead title="Thermals and fans" right={<Freshness at={sample?.t ?? telemetry?.generatedAt} error={resources.host.error} now={now} />} />
-        <div className={styles.stats}>
-          <Stat label="CPU package" value={temp(sample?.cpuTempC)} />
-          <Stat label="NVMe" value={temp(sample?.nvmeTempC)} />
-          {gpus.map(gpu => <Stat key={gpu.index} label={`GPU ${gpu.index}`} value={temp(gpu.tempC)} sub={`Fan ${'fanPct' in gpu ? pct(gpu.fanPct) : 'not reported'}`} />)}
-        </div>
-        <p className={styles.note}>CPU and chassis fan speeds are not exposed. GPU fan readings appear only when reported.</p>
-      </Card>
+      <section className={`mc-widget ${styles.widget}`} aria-label="Thermals and fans">
+        <Head cmd="sensors" right={<Freshness at={sample?.t ?? telemetry?.generatedAt} error={resources.host.error} now={now} />} />
+        <Kv keyWidth="7ch">
+          <KvRow k="cpu" v="package" r={deg(sample?.cpuTempC) || '—'} />
+          <KvRow k="nvme" v="drive" r={deg(sample?.nvmeTempC) || '—'} />
+          {gpus.map(gpu => {
+            const fan = 'fanPct' in gpu ? gpu.fanPct : null
+            const power = 'powerW' in gpu ? gpu.powerW : null
+            return <KvRow key={gpu.index} k={gpuLabel(gpu.name, gpu.index)} v={`fan ${finite(fan) ? pct0(fan) : 'n/a'}${finite(power) ? `  ${Math.round(power)}W` : ''}`} r={deg(gpu.tempC) || '—'} />
+          })}
+        </Kv>
+        <p className={styles.note}>cpu and chassis fan speeds are not exposed; gpu fans appear only when reported.</p>
+      </section>
 
-      <Card as="section">
-        <CardHead title="Services and files" sub={`Probe updated ${date(health?.generatedAt)}`} right={issues.length ? <Chip tone="bad">{issues.length} need attention</Chip> : <Freshness at={health?.generatedAt} error={resources.system.error} now={now} />} />
-        <Notice resource={resources.system} label="Service probe" />
-        {health && stale(health.generatedAt, now) && <p className={styles.notice}>Service observations are stale. These are last known states.</p>}
-        {services.length ? services.map(service => <Row key={service.id} className={`${styles.row} ${service.status !== 'up' ? styles.attention : ''}`}
-          title={service.name} sub={<span className={styles.line}>{FILE_IDS.has(service.id) ? 'File freshness' : 'Service probe'} · {service.detail}</span>} trailing={<Status state={service.status} />} />) : <p className={styles.note}>No service or file-health observations available.</p>}
-        <p className={styles.note}>These are the app’s tracked probes. Systemd user-unit states are not exposed.</p>
-      </Card>
+      <section className={`mc-widget ${styles.widget}`} aria-label="Services and files">
+        <Head cmd="systemctl --user status" right={issues.length ? <span className={styles.fresh}><Glyph g="err" /> {issues.length} need attention</span> : <Freshness at={health?.generatedAt} error={resources.system.error} now={now} />} />
+        <Notice resource={resources.system} label="service probe" />
+        {health && stale(health.generatedAt, now) && <p className={styles.notice}>service observations are stale. these are last known states.</p>}
+        {services.length ? services.map(service => <div key={service.id} className={styles.item}>
+          <WRow g={glyphFor(service.status)} right={stateWord(service.status)} title={service.detail}>{service.name}</WRow>
+          <span className={styles.sub}>{FILE_IDS.has(service.id) ? 'file' : 'probe'} · {service.detail}</span>
+        </div>) : <p className={styles.note}>no service or file-health observations available.</p>}
+        <Prompt host="friday" foot meta={`probed ${date(health?.generatedAt)}`} />
+      </section>
 
-      <Card as="section">
-        <CardHead title="Bots and gateways" sub={`Checked ${date(bots?.generatedAt)} · Open a row to go to Chat.`} right={<Freshness at={bots?.generatedAt} error={resources.bots.error} now={now} />} />
-        <Notice resource={resources.bots} label="Gateways" />
-        {bots?.bots.length ? [...bots.bots].sort((a, b) => Number(a.gateway.status === 'running') - Number(b.gateway.status === 'running')).map(bot => <Row key={bot.name} className={styles.row} href="/chat" title={bot.name}
-          sub={<><span className={styles.line}>Last activity {date(bot.lastActiveAt)}</span><span className={styles.line}>{bot.gateway.detail}</span></>} trailing={<Status state={bot.gateway.status} />} />) : <p className={styles.note}>No bot gateway observations available.</p>}
-      </Card>
+      <section className={`mc-widget ${styles.widget}`} aria-label="Bots and gateways">
+        <Head cmd="gateways" right={<Freshness at={bots?.generatedAt} error={resources.bots.error} now={now} />} />
+        <Notice resource={resources.bots} label="gateways" />
+        {bots?.bots.length ? [...bots.bots].sort((a, b) => Number(a.gateway.status === 'running') - Number(b.gateway.status === 'running')).map(bot => <div key={bot.name} className={styles.item}>
+          <WRow g={glyphFor(bot.gateway.status)} right={stateWord(bot.gateway.status)} href="/chat" title={`Open ${bot.name} in chat`}>{bot.name}</WRow>
+          <span className={styles.sub}>last active {date(bot.lastActiveAt)} · {bot.gateway.detail}</span>
+        </div>) : <p className={styles.note}>no bot gateway observations available.</p>}
+      </section>
 
-      <Card as="section">
-        <CardHead title="Board and data health" sub={`Board checked ${date(board?.generatedAt)}`} right={<Freshness at={board?.generatedAt} error={resources.board.error} now={now} />} />
-        <Notice resource={resources.board} label="Board" />
+      <section className={`mc-widget ${styles.widget}`} aria-label="Board and data health">
+        <Head cmd="kanban --health" right={<Freshness at={board?.generatedAt} error={resources.board.error} now={now} />} />
+        <Notice resource={resources.board} label="board" />
         {board ? <>
-          <Row className={styles.row} href="/kanban" title="Kanban board" sub={<span className={styles.line}>Open board</span>} trailing={<Status state={board.available ? 'available' : 'unavailable'} />} />
-          {board.sources?.map(source => <Row key={source.origin} className={styles.row} title={source.name} sub={<span className={styles.line}>{source.origin}</span>} trailing={<Status state={source.available ? 'available' : 'unavailable'} />} />)}
-          {board.available ? <div className={styles.stats}>
-            <Stat label="Total tasks" value={Object.values(board.counts).reduce((sum, count) => sum + count, 0)} sub="Across available boards" />
-            {Object.entries(board.counts).map(([state, count]) => <Stat key={state} label={state.replaceAll('_', ' ')} value={count} />)}
-          </div> : <p className={styles.note}>Task counts unavailable while the board is unavailable.</p>}
-          {board.sources?.some(source => !source.available) && <p className={styles.notice}>Some boards are unavailable. Counts cover only available boards.</p>}
-        </> : <p className={styles.note}>Board availability and task counts have not been received.</p>}
-        <div className={styles.subhead}><h3>Source freshness</h3><Freshness at={data?.generatedAt} error={error} now={now} /></div>
-        <p className={styles.note}>Summary checked {date(data?.generatedAt)}. Source states reflect their own availability and freshness checks.</p>
-        {error && <p className={styles.notice}>Source refresh failed: {error}. Last known observations may be stale.</p>}
-        {sourceRows.length ? sourceRows.map(source => <Row key={source.id} className={styles.row} title={source.name} sub={<span className={styles.line}>Last update {date(source.at)}{source.detail ? ` · ${source.detail}` : ''}</span>} trailing={<Status state={source.state} />} />) : <p className={styles.note}>No source freshness observations available.</p>}
-        <Row className={styles.row} title="Usage logs" sub={<span className={styles.line}>Last logged {date(freshness?.lastLoggedAt)} · Stale after 3 days</span>} trailing={<Status state={!freshness?.lastLoggedAt || freshness.staleDays == null ? 'unknown' : freshness.staleDays > 3 ? 'stale' : 'ok'} />} />
-        {Object.entries(data?.collectorErrors ?? {}).map(([name, message]) => <Row key={name} className={`${styles.row} ${styles.attention}`} title={`${name} collector`} sub={<span className={styles.line}>{message} · Last good {date(data?.lastGoodAt?.[name])}</span>} trailing={<Status state="degraded" />} />)}
-      </Card>
+          <WRow g={glyphFor(board.available ? 'available' : 'unavailable')} right={board.available ? 'available' : 'unavailable'} href="/kanban">kanban board</WRow>
+          {board.sources?.map(source => <WRow key={source.origin} g={glyphFor(source.available ? 'available' : 'unavailable')} right={source.available ? 'available' : 'unavailable'} title={source.origin}>{source.name}</WRow>)}
+          {board.available ? <>
+            <Divider label={`tasks ${Object.values(board.counts).reduce((sum, count) => sum + count, 0)}`} />
+            <Kv keyWidth="12ch">{Object.entries(board.counts).map(([state, count]) => <KvRow key={state} k={state.replaceAll('_', ' ')} v="" r={count} />)}</Kv>
+          </> : <p className={styles.note}>task counts unavailable while the board is unavailable.</p>}
+          {board.sources?.some(source => !source.available) && <p className={styles.notice}>some boards are unavailable. counts cover only available boards.</p>}
+        </> : <p className={styles.note}>board availability and task counts have not been received.</p>}
+        <Divider label="sources" />
+        {error && <p className={styles.notice}>source refresh failed: {error}. last known observations may be stale.</p>}
+        {sourceRows.length ? sourceRows.map(source => <div key={source.id} className={styles.item}>
+          <WRow g={glyphFor(source.state)} right={source.state}>{source.name.toLowerCase()}</WRow>
+          <span className={styles.sub}>last update {date(source.at)}{source.detail ? ` · ${source.detail}` : ''}</span>
+        </div>) : <p className={styles.note}>no source freshness observations available.</p>}
+        {(() => {
+          const state = !freshness?.lastLoggedAt || freshness.staleDays == null ? 'unknown' : freshness.staleDays > 3 ? 'stale' : 'ok'
+          return <div className={styles.item}><WRow g={glyphFor(state)} right={state}>usage logs</WRow><span className={styles.sub}>last logged {date(freshness?.lastLoggedAt)} · stale after 3 days</span></div>
+        })()}
+        {Object.entries(data?.collectorErrors ?? {}).map(([name, message]) => <div key={name} className={styles.item}>
+          <WRow g="fail" right="degraded">{name} collector</WRow>
+          <span className={styles.sub}>{message} · last good {date(data?.lastGoodAt?.[name])}</span>
+        </div>)}
+        <Prompt host="friday" foot meta={<Freshness at={data?.generatedAt} error={error} now={now} />} />
+      </section>
 
-      <Card as="section">
-        <CardHead title="What changed" sub="Service, gateway, and data status changes observed while this page is open." />
-        {changes.length ? changes.map((change, index) => <Row key={`${change.at}-${index}`} className={styles.row} title={change.name} sub={<span className={styles.line}>{change.from} → {change.to} · {date(change.at)}</span>} trailing={<Status state={change.to} />} />) : <p className={styles.note}>No status transitions observed yet. This view does not store a daily history.</p>}
-      </Card>
+      <section className={`mc-widget ${styles.widget}`} aria-label="What changed">
+        <Head cmd="journal -f" right={<span className={styles.fresh}>{eventStream === 'live' ? <><Glyph g="live" /> live</> : eventStream === 'connecting' ? <><Glyph g="retry" /> connecting</> : <><Glyph g="fail" /> disconnected</>}</span>} />
+        {changes.length ? changes.map((change, index) => <div key={`${change.at}-${index}`} className={styles.item}>
+          <WRow g={glyphFor(change.to)} right={new Date(change.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' })}>{change.name.toLowerCase()}</WRow>
+          <span className={styles.sub}>{change.from} → {change.to}</span>
+        </div>) : <p className={styles.note}>no status transitions observed yet. this view does not store a daily history.</p>}
+      </section>
     </div>
   </>
 }

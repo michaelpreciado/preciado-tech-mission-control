@@ -11,7 +11,7 @@ const LocalAiPage = dynamic(() => import('@/components/views/LocalAiPage'), {
 
 export default function LocalAiRoute() {
   return <div className={styles.page}>
-    <PageHeader eyebrow="~/local-ai · RESIDENCY" title="LOCAL AI" subtitle="Models, engines and GPU residency on this machine, read live and never assumed." />
+    <PageHeader command="localai status" eyebrow="residency" title="local ai" subtitle="Models, engines and GPU residency on this machine, read live and never assumed." />
     <LocalAiPage />
   </div>
 }

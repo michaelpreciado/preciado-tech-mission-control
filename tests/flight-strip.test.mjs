@@ -183,3 +183,55 @@ test('movedTasks keeps each card\'s latest move inside the window, newest first'
   assert.equal(buckets[23 - 9], 1) // c, 9h ago
   assert.deepEqual(hourBuckets([NOW + H, NOW - 30 * H], NOW, 24), new Array(24).fill(0))
 })
+
+/* Local calendar days, so the fixture is built with local Date constructors and the
+   assertions hold in any timezone. */
+test('completionStats buckets completions into local days and derives streak/best', async () => {
+  const { completionStats } = await import('../lib/flight-strip.ts')
+  const now = new Date(2026, 10, 9, 15, 0).getTime()
+  const at = (daysAgo, hour = 10) => new Date(2026, 10, 9 - daysAgo, hour, 0).toISOString()
+  const done = (id, daysAgo, hour) => task({ id, status: 'done', completedAt: at(daysAgo, hour) })
+  const tasks = [
+    done('t0a', 0, 1), done('t0b', 0, 14),            // today x2 (01:00 and 14:00 local)
+    done('t1', 1), done('t2', 2),                      // streak of 3 ending today
+    done('t4', 4), done('t6', 6),                      // still inside the 7-day week
+    done('t8', 8),                                     // outside the week, inside 14d
+    ...[20, 21, 22, 23, 24].map(d => done(`old${d}`, d)), // best run of 5, outside 14d
+    task({ id: 'arch', status: 'archived', completedAt: at(1) }),
+    task({ id: 'open', status: 'running', completedAt: at(0) }), // not a completion
+    task({ id: 'nostamp', status: 'done' }),
+    task({ id: 'future', status: 'done', completedAt: new Date(now + 3 * 86_400_000).toISOString() }),
+  ]
+  const s = completionStats(tasks, now)
+  assert.equal(s.doneToday, 2)
+  assert.equal(s.doneWeek, 7) // 2 today + t1 + arch + t2 + t4 + t6
+  assert.equal(s.streak, 3)
+  assert.equal(s.best, 5)
+  assert.equal(s.daily.length, 14)
+  assert.equal(s.daily[13], 2)
+  assert.equal(s.daily[12], 2)
+  assert.equal(s.daily[13 - 8], 1)
+  assert.equal(s.daily.reduce((a, b) => a + b, 0), 8)
+
+  // a quiet today does not break yesterday's streak
+  const quiet = completionStats([done('y1', 1), done('y2', 2)], now)
+  assert.equal(quiet.doneToday, 0)
+  assert.equal(quiet.streak, 2)
+  assert.equal(quiet.best, 2)
+  // a gap of two days does
+  assert.equal(completionStats([done('z', 2)], now).streak, 0)
+
+  const empty = completionStats([], now)
+  assert.deepEqual(empty, { doneToday: 0, doneWeek: 0, streak: 0, best: 0, daily: new Array(14).fill(0) })
+})
+
+test('summarizeKanban splits needs-you into blocked/failed and review for the glyph counts', () => {
+  const s = summarizeKanban([
+    task({ id: 'c', status: 'blocked' }),
+    task({ id: 'd', status: 'failed' }),
+    task({ id: 'e', status: 'review' }),
+  ], NOW)
+  assert.equal(s.blocked, 2)
+  assert.equal(s.review, 1)
+  assert.equal(s.needsYou, 3)
+})

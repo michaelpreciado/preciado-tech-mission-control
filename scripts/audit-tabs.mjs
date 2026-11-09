@@ -11,16 +11,18 @@ fs.mkdirSync(OUT, { recursive: true })
 const TABS = [
   ['deck', '/'],
   ['kanban', '/kanban'],
-  ['calendar', '/calendar'],
   ['chat', '/chat'],
+  ['calendar', '/calendar'],
   ['github', '/github'],
   ['costs', '/costs'],
-  ['projects', '/projects'],
-  ['pipeline', '/pipeline'],
-  ['content-creation', '/content-creation'],
+  ['system', '/system'],
+  ['local-ai', '/local-ai'],
   ['memory', '/memory'],
-  ['team', '/team'],
   ['setup', '/setup'],
+  ['pipeline', '/pipeline'],
+  ['crew', '/crew'],
+  ['deliverables', '/deliverables'],
+  ['bots', '/bots'],
 ]
 
 const VIEWPORTS = {

@@ -9,7 +9,7 @@ const GithubPanel = dynamic(() => import('@/components/views/GithubPanel').then(
 export default function GithubPage() {
   return (
     <>
-      <PageHeader eyebrow="~/github · REPO-STATE" title="GITHUB" subtitle="Contribution graph and repository activity" />
+      <PageHeader title="GITHUB" subtitle="Contribution graph and repository activity" />
       <GithubPanel />
     </>
   )

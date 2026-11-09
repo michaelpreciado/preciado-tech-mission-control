@@ -1,7 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Button, Card, Field, IconButton, Input, Row, Segmented, Select, TextArea } from './ui'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { Button, Card, Field, Glyph, IconButton, Input, Prompt, Row, Segmented, Select, TextArea } from './ui'
 import { Markdown } from './Markdown'
 import { BotsPanel, ago } from './views/BotsPanel'
 import { ChatContinuityFooter } from './ChatContinuityFooter'
@@ -9,8 +9,7 @@ import LiveChatMirror from './LiveChatMirror'
 import { apiFetch } from '@/lib/api-base'
 import type { HandoffReport } from '@/lib/handoff'
 import { cleanTitle, isJunk } from '@/lib/conv-format'
-import styles from './AgentConsole.module.css'
-import shellStyles from './ChatShell.module.css'
+import styles from './ChatShell.module.css'
 
 type Agent = 'hermes' | 'pi'
 type AgentStatus = { id: string; enabled: boolean; available: boolean }
@@ -128,7 +127,7 @@ async function* readSse(body: ReadableStream<Uint8Array>) {
 function MessageBody({ message }: { message: Message }) {
   const [open, setOpen] = useState(false)
   if (message.role === 'tool') return <div className={styles.tool}>
-    <Button className={shellStyles.toolChip} aria-expanded={open} onClick={() => setOpen(v => !v)}>{message.toolName || 'Tool output'} {open ? '−' : '+'}</Button>
+    <Button className={styles.toolChip} aria-expanded={open} onClick={() => setOpen(v => !v)}>{message.toolName || 'Tool output'} {open ? '−' : '+'}</Button>
     {open && <pre>{message.content}</pre>}
   </div>
   return <Markdown text={message.content || ''} />
@@ -172,6 +171,7 @@ export default function ChatConsole() {
   const [agents, setAgents] = useState<AgentStatus[]>([])
   const [availabilityError, setAvailabilityError] = useState('')
   const [availabilityRetry, setAvailabilityRetry] = useState(0)
+  const [herdrDenied, setHerdrDenied] = useState(false)
   const [management, setManagement] = useState<string | null>(null)
   const [atBottom, setAtBottom] = useState(true)
   const [sidebarTab, setSidebarTab] = useState<'sessions' | 'bots'>('bots')
@@ -261,6 +261,17 @@ export default function ChatConsole() {
     })()
     return () => { alive = false; controller.abort() }
   }, [availabilityRetry])
+
+  // Herdr is gated server-side (401 off the trusted network). Probe once so the
+  // destination is only offered when it can actually answer.
+  useEffect(() => {
+    const controller = new AbortController()
+    void apiFetch('/api/herdr', { cache: 'no-store', signal: controller.signal })
+      .then(response => setHerdrDenied(response.status === 401 || response.status === 403))
+      .catch(() => { /* unreachable is not unauthorized; leave the destination offered */ })
+    return () => controller.abort()
+  }, [])
+  useEffect(() => { if (herdrDenied && mode === 'herdr') setMode('chat') }, [herdrDenied, mode])
 
   // Model selection is a UI preference only. The catalogue is optional: if it
   // is unavailable, the agent's configured default remains the chat default.
@@ -519,25 +530,37 @@ export default function ChatConsole() {
     {!target.draft && !remote && <Button disabled={busy || !agents.some(a => a.id === 'codex' && a.enabled && a.available)} onClick={() => { setMode('codex'); setManagement(null) }}>Use composer for Codex handoff</Button>}
   </section> : undefined
 
-  return <div ref={root} className={`${styles.console} ${shellStyles.shell}`} data-stage={stage}>
+  const modeLabel = mode === 'codex' ? 'codex' : mode === 'herdr' ? 'herdr' : target?.profile ?? ''
+  // One status line under the composer replaces the hint / sending / availability /
+  // error paragraphs: the most urgent state wins, idle shows the key hint.
+  const footer: { tone: 'idle' | 'run' | 'warn' | 'err'; text: ReactNode; meta?: ReactNode } =
+    sendError ? { tone: 'err', text: <span role="alert"><Glyph g="err" /> {sendError} Your message is kept below; check the thread before sending again.{connectionLost && <> <Button onClick={() => { setSendError(''); setConnectionLost(false); void send() }}>Retry</Button></>}</span> }
+    : availabilityError ? { tone: 'err', text: <span role="alert"><Glyph g="err" /> {availabilityError} <Button onClick={() => setAvailabilityRetry(v => v + 1)}>Retry</Button></span> }
+    : busy ? { tone: 'run', text: <span id="chat-send-status" role="status"><Glyph g="run" /> {modeLabel} · {elapsed}s</span>, meta: 'navigation paused' }
+    : !available ? { tone: 'warn', text: <span role="status"><Glyph g="fail" /> agent unavailable <Button onClick={() => setAvailabilityRetry(v => v + 1)}>Retry availability</Button></span> }
+    : remoteComplete ? { tone: 'idle', text: <span role="status"><Glyph g="ok" /> conversation created · open it from Conversations to continue</span> }
+    : mode === 'codex' ? { tone: 'idle', text: <span><Glyph g="ok" /> codex handoff · the task is sent with a brief from this conversation</span>, meta: 'Enter sends' }
+    : { tone: 'idle', text: <span>Enter sends · Shift+Enter newline</span> }
+
+  return <div ref={root} className={styles.shell} data-stage={stage}>
     <LiveChatMirror onActivity={refresh} />
-    <Card className={`${styles.rail} ${shellStyles.sidebar} ${sidebarExpanded ? shellStyles.sidebarExpanded : ''}`}>
-      <nav className={shellStyles.sidebarTabs} aria-label="Chat navigation" role="tablist">
-        <Button className={shellStyles.sidebarTab} active={sidebarTab === 'sessions'} role="tab" aria-selected={sidebarTab === 'sessions'} onClick={() => { setSidebarTab('sessions'); setSidebarExpanded(true); setStage('conversations') }}>
-          <span className={shellStyles.sidebarTabIcon} aria-hidden="true">◈</span><span className={shellStyles.sidebarTabLabel}>SESSIONS</span>
+    <Card className={`${styles.sidebar} ${sidebarExpanded ? styles.sidebarExpanded : ''}`}>
+      <nav className={styles.sidebarTabs} aria-label="Chat navigation" role="tablist">
+        <Button className={styles.sidebarTab} active={sidebarTab === 'sessions'} role="tab" aria-selected={sidebarTab === 'sessions'} onClick={() => { setSidebarTab('sessions'); setSidebarExpanded(true); setStage('conversations') }}>
+          <span className={styles.sidebarTabIcon} aria-hidden="true">◈</span><span className={styles.sidebarTabLabel}>SESSIONS</span>
         </Button>
-        <Button className={shellStyles.sidebarTab} active={sidebarTab === 'bots'} role="tab" aria-selected={sidebarTab === 'bots'} onClick={() => { setSidebarTab('bots'); setSidebarExpanded(true); setStage('roster') }}>
-          <span className={shellStyles.sidebarTabIcon} aria-hidden="true">◎</span><span className={shellStyles.sidebarTabLabel}>BOTS</span>
+        <Button className={styles.sidebarTab} active={sidebarTab === 'bots'} role="tab" aria-selected={sidebarTab === 'bots'} onClick={() => { setSidebarTab('bots'); setSidebarExpanded(true); setStage('roster') }}>
+          <span className={styles.sidebarTabIcon} aria-hidden="true">◎</span><span className={styles.sidebarTabLabel}>BOTS</span>
         </Button>
-        <Button className={shellStyles.railClose} aria-label="Collapse chat sidebar" onClick={() => setSidebarExpanded(false)}>×</Button>
+        <Button className={styles.railClose} aria-label="Collapse chat sidebar" onClick={() => setSidebarExpanded(false)}>×</Button>
       </nav>
-      <div className={shellStyles.sidebarBody}>
-        {sidebarTab === 'bots' ? <div className={`${styles.rosterPane} ${shellStyles.botPane}`}>
-          <div className={shellStyles.terminalLabel}>~/bots</div>
+      <div className={styles.sidebarBody}>
+        {sidebarTab === 'bots' ? <div className={styles.botPane}>
+          <Prompt host="friday" cmd="bots" />
           <BotsPanel selected={profile} onSelect={selectBot} disabled={busy} management={management} onManage={setManagement} details={sessionDetails} />
-        </div> : <section className={`${styles.conversations} ${shellStyles.sessionPane}`} aria-label="Conversations">
-          <div className={`${styles.sectionHead} ${shellStyles.paneHead}`}><div><span className={shellStyles.terminalLabel}>~/group-chats</span><h2>{profile || 'All conversations'}</h2></div><Button variant="primary" disabled={busy} onClick={newChat}>New chat</Button></div>
-        <div className={`${styles.search} ${shellStyles.searchBar}`}>
+        </div> : <section className={styles.sessionPane} aria-label="Conversations">
+          <div className={styles.paneHead}><div><Prompt host="friday" cmd="sessions" /><h2>{profile || 'All conversations'}</h2></div><Button variant="primary" disabled={busy} onClick={newChat}>New chat</Button></div>
+        <div className={styles.searchBar}>
           <Input type="search" value={q} onChange={e => setQ(e.target.value)} placeholder="Search bots and group chats…" aria-label="Search bots and group chats" />
           <Button aria-expanded={filters} aria-controls="chat-filters" onClick={() => setFilters(v => !v)} active={filters}>Filters</Button>
         </div>
@@ -551,8 +574,8 @@ export default function ChatConsole() {
         </div>}
         <div className={styles.conversationList} aria-busy={listLoading}>
           {listError ? <div role="alert" className={styles.notice}><p>{listError}</p><Button onClick={refresh}>Retry</Button></div> : listLoading && !index ? <p className={styles.notice} role="status">Loading conversations…</p> : <>
-            {visible.slice(0, limit).map(c => <Row key={keyOf(c)} className={`${styles.conversationRow} ${shellStyles.sessionRow}`} title={<Button className={`${styles.conversationButton} ${shellStyles.sessionButton}`} disabled={busy} active={Boolean(target && keyOf(c) === keyOf(target))} onClick={() => openThread(c)}>
-              <span className={styles.rowTop}><span className={shellStyles.rowMarker} aria-hidden="true">{target && keyOf(c) === keyOf(target) ? '>' : ' '}</span><strong>{cleanTitle(c.title) || 'Untitled conversation'}</strong><span className={styles.rowMeta}>{ago(c.lastActiveAt)}</span></span>
+            {visible.slice(0, limit).map(c => <Row key={keyOf(c)} className={styles.sessionRow} title={<Button className={styles.sessionButton} disabled={busy} active={Boolean(target && keyOf(c) === keyOf(target))} onClick={() => openThread(c)}>
+              <span className={styles.rowTop}><span className={styles.rowMarker} aria-hidden="true">{target && keyOf(c) === keyOf(target) ? '>' : ' '}</span><strong>{cleanTitle(c.title) || 'Untitled conversation'}</strong><span className={styles.rowMeta}>{ago(c.lastActiveAt)}</span></span>
               <span className={styles.preview}>{c.preview || 'No messages yet'}</span>
               <span className={styles.rowMeta}>{c.active ? 'Active · ' : ''}{profile ? c.source : c.profile}{c.device ? ` · ${c.device}` : ''}</span>
             </Button>} />)}
@@ -564,9 +587,9 @@ export default function ChatConsole() {
         </section>}
       </div>
     </Card>
-    <Card className={`${styles.threadPane} ${shellStyles.thread}`} aria-label="Conversation">
+    <Card className={styles.thread} aria-label="Conversation">
       {target ? <>
-        <div className={`${styles.threadHead} ${shellStyles.threadHeader}`}><div><h2>{target.title}</h2><div className={shellStyles.identityLine}><span className={shellStyles.avatarDot} data-status={busy ? 'busy' : available ? 'running' : 'stopped'} aria-hidden="true" /> <span>{target.profile}</span><Select className={shellStyles.modelPicker} value={modelPick} disabled={busy || modelsLoading || !modelSelectionSupported} onChange={event => {
+        <div className={styles.threadHeader}><div><Prompt host="friday" cmd={`chat ${target.profile}`} /><h2>{target.title}</h2><div className={styles.identityLine}><Glyph g={busy ? 'run' : available ? 'ok' : 'err'} label={busy ? 'answering' : available ? 'available' : 'unavailable'} /> <span>{target.profile}</span><Select className={styles.modelPicker} value={modelPick} disabled={busy || modelsLoading || !modelSelectionSupported} onChange={event => {
           const next = event.target.value
           setModelPick(next)
           try {
@@ -585,7 +608,7 @@ export default function ChatConsole() {
             {target.agent === 'hermes' && <Field label="Device"><Select value={target.device} disabled={busy} onChange={e => changeDraft({ device: e.target.value })}><option value="">Local</option>{index?.devices.filter(d => !d.isLocal).map(d => <option key={d.name} value={d.name}>{d.name}</option>)}</Select></Field>}
           </div>}
         </div>}
-        <div ref={messagesEl} className={`${styles.messages} ${shellStyles.messageStream}`} role="log" aria-label="Messages" aria-live="polite" aria-busy={threadLoading} onScroll={() => { const el = messagesEl.current; if (el) setAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 100) }}>
+        <div ref={messagesEl} className={styles.messageStream} role="log" aria-label="Messages" aria-live="polite" aria-busy={threadLoading} onScroll={() => { const el = messagesEl.current; if (el) setAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 100) }}>
           {threadLoading && <p role="status">Loading conversation…</p>}
           {threadError && <div role="alert" className={styles.notice}><p>{threadError}</p><Button onClick={() => setThreadRetry(v => v + 1)}>Retry</Button></div>}
           {!threadLoading && !threadError && thread.length === 0 && <p className={styles.emptyThread}>{target.draft ? `What would you like to ask ${target.profile}?` : 'No messages in this conversation yet.'}</p>}
@@ -594,7 +617,7 @@ export default function ChatConsole() {
             if (el) earlierScroll.current = { height: el.scrollHeight, top: el.scrollTop }
             setMessageLimit(value => value + MESSAGE_PAGE_SIZE)
           }}>Show earlier messages ({hiddenMessageCount})</Button>}
-          {visibleThread.map((m, i) => <article key={`${m.id}:${hiddenMessageCount + i}`} className={`${styles.message} ${shellStyles.messageCard} ${m.role === 'user' ? styles.userMessage : styles.agentMessage}`}>
+          {visibleThread.map((m, i) => <article key={`${m.id}:${hiddenMessageCount + i}`} className={`${styles.messageCard} ${m.role === 'user' ? styles.userMessage : styles.agentMessage}`}>
             <div className={styles.messageMeta}><span>{m.role === 'user' ? 'You' : m.role === 'assistant' ? target.profile : m.role === 'tool' ? 'Tool' : 'System'}</span><time dateTime={new Date(m.timestamp).toISOString()}>{new Date(m.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</time></div>
             <MessageBody message={m} />
           </article>)}
@@ -607,26 +630,20 @@ export default function ChatConsole() {
           </Card>)}
           {busy && <p role="status">Waiting for {mode === 'codex' ? 'Codex' : mode === 'herdr' ? 'Herdr' : target.profile}… {elapsed}s</p>}
         </div>
-        {!atBottom && <Button className={`${styles.latest} ${shellStyles.latestJump}`} onClick={() => setAtBottom(true)}>↓ Latest messages</Button>}
-        <form className={`${styles.composer} ${shellStyles.composerBar}`} onSubmit={e => { e.preventDefault(); void send() }}>
-          <div className={`${styles.composerTools} ${shellStyles.composerTools}`}>
+        {!atBottom && <Button className={styles.latestJump} onClick={() => setAtBottom(true)}>↓ Latest messages</Button>}
+        <form className={styles.composerBar} onSubmit={e => { e.preventDefault(); void send() }}>
+          <div className={styles.composerTools}>
             <Button disabled={busy} aria-describedby={busy ? 'chat-send-status' : undefined} onClick={back} aria-label="Back to conversations">‹ Conversations</Button>
-            {((target.agent === 'hermes' && !remote && (!target.draft || initialized)) || mode === 'codex') && <fieldset disabled={busy} className={styles.mode} aria-label="Message destination"><Segmented size="sm" value={mode} onChange={setMode} options={[{ value: 'chat', label: 'Chat' }, ...(target.agent === 'hermes' ? [{ value: 'herdr', label: 'Herdr' }] : []), ...(mode === 'codex' ? [{ value: 'codex', label: 'Codex' }] : [])]} /></fieldset>}
-            {busy && <span className={shellStyles.busyChip} aria-hidden="true">● {mode === 'codex' ? 'Codex' : mode === 'herdr' ? 'Herdr' : target.profile} · {elapsed}s</span>}
+            {((target.agent === 'hermes' && !remote && (!target.draft || initialized)) || mode === 'codex') && <fieldset disabled={busy} className={styles.mode} aria-label="Message destination"><Segmented size="sm" value={mode} onChange={setMode} options={[{ value: 'chat', label: 'Chat' }, ...(target.agent === 'hermes' && !herdrDenied ? [{ value: 'herdr', label: 'Herdr' }] : []), ...(mode === 'codex' ? [{ value: 'codex', label: 'Codex' }] : [])]} /></fieldset>}
+            {target.agent === 'hermes' && herdrDenied && <span className={styles.herdrHint}>herdr  unauthorized</span>}
           </div>
-          <p id="chat-composer-hint" className={styles.muted}>Enter sends · Shift+Enter adds a line.</p>
-          {busy && <p id="chat-send-status" className={styles.muted} role="status">Navigation is paused while your message sends.</p>}
-          {availabilityError && <div role="alert" className={styles.inlineNotice}>{availabilityError}<Button onClick={() => setAvailabilityRetry(v => v + 1)}>Retry</Button></div>}
-          {!available && !availabilityError && <p className={styles.muted}>This agent is unavailable. <Button onClick={() => setAvailabilityRetry(v => v + 1)}>Retry availability</Button></p>}
-          {sendError && <p role="alert" className={styles.error}>{sendError} Your message is kept below; check the thread before sending again. {connectionLost && <Button onClick={() => { setSendError(''); setConnectionLost(false); void send() }}>Retry</Button>}</p>}
-          {mode === 'codex' && <p className={styles.muted}>Send a task to Codex with a brief from this conversation.</p>}
-          {remoteComplete && <p role="status">Conversation created. Open it from Conversations to continue.</p>}
-          <div className={`${styles.composerInput} ${shellStyles.composerRow}`}>
-            <span className={shellStyles.composerPrompt} aria-hidden="true">&gt;</span>
+          <div className={styles.composerRow}>
+            <span className={styles.composerPrompt} aria-hidden="true"><b>friday</b>:~$</span>
             <TextArea value={composer} onChange={e => setComposer(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void send() } }} rows={2} maxLength={remote && mode === 'chat' ? 8000 : 4000} disabled={busy || !canCompose} aria-label="Message" aria-describedby="chat-composer-hint" placeholder={mode === 'codex' ? 'Task for Codex…' : mode === 'herdr' ? 'Continue this chat in Herdr…' : 'Message…'} />
-            <Button className={shellStyles.composerAffordance} type="button" disabled aria-label="Voice input unavailable">⌁</Button>
-            <Button variant="primary" type="submit" disabled={!composer.trim() || !canCompose || !available} loading={busy}>Send</Button>
+            <Button className={styles.composerAffordance} type="button" disabled aria-label="Voice input unavailable">⌁</Button>
+            <Button variant="primary" type="submit" disabled={!composer.trim() || !canCompose || !available} loading={busy}><span className={styles.sendLabel}>Send</span><span className={styles.sendIcon} aria-hidden="true">↑</span></Button>
           </div>
+          <Prompt host="friday" foot as="p" id="chat-composer-hint" className={styles.footLine} cmd={footer.text} meta={footer.meta} />
         </form>
       </> : <div className={styles.emptyThread}><h2>Choose a conversation</h2><p>Select a bot to pick up where you left off.</p><Button variant="primary" onClick={newChat}>New chat</Button></div>}
     </Card>

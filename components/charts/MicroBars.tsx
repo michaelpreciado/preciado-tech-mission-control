@@ -8,7 +8,7 @@
  *   - zero-based scale; the peak is printed, never implied
  *   - one grid colour: a baseline, a peak line, a dashed midline
  *   - one emphasis: the latest bar; the rest of the series is the quiet tone
- *   - stacked bars keep their identity hues (--mc-cat-*) and are never summed
+ *   - stacked bars keep their identity hues (BILLING_MODE_COLOR) and are never summed
  *     across a scale they do not share
  *   - an all-zero series renders the `empty` sentence, not flat bars
  */

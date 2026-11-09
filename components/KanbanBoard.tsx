@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import type {
   HermesKanbanSnapshot,
@@ -8,10 +8,12 @@ import type {
   HermesTaskDetail,
   KanbanSourceStatus,
 } from '@/lib/types'
-import { Button, Card, Chip, Field, Input, Select, Segmented, Sheet, SkeletonPanel, TextArea, fmtDate } from './ui'
+import { Button, Card, Chip, Field, Glyph, Input, Kv, KvRow, Prompt, Select, Segmented, Sheet, SkeletonPanel, TextArea, Verdict, fmtDate, type GlyphName } from './ui'
+import { MiniHist } from './charts/MiniHist'
 import styles from './Kanban.module.css'
-import { RelativeTime } from './RelativeTime'
-import { apiFetch, apiUrl } from '@/lib/api-base'
+import { useLiveData } from './LiveDataProvider'
+import { apiFetch } from '@/lib/api-base'
+import { completionStats, summarizeKanban, taskSort, workerState } from '@/lib/flight-strip'
 
 const POLL_MS = 15_000
 const SHOW_DONE_LS_KEY = 'mc-kanban:showDone'
@@ -132,19 +134,15 @@ function DetailDrawer({ id, onClose, onChanged, pinned, onTogglePin, byId, onOpe
 
   useEffect(() => { void load() }, [load])
 
+  // Reload when the shared LiveDataProvider stream carries an event for this task.
+  const { events } = useLiveData()
+  const seenEventRef = useRef(events[0]?.id ?? 0)
   useEffect(() => {
-    const es = new EventSource(apiUrl('/api/events'))
-    const onAny = (ev: MessageEvent) => {
-      try {
-        const evt = JSON.parse(ev.data) as { task_id?: string }
-        if (evt.task_id === id) void load()
-      } catch { /* keepalive */ }
-    }
-    for (const n of ['task.created', 'task.assigned', 'task.progress', 'task.done', 'task.failed', 'agent.status', 'message']) {
-      es.addEventListener(n, onAny as EventListener)
-    }
-    return () => es.close()
-  }, [id, load])
+    const fresh = events.filter(evt => evt.id > seenEventRef.current)
+    if (fresh.length === 0) return
+    seenEventRef.current = fresh[0].id
+    if (fresh.some(evt => evt.task_id === id)) void load()
+  }, [events, id, load])
 
   const act = useCallback(async (action: string, payload: Record<string, unknown> = {}) => {
     setBusy(action)
@@ -360,48 +358,67 @@ function CreateModal({ sources, onClose, onCreated, token = '' }: {
 
 type KanSource = KanbanSourceStatus
 
-/* ── Sorting────────────────────────────────────────────────────── */
+/* ── Rows ───────────────────────────────────────────────────────── */
 
-/**
- * Card sort within a column: pinned first, then blocked/failed first,
- * then consecutive failures desc, then oldest created first.
- */
-function taskSort(a: HermesTask, b: HermesTask, pinned: Set<string>): number {
-  const aPin = pinned.has(a.id) ? 0 : 1
-  const bPin = pinned.has(b.id) ? 0 : 1
-  if (aPin !== bPin) return aPin - bPin
-  const aBad = a.status === 'blocked' || a.status === 'failed' ? 0 : 1
-  const bBad = b.status === 'blocked' || b.status === 'failed' ? 0 : 1
-  if (aBad !== bBad) return aBad - bBad
-  const af = a.consecutiveFailures ?? 0
-  const bf = b.consecutiveFailures ?? 0
-  if (af !== bf) return bf - af
-  const at = a.createdAt ? new Date(a.createdAt).getTime() : 0
-  const bt = b.createdAt ? new Date(b.createdAt).getTime() : 0
-  return at - bt
+/** `2d`, `5h`, `12m` — the widget's right-hand age column. */
+function shortAge(iso: string | undefined, now: number): string {
+  const ms = iso ? Date.parse(iso) : NaN
+  if (!Number.isFinite(ms)) return ''
+  const sec = Math.max(0, Math.floor((now - ms) / 1000))
+  if (sec < 60) return `${sec}s`
+  if (sec < 3600) return `${Math.floor(sec / 60)}m`
+  if (sec < 86_400) return `${Math.floor(sec / 3600)}h`
+  return `${Math.floor(sec / 86_400)}d`
 }
 
-function KanbanCard({ task, onOpen, draggable, dragging, onDragStart, onDragEnd }: {
+/** Status glyph per card: amber `×` blocked, red `×` failed, `▶` only with a live worker. */
+function glyphFor(task: HermesTask, now: number): GlyphName {
+  switch (task.status) {
+    case 'failed': return 'err'
+    case 'blocked': return 'fail'
+    case 'review': return 'todo'
+    case 'done':
+    case 'archived': return 'ok'
+    case 'running':
+    case 'in_progress': return workerState(task, now) === 'live' ? 'run' : 'retry'
+    default: return 'idle'
+  }
+}
+
+/** The age that matters for the lane: finished, started, else created. */
+function ageStamp(task: HermesTask): string | undefined {
+  if (task.status === 'done' || task.status === 'archived') return task.completedAt ?? task.createdAt
+  if (task.status === 'running' || task.status === 'in_progress') return task.startedAt ?? task.createdAt
+  return task.createdAt
+}
+
+function KanbanCard({ task, now, onOpen, draggable, dragging, onDragStart, onDragEnd }: {
   task: HermesTask
+  now: number
   onOpen: () => void
   draggable: boolean
   dragging: boolean
   onDragStart: () => void
   onDragEnd: () => void
 }) {
-  return <Card as="article" className={`${styles.taskCard} ${dragging ? styles.dragging : ''}`} data-glass-interactive="" data-status={task.status}>
-    <Button className={styles.taskButton} aria-label={`Open ${task.title}`} onClick={onOpen}
+  const stamp = ageStamp(task)
+  return <article className={`${styles.taskCard} ${dragging ? styles.dragging : ''}`} data-status={task.status}>
+    <button type="button" className={`mc-wrow is-action ${styles.taskButton}`} aria-label={`Open ${task.title}`} onClick={onOpen}
+      title={stamp ? `${task.title} · ${fmtDate(stamp)}` : task.title}
       draggable={draggable}
       onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', task.id); onDragStart() }}
       onDragEnd={onDragEnd}>
-      <strong className={styles.taskTitle}>{task.title}</strong>
-      <span className={styles.taskMeta}>{task.assignee || 'Unassigned'}{task.createdAt && <> · <RelativeTime ts={new Date(task.createdAt).getTime()} frame="ago" /></>}</span>
-    </Button>
-  </Card>
+      <Glyph g={glyphFor(task, now)} />
+      <span className={`t ${styles.taskTitle}`}>{task.title}</span>
+      <span className="r">{shortAge(stamp, now)}</span>
+      <span className={styles.taskMeta}>{task.assignee || 'unassigned'}</span>
+    </button>
+  </article>
 }
 
-function Column({ def, needsYou, tasks, pinned, onOpen, expanded, onToggle, desktop, drag, onCardDragStart, onCardDragEnd, onDropToStatus }: {
+function Column({ def, needsYou, tasks, now, pinned, onOpen, expanded, onToggle, desktop, drag, onCardDragStart, onCardDragEnd, onDropToStatus }: {
   def: { status: string; label: string }
+  now: number
   needsYou: boolean
   tasks: HermesTask[]
   pinned: Set<string>
@@ -421,10 +438,10 @@ function Column({ def, needsYou, tasks, pinned, onOpen, expanded, onToggle, desk
   const rail = desktop && tasks.length === 0
   return <section className={`${styles.lane} ${rail ? styles.laneRail : ''} ${needsYou ? styles.laneNeeds : ''}`} aria-label={`${def.label} lane`}>
     <h2 className={styles.laneHeader}>
-      {desktop ? <span className={styles.laneTitle}>{def.label}<Chip>{tasks.length}</Chip></span> : (
-        <Button className={styles.laneToggle} aria-expanded={expanded} aria-controls={bodyId} onClick={onToggle}>
-          <span>{def.label}</span><Chip>{tasks.length}</Chip><span className={styles.chevron} aria-hidden="true">{expanded ? '−' : '+'}</span>
-        </Button>
+      {desktop ? <LaneRule label={def.label} count={tasks.length} /> : (
+        <button type="button" className={styles.laneToggle} aria-expanded={expanded} aria-controls={bodyId} onClick={onToggle}>
+          <LaneRule label={def.label} count={tasks.length} /><span className={styles.chevron} aria-hidden="true">{expanded ? '−' : '+'}</span>
+        </button>
       )}
     </h2>
     <div id={bodyId} hidden={!desktop && !expanded} className={`${styles.laneBody} ${dropOk ? styles.dropReady : ''} ${dropOk && over ? styles.dropOver : ''}`}
@@ -432,11 +449,52 @@ function Column({ def, needsYou, tasks, pinned, onOpen, expanded, onToggle, desk
       onDragLeave={() => setOver(false)}
       onDrop={dropOk ? e => { e.preventDefault(); setOver(false); onDropToStatus(def.status) } : undefined}>
       {tasks.length === 0 ? (dropOk ? <p className={styles.empty}>Drop here</p> : desktop ? null : <p className={styles.empty}>No tasks</p>) : [...tasks].sort((a, b) => taskSort(a, b, pinned)).map(task => (
-        <KanbanCard key={task.id} task={task} onOpen={() => onOpen(task.id)} draggable={desktop} dragging={drag?.id === task.id}
+        <KanbanCard key={task.id} task={task} now={now} onOpen={() => onOpen(task.id)} draggable={desktop} dragging={drag?.id === task.id}
           onDragStart={() => onCardDragStart({ id: task.id, from: task.status })} onDragEnd={onCardDragEnd} />
       ))}
     </div>
   </section>
+}
+
+/** `-- review 2 ---------` — the lane title drawn as the widget's ASCII divider. */
+function LaneRule({ label, count }: { label: string; count: number }) {
+  return <span className={`mc-divider ${styles.laneRule}`}><span className="mc-divider-label">{label.toLowerCase()} {count}</span></span>
+}
+
+/** Seconds since the last successful board read, ticking in place (`↻ 12s`). */
+function RefreshAge({ at, busy }: { at: number | null; busy: boolean }) {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const t = window.setInterval(() => { if (document.visibilityState === 'visible') setNow(Date.now()) }, 1000)
+    return () => window.clearInterval(t)
+  }, [])
+  if (busy) return <>↻ …</>
+  if (at == null) return <>↻ —</>
+  return <>↻ {Math.max(0, Math.round((now - at) / 1000))}s</>
+}
+
+/** `desk:~$ kanban` — open count, glyph counts, done/streak lines and a 14-day histogram. */
+function KanbanHead({ tasks, now, loaded }: { tasks: HermesTask[]; now: number; loaded: boolean }) {
+  const summary = useMemo(() => summarizeKanban(tasks, now), [tasks, now])
+  const stats = useMemo(() => completionStats(tasks, now), [tasks, now])
+  // `▶` is a live worker only; cards merely marked running show `↻` on their row.
+  const running = summary.runningLive
+  const v = (n: number) => (loaded ? n : '—')
+  return <div className={styles.head}>
+    <div className={styles.headTop}>
+      <Verdict unit="open">{v(summary.open)}</Verdict>
+      <span className={styles.counts} aria-label={loaded ? `${running} running with a live worker, ${summary.blocked} blocked or failed, ${summary.review} in review` : 'loading'}>
+        <span><Glyph g="run" />{v(running)}</span>
+        <span><Glyph g="fail" />{v(summary.blocked)}</span>
+        <span><Glyph g="idle" />{v(summary.review)}</span>
+      </span>
+    </div>
+    <Kv keyWidth="7ch">
+      <KvRow k="done" v={`${v(stats.doneToday)} today`} r={`${v(stats.doneWeek)} wk`} />
+      <KvRow k="14d" v={<MiniHist values={stats.daily} label={`completions per day, last 14 days: ${stats.daily.join(', ')}`} />} r="" />
+      <KvRow k="streak" v={`${v(stats.streak)}d`} r={`best ${v(stats.best)}`} />
+    </Kv>
+  </div>
 }
 
 /* ── Main board ────────────────────────────────────────────────── */
@@ -462,6 +520,8 @@ export function KanbanBoard({ token = '' }: { token?: string }) {
   const [isDesktop, setIsDesktop] = useState(false)
   const [drag, setDrag] = useState<DragInfo | null>(null)
   const [moveError, setMoveError] = useState<string | null>(null)
+  const [loadedAt, setLoadedAt] = useState<number | null>(null)
+  const { events } = useLiveData()
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 900px)')
@@ -511,6 +571,7 @@ export function KanbanBoard({ token = '' }: { token?: string }) {
       if (!Array.isArray(next.tasks)) throw new Error('Invalid board response')
       setSnap(next)
       setError(null)
+      setLoadedAt(Date.now())
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Connection failed')
     } finally {
@@ -547,20 +608,18 @@ export function KanbanBoard({ token = '' }: { token?: string }) {
     return () => clearInterval(timer)
   }, [refresh])
 
+  // Live refresh rides the LiveDataProvider SSE stream (one EventSource app-wide), debounced 3s.
+  const newestEvent = events[0]?.id ?? 0
+  const seenEventRef = useRef(newestEvent)
   useEffect(() => {
-    const es = new EventSource(apiUrl('/api/events'))
-    const onAny = () => {
-      const now = Date.now()
-      if (now - lastEventRef.current > 3000) {
-        lastEventRef.current = now
-        void refresh()
-      }
+    if (newestEvent <= seenEventRef.current) return
+    seenEventRef.current = newestEvent
+    const now = Date.now()
+    if (now - lastEventRef.current > 3000) {
+      lastEventRef.current = now
+      void refresh()
     }
-    for (const n of ['task.created', 'task.assigned', 'task.progress', 'task.done', 'task.failed', 'message']) {
-      es.addEventListener(n, onAny as EventListener)
-    }
-    return () => es.close()
-  }, [refresh])
+  }, [newestEvent, refresh])
 
   // Sheet owns keyboard handling while a dialog is open.
   useEffect(() => {
@@ -620,7 +679,8 @@ export function KanbanBoard({ token = '' }: { token?: string }) {
     }
   }, [drag, refresh, token, snap])
 
-  const tasks = snap?.tasks ?? []
+  const tasks = useMemo(() => snap?.tasks ?? [], [snap])
+  const now = loadedAt ?? 0
   const sources = (snap as (HermesKanbanSnapshot & { sources?: KanSource[] }) | null)?.sources ?? []
   const byId = new Map(tasks.map(task => [task.id, task]))
   let visible = tasks
@@ -644,10 +704,12 @@ export function KanbanBoard({ token = '' }: { token?: string }) {
   const changeFilter = (value: string) => { setFilter(value as FilterId); setExpanded(null) }
 
   return <>
-    <section className={styles.board} aria-label="Kanban board">
-      <div className={styles.toolbar}><h1>Kanban</h1><Button variant="primary" onClick={() => setShowCreate(true)}>New task</Button></div>
-      <div role="toolbar" aria-label="Task filters">
+    <section className={`mc-widget ${styles.board}`} aria-label="Kanban board">
+      <Prompt as="h1" host="desk" cmd="kanban" />
+      <KanbanHead tasks={tasks} now={now} loaded={!!snap} />
+      <div className={styles.toolbar} role="toolbar" aria-label="Task filters">
         <Segmented className={styles.filters} options={FILTER_OPTIONS.map(item => ({ value: item.id, label: item.label }))} value={filter} onChange={changeFilter} />
+        <Button variant="primary" onClick={() => setShowCreate(true)}>New task</Button>
       </div>
       <div className={styles.searchRow} role="toolbar" aria-label="Filter kanban">
         <Input ref={searchRef} type="search" placeholder="Search tasks…" aria-label="Search tasks by title" value={query}
@@ -663,7 +725,7 @@ export function KanbanBoard({ token = '' }: { token?: string }) {
       {!snap && !error && <SkeletonPanel label="Loading tasks" />}
       {snap && <div className={styles.lanes}>
         {cols.length === 0 && <Card pad="md"><p className={styles.empty}>{completedCount > 0 ? 'No open tasks match. Show done to view completed work.' : 'No tasks match the current filters.'}</p></Card>}
-        {(isDesktop ? desktopCols : [...cols].sort((a, b) => urgency(b.status) - urgency(a.status) || (byStatus.get(b.status)?.length ?? 0) - (byStatus.get(a.status)?.length ?? 0))).map(column => <Column key={column.status} def={column} needsYou={NEEDS_YOU.has(column.status)} tasks={byStatus.get(column.status) ?? []} pinned={pinned} onOpen={setOpenId}
+        {(isDesktop ? desktopCols : [...cols].sort((a, b) => urgency(b.status) - urgency(a.status) || (byStatus.get(b.status)?.length ?? 0) - (byStatus.get(a.status)?.length ?? 0))).map(column => <Column key={column.status} def={column} needsYou={NEEDS_YOU.has(column.status)} tasks={byStatus.get(column.status) ?? []} now={now} pinned={pinned} onOpen={setOpenId}
           expanded={expanded === null ? column.status === defaultLane : !!expanded[column.status]}
           onToggle={() => setExpanded(previous => {
             const current = previous ?? (defaultLane ? { [defaultLane]: true } : {})
@@ -671,7 +733,8 @@ export function KanbanBoard({ token = '' }: { token?: string }) {
           })}
           desktop={isDesktop} drag={drag} onCardDragStart={setDrag} onCardDragEnd={() => setDrag(null)} onDropToStatus={moveTask} />)}
       </div>}
-      {sources.some(source => !source.available) && <p className={styles.muted} role="status">Unavailable sources: {sources.filter(source => !source.available).map(source => source.name).join(', ')}</p>}
+      {sources.some(source => !source.available) && <p className={styles.muted} role="status">unavailable: {sources.filter(source => !source.available).map(source => source.name).join(', ')}</p>}
+      <Prompt host="desk" foot meta={<RefreshAge at={loadedAt} busy={refreshing} />} />
     </section>
     {openId && <DetailDrawer key={openId} id={openId} token={token} pinned={pinned.has(openId)} onTogglePin={() => togglePin(openId)} byId={byId} onOpen={setOpenId} onClose={closeDetail} onChanged={refresh} />}
     {showCreate && <CreateModal sources={sources} token={token} onClose={closeCreate} onCreated={onCreated} />}

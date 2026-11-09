@@ -9,7 +9,7 @@ const MemoryGraphView = dynamic(() => import('@/components/views/MemoryGraph').t
 export default function MemoryPage() {
   return (
     <>
-      <PageHeader eyebrow="~/memory · VAULT-STATE" title="MEMORY" subtitle="Memory graph, vault index, and operational context" />
+      <PageHeader title="MEMORY" subtitle="Memory graph, vault index, and operational context" />
       <MemoryGraphView />
     </>
   )

@@ -1,0 +1,78 @@
+/* /costs — route layout for the launcher widgets. Cards are `.mc-widget`
+   (globals.css); bars are <SegBar>/<MiniHist>; type is mono, 12px floor.
+   The legacy cp-* rules in globals.css still style the shared table, model
+   chart and notes; the ones this module supersedes are listed for removal in
+   docs/lane-b-report.md. */
+
+.panel { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--pt-s-4); min-width: 0; overflow-wrap: anywhere; font-family: var(--pt-font-mono); }
+.panel > :global(.mc-divider) { margin: 6px 0 0; }
+
+/* Top block: costs verdict · localai top · openrouter, then the cap cards. */
+.top { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: var(--pt-s-4); align-items: start; min-width: 0; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: var(--pt-s-4); align-items: start; min-width: 0; }
+
+.widget { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 6px; min-width: 0; }
+.widget > :global(.mc-prompt) { margin-bottom: 2px; }
+.lines { margin-top: 4px; }
+
+.hi { color: var(--pt-text-high); }
+.dim { color: var(--pt-text-mute); }
+.mute { color: var(--pt-text-mute); }
+.warn { color: var(--pt-warn-ink); font-variant-numeric: tabular-nums; }
+.crit { color: var(--pt-error-ink); font-variant-numeric: tabular-nums; }
+.hint { margin: 2px 0 0; color: var(--pt-text-mute); font-size: 12px; line-height: 1.5; }
+.push { margin-left: auto; }
+
+/* Stat: mono figure, lowercase label. Hero size renders a <Verdict> instead. */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); gap: 12px 18px; min-width: 0; }
+.stat { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.statValue { color: var(--pt-text-high); font: 500 16px/1.15 var(--pt-font-mono); font-variant-numeric: tabular-nums; }
+.statLg { font-size: 20px; }
+.statSm { font-size: 13px; font-weight: 400; }
+.statLabel { margin-top: 4px; color: var(--pt-text-mute); font-size: 12px; line-height: 1.4; }
+.statSub { margin-top: 2px; color: var(--pt-text-dim); font-size: 12px; line-height: 1.4; }
+
+/* Billing-mode identity key: a flat 7px square, never a glow. */
+.modeDot { display: inline-block; flex: none; width: 7px; height: 7px; border-radius: 1px; vertical-align: middle; }
+
+.legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; color: var(--pt-text-mute); font-size: 12px; }
+.legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.legend :global(.mc-heatmap-legend) { padding: 0; }
+
+/* CLAUDE / CODEX cap card. */
+.capHead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 1.5ch; }
+.capTitle { margin: 0; color: var(--pt-text-dim); font: 400 13px/1.5 var(--pt-font-mono); letter-spacing: var(--pt-ls-kicker, .08em); }
+.caps { display: grid; gap: 8px; margin: 6px 0 2px; }
+.capRow { display: grid; gap: 4px; min-width: 0; }
+.capLine { display: grid; grid-template-columns: 1.5ch minmax(0, 1fr) auto 5ch; gap: 0 1ch; align-items: baseline; color: var(--pt-text-high); font-variant-numeric: tabular-nums; }
+.capDot, .capDotOn { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--pt-text-mute); align-self: center; }
+.capDotOn { background: var(--pt-text-high); }
+.capName { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.capReset { color: var(--pt-text-dim); white-space: nowrap; }
+.capPct { color: var(--pt-text-dim); text-align: right; }
+.capLine > .warn, .capLine > .crit { text-align: right; }
+
+.billed { display: flex; align-items: baseline; justify-content: space-between; gap: 1ch; padding-top: 6px; border-top: 1px solid var(--pt-border); color: var(--pt-text-mute); font-size: 12px; }
+
+/* Table cells and model chart. */
+.cellBar { display: inline-block; flex: 1 1 auto; width: 92px; min-width: 40px; max-width: 92px; }
+.cellBar > :global(.mc-segbar) { height: 6px; }
+.trackBar { flex: 1 1 auto; height: 6px; }
+.stackHead { color: var(--pt-text-mute); font-size: 12px; }
+
+/* Provenance notes: quiet 12px mono, flush with the widget padding. */
+.note { padding-inline: 0; font-size: 12px; letter-spacing: 0; }
+.noteLine { margin-top: 5px; }
+
+.warnRow { display: grid; grid-template-columns: 1.5ch minmax(0, 1fr); gap: 0 1ch; padding: 3px 0; color: var(--pt-text-dim); font-size: 12px; line-height: 1.6; }
+
+.heatScroll { overflow-x: auto; }
+
+@media (max-width: 820px) {
+  .cellBar { display: none; }
+}
+
+@media (max-width: 520px) {
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
+  .statLg { font-size: 17px; }
+}

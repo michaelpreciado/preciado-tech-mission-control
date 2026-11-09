@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { apiUrl } from '@/lib/api-base'
+import { Prompt } from '@/components/ui'
+import styles from '@/components/login.module.css'
 
 /**
  * /login — session login for non-loopback deployments (MC_AUTH_PASSWORD set).
@@ -85,35 +87,36 @@ export default function LoginPage() {
   }, [])
 
   return (
-    <main className="mc-login">
-      <form className="mc-login-card" onSubmit={submit}>
-        <Image src="/brand/preciado-tech-logo.jpg" alt="Preciado Tech" width={64} height={64} priority style={{ display: 'block', margin: '0 auto', borderRadius: 10 }} />
-        <div aria-hidden="true" style={{ height: 1, margin: '16px 0', background: 'linear-gradient(90deg, transparent, rgba(157,180,236,0.9), #f4f7fb, rgba(157,180,236,0.9), transparent)' }} />
-        <div className="mc-login-brand">F.R.I.D.A.Y.</div>
-        <div className="mc-login-kicker">MISSION CONTROL</div>
+    <main className={styles.page}>
+      <form className={styles.card} onSubmit={submit}>
+        <Image className={styles.logo} src="/brand/preciado-tech-logo.jpg" alt="Preciado Tech" width={64} height={64} priority />
+        <hr className={styles.rule} aria-hidden="true" />
+        <Prompt host="friday" cmd="login" />
+        <div className={styles.brand}>F.R.I.D.A.Y.</div>
+        <div className={styles.kicker}>MISSION CONTROL</div>
 
         {status === 'checking' ? (
-          <p className="mc-login-muted">checking access&hellip;</p>
+          <p className={styles.muted}>checking access…</p>
         ) : authed ? (
           <>
-            <p className="mc-login-muted">You are signed in.</p>
-            <div className="mc-login-actions">
-              <button type="button" className="mc-login-btn" onClick={() => router.replace(nextPath)}>
+            <p className={styles.muted}>You are signed in.</p>
+            <div className={styles.actions}>
+              <button type="button" className={styles.btn} onClick={() => router.replace(nextPath)}>
                 Return to dashboard
               </button>
-              <button type="button" className="mc-login-btn mc-login-btn-ghost" onClick={signOut}>
+              <button type="button" className={`${styles.btn} ${styles.btnGhost}`} onClick={signOut}>
                 Sign out
               </button>
             </div>
           </>
         ) : (
           <>
-            <label htmlFor="mc-login-password" className="mc-login-label">
+            <label htmlFor="mc-login-password" className={styles.label}>
               Password
             </label>
             <input
               id="mc-login-password"
-              className="mc-login-input"
+              className={styles.input}
               type="password"
               autoFocus
               autoComplete="current-password"
@@ -122,9 +125,9 @@ export default function LoginPage() {
               disabled={status === 'signing-in'}
               placeholder="••••••••"
             />
-            {error && <p className="mc-login-error">{error}</p>}
-            <button type="submit" className="mc-login-btn" disabled={status === 'signing-in' || !authEnabled}>
-              {status === 'signing-in' ? 'Signing in&hellip;' : 'Sign in'}
+            {error && <p className={styles.error}>{error}</p>}
+            <button type="submit" className={styles.btn} disabled={status === 'signing-in' || !authEnabled}>
+              {status === 'signing-in' ? 'Signing in…' : 'Sign in'}
             </button>
           </>
         )}

@@ -525,3 +525,34 @@ Record results in `artifacts/2026-11-09/polish-verification.md` (route × viewpo
 ````
 
 Recap: the audit is complete and the plan above is final. It was not written to disk because the session has no write grant for the repo. To land it, either paste the block into `docs/polish-plan-2026-11-09.md` or re-run this planner with write permission for that path. Nothing was committed, and no source files were touched. The daily memory log under `memory/` was also skipped for the same reason, so this run has no on-disk trace yet.
+
+---
+
+## 5. Lane A pre-flight audit (2026-11-09, from the read-only planner run)
+
+- `tests/motion-css.test.mjs` asserts `SURFACE.bg === '#07080b'` and the six `--mc-rain-*` tokens stay in globals.css. The plan sets bg `#000000` and deletes the rain → the test must be updated in the same change (Lane A owns it).
+- The blur-off rule must keep exactly `.cmdp`, `.mc-cockpit`, `.mc-drawer`, `.mc-login-card`, `.mc-modal` in its exemption list (`.mc-cockpit` may lose styles but stays listed).
+- `.mc-hud3d` must remain the ONLY `contain: paint` rule in globals.css.
+- `matrix-blue.css`, `aurora.css`, `globals.css` set `--mbg-*`, `--aur-*`, `--ob-*`, `--glass-*` as fixed root colors — write new values directly into those files, don't rely on token-block load order.
+- Tablet icon rail is 72px (`Sidebar.module.css`, `--mc-fold-rail` in fold.css), not the plan's 64px.
+- No `(max-aspect-ratio: 5/4)` guard exists today.
+- Phone-layout switch is at 719/720px (`FOLD_INNER_MEDIA_QUERY` in Sidebar.tsx, MobileChrome.tsx ~138, both .module.css, fold.css) — move all to 820/821 together.
+- Hardcoded build number `2026.10` in atmosphere/PromptBar.tsx and Sidebar.tsx footer.
+
+## 6. Lane C pre-flight audit (read-only run)
+
+- `/chat`: add `chat.module.css`, `friday:~$ chat <profile>` thread header; disable Herdr segment with `herdr unauthorized` hint when `/api/herdr` is 401.
+- `/crew`: `agent top` widget + BOT DESK card joining `/api/bots` + `/api/crew`.
+- `/calendar`: add `res.ok` check, day-summary card, kill forced horizontal scroll at 412px.
+- `lib/pt/theme.ts`: font + cyan overrides need fixing.
+- `Signing in&hellip;` bug in login.
+- Duplicate preset key in `/setup`.
+
+## 7. Lane B pre-flight audit (read-only run)
+
+- Lane B imports Lane A primitives (SegBar.tsx, MiniHist.tsx, Prompt/Divider/Verdict/Glyph in ui.tsx). Code against the planned APIs; the build only passes once A lands.
+- /system `-- top --` process list has NO data source (host-metrics has no per-process CPU) → drop it or add a sampler.
+- Only Codex has weekly-cap data; Claude has no cap snapshot → show 7-day tokens honestly, not "CLAUDE 3% this week".
+- /api/local-ai reports only RUNNING containers → no "stopped" engine lines; honest list = running engines + proxy loaded model.
+- Do NOT change `CATEGORICAL` in lib/chart-colors.ts (memory graph + crew accents use it). Switch `STATUS` to CSS tokens; swap colors locally in BurnLandscape.tsx. STATUS as CSS var can't feed glow() (no current code does).
+- flight-strip: add `completionStats(tasks, now)` → { doneToday, doneWeek, streak, best, daily[14] }, local calendar days, timezone-agnostic test. First edit on re-run.

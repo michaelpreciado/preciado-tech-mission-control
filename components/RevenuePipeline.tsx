@@ -4,7 +4,7 @@ import { useState, type CSSProperties } from 'react'
 import STAGE_LABELS from '@/lib/pt/stage-labels.json'
 import { THEME_CSS_VARIABLES } from '@/lib/pt/theme'
 import type { RadarRecord, RadarStage } from '@/lib/pt/pipeline'
-import { Button, Card, CardHead, Chip, Row, Stat } from './ui'
+import { Button, Card, Chip, Prompt, Row, Stat } from './ui'
 import { apiFetch } from '@/lib/api-base'
 import { usePipelineRadar } from './usePipelineRadar'
 import styles from './Pipeline.module.css'
@@ -45,7 +45,8 @@ export function RevenuePipeline({ docked = false, radar: supplied }: { docked?: 
   }
   const shown = (data?.revenue.recordIds ?? []).map(id => data!.records.find(record => record.id === id)!).filter(Boolean)
   return <Card as="section" id="home-revenue" aria-labelledby="home-revenue-title" className={styles.revenue} style={THEME_CSS_VARIABLES as CSSProperties}>
-    <CardHead title={<span id="home-revenue-title">Revenue pipeline</span>} sub={`Offers and approvals · ${presentation.label}`} />
+    <Prompt host="desk" cmd={<span id="home-revenue-title">revenue pipeline</span>} meta={presentation.label} />
+    <p className={styles.note}>Offers and approvals</p>
     {(error || reviewError) && <p role="alert" className={styles.error}>{reviewError || error}</p>}
     {!data && !error && <p role="status" className={styles.note}>Loading revenue…</p>}
     {data && <>

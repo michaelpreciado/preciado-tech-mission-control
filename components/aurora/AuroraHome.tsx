@@ -8,7 +8,6 @@ import { AuroraHero, AuroraSkyPanel } from './AuroraHero'
 import { AuroraBands, StatusStrip, type BandItem, type BandTone } from './AuroraBands'
 import { heroHeadline } from '@/lib/aurora-copy'
 import { hourBuckets, isUnassigned, movedTasks, needsYouTasks, stateWord, type MovedKind } from '@/lib/flight-strip'
-import { sparkGlyphs } from '@/lib/glyph-series'
 import type { AgentTimeline } from '@/lib/agent-timeline'
 import styles from './aurora.module.css'
 
@@ -34,8 +33,8 @@ function age(fromIso: string | undefined, now: number): string | null {
   return `${Math.floor(m / 1440)}d`
 }
 
-/** AURORA Home: hero headline + status strip, the per-agent sky in the first fold, then the
- *  NEEDS YOU / BROKE / MOVED bands — all from live data. */
+/** Home: `desk:~$ status` headline, four verdict cells, the `agents --today` sky in the first
+ *  fold, then the `-- needs you --` / `-- broke --` / `-- moved --` bands — all from live data. */
 export function AuroraHome({ timeline, dateLabel, timeLabel }: { timeline: AgentTimeline; dateLabel: string; timeLabel: string }) {
   const router = useRouter()
   const { tasks, summary, error, now } = useKanbanSnapshot()
@@ -111,8 +110,8 @@ export function AuroraHome({ timeline, dateLabel, timeLabel }: { timeline: Agent
           { key: 'broke', label: 'Broke', value: brokeCount, href: '#home-broke', tone: 'error', hint: 'services · cron · collectors' },
           { key: 'live', label: 'Running', value: summary ? summary.runningLive : null, href: '/kanban', tone: 'live', hint: 'live workers now' },
           {
-            key: 'moved', label: 'Moved · 24h', value: summary ? moved.length : null, href: '#home-moved', hint: 'cards that changed',
-            trend: summary && moved.length > 0 ? { glyphs: sparkGlyphs(movedPerHour), label: `Card moves per hour, last 12 hours, oldest first: ${movedPerHour.join(', ')}` } : undefined,
+            key: 'moved', label: 'Moved 24h', value: summary ? moved.length : null, href: '#home-moved', hint: 'cards that changed',
+            trend: summary && moved.length > 0 ? { values: movedPerHour, label: `Card moves per hour, last 12 hours, oldest first: ${movedPerHour.join(', ')}` } : undefined,
           },
         ]}
       />
@@ -127,7 +126,7 @@ export function AuroraHome({ timeline, dateLabel, timeLabel }: { timeline: Agent
       <AuroraBands
         waiting={{
           anchor: 'home-needs',
-          wordmark: 'needsYou',
+          label: 'needs you',
           count: waiting,
           linkLabel: 'Open board',
           href: '/kanban',
@@ -137,7 +136,7 @@ export function AuroraHome({ timeline, dateLabel, timeLabel }: { timeline: Agent
         }}
         broke={{
           anchor: 'home-broke',
-          wordmark: 'broke',
+          label: 'broke',
           count: brokeCount,
           countTone: 'error',
           linkLabel: 'System',
@@ -147,7 +146,7 @@ export function AuroraHome({ timeline, dateLabel, timeLabel }: { timeline: Agent
         }}
         moved={{
           anchor: 'home-moved',
-          wordmark: 'moved',
+          label: 'moved',
           count: summary ? moved.length : null,
           linkLabel: 'Board',
           href: '/kanban',

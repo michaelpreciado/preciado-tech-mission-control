@@ -35,3 +35,14 @@ Two reference captures live on disk:
 .segmented-bar-segment: flex-1 bg-border rounded-sm (+ .active bg-accent-blue / .warning bg-accent-yellow)
 .dot-progress-row: label + dot track + % right-aligned
 ```
+
+## Where it lives in Mission Control (2026-11-09)
+
+- Values: `WIDGET` / `WIDGET_SEMANTIC` / `WIDGET_RADIUS` in `lib/tokens.ts`, emitted as the friday theme block.
+- Classes: `.mc-widget`, `.mc-prompt`, `.mc-divider`, `.mc-verdict`, `.mc-kv`, `.mc-segbar`, `.mc-hist`,
+  `.mc-dots`, `.mc-glyph`, `.mc-wrow` at the end of `app/globals.css` (the Tailwind names above map 1:1:
+  `.terminal-card` → `.mc-widget`, `.terminal-header` → `.mc-prompt`, `.terminal-divider` → `.mc-divider`,
+  `.segmented-bar` → `.mc-segbar`, `.dot-progress-row` → `.mc-dots`).
+- React: `Prompt`, `Divider`, `Verdict`, `Glyph`, `Kv`, `KvRow`, `WRow` in `components/ui.tsx`;
+  `SegBar`, `MiniHist` in `components/charts/`. Rendered contract: `/styleguide` → Widgets.
+- Deviation: segmented bars are 12px tall (thin variant 4px) rather than `h-2`, per the polish plan §1.5.

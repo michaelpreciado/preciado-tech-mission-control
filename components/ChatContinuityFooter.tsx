@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import type { ChatContinuity } from '@/lib/chat-continuity'
 import { apiFetch } from '@/lib/api-base'
 import { Button } from './ui'
-import styles from './AgentConsole.module.css'
+import styles from './ChatShell.module.css'
 
 /** Read-only session details for the management sheet. Sending belongs to the single composer. */
 export function ChatContinuityFooter({ session, profile }: { session: string; profile: string }) {

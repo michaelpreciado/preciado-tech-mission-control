@@ -2,9 +2,14 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import type { HerdrAgent, HerdrKind, HerdrSnapshot } from '@/lib/herdr-types';
-import { Button, Card, Chip, Field, Input, Select, Sheet, TextArea } from './ui'
+import { Button, Card, Field, Input, KvRow, Prompt, Select, Sheet, TextArea, WRow, type GlyphName } from './ui'
 import styles from './Kanban.module.css';
 import { apiFetch } from '@/lib/api-base';
+
+/** A 401/403 from herdr: retrying on a timer cannot fix it, only a new token can. */
+class HerdrAuthError extends Error {}
+
+const HERDR_GLYPH: Record<string, GlyphName> = { working: 'run', running: 'run', busy: 'run', idle: 'idle', done: 'ok', error: 'err', failed: 'err', blocked: 'fail' };
 
 // Memory only: credentials are discarded when this component unmounts.
 export default function AgentDeck({ onCredentialChange }: { onCredentialChange?: (token: string) => void }) {
@@ -26,14 +31,14 @@ export default function AgentDeck({ onCredentialChange }: { onCredentialChange?:
   const [cwd, setCwd] = useState('');
   const [opening, setOpening] = useState('');
   const [revision, setRevision] = useState(0);
+  const [unauthorized, setUnauthorized] = useState(false);
   const request = useCallback(async (url: string, init: RequestInit = {}) => {
     const response = await apiFetch(url, { ...init, cache: 'no-store', headers: {
       'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...init.headers,
     } });
     const body = await response.json();
-    if (!response.ok) throw new Error(response.status === 401 || response.status === 403
-      ? 'Access requires a trusted connection or API token. Open Access below.'
-      : typeof body.error === 'string' ? `${body.error}${body.target ? ` Pane: ${body.target}.` : ''}` : 'The request failed. Try again.');
+    if (response.status === 401 || response.status === 403) throw new HerdrAuthError('Access requires a trusted connection or API token. Set one below.');
+    if (!response.ok) throw new Error(typeof body.error === 'string' ? `${body.error}${body.target ? ` Pane: ${body.target}.` : ''}` : 'The request failed. Try again.');
     return body;
   }, [token]);
 
@@ -56,9 +61,11 @@ export default function AgentDeck({ onCredentialChange }: { onCredentialChange?:
       controller = new AbortController();
       try {
         const result = await request('/api/herdr', { signal: controller.signal }) as HerdrSnapshot;
-        if (!stopped) { setSnapshot(result); setError(''); }
+        if (!stopped) { setSnapshot(result); setError(''); setUnauthorized(false); }
       } catch (e) {
-        if (!stopped && !controller.signal.aborted) setError(e instanceof Error ? e.message : 'Unable to load agents.');
+        // Unauthorized is terminal for this token: stop polling until the token changes.
+        if (e instanceof HerdrAuthError) { stopped = true; setUnauthorized(true); setError(''); }
+        else if (!stopped && !controller.signal.aborted) setError(e instanceof Error ? e.message : 'Unable to load agents.');
       } finally {
         running = false;
         if (!stopped && !document.hidden) timer = setTimeout(poll, 4000);
@@ -108,24 +115,27 @@ export default function AgentDeck({ onCredentialChange }: { onCredentialChange?:
   const close = useCallback(() => { setSelected(null); setLauncher(false); }, []);
   const current = snapshot?.agents.find(agent => agent.id === selected?.id) ?? selected;
 
-  return <Card as="section" pad="md" className={styles.agentDeck} aria-label="Live agent deck">
-    <header className={styles.agentHeader}><div><h2>Agent deck</h2><p>Live local agent instances · updates every 4 seconds</p></div>
+  return <section className={`mc-widget ${styles.agentDeck}`} aria-label="Live agent deck">
+    <header className={styles.agentHeader}><Prompt as="h2" host="desk" cmd="herdr ls" meta={unauthorized ? undefined : '↻ 4s'} />
       <Button type="button" disabled={busy || !snapshot?.available} onClick={() => { setLauncher(true); setError(''); setNotice(''); }}>New agent</Button></header>
+    {unauthorized && <KvRow k="herdr" v="unauthorized" r="" />}
     <div className={styles.agentAccess}><form onSubmit={event => { event.preventDefault(); const nextToken = credential.trim(); setToken(nextToken); onCredentialChange?.(nextToken); setCredential(''); }}>
       <Field label="API bearer token"><Input type="password" autoComplete="off" value={credential} onChange={e => setCredential(e.target.value)} placeholder={token ? 'Token is set for this page session' : 'Only if required by your server'} /></Field>
-      <Button type="submit">{credential.trim() ? 'Use token' : 'Clear token'}</Button><small>Kept only in memory for this page session.</small>
+      <Button type="submit">{credential.trim() ? 'Use token' : 'Clear token'}</Button><span className={styles.muted}>Kept only in memory for this page session.</span>
     </form></div>
     {error && <p role="alert" className={styles.agentMessage}>{error}</p>}
     {notice && <p role="status" className={styles.agentMessage}>{notice}</p>}
-    {!snapshot && !error && <p role="status">Connecting to herdr…</p>}
-    {snapshot && !snapshot.available && <p role="status">Herdr is unavailable. {snapshot.error || 'Start herdr on this machine to connect.'}</p>}
-    {snapshot?.available && snapshot.agents.length === 0 && <p>No agent instances yet. Launch an agent to begin.</p>}
-    <div className={styles.agentGrid}>{snapshot?.agents.map(agent => <Card key={agent.id}><Button type="button" className={styles.agentTile} onClick={() => { setSelected(agent); setRename(agent.name); setPrompt(''); setError(''); setNotice(''); }}>
-      <span className={styles.agentRow}><strong>{agent.name || agent.id}</strong><span>{agent.kind || 'unknown'}</span></span>
-      <span className={styles.agentRow}><Chip>{agent.status || 'unknown'}</Chip>{agent.focused && <small>Focused</small>}</span>
-      <span className={styles.agentPath} title={agent.cwd}>{agent.cwd || 'Working directory unavailable'}</span>
-    </Button></Card>)}</div>
-    {snapshot && <small>Last snapshot: {new Date(snapshot.generatedAt).toLocaleTimeString()}</small>}
+    {!snapshot && !error && !unauthorized && <p role="status">connecting to herdr…</p>}
+    {snapshot && !snapshot.available && <KvRow k="herdr" v={snapshot.error || 'unavailable'} r="" />}
+    {snapshot?.available && snapshot.agents.length === 0 && <WRow g="idle" dim>no agents running</WRow>}
+    {!!snapshot?.agents.length && <div className={styles.agentList}>{snapshot.agents.map(agent => <div key={agent.id}>
+      <WRow g={HERDR_GLYPH[agent.status] ?? 'idle'} right={`${agent.kind || 'unknown'}${agent.focused ? ' · focus' : ''}`} title={agent.cwd}
+        onClick={() => { setSelected(agent); setRename(agent.name); setPrompt(''); setError(''); setNotice(''); }}>
+        {agent.name || agent.id} <span className={styles.muted}>{agent.status || 'unknown'}</span>
+      </WRow>
+      <span className={styles.agentPath}>{agent.cwd || 'working directory unavailable'}</span>
+    </div>)}</div>}
+    {snapshot && <Prompt host="desk" foot meta={new Date(snapshot.generatedAt).toLocaleTimeString()} />}
     <Sheet open={!!selected || launcher} onClose={close} title={launcher ? 'Launch agent' : current?.name || current?.id || 'Agent'} size="tall">
       <div className={styles.agentDialog}>
       {error && <p role="alert">{error}</p>}{notice && <p role="status">{notice}</p>}
@@ -153,5 +163,5 @@ export default function AgentDeck({ onCredentialChange }: { onCredentialChange?:
         </fieldset></>}
       </div>
     </Sheet>
-  </Card>;
+  </section>;
 }

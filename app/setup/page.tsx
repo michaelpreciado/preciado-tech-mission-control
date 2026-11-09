@@ -12,7 +12,7 @@ import { Button } from '@/components/ui'
 import { ACCENT_PRESETS, DEFAULT_ACCENT } from '@/lib/theme'
 import { NAV_TABS, PINNED_TAB_IDS } from '@/lib/nav-tabs'
 import { apiFetch } from '@/lib/api-base'
-import '../vf/v3-lane.css'
+import styles from '@/components/setup.module.css'
 
 type MotionSetting = 'full' | 'reduced' | 'off'
 type Density = 'compact' | 'expanded'
@@ -240,50 +240,49 @@ export default function SetupPage() {
 
   return (
     <>
-      <PageHeader eyebrow="~/setup · CONFIG-STATE" title="SETUP" subtitle="Configure identity, integrations, and interface behavior" />
-      <div className="v3-kicker v4-legacy-kicker"><span className="jp">設定</span> configure</div>
-      <div className="mc-setup">
-        <div className="mc-setup-intro">
+      <PageHeader title="SETUP" subtitle="Configure identity, integrations, and interface behavior" />
+      <div className={styles.setup}>
+        <div className={styles.intro}>
           <p><strong>Local-first, bring-your-own-keys.</strong> Everything below is written to
           <code> data/config.json</code> — gitignored, never synced, never sent anywhere.
           Blank fields simply disable their panel; the dashboard degrades gracefully.</p>
-          <div className="mc-setup-actions">
+          <div className={styles.actions}>
             <Button variant="ghost" onClick={seedDemo} disabled={busy}>
               ▶ LOAD DEMO DATA
             </Button>
-            <span className="mc-setup-hint">New here? Seed a realistic demo dataset first, explore, then point the paths at your own agents.</span>
+            <span className={styles.hint}>New here? Seed a realistic demo dataset first, explore, then point the paths at your own agents.</span>
           </div>
         </div>
 
         {flash && !cfg && (
-          <div className={`mc-setup-flash ${flash.tone}`}>{flash.tone === 'ok' ? '✓' : '⚠'} {flash.text}</div>
+          <div className={`${styles.flash} ${flash.tone === 'ok' ? styles.ok : styles.err}`}>{flash.tone === 'ok' ? '✓' : '⚠'} {flash.text}</div>
         )}
 
         {!cfg ? (
-          <div className="mc-setup-loading">loading current config…</div>
+          <div className={styles.loading}>loading current config…</div>
         ) : (
           <>
-            <div className="mc-setup-group">
-              <div className="mc-setup-group-head">IDENTITY</div>
-              <label className="mc-setup-field">
+            <div className={styles.group}>
+              <div className={styles.groupHead}>IDENTITY</div>
+              <label className={styles.field}>
                 <span>App name (brand)</span>
                 <input value={cfg.appName} onChange={e => set('root', 'appName', e.target.value)} maxLength={40} />
                 <em>shown in the sidebar + header · restart to update page metadata</em>
               </label>
-              <label className="mc-setup-field">
+              <label className={styles.field}>
                 <span>Tagline</span>
                 <input value={cfg.appTagline} onChange={e => set('root', 'appTagline', e.target.value)} maxLength={80} />
               </label>
-              <div className="mc-setup-field">
+              <div className={styles.field}>
                 <span>Accent color</span>
-                <div className="mc-setup-swatches">
+                <div className={styles.swatches}>
                   {ACCENT_PRESETS.map(p => (
                     <button
-                      key={p.hex}
+                      key={p.name}
                       type="button"
                       title={p.name}
-                      className={`mc-swatch ${cfg.appearance.accentColor.toLowerCase() === p.hex ? 'is-active' : ''}`}
-                      style={{ background: p.hex, boxShadow: `0 0 10px ${p.hex}88` }}
+                      className={`${styles.swatch} ${cfg.appearance.accentColor.toLowerCase() === p.hex ? styles.active : ''}`}
+                      style={{ background: p.hex }}
                       onClick={() => set('appearance', 'accentColor', p.hex)}
                     />
                   ))}
@@ -298,12 +297,12 @@ export default function SetupPage() {
               </div>
             </div>
 
-            <div className="mc-setup-group w2l-setup-ui">
-              <div className="mc-setup-group-head">UI CUSTOMIZATION <span>motion, density, nav, 3D elements · applies on next page load, no restart needed (like accent color)</span></div>
+            <div className={`${styles.group} ${styles.uiGroup}`}>
+              <div className={styles.groupHead}>UI CUSTOMIZATION <span>motion, density, nav, 3D elements · applies on next page load, no restart needed (like accent color)</span></div>
 
-              <div className="mc-setup-field">
+              <div className={styles.field}>
                 <span>Motion</span>
-                <div className="mc-setup-swatches">
+                <div className={styles.swatches}>
                   {(['full', 'reduced', 'off'] as const).map(m => (
                     <Button key={m} variant="ghost" active={cfg.appearance.motion === m} onClick={() => setAppearance('motion', m)}>
                       {m.toUpperCase()}
@@ -313,9 +312,9 @@ export default function SetupPage() {
                 <em>full = defer to OS reduced-motion/battery only · reduced &amp; off both freeze every ambient/3D element to a static frame</em>
               </div>
 
-              <div className="mc-setup-field">
+              <div className={styles.field}>
                 <span>Card density</span>
-                <div className="mc-setup-swatches">
+                <div className={styles.swatches}>
                   {(['compact', 'expanded'] as const).map(d => (
                     <Button key={d} variant="ghost" active={cfg.appearance.density === d} onClick={() => setAppearance('density', d)}>
                       {d.toUpperCase()}
@@ -325,9 +324,9 @@ export default function SetupPage() {
                 <em>card padding/gap across the dashboard</em>
               </div>
 
-              <div className="mc-setup-field">
+              <div className={styles.field}>
                 <span>3D / ambient elements</span>
-                <div className="mc-setup-swatches">
+                <div className={styles.swatches}>
                   <Button variant="ghost" active={cfg.appearance.elements3d.coreOrb} onClick={() => toggleElement3d('coreOrb')}>
                     GLOBAL CORE ORB · {cfg.appearance.elements3d.coreOrb ? 'ON' : 'OFF'}
                   </Button>
@@ -341,9 +340,9 @@ export default function SetupPage() {
                 <em>turn off the heavier WebGL/graph views on lower-power machines · Memory/Team graph fall back to their existing list views · Core orb toggles the 3D heartbeat visual; Home navigation remains available</em>
               </div>
 
-              <div className="mc-setup-field mc-setup-tabs">
+              <div className={styles.field}>
                 <span>Sidebar / mobile-nav tabs</span>
-                <div className="mc-setup-tablist">
+                <div className={styles.tablist}>
                   {Object.entries(
                     effectiveTabOrder(cfg.appearance.tabOrder).reduce<Record<string, typeof NAV_TABS>>((acc, id) => {
                       const t = NAV_TABS.find(x => x.id === id)
@@ -354,14 +353,14 @@ export default function SetupPage() {
                   ).map(([section, tabs]) => {
                     const configurableTabs = tabs.filter(t => t.id !== '/')
                     return (
-                      <div key={section} className="mc-setup-tabsection">
-                        <div className="mc-setup-tabsection-head">{section}</div>
+                      <div key={section} className={styles.tabsection}>
+                        <div className={styles.tabsectionHead}>{section}</div>
                         {configurableTabs.map((t, i) => {
                           const hidden = cfg.appearance.hiddenTabs.includes(t.id)
                           return (
                             <div
                               key={t.id}
-                              className={`mc-setup-tabrow${dragTabId === t.id ? ' setup-tabrow--dragging' : ''}${overTabId === t.id && dragTabId && dragTabId !== t.id ? ' setup-tabrow--over' : ''}`}
+                              className={`${styles.tabrow}${dragTabId === t.id ? ` ${styles.dragging}` : ''}${overTabId === t.id && dragTabId && dragTabId !== t.id ? ` ${styles.over}` : ''}`}
                               draggable
                               onDragStart={e => { setDragTabId(t.id); e.dataTransfer.effectAllowed = 'move' }}
                               onDragEnd={() => { setDragTabId(null); setOverTabId(null) }}
@@ -369,11 +368,11 @@ export default function SetupPage() {
                               onDragLeave={() => setOverTabId(prev => (prev === t.id ? null : prev))}
                               onDrop={e => { e.preventDefault(); if (dragTabId) reorderTab(dragTabId, t.id); setDragTabId(null); setOverTabId(null) }}
                             >
-                              <span className="setup-tabrow-grip" aria-hidden="true" title="Drag to reorder">⠿</span>
-                              <span className="mc-setup-tabrow-label">
+                              <span className={styles.grip} aria-hidden="true" title="Drag to reorder">⠿</span>
+                              <span className={styles.tabrowLabel}>
                                 {t.label}{t.pinned && <em> · pinned</em>}
                               </span>
-                              <div className="mc-setup-tabrow-actions">
+                              <div className={styles.tabrowActions}>
                                 <Button variant="ghost" disabled={i === 0} onClick={() => moveTab(t.id, -1)} aria-label={`Move ${t.label} up`}>↑</Button>
                                 <Button variant="ghost" disabled={i === configurableTabs.length - 1} onClick={() => moveTab(t.id, 1)} aria-label={`Move ${t.label} down`}>↓</Button>
                                 <Button
@@ -396,10 +395,10 @@ export default function SetupPage() {
               </div>
             </div>
 
-            <div className="mc-setup-group">
-              <div className="mc-setup-group-head">API KEYS</div>
-              <label className="mc-setup-field">
-                <span>OpenRouter API key {cfg.keysSet.openrouterApiKey && <b className="is-set">· configured ✓</b>}</span>
+            <div className={styles.group}>
+              <div className={styles.groupHead}>API KEYS</div>
+              <label className={styles.field}>
+                <span>OpenRouter API key {cfg.keysSet.openrouterApiKey && <b className={styles.isSet}>· configured ✓</b>}</span>
                 <input
                   type="password"
                   value={openrouterKey}
@@ -409,8 +408,8 @@ export default function SetupPage() {
                 />
                 <em>used server-side for live billing on the Costs tab · never returned by any API</em>
               </label>
-              <label className="mc-setup-field">
-                <span>TickTick API token {cfg.keysSet.ticktickToken && <b className="is-set">· configured ✓</b>}</span>
+              <label className={styles.field}>
+                <span>TickTick API token {cfg.keysSet.ticktickToken && <b className={styles.isSet}>· configured ✓</b>}</span>
                 <input
                   type="password"
                   value={ticktickKey}
@@ -423,12 +422,12 @@ export default function SetupPage() {
             </div>
 
             {FIELD_GROUPS.map(group => (
-              <div className="mc-setup-group" key={group.title}>
-              <div className="mc-setup-group-head">{group.title} <span>{group.sub}</span></div>
+              <div className={styles.group} key={group.title}>
+              <div className={styles.groupHead}>{group.title} <span>{group.sub}</span></div>
                 {group.fields.map(f => {
                   const branch = cfg[f.section] as Record<string, string>
                   return (
-                    <label className="mc-setup-field" key={`${f.section}.${f.key}`}>
+                    <label className={styles.field} key={`${f.section}.${f.key}`}>
                       <span>{f.label}</span>
                       <input value={branch[f.key] ?? ''} onChange={e => set(f.section, f.key, e.target.value)} spellCheck={false} />
                       {f.hint && <em>{f.hint}</em>}
@@ -438,13 +437,13 @@ export default function SetupPage() {
               </div>
             ))}
 
-            <div className="mc-setup-actions sticky">
-              {flash && <div className={`mc-setup-flash ${flash.tone}`} role="status" style={{ flexBasis: '100%' }}>{flash.tone === 'ok' ? '✓' : '⚠'} {flash.text}</div>}
-              <span className="mc-kb-sync" role="status">{configured ? 'CONFIGURED' : 'NOT CONFIGURED'}</span>
+            <div className={`${styles.actions} ${styles.sticky}`}>
+              {flash && <div className={`${styles.flash} ${flash.tone === 'ok' ? styles.ok : styles.err}`} role="status" style={{ flexBasis: '100%' }}>{flash.tone === 'ok' ? '✓' : '⚠'} {flash.text}</div>}
+              <span className={styles.status} role="status">{configured ? 'CONFIGURED' : 'NOT CONFIGURED'}</span>
               <Button variant="primary" loading={busy} onClick={save}>
-                {busy ? 'WORKING…' : '💾 SAVE CONFIG'}
+                {busy ? 'WORKING…' : 'SAVE CONFIG'}
               </Button>
-              <span className="mc-setup-hint">saves to data/config.json · data panels update immediately</span>
+              <span className={styles.hint}>saves to data/config.json · data panels update immediately</span>
             </div>
           </>
         )}

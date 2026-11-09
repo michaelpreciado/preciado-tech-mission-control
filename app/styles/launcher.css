@@ -10,31 +10,10 @@ html[data-palette="launcher"],
 html[data-palette="launcher"] body {
   background-color: var(--pt-launcher-bg);
 }
-html[data-palette="launcher"] body {
-  background-image:
-    radial-gradient(1100px 600px at 80% -12%, rgba(var(--pt-launcher-accent-rgb), .06), transparent 62%),
-    linear-gradient(180deg, var(--pt-launcher-bg) 0%, var(--pt-launcher-bg) 60%, var(--pt-launcher-deep) 100%);
-}
 
 /* Stats were LCD plates: drop the scanline overlay, keep the glass card. */
-html[data-palette="launcher"] .mc-stat::after { display: none; }
-html[data-palette="launcher"] .mc-stat {
-  background: var(--pt-card-bg);
-  border-color: var(--pt-card-border);
-  box-shadow: var(--pt-mx-glass-rim);
-}
 
 /* Progress: 3px, pill, accent fill on a cyan track (no Pip-Boy segments). */
-html[data-palette="launcher"] .mc-cost-bar {
-  height: 3px;
-  border: 0;
-  background: rgba(var(--pt-launcher-accent-rgb), .15);
-}
-html[data-palette="launcher"] .mc-cost-bar > span {
-  background: var(--pt-launcher-accent);
-  box-shadow: none;
-}
-html[data-palette="launcher"] .mc-cost-bar > span::after { display: none; }
 
 /* Kickers: mono, uppercase, 0.14em (the launcher widget headers). */
 html[data-palette="launcher"] .mc-ascii-head { letter-spacing: var(--pt-ls-kicker); }

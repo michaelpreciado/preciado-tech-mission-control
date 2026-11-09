@@ -122,7 +122,7 @@ export function CommandPalette() {
       <div className="cmdp-backdrop" onClick={close} />
       <div className="cmdp">
         <div className="cmdp-inputrow">
-          <span className="cmdp-prompt">&gt;_</span>
+          <span className="cmdp-prompt">friday:~$</span>
           <input ref={inputRef} className="cmdp-input" value={query} onChange={e => setQuery(e.target.value)}
             placeholder="Search practice areas or destinations…" aria-label="Command palette search" autoComplete="off" spellCheck={false}
             role="combobox" aria-expanded="true" aria-controls="cmdp-list" aria-autocomplete="list" aria-activedescendant={items[cursor] ? `cmdp-option-${items[cursor].id}` : undefined} />
@@ -130,7 +130,7 @@ export function CommandPalette() {
         </div>
         <div className="cmdp-status" role="status">{view.label}{error ? ` · ${error}` : ''}</div>
         <div className="cmdp-list" id="cmdp-list" role="listbox" aria-label="Destinations">
-          {items.length === 0 && <div className="cmdp-empty">— no matches —</div>}
+          {items.length === 0 && <div className="cmdp-empty">-- no matches --</div>}
           {items.map((command, i) => {
             const showGroup = command.practiceArea !== lastGroup
             lastGroup = command.practiceArea

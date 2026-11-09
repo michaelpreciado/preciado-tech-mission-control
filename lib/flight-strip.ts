@@ -88,13 +88,20 @@ export type KanbanSummary = {
   done: number
   /** Non-terminal tasks: everything except done and archived. */
   open: number
+  /** Needs-you split for the widget glyph counts: blocked + failed (`×`), review (`·`). */
+  blocked: number
+  review: number
 }
 
 export function summarizeKanban(tasks: HermesTask[], now: number): KanbanSummary {
-  const s: KanbanSummary = { needsYou: 0, runningLive: 0, trackingOnly: 0, upNext: 0, done: 0, open: 0 }
+  const s: KanbanSummary = { needsYou: 0, runningLive: 0, trackingOnly: 0, upNext: 0, done: 0, open: 0, blocked: 0, review: 0 }
   for (const t of tasks) {
     const lane = laneFor(t.status)
-    if (lane === 'needs_you') s.needsYou++
+    if (lane === 'needs_you') {
+      s.needsYou++
+      if (t.status === 'review') s.review++
+      else s.blocked++
+    }
     else if (lane === 'up_next') s.upNext++
     else if (lane === 'done') s.done++
     else if (workerState(t, now) === 'live') s.runningLive++
@@ -102,6 +109,51 @@ export function summarizeKanban(tasks: HermesTask[], now: number): KanbanSummary
     if (lane !== 'done') s.open++
   }
   return s
+}
+
+export type CompletionStats = {
+  doneToday: number
+  /** Rolling 7 local days, today included. */
+  doneWeek: number
+  /** Consecutive local days with a completion, ending today (or yesterday if today is still quiet). */
+  streak: number
+  /** Longest such run anywhere in the board's history. */
+  best: number
+  /** Completions per local day, oldest first; the last slot is today. */
+  daily: number[]
+}
+
+const DAY_MS = 86_400_000
+/** Local-calendar day index (DST-safe): days since the epoch, counted in local dates. */
+const localDay = (ms: number) => {
+  const d = new Date(ms)
+  return Math.round(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / DAY_MS)
+}
+
+/** The kanban widget's `done / streak / 14d` lines, from each card's own completedAt. */
+export function completionStats(tasks: HermesTask[], now: number, days = 14): CompletionStats {
+  const today = localDay(now)
+  const perDay = new Map<number, number>()
+  for (const t of tasks) {
+    if (laneFor(t.status) !== 'done') continue
+    const ms = t.completedAt ? Date.parse(t.completedAt) : NaN
+    if (!Number.isFinite(ms) || ms > now + 60_000) continue
+    const day = localDay(ms)
+    perDay.set(day, (perDay.get(day) ?? 0) + 1)
+  }
+  const daily = Array.from({ length: days }, (_, i) => perDay.get(today - (days - 1 - i)) ?? 0)
+  let doneWeek = 0
+  for (let i = 0; i < 7; i++) doneWeek += perDay.get(today - i) ?? 0
+  let streak = 0
+  for (let d = perDay.has(today) ? today : today - 1; perDay.has(d); d--) streak++
+  let best = 0
+  for (const day of perDay.keys()) {
+    if (perDay.has(day - 1)) continue
+    let run = 1
+    while (perDay.has(day + run)) run++
+    if (run > best) best = run
+  }
+  return { doneToday: perDay.get(today) ?? 0, doneWeek, streak, best, daily }
 }
 
 export type BriefKind = 'loading' | 'unavailable' | 'stale' | 'ok'

@@ -2,12 +2,15 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useLiveData } from '../LiveDataProvider'
-import { TFrame, SectionRule, Window, EmptyTerminal, SkeletonPanel } from '../ui'
+import { Divider, EmptyTerminal, Glyph, Kv, KvRow, Prompt, SkeletonPanel, Verdict, WRow } from '../ui'
 import dynamic from 'next/dynamic'
 import { Heatmap } from '../Viz'
-import { AsciiSpark, AsciiHeat } from '../ascii-viz'
 import { MicroBars } from '../charts/MicroBars'
-import { CATEGORICAL, STATUS } from '@/lib/chart-colors'
+import { MiniHist } from '../charts/MiniHist'
+import { SegBar } from '../charts/SegBar'
+import { LocalAiTop, useLocalAi } from './LocalAiTop'
+import { BILLING_MODE_COLOR } from '@/lib/chart-colors'
+import css from './costs.module.css'
 import type { CostDashboard, BillingMode } from '@/lib/types'
 import { billingMode } from '@/lib/collectors/costs-usage'
 
@@ -32,11 +35,14 @@ const BurnLandscape = dynamic(() => import('./BurnLandscape').then(m => m.defaul
  * ═════════════════════════════════════════════════════════════════════════ */
 
 const MODE_META: Record<BillingMode, { label: string; color: string; note: string }> = {
-  metered: { label: 'METERED', color: CATEGORICAL[0], note: 'billed per token' },
-  subscription: { label: 'SUBSCRIPTION', color: CATEGORICAL[3], note: 'flat plan · no per-token $' },
-  local: { label: 'LOCAL', color: CATEGORICAL[2], note: 'this rig · free' },
-  'cloud-routed': { label: 'CLOUD-ROUTED', color: CATEGORICAL[5], note: "ollama's hardware · price not logged" },
+  metered: { label: 'metered', color: BILLING_MODE_COLOR.metered, note: 'billed per token' },
+  subscription: { label: 'subscription', color: BILLING_MODE_COLOR.subscription, note: 'flat plan · no per-token $' },
+  local: { label: 'local', color: BILLING_MODE_COLOR.local, note: 'this rig · free' },
+  'cloud-routed': { label: 'cloud-routed', color: BILLING_MODE_COLOR['cloud-routed'], note: "ollama's hardware · price not logged" },
 }
+
+/** Amber/red only where a real threshold is crossed: weekly cap and fair-use burn. */
+const CAP_TONE = { warn: 70, crit: 90 }
 
 function finite(n: unknown): n is number {
   return typeof n === 'number' && Number.isFinite(n)
@@ -168,51 +174,63 @@ function weeklyPercent(value?: number | null): string {
   return finite(value) ? `${value}%` : '—'
 }
 
-function WeeklyUsage({ limits, now, compact = false }: { limits: CodexLimits; now: number | null; compact?: boolean }) {
-  const used = limits?.weeklyUsedPercent
-  const remaining = weeklyPercent(limits?.weeklyRemainingPercent)
-  const tone = !finite(used) ? 'var(--pt-text-mute)' : used >= 90 ? STATUS.crit : used >= 70 ? STATUS.warn : STATUS.ok
-  const reset = resetTime(limits?.weeklyResetsAt)
-  const relative = resetRelative(limits?.weeklyResetsAt, now)
+/** `4d 18h` until a provider reset; '' when unknown or passed. */
+function resetIn(value: string | null | undefined, now: number | null): string {
+  const ms = value ? Date.parse(value) : NaN
+  if (!finite(ms) || now === null || ms <= now) return ''
+  const minutes = Math.floor((ms - now) / 60_000)
+  const h = Math.floor(minutes / 60)
+  return h >= 24 ? `${Math.floor(h / 24)}d ${h % 24}h` : h > 0 ? `${h}h ${minutes % 60}m` : `${minutes}m`
+}
+
+/** `● week   4d 18h   3%` over a thin progress line — the launcher CLAUDE card row. */
+function CapRow({ label, used, resetsAt, now, active = false }: { label: string; used: number | null | undefined; resetsAt?: string | null; now: number | null; active?: boolean }) {
+  const pctUsed = finite(used) ? used : null
+  const tone = pctUsed == null ? undefined : pctUsed >= CAP_TONE.crit ? 'crit' : pctUsed >= CAP_TONE.warn ? 'warn' : undefined
   return (
-    <div className={compact ? undefined : 'cp-plan-band'} style={{ padding: compact ? '14px 0 0' : '14px 16px', borderBottom: 0 }}>
-      {compact ? (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px 24px', alignItems: 'flex-start' }}>
-          <Stat value={remaining} label="WEEKLY REMAINING" color={tone} />
-          <Stat value={reset} label="RESETS" sub={relative !== '—' ? relative : undefined} size="sm" />
-        </div>
-      ) : (
-        <>
-          <div className="cp-plan-band-head"><span style={{ color: tone }}>WEEKLY {weeklyPercent(used)} used · {remaining} remaining</span></div>
-          <div className="cp-plan-band-track" role="img" aria-label={`Weekly Codex usage: ${weeklyPercent(used)} used, ${remaining} remaining`}>
-            {finite(used) && <span style={{ width: `${Math.max(0, Math.min(100, used))}%`, background: tone }} />}
-          </div>
-          <div className="cp-plan-band-hint" style={{ lineHeight: 1.6 }}>RESETS {reset}{relative !== '—' && ` · ${relative}`}</div>
-        </>
+    <div className={css.capRow}>
+      <div className={css.capLine}>
+        <span className={active ? css.capDotOn : css.capDot} aria-hidden="true" />
+        <span className={css.capName}>{label}</span>
+        <span className={css.capReset} title={resetsAt ? `resets ${resetTime(resetsAt)}` : undefined}>{resetIn(resetsAt, now)}</span>
+        <span className={tone === 'crit' ? css.crit : tone === 'warn' ? css.warn : css.capPct}>{weeklyPercent(pctUsed)}</span>
+      </div>
+      <SegBar value={pctUsed ?? 0} thin segments={40} autoTone={CAP_TONE} label={`${label} ${weeklyPercent(pctUsed)} used`} />
+    </div>
+  )
+}
+
+/** Codex weekly cap: provider-reported percent from the session rate_limits snapshot. */
+function WeeklyUsage({ limits, now }: { limits: CodexLimits; now: number | null }) {
+  const used = limits?.weeklyUsedPercent
+  return (
+    <div className={css.caps}>
+      {limits?.secondaryUsedPercent != null && limits.secondaryWindowMinutes !== limits.weeklyWindowMinutes && (
+        <CapRow label="session" used={limits.secondaryUsedPercent} resetsAt={limits.secondaryResetsAt} now={now} />
       )}
-      {!limits && <div className="cp-plan-band-hint">no provider snapshot in session logs</div>}
+      <CapRow label="week" used={used} resetsAt={limits?.weeklyResetsAt} now={now} active />
+      {!limits && <p className={css.hint}>no provider snapshot in session logs</p>}
+      {limits?.weeklyResetsAt && <p className={css.hint}>resets {resetTime(limits.weeklyResetsAt)} · {resetRelative(limits.weeklyResetsAt, now)}</p>}
     </div>
   )
 }
 
 /* ── Primitives ─────────────────────────────────────────────────────── */
 
-function Stat({ value, label, sub, color = 'var(--pt-text-high)', size = 'md', glow = false }: {
+function Stat({ value, label, sub, color, size = 'md' }: {
   value: ReactNode; label: string; sub?: ReactNode
-  color?: string; size?: 'hero' | 'lg' | 'md' | 'sm'; glow?: boolean
+  /** Only for a real threshold tone (STATUS.*); figures are otherwise white. */
+  color?: string; size?: 'hero' | 'lg' | 'md' | 'sm'
 }) {
-  const fs = size === 'hero' ? 36 : size === 'lg' ? 23 : size === 'sm' ? 14 : 17
+  const shown = value == null || (typeof value === 'number' && !finite(value)) ? '—' : value
   return (
-    <TFrame><div className="cp-stat" style={{ minWidth: 0, maxWidth: '100%', overflowWrap: 'anywhere' }}>
-      <div style={{
-        fontSize: fs, fontWeight: 700, lineHeight: 1.05,
-        fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums',
-        color: glow ? 'var(--pt-neon-bright)' : color,
-        ...(glow ? { textShadow: 'var(--pt-glow-text)' } : {}),
-      }}>{value == null || (typeof value === 'number' && !finite(value)) ? '—' : value}</div>
-      <div style={{ fontSize: 8, lineHeight: 1.5, color: 'var(--pt-text-mute)', letterSpacing: '0.12em', marginTop: 5 }}>{label}</div>
-      {sub != null && <div style={{ fontSize: 8.5, color: 'var(--pt-text-dim)', marginTop: 3, fontFamily: 'var(--font-mono)' }}>{sub}</div>}
-    </div></TFrame>
+    <div className={css.stat}>
+      {size === 'hero'
+        ? <Verdict>{shown}</Verdict>
+        : <div className={`${css.statValue} ${size === 'lg' ? css.statLg : size === 'sm' ? css.statSm : ''}`} style={color ? { color } : undefined}>{shown}</div>}
+      <div className={css.statLabel}>{label}</div>
+      {sub != null && <div className={css.statSub}>{sub}</div>}
+    </div>
   )
 }
 
@@ -223,7 +241,7 @@ function Note({ children }: { children: ReactNode }) {
   // Phones clamp the caveat to two lines behind a toggle; the full text stays in the DOM.
   const [open, setOpen] = useState(false)
   return (
-    <div className={`cp-note${open ? ' is-open' : ''}`}>
+    <div className={`cp-note ${css.note}${open ? ' is-open' : ''}`}>
       <div className="cp-note-body">{children}</div>
       <button type="button" className="cp-note-more" aria-expanded={open} onClick={() => setOpen(o => !o)}>
         {open ? 'less' : 'source & caveats'}
@@ -232,11 +250,19 @@ function Note({ children }: { children: ReactNode }) {
   )
 }
 
+/** Flat identity square for a billing mode (legend key, never a status). */
 function ModeDot({ mode }: { mode: BillingMode }) {
-  return <span style={{
-    width: 7, height: 7, borderRadius: 2, flexShrink: 0, display: 'inline-block',
-    background: MODE_META[mode].color, boxShadow: `0 0 5px ${MODE_META[mode].color}99`,
-  }} />
+  return <span className={css.modeDot} style={{ background: MODE_META[mode].color }} aria-hidden="true" />
+}
+
+/** A launcher widget: `desk:~$ <cmd>` head, then the body. */
+function Widget({ cmd, meta, children, className = '', label }: { cmd: string; meta?: ReactNode; children: ReactNode; className?: string; label?: string }) {
+  return (
+    <section className={`mc-widget ${css.widget} ${className}`} aria-label={label ?? cmd}>
+      <Prompt as="h2" host="desk" cmd={cmd} meta={meta} />
+      {children}
+    </section>
+  )
 }
 
 /* ── Table ──────────────────────────────────────────────────────────────
@@ -247,6 +273,9 @@ function ModeDot({ mode }: { mode: BillingMode }) {
 
 type Col<T> = { key: string; head: string; align?: 'left' | 'right'; render: (row: T) => ReactNode; w?: number }
 
+/** Phones and folds always get the stacked layout, whatever the column budget. */
+const STACK_MEDIA = '(max-width: 820px)'
+
 function Table<T>({ cols, rows, empty, rowKey }: { cols: Col<T>[]; rows: T[]; empty: string; rowKey: (row: T) => string }) {
   const wrapper = useRef<HTMLDivElement>(null)
   // A stacked first render also fits narrow screens before hydration.
@@ -256,12 +285,17 @@ function Table<T>({ cols, rows, empty, rowKey }: { cols: Col<T>[]; rows: T[]; em
   useEffect(() => {
     const element = wrapper.current
     if (!element) return
-    const observer = new ResizeObserver(([entry]) => setStacked(entry.contentRect.width < minTableWidth))
+    const mq = window.matchMedia(STACK_MEDIA)
+    let width = element.getBoundingClientRect().width
+    const sync = () => setStacked(mq.matches || width < minTableWidth)
+    const observer = new ResizeObserver(([entry]) => { width = entry.contentRect.width; sync() })
     observer.observe(element)
-    return () => observer.disconnect()
+    mq.addEventListener('change', sync)
+    sync()
+    return () => { observer.disconnect(); mq.removeEventListener('change', sync) }
   }, [isEmpty, minTableWidth])
   if (!rows.length) {
-    return <div style={{ padding: '16px', fontSize: 10, color: 'var(--pt-text-mute)', letterSpacing: '0.14em' }}>— {empty} —</div>
+    return <WRow g="idle" dim>{empty}</WRow>
   }
   return (
     <div className="cp-tablewrap" ref={wrapper} style={{ minWidth: 0, overflowX: 'visible' }}>
@@ -275,7 +309,7 @@ function Table<T>({ cols, rows, empty, rowKey }: { cols: Col<T>[]; rows: T[]; em
           {rows.map((r, index) => (
             <tr key={rowKey(r)} role="row" style={stacked ? { display: 'block', padding: '14px 16px', borderBottom: index < rows.length - 1 ? '1px dashed var(--pt-border-dim)' : 0 } : undefined}>{cols.map(c => (
               <td key={c.key} role="cell" data-label={c.head} style={{ textAlign: c.align ?? 'left', minWidth: 0, whiteSpace: 'normal', overflowWrap: 'anywhere', ...(stacked ? { display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'baseline', gap: '4px 12px', width: 'auto', padding: '5px 0', border: 0 } : {}) }}>
-                {stacked && <span style={{ color: 'var(--pt-text-mute)', fontSize: 8, letterSpacing: '0.12em' }}>{c.head}</span>}
+                {stacked && <span className={css.stackHead}>{c.head.toLowerCase()}</span>}
                 <span style={{ minWidth: 0, ...(stacked ? { flex: '1 1 130px' } : { display: 'block' }) }}>{c.render(r)}</span>
               </td>
             ))}</tr>
@@ -288,68 +322,27 @@ function Table<T>({ cols, rows, empty, rowKey }: { cols: Col<T>[]; rows: T[]; em
 
 /** Inline proportion bar for a table cell — magnitude at a glance without a
  *  second chart. Width is share-of-max within its own column only. */
-function Bar({ value, max, color }: { value: number; max: number; color: string }) {
-  return (
-    <span className="cp-bar" aria-hidden>
-      <span style={{ width: `${finite(value) && finite(max) && value > 0 && max > 0 ? Math.min(100, Math.max(1.5, (value / max) * 100)) : 0}%`, background: color }} />
-    </span>
-  )
+function Bar({ value, max }: { value: number; max: number }) {
+  return <span className={css.cellBar} aria-hidden><SegBar value={finite(value) ? value : 0} max={finite(max) && max > 0 ? max : 1} segments={12} /></span>
 }
 
-function BurnTrendSparkline({
-  codexDaily,
-  windowDays,
-  tone,
-}: {
-  codexDaily: { date: string; tokens: number }[]
-  windowDays: number
-  tone: string
-}) {
+function BurnTrend({ codexDaily, windowDays }: { codexDaily: { date: string; tokens: number }[]; windowDays: number }) {
   const series = new Map(codexDaily.map(day => [day.date, day.tokens]))
-  const activeDays = [...series.entries()].sort(([a], [b]) => a.localeCompare(b))
-  const latestDate = activeDays.at(-1)?.[0]
+  const latestDate = [...series.keys()].sort().at(-1)
   if (!latestDate) return null
-
-  const daysInWindow = Math.max(1, windowDays)
-  const latestCalendarDate = new Date(`${latestDate}T00:00:00Z`)
-  if (!finite(latestCalendarDate.getTime())) return null
-  const days = Array.from({ length: daysInWindow }, (_, index) => {
-    const date = new Date(latestCalendarDate)
-    date.setUTCDate(latestCalendarDate.getUTCDate() - (daysInWindow - index - 1))
-    const dateKey = date.toISOString().slice(0, 10)
-    return [dateKey, series.get(dateKey) ?? 0] as [string, number]
+  const latest = new Date(`${latestDate}T00:00:00Z`)
+  if (!finite(latest.getTime())) return null
+  const days = Array.from({ length: Math.max(1, windowDays) }, (_, index) => {
+    const date = new Date(latest)
+    date.setUTCDate(latest.getUTCDate() - (windowDays - index - 1))
+    const key = date.toISOString().slice(0, 10)
+    return [key, series.get(key) ?? 0] as [string, number]
   })
   const values = days.map(([, value]) => value)
   if (values.every(value => value === 0)) return null
-
-  const width = 320
-  const height = 44
-  const padX = 4
-  const padY = 5
-  const max = Math.max(...values, 1)
-  const x = (index: number) => days.length === 1 ? width / 2 : padX + (index / (days.length - 1)) * (width - padX * 2)
-  const y = (value: number) => height - padY - (value / max) * (height - padY * 2)
-  const points = values.map((value, index) => `${x(index)},${y(value)}`).join(' ')
-  const areaPoints = `${padX},${height - padY} ${points} ${width - padX},${height - padY}`
-  const first = values[0]
-  const latest = values.at(-1) ?? 0
-  const direction = latest > first ? 'up' : latest < first ? 'down' : 'flat'
-  const peakIndex = values.reduce((best, value, index) => value > values[best] ? index : best, 0)
-  const label = `Last ${days.length} days Codex burn against the estimated monthly ceiling, trending ${direction}, peak ${tok(values[peakIndex])} on ${days[peakIndex][0]}`
-
+  const peak = values.reduce((best, value, index) => value > values[best] ? index : best, 0)
   return (
-    <div className="cp-plan-band-sparkline">
-      <svg
-        role="img"
-        aria-label={label}
-        viewBox={`0 0 ${width} ${height}`}
-        preserveAspectRatio="none"
-      >
-        <polygon points={areaPoints} fill={tone} opacity="0.12" />
-        <polyline points={points} fill="none" stroke={tone} strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" />
-        <circle cx={x(values.length - 1)} cy={y(latest)} r="2.5" fill={tone} />
-      </svg>
-    </div>
+    <KvRow k={`${days.length}d`} v={<MiniHist values={values} days={days.length} label={`Codex tokens per day, last ${days.length} days, peak ${tok(values[peak])} on ${days[peak][0]}`} />} r={tok(values.at(-1) ?? 0)} />
   )
 }
 
@@ -373,36 +366,23 @@ function ActualSpend({ costs }: { costs: CostDashboard }) {
   ]
 
   return (
-    <Window title={`ACTUAL SPEND · ${b?.month ?? 'THIS MONTH'}`}
-      meta={isCurrent ? 'month to date' : 'no current-month record'}>
-      <div style={{ padding: '14px 16px', display: 'flex', gap: 32, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-        <Stat value={money(total)} label="TOTAL BILLED THIS MONTH" size="hero" glow />
-        <div style={{ flex: '1 1 260px', minWidth: 0, paddingTop: 2 }}>
-          {lines.map(l => (
-            <div key={l.label} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, padding: '4px 0', fontSize: 11, fontFamily: 'var(--font-mono)' }}>
-              <ModeDot mode={l.kind} />
-              <span style={{ color: 'var(--pt-text)' }}>{l.label}</span>
-              <span style={{ color: 'var(--pt-text-mute)', fontSize: 8.5, letterSpacing: '0.08em' }}>{l.src}</span>
-              <span style={{ marginLeft: 'auto', color: 'var(--pt-text-high)', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{money(l.amount)}</span>
-            </div>
-          ))}
-          <div style={{ borderTop: '1px solid var(--pt-border)', marginTop: 6, paddingTop: 7, display: 'flex', fontSize: 11, fontFamily: 'var(--font-mono)' }}>
-            <span style={{ color: 'var(--pt-text-mute)', letterSpacing: '0.14em', fontSize: 9 }}>TOTAL</span>
-            <span style={{ marginLeft: 'auto', color: STATUS.warn, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{money(total)}</span>
-          </div>
-        </div>
+    <Widget cmd="costs" label="Actual spend this month" meta={isCurrent ? b?.month : 'no current-month record'}>
+      <Verdict unit="this month">{money(total)}</Verdict>
+      <Kv keyWidth="14ch" className={css.lines}>
+        {lines.map(l => (
+          <KvRow key={l.label} k={<><ModeDot mode={l.kind} /> {l.label.toLowerCase()}</>} v={<span className={css.dim}>{l.src}</span>} r={money(l.amount)} />
+        ))}
         {displaced != null && displaced > 0 && (
-          <Stat value={money(displaced)} label="DISPLACED BY LOCAL AI" size="lg" color={CATEGORICAL[2]}
-            sub={`${tok(b!.localTokens)} tokens run free`} />
+          <KvRow k="displaced" v={<span className={css.dim}>{tok(b!.localTokens)} local tokens</span>} r={money(displaced)} />
         )}
-      </div>
+      </Kv>
       <Note>
         THE ONLY TWO THINGS THAT MOVE MONEY: A FLAT PLAN AND METERED API USE. TOKENS PROCESSED UNDER THE PLAN
         ({tok((b?.claudeTokens ?? 0) + (b?.codexTokens ?? 0))} THIS MONTH ACROSS CLAUDE CODE + CODEX CLI) COST NOTHING EXTRA AND ARE DELIBERATELY ABSENT FROM THIS FIGURE.
         {or && <> OPENROUTER&apos;S MONTHLY NUMBER IS ITS OWN BILLING API, NOT A LOG ESTIMATE.</>}
         {displaced != null && displaced > 0 && ` DISPLACED = LOCAL TOKENS PRICED AT ${money(rate, 2)}/M, THE RATE YOUR OWN METERED USAGE IMPLIES — A COUNTERFACTUAL, NOT A REFUND.`}
       </Note>
-    </Window>
+    </Widget>
   )
 }
 
@@ -414,8 +394,7 @@ function ModeBreakdown({ costs }: { costs: CostDashboard }) {
   const maxBillable = Math.max(...modes.map(m => m.billableTokens), 1)
 
   return (
-    <Window title="VOLUME BY BILLING MODE · ALL-TIME LOGS"
-      meta="never summed across modes">
+    <Widget cmd="costs --by-mode" label="Volume by billing mode, all-time logs" meta="never summed">
       <Table
         rows={modes}
         rowKey={m => m.mode}
@@ -425,7 +404,7 @@ function ModeBreakdown({ costs }: { costs: CostDashboard }) {
             key: 'mode', head: 'MODE', render: m => (
               <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 7 }}>
                 <ModeDot mode={m.mode} />
-                <span style={{ color: 'var(--pt-text-high)', fontWeight: 600 }}>{MODE_META[m.mode].label}</span>
+                <span className={css.hi}>{MODE_META[m.mode].label}</span>
                 <span className="cp-cellnote">{MODE_META[m.mode].note}</span>
               </span>
             ),
@@ -435,21 +414,21 @@ function ModeBreakdown({ costs }: { costs: CostDashboard }) {
           {
             key: 'billable', head: 'BILLABLE', align: 'right', w: 150, render: m => (
               <span style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
-                <Bar value={m.billableTokens} max={maxBillable} color={MODE_META[m.mode].color} />
+                <Bar value={m.billableTokens} max={maxBillable} />
                 <span style={{ minWidth: 46, textAlign: 'right' }}>{tok(m.billableTokens)}</span>
               </span>
             ),
           },
-          { key: 'cache', head: 'CACHE READ', align: 'right', w: 84, render: m => m.cacheReadTokens > 0 ? tok(m.cacheReadTokens) : <span style={{ color: 'var(--pt-text-mute)' }}>—</span> },
+          { key: 'cache', head: 'CACHE READ', align: 'right', w: 84, render: m => m.cacheReadTokens > 0 ? tok(m.cacheReadTokens) : <span className={css.mute}>—</span> },
           {
             key: 'lev', head: 'LEVERAGE', align: 'right', w: 74, render: m => m.cacheReadTokens > 0
-              ? <span style={{ color: CATEGORICAL[4] }}>{fixed(m.cacheReadTokens / Math.max(1, m.billableTokens))}×</span>
-              : <span style={{ color: 'var(--pt-text-mute)' }}>—</span>,
+              ? <span>{fixed(m.cacheReadTokens / Math.max(1, m.billableTokens))}×</span>
+              : <span className={css.mute}>—</span>,
           },
           {
             key: 'cost', head: 'BILLED', align: 'right', w: 86, render: m => m.mode === 'metered'
-              ? <span style={{ color: STATUS.warn, fontWeight: 600 }}>{money(m.costUsd)}</span>
-              : <span style={{ color: 'var(--pt-text-mute)', fontSize: 9 }}>{m.mode === 'local' ? 'free' : m.mode === 'subscription' ? 'in plan' : 'not logged'}</span>,
+              ? <span className={css.hi}>{money(m.costUsd)}</span>
+              : <span className={css.mute}>{m.mode === 'local' ? 'free' : m.mode === 'subscription' ? 'in plan' : 'not logged'}</span>,
           },
         ]}
       />
@@ -460,7 +439,7 @@ function ModeBreakdown({ costs }: { costs: CostDashboard }) {
           ? `THE OTHERS' LOGS PRICE THEMSELVES AT LIST RATE (${money(modes.reduce((s, m) => s + m.notionalCostUsd, 0))} ALL-TIME), WHICH A FLAT PLAN HAD ALREADY PAID FOR.`
           : 'THE OTHERS ARE NOT BILLED PER TOKEN.'}
       </Note>
-    </Window>
+    </Widget>
   )
 }
 
@@ -481,12 +460,11 @@ function SourceSplit({ costs }: { costs: CostDashboard }) {
   const rate = lc?.blendedApiRatePerMTokens ?? null
 
   return (
-    <Window title="LOCAL vs METERED vs PLAN · WHO DID THE WORK"
-      meta={`${tok(totalOut)} output tokens all-time`}>
-      <div style={{ padding: '14px 16px 4px', display: 'flex', gap: 30, flexWrap: 'wrap' }}>
+    <Widget cmd="costs --who-did-the-work" label="Local vs metered vs plan" meta={`${tok(totalOut)} out`}>
+      <div className={css.stats}>
         {rows.map(r => (
-          <Stat key={r.mode} value={pct(r.outputTokens, totalOut)} label={`${MODE_META[r.mode].label} SHARE`}
-            color={MODE_META[r.mode].color} size="lg" sub={`${tok(r.outputTokens)} generated`} />
+          <Stat key={r.mode} value={pct(r.outputTokens, totalOut)} label={`${MODE_META[r.mode].label} share`}
+            size="lg" sub={`${tok(r.outputTokens)} generated`} />
         ))}
       </div>
       <Table
@@ -498,14 +476,14 @@ function SourceSplit({ costs }: { costs: CostDashboard }) {
             key: 'm', head: 'SOURCE', render: r => (
               <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 7 }}>
                 <ModeDot mode={r.mode} />
-                <span style={{ color: 'var(--pt-text-high)', fontWeight: 600 }}>{MODE_META[r.mode].label}</span>
+                <span className={css.hi}>{MODE_META[r.mode].label}</span>
               </span>
             ),
           },
           {
             key: 'out', head: 'OUTPUT TOKENS', align: 'right', w: 170, render: r => (
               <span style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
-                <Bar value={r.outputTokens} max={maxOut} color={MODE_META[r.mode].color} />
+                <Bar value={r.outputTokens} max={maxOut} />
                 <span style={{ minWidth: 46, textAlign: 'right' }}>{tok(r.outputTokens)}</span>
               </span>
             ),
@@ -515,13 +493,13 @@ function SourceSplit({ costs }: { costs: CostDashboard }) {
           { key: 'req', head: 'REQUESTS', align: 'right', w: 82, render: r => count(r.requests) },
           {
             key: 'avg', head: 'AVG OUT/REQ', align: 'right', w: 90,
-            render: r => r.requests > 0 ? tok(Math.round(r.outputTokens / r.requests)) : <span style={{ color: 'var(--pt-text-mute)' }}>—</span>,
+            render: r => r.requests > 0 ? tok(Math.round(r.outputTokens / r.requests)) : <span className={css.mute}>—</span>,
           },
           {
             key: 'cost', head: '$ / M OUTPUT', align: 'right', w: 96,
             render: r => r.mode === 'metered'
-              ? <span style={{ color: STATUS.warn, fontWeight: 600 }}>{r.outputTokens > 0 ? money(r.costUsd / (r.outputTokens / 1_000_000)) : '—'}</span>
-              : <span style={{ color: r.mode === 'local' ? CATEGORICAL[2] : 'var(--pt-text-mute)', fontSize: 9 }}>
+              ? <span className={css.hi}>{r.outputTokens > 0 ? money(r.costUsd / (r.outputTokens / 1_000_000)) : '—'}</span>
+              : <span className={r.mode === 'local' ? undefined : css.mute}>
                   {r.mode === 'local' ? '$0.00' : r.mode === 'subscription' ? 'in plan' : 'not logged'}
                 </span>,
           },
@@ -533,7 +511,7 @@ function SourceSplit({ costs }: { costs: CostDashboard }) {
         {rate != null && ` AT YOUR METERED RATE, THE ${tok(rows.find(r => r.mode === 'local')?.outputTokens ?? 0)} TOKENS THE RIG GENERATED WOULD HAVE BEEN BILLABLE WORK ELSEWHERE.`}
         {' '}CLAUDE CODE AND CODEX CLI OUTPUT ARE FOLDED INTO THE SUBSCRIPTION ROW; BOTH ARE LOGGED IN SEPARATE TREES AND HAVE NO REQUEST COUNT.
       </Note>
-    </Window>
+    </Widget>
   )
 }
 
@@ -546,36 +524,22 @@ function MeteredSpend({ costs }: { costs: CostDashboard }) {
   const cov = or.usageLifetime > 0 ? logged / or.usageLifetime : 0
 
   return (
-    <Window title="METERED SPEND · OPENROUTER" meta={or.label}>
-      <div style={{ padding: '14px 16px 8px', display: 'flex', gap: 30, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-        <Stat value={money(or.usageMonthly)} label="THIS MONTH" size="hero" color={CATEGORICAL[0]} />
-        <Stat value={money(or.usageWeekly)} label="LAST 7 DAYS" size="lg" />
-        <Stat value={money(or.usageDaily)} label="TODAY" size="lg" />
-        <Stat value={money(or.usageLifetime)} label="LIFETIME ON THIS KEY" size="lg" color={STATUS.warn} />
-        {or.limit != null && <Stat value={money(or.limitRemaining)} label="CREDIT REMAINING" size="lg" color={CATEGORICAL[2]} />}
-      </div>
-
-      <div style={{ padding: '6px 16px 12px' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between', fontSize: 9, color: 'var(--pt-text-mute)', letterSpacing: '0.12em', marginBottom: 5 }}>
-          <span>LOG COVERAGE OF LIFETIME BILLING</span>
-          <span style={{ color: cov < 0.5 ? STATUS.warn : 'var(--pt-text-dim)' }}>
-            {money(logged)} of {money(or.usageLifetime)} · {pct(logged, or.usageLifetime)}
-          </span>
-        </div>
-        <div style={{ height: 9, background: 'var(--pt-surface-2)', borderRadius: 4, overflow: 'hidden', border: '1px solid var(--pt-border-dim)' }}>
-          <div style={{
-            width: `${Math.min(100, cov * 100)}%`, height: '100%',
-            background: `linear-gradient(90deg, ${CATEGORICAL[0]}77, ${CATEGORICAL[0]})`,
-            boxShadow: `0 0 8px ${CATEGORICAL[0]}88`,
-          }} />
-        </div>
-      </div>
+    <Widget cmd="openrouter" label="Metered spend, OpenRouter" meta={or.label}>
+      <Verdict unit="this month">{money(or.usageMonthly)}</Verdict>
+      <Kv keyWidth="9ch" className={css.lines}>
+        <KvRow k="7d" v="" r={money(or.usageWeekly)} />
+        <KvRow k="today" v="" r={money(or.usageDaily)} />
+        <KvRow k="lifetime" v={<span className={css.dim}>on this key</span>} r={money(or.usageLifetime)} />
+        {or.limit != null && <KvRow k="credit" v={<span className={css.dim}>remaining</span>} r={money(or.limitRemaining)} />}
+        <KvRow k="logged" v={<SegBar value={Math.min(100, cov * 100)} label="Log coverage of lifetime OpenRouter billing" />} r={pct(logged, or.usageLifetime)} />
+      </Kv>
+      <p className={css.hint}>{money(logged)} of {money(or.usageLifetime)} lifetime billing is visible in this machine&apos;s logs</p>
       <Note>
         THE BAR IS NOT A BUDGET — IT IS HOW MUCH OF YOUR REAL OPENROUTER BILL THIS MACHINE&apos;S LOGS CAN SEE.
         REQUESTS MADE FROM ANY OTHER MACHINE ARE BILLED TO THIS KEY AND NEVER APPEAR HERE, SO THE LOGGED FIGURE IS
         A FLOOR. THE TWO NUMBERS ARE REPORTED SIDE BY SIDE AND NEVER ADDED.
       </Note>
-    </Window>
+    </Widget>
   )
 }
 
@@ -616,7 +580,7 @@ function ModelBurnChart({ groups, windowDays }: { groups: ModelChartGroup[]; win
   const max = Math.max(...rows.map(row => row.billable), 1)
 
   return (
-    <Window title="MODELS · RANKED ON BILLABLE TOKENS" meta={`${rows.length} models · scroll to inspect`}>
+    <Widget cmd="costs --models" label="Models ranked on billable tokens" meta={`${rows.length} models`}>
       <div className="cp-model-chart">
         <div className="cp-model-chart-legend" aria-label="Billing mode legend">
           {(Object.entries(MODE_META) as [BillingMode, typeof MODE_META[BillingMode]][]).map(([mode, meta]) => (
@@ -626,12 +590,8 @@ function ModelBurnChart({ groups, windowDays }: { groups: ModelChartGroup[]; win
         <div className="cp-model-chart-scroll" role="region" aria-label="Models ranked by billable tokens">
           {sortedGroups.map(group => (
             <section className="cp-model-chart-group" key={group.title}>
-              <div className="cp-model-chart-group-head">
-                <span>{group.title}</span>
-                {group.meta && <span>{group.meta}</span>}
-              </div>
+              <Divider label={`${group.title.toLowerCase()}${group.meta ? ` · ${group.meta}` : ''}`} />
               {group.rows.map(row => {
-                const modeColor = MODE_META[row.mode].color
                 const cost = row.cost > 0 ? spend(row.cost) : row.freeTier ? 'free tier' : 'no price logged'
                 const speed = finite(row.tokensPerSec) ? `${fixed(row.tokensPerSec)} tok/s` : '— tok/s'
                 return (
@@ -643,9 +603,7 @@ function ModelBurnChart({ groups, windowDays }: { groups: ModelChartGroup[]; win
                         {row.provider && <span className="cp-cellprov">{row.provider}</span>}
                       </div>
                       <div className="cp-model-chart-barline">
-                        <div className="cp-model-chart-track" role="img" aria-label={`${row.name}: ${tok(row.billable)} billable tokens`}>
-                          <span style={{ width: `${Math.max(1.5, (row.billable / max) * 100)}%`, background: modeColor }} />
-                        </div>
+                        <SegBar className={css.trackBar} value={row.billable} max={max} segments={24} label={`${row.name}: ${tok(row.billable)} billable tokens`} />
                         <strong>{tok(row.billable)}</strong>
                       </div>
                     </div>
@@ -653,8 +611,8 @@ function ModelBurnChart({ groups, windowDays }: { groups: ModelChartGroup[]; win
                       <span>cache {row.cache > 0 ? tok(row.cache) : '—'}</span>
                       <span>req {row.requests == null ? '—' : count(row.requests)}</span>
                       <span>{windowDays}d {row.windowBillable > 0 ? tok(row.windowBillable) : 'idle'}</span>
-                      {group.showSpeed && <span style={{ color: 'var(--mc-chart-ink)' }}>{speed}</span>}
-                      {group.showCost && <span style={{ color: row.cost > 0 ? STATUS.warn : row.freeTier ? CATEGORICAL[2] : 'var(--pt-text-mute)' }}>{cost}</span>}
+                      {group.showSpeed && <span>{speed}</span>}
+                      {group.showCost && <span className={row.cost > 0 ? css.hi : css.mute}>{cost}</span>}
                     </div>
                   </div>
                 )
@@ -664,9 +622,9 @@ function ModelBurnChart({ groups, windowDays }: { groups: ModelChartGroup[]; win
         </div>
       </div>
       <Note>
-        {sortedGroups.map(group => <div key={group.title} style={{ marginTop: 5 }}>{group.note}</div>)}
+        {sortedGroups.map(group => <div key={group.title} className={css.noteLine}>{group.note}</div>)}
       </Note>
-    </Window>
+    </Widget>
   )
 }
 
@@ -718,11 +676,11 @@ function Activity({ costs, modeOf, now }: { costs: CostDashboard; modeOf: (m: st
   const order: BillingMode[] = ['metered', 'subscription', 'local', 'cloud-routed']
 
   return (
-    <Window title={`ACTIVITY · LAST ${windowDays} DAYS`} meta={`${active} of ${windowDays} days active`}>
-      <div style={{ padding: '14px 16px 6px', display: 'flex', gap: 26, flexWrap: 'wrap' }}>
-        <Stat value={tok(grand)} label={`TOKENS PROCESSED · ${windowDays}D`} size="lg" glow />
+    <Widget cmd={`costs --activity ${windowDays}d`} label={`Activity, last ${windowDays} days`} meta={`${active}/${windowDays} days active`}>
+      <div className={css.stats}>
+        <Stat value={tok(grand)} label={`tokens processed · ${windowDays}d`} size="lg" />
         {order.filter(k => totals[k] > 0).map(k => (
-          <Stat key={k} value={tok(totals[k])} label={MODE_META[k].label} color={MODE_META[k].color} size="md"
+          <Stat key={k} value={tok(totals[k])} label={MODE_META[k].label} size="md"
             sub={pct(totals[k], grand)} />
         ))}
       </div>
@@ -738,21 +696,17 @@ function Activity({ costs, modeOf, now }: { costs: CostDashboard; modeOf: (m: st
         axis={[days[0]?.date.slice(5) ?? '', days[Math.floor(days.length / 2)]?.date.slice(5) ?? '', days.at(-1)?.date.slice(5) ?? '']}
         empty={`No tokens logged in the last ${windowDays} days.`}
       />
-      <div style={{ padding: '0 16px 2px' }}>
-        <div style={{ display: 'flex', gap: 16, padding: '9px 0 4px', flexWrap: 'wrap' }}>
-          {order.filter(k => totals[k] > 0).map(k => (
-            <span key={k} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 8, color: 'var(--pt-text-mute)', letterSpacing: '0.14em' }}>
-              <ModeDot mode={k} />{MODE_META[k].label}
-            </span>
-          ))}
-        </div>
+      <div className={css.legend}>
+        {order.filter(k => totals[k] > 0).map(k => (
+          <span key={k}><ModeDot mode={k} />{MODE_META[k].label}</span>
+        ))}
       </div>
       <Note>
         ONE COLUMN PER CALENDAR DAY — EMPTY COLUMNS ARE QUIET DAYS, NOT MISSING DATA. THIS CHART COUNTS TOTAL TOKENS
         PROCESSED (CACHE READS INCLUDED), WHICH IS WHY IT IS LABELLED PROCESSED AND CARRIES NO DOLLARS: IT MEASURES
         HOW BUSY THE STACK WAS, NOT WHAT IT COST. FROM THIS MACHINE&apos;S LOGS ONLY.
       </Note>
-    </Window>
+    </Widget>
   )
 }
 
@@ -761,12 +715,12 @@ function CodexUsage({ costs, now }: { costs: CostDashboard; now: number | null }
   if (!usage) return null
   const lastActivity = utcTimestamp(usage.lastActivityAt)
   return (
-    <Window title="CODEX CLI · FLAT PLAN USAGE" meta={usage.planType ? `${planLabel(usage.planType)} · tokens only` : 'tokens only'}>
-      <div style={{ padding: '14px 16px 8px', display: 'flex', gap: 30, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-        <Stat value={planLabel(usage.planType)} label="PLAN" color={CATEGORICAL[3]} size="lg" />
-        <Stat value={tok(usage.totalTokens)} label="TOKENS" color={CATEGORICAL[3]} size="lg" />
-        <Stat value={count(usage.sessionsCount)} label="SESSIONS" size="lg" />
-        <Stat value={lastActivity} label="LAST ACTIVITY" size="sm" />
+    <Widget cmd="codex usage" label="Codex CLI flat plan usage" meta={usage.planType ? `${planLabel(usage.planType).toLowerCase()} · tokens only` : 'tokens only'}>
+      <div className={css.stats}>
+        <Stat value={planLabel(usage.planType)} label="plan" size="lg" />
+        <Stat value={tok(usage.totalTokens)} label="tokens" size="lg" />
+        <Stat value={count(usage.sessionsCount)} label="sessions" size="lg" />
+        <Stat value={lastActivity} label="last activity" size="sm" />
       </div>
       <WeeklyUsage limits={usage.rateLimits} now={now} />
       <MicroBars
@@ -778,7 +732,7 @@ function CodexUsage({ costs, now }: { costs: CostDashboard; now: number | null }
         empty="No Codex CLI tokens logged in this window."
       />
       <Note>CODEX CLI ROLLOUT LOGS · SUBSCRIPTION USAGE IS REPORTED AS TOKENS AND NEVER AS METERED SPEND.</Note>
-    </Window>
+    </Widget>
   )
 }
 
@@ -803,24 +757,12 @@ function heatmapWeeks(daily: { date: string; tokens: number }[], now: number | n
   return weeks
 }
 
-const SPARK = '▁▂▃▄▅▆▇█'
-function sparkline(v: number[]): string {
-  if (!v.length) return ''
-  const max = Math.max(...v, 1)
-  return v.map(x => finite(x) && finite(max) ? SPARK[Math.max(0, Math.min(7, Math.floor((x / max) * 7)))] : '·').join('')
-}
-
-/** Local inference carries the LOCAL billing-mode identity everywhere it is drawn. */
-const LOCAL = MODE_META.local.color
-
 function LocalAI({ costs, now }: { costs: CostDashboard; now: number | null }) {
   const lc = costs.localCompute
-  if (!lc) return null
-  const weeks = heatmapWeeks(lc.daily, now)
-  const spark = lc.dailyThroughput.map(d => d.avgTokensPerSec)
-  const rate = lc.blendedApiRatePerMTokens
+  const rate = lc?.blendedApiRatePerMTokens ?? null
+  // Hooks run before the "no local usage" return so the hook order never changes.
   const dailyBurn = useMemo(() => {
-    const byDate = new Map((lc.daily ?? []).map(day => [day.date, day]))
+    const byDate = new Map((lc?.daily ?? []).map(day => [day.date, day]))
     const today = new Date()
     const end = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())
     return Array.from({ length: 14 }, (_, i) => {
@@ -829,7 +771,10 @@ function LocalAI({ costs, now }: { costs: CostDashboard; now: number | null }) {
       const tokens = day?.tokens ?? 0
       return { date, tokens, requests: day?.requests ?? 0, avoided: rate != null ? tokens * rate / 1_000_000 : null }
     })
-  }, [lc.daily, rate])
+  }, [lc?.daily, rate])
+  if (!lc) return null
+  const weeks = heatmapWeeks(lc.daily, now)
+  const spark = lc.dailyThroughput.map(d => d.avgTokensPerSec)
   const todayBurn = dailyBurn[dailyBurn.length - 1]
   const last7 = dailyBurn.slice(-7)
   const weekTokens = last7.reduce((sum, day) => sum + day.tokens, 0)
@@ -841,20 +786,20 @@ function LocalAI({ costs, now }: { costs: CostDashboard; now: number | null }) {
 
   return (
     <>
-      <SectionRule label="LOCAL AI · OLLAMA" />
-      <Window title="LOCAL INFERENCE · WHAT THE RIG DID" meta={`${count(lc.totalRequests)} requests all-time`}>
-        <div style={{ padding: '14px 16px 12px', display: 'flex', gap: 28, flexWrap: 'wrap' }}>
-          <Stat value={tok(lc.totalTokens)} label="TOKENS ALL-TIME" size="hero" color={CATEGORICAL[2]}
+      <Divider label="local ai · ollama" />
+      <Widget cmd="localai stats" label="Local inference, what the rig did" meta={`${count(lc.totalRequests)} reqs`}>
+        <div className={css.stats}>
+          <Stat value={tok(lc.totalTokens)} label="tokens all-time" size="hero"
             sub={`${tok(lc.outputTokens)} generated · ${tok(lc.inputTokens)} prompt`} />
-          <Stat value={fixed(lc.medianTokensPerSec)} label="MEDIAN TOK/S" size="lg"
+          <Stat value={fixed(lc.medianTokensPerSec)} label="median tok/s" size="lg"
             sub={<>p95 {fixed(lc.p95TokensPerSec)} · mean {fixed(lc.avgTokensPerSec)}</>} />
-          <Stat value={hours(lc.generationSeconds)} label="TIME SPENT GENERATING" size="lg"
+          <Stat value={hours(lc.generationSeconds)} label="time generating" size="lg"
             sub={`${count(lc.sampleCount)} sampled turns`} />
-          <Stat value={rate != null ? money(lc.costAvoidedAllTimeUsd) : '—'} label="WOULD HAVE COST, METERED" size="lg" color={CATEGORICAL[2]}
+          <Stat value={rate != null ? money(lc.costAvoidedAllTimeUsd) : '—'} label="would have cost, metered" size="lg"
             sub={rate != null ? `at ${money(rate)}/M` : 'no metered rate to compare'} />
-          <Stat value={lc.daily.filter(day => day.tokens > 0).length} label="ACTIVE DAYS" size="lg"
+          <Stat value={lc.daily.filter(day => day.tokens > 0).length} label="active days" size="lg"
             sub={lc.busiestDay ? `peak ${tok(lc.busiestDay.tokens)} on ${lc.busiestDay.date.slice(5)}` : undefined} />
-          <Stat value={lc.totalRequests > 0 ? tok(Math.round(lc.totalTokens / lc.totalRequests)) : '—'} label="AVG TOKENS / REQUEST" size="lg" />
+          <Stat value={lc.totalRequests > 0 ? tok(Math.round(lc.totalTokens / lc.totalRequests)) : '—'} label="avg tokens / request" size="lg" />
         </div>
         <Note>
           {rate != null && lc.blendedRateBasis
@@ -866,15 +811,14 @@ function LocalAI({ costs, now }: { costs: CostDashboard; now: number | null }) {
           HANDFUL OF CPU-BOUND TURNS NEAR 0.2 TOK/S DRAG THE MEAN WELL BELOW WHAT THE RIG USUALLY DOES.
           {lc.cloudRouted.tokens > 0 && ` EXCLUDES ${lc.cloudRouted.models.join(', ')} (${tok(lc.cloudRouted.tokens)} TOKENS) — CLOUD-ROUTED, NOT THIS RIG.`}
         </Note>
-      </Window>
+      </Widget>
 
-      <SectionRule label="DAILY LOCAL AI BURN · LAST 14 DAYS" />
-      <Window title="ON THIS RIG · TOKENS & API VALUE AVOIDED" meta="local inference · daily">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(150px, 100%), 1fr))', gap: 12, padding: '14px 16px 4px' }}>
-          <Stat value={tok(todayBurn.tokens)} label="TODAY · LOCAL TOKENS" size="lg" color={LOCAL}
-            sub={`${count(todayBurn.requests)} requests`} />
-          <Stat value={tok(weekTokens)} label="7-DAY LOCAL TOKENS" size="lg" color={LOCAL} />
-          <Stat value={weekAvoided != null ? money(weekAvoided) : '—'} label="7-DAY API COST AVOIDED · EST." size="lg" color={CATEGORICAL[2]}
+      <Divider label="daily local ai burn · 14d" />
+      <Widget cmd="localai burn --14d" label="Local tokens and API value avoided, last 14 days" meta="daily">
+        <div className={css.stats}>
+          <Stat value={tok(todayBurn.tokens)} label="today · local tokens" size="lg" sub={`${count(todayBurn.requests)} requests`} />
+          <Stat value={tok(weekTokens)} label="7-day local tokens" size="lg" />
+          <Stat value={weekAvoided != null ? money(weekAvoided) : '—'} label="7-day api cost avoided · est." size="lg"
             sub={rate != null ? `at ${money(rate)}/M metered rate` : 'no metered rate to compare'} />
         </div>
         <MicroBars
@@ -884,18 +828,18 @@ function LocalAI({ costs, now }: { costs: CostDashboard; now: number | null }) {
           axis={[dailyBurn[0].date.slice(5), dailyBurn[7].date.slice(5), 'today']}
           empty="No local inference logged in the last 14 days."
         />
-        <div className="mc-heatmap-legend" style={{ padding: '0 16px 10px' }}>
-          <span>DAILY LOCAL TOKENS · UTC DAYS</span><span style={{ marginLeft: 'auto' }}>{rate != null ? `EST. 7D AVOIDED · ${money(weekAvoided)}` : 'DOLLAR VALUE UNAVAILABLE · NO METERED BASELINE'}</span>
+        <div className={css.legend}>
+          <span>daily local tokens · utc days</span><span className={css.push}>{rate != null ? `est. 7d avoided · ${money(weekAvoided)}` : 'no metered baseline'}</span>
         </div>
         <Note>API VALUE IS A COUNTERFACTUAL ESTIMATE, NOT CASH SAVED OR AVOIDED ELECTRICITY COST. IT PRICES LOCAL TOKENS AT THE LOG-DERIVED METERED RATE; SUBSCRIPTION USAGE IS EXCLUDED. POWER / ENERGY COST IS NOT INCLUDED.</Note>
-      </Window>
+      </Widget>
 
-      <SectionRule label="LOCAL AI BURN · ROLLING 24 HOURS" />
-      <Window title="LAST 24 HOURS · HOURLY LOCAL USAGE" meta="rolling window · this rig only">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(150px, 100%), 1fr))', gap: 12, padding: '14px 16px 4px' }}>
-          <Stat value={tok(last24Tokens)} label="LOCAL TOKENS · 24H" size="lg" color={LOCAL} />
-          <Stat value={count(last24Requests)} label="REQUESTS · 24H" size="lg" />
-          <Stat value={last24Avoided != null ? money(last24Avoided) : '—'} label="API VALUE · EST. 24H" size="lg" color={CATEGORICAL[2]}
+      <Divider label="local ai burn · rolling 24h" />
+      <Widget cmd="localai burn --24h" label="Hourly local usage, last 24 hours" meta="this rig only">
+        <div className={css.stats}>
+          <Stat value={tok(last24Tokens)} label="local tokens · 24h" size="lg" />
+          <Stat value={count(last24Requests)} label="requests · 24h" size="lg" />
+          <Stat value={last24Avoided != null ? money(last24Avoided) : '—'} label="api value · est. 24h" size="lg"
             sub={rate != null ? `at ${money(rate)}/M metered rate` : 'no metered rate to compare'} />
         </div>
         <MicroBars
@@ -905,41 +849,36 @@ function LocalAI({ costs, now }: { costs: CostDashboard; now: number | null }) {
           axis={last24.length ? [`${last24[0].hour.slice(11, 13)}:00`, `${last24[Math.floor(last24.length / 2)].hour.slice(11, 13)}:00`, 'now'] : ['', '', '']}
           empty="No local inference logged in the last 24 hours."
         />
-        <div className="mc-heatmap-legend" style={{ padding: '0 16px 10px' }}>
-          <span>UTC HOUR · LAST 24 HOURS</span><span style={{ marginLeft: 'auto' }}>{last24Avoided != null ? `EST. API VALUE · ${money(last24Avoided)}` : 'DOLLAR VALUE UNAVAILABLE · NO METERED BASELINE'}</span>
+        <div className={css.legend}>
+          <span>utc hour · last 24h</span><span className={css.push}>{last24Avoided != null ? `est. api value · ${money(last24Avoided)}` : 'no metered baseline'}</span>
         </div>
         <Note>ROLLING 24 HOURS FROM LOGGED LOCAL INFERENCE TIMESTAMPS, GROUPED BY UTC HOUR. API VALUE IS A COUNTERFACTUAL ESTIMATE, NOT CASH SAVED; EXCLUDES SUBSCRIPTION USE AND ELECTRICITY COST.</Note>
-      </Window>
+      </Widget>
 
-      <div className="mc-viz-grid" style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(min(360px, 100%), 1fr))' }}>
+      <div className={css.grid}>
         {weeks.length > 0 && (
-          <Window title="DAILY VOLUME" meta={`${weeks.length}w to today`}>
+          <Widget cmd="localai heatmap" label="Daily local volume" meta={`${weeks.length}w`}>
             <div className="mc-gh-heatmap-wrap">
               <div className="mc-gh-day-labels"><span /><span>Mon</span><span /><span>Wed</span><span /><span>Fri</span><span /></div>
-              <div className="mc-gh-heatmap-inner"><Heatmap data={weeks} /><div className="asciiviz-inset" title="Daily volume · chronological quartile density"><AsciiHeat cells={weeks.flat()} /></div></div>
+              <div className={`mc-gh-heatmap-inner ${css.heatScroll}`}><Heatmap data={weeks} /></div>
             </div>
-            <div className="mc-heatmap-legend">
-              <span>LESS</span>
-              <span className="scale"><span className="lvl-0" /><span className="lvl-1" /><span className="lvl-2" /><span className="lvl-3" /><span className="lvl-4" /></span>
-              <span>MORE</span>
-              <span style={{ marginLeft: 'auto' }}>SHADES ARE QUARTILES OF THIS SERIES</span>
+            <div className={css.legend}>
+              <span>less</span>
+              <span className="mc-heatmap-legend"><span className="scale"><span className="lvl-0" /><span className="lvl-1" /><span className="lvl-2" /><span className="lvl-3" /><span className="lvl-4" /></span></span>
+              <span>more</span>
+              <span className={css.push}>shades are quartiles of this series</span>
             </div>
-          </Window>
+          </Widget>
         )}
         {spark.length > 1 && (
-          <Window title="THROUGHPUT TREND" meta={`${count(lc.sampleCount)} samples`}>
-            <div style={{ padding: '14px 16px' }}>
-              <div style={{ fontSize: 21, fontFamily: 'var(--font-mono)', color: 'var(--mc-chart-emph)', lineHeight: 1.2, wordBreak: 'break-all', textShadow: 'var(--mc-chart-glow)' }}>
-                {sparkline(spark)}
-              </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between', marginTop: 9, fontSize: 8, color: 'var(--pt-text-mute)', letterSpacing: '0.1em' }}>
-                <span>{lc.dailyThroughput[0]?.date}</span>
-                <span style={{ color: 'var(--mc-chart-ink)' }}>{fixed(Math.max(...spark), 0)} peak · {fixed(spark.reduce((s, v) => s + v, 0) / spark.length)} avg tok/s</span>
-                <span>{lc.dailyThroughput[lc.dailyThroughput.length - 1]?.date}</span>
-              </div>
-            </div>
+          <Widget cmd="localai tok/s" label="Throughput trend" meta={`${count(lc.sampleCount)} samples`}>
+            <Kv keyWidth="7ch">
+              <KvRow k={`${spark.length}d`} v={<MiniHist values={spark} days={spark.length} label={`Daily mean tokens per second, peak ${fixed(Math.max(...spark), 0)}`} />} r={`${fixed(spark.at(-1), 0)}`} />
+              <KvRow k="peak" v={<span className={css.dim}>{lc.dailyThroughput[0]?.date} → {lc.dailyThroughput.at(-1)?.date}</span>} r={`${fixed(Math.max(...spark), 0)} tok/s`} />
+              <KvRow k="avg" v="" r={`${fixed(spark.reduce((s, v) => s + v, 0) / spark.length)} tok/s`} />
+            </Kv>
             <Note>DAILY MEAN OF PER-TURN TOKENS/SEC. GAPS OVER 120S BETWEEN TURNS ARE TREATED AS IDLE AND EXCLUDED.</Note>
-          </Window>
+          </Widget>
         )}
       </div>
     </>
@@ -953,36 +892,23 @@ function MonthlyBilling({ costs }: { costs: CostDashboard }) {
   if (!billing.length) return null
   return (
     <>
-      <SectionRule label="BILLING HISTORY" />
-      <div className="mc-viz-grid" style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))' }}>
+      <Divider label="billing history" />
+      <div className={css.grid}>
         {billing.map(b => {
           const real = finite(b.planAmount) && finite(b.openRouterUsd) ? b.planAmount + b.openRouterUsd : null
           const current = costs.subscription?.month === b.month
           return (
-            <Window key={b.month} title={`${b.month} · ${b.plan.toUpperCase()}`} meta={current ? 'current' : 'previous'}>
-              <div style={{ padding: '14px 16px', fontFamily: 'var(--font-mono)', fontSize: 11 }}>
-                {[
-                  { k: 'plan (flat)', v: money(b.planAmount), mode: 'subscription' as BillingMode },
-                  { k: 'openrouter (metered)', v: b.openRouterUsd != null ? money(b.openRouterUsd) : 'no per-month history', mode: 'metered' as BillingMode },
-                ].map(r => (
-                  <div key={r.k} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, padding: '3px 0' }}>
-                    <ModeDot mode={r.mode} />
-                    <span style={{ color: 'var(--pt-text-mute)' }}>{r.k}</span>
-                    <span style={{ marginLeft: 'auto', color: 'var(--pt-text-high)', fontVariantNumeric: 'tabular-nums' }}>{r.v}</span>
-                  </div>
-                ))}
-                <div style={{ borderTop: '1px solid var(--pt-border)', marginTop: 8, paddingTop: 8, display: 'flex', alignItems: 'baseline' }}>
-                  <span style={{ fontSize: 9, color: 'var(--pt-text-mute)', letterSpacing: '0.16em' }}>BILLED</span>
-                  <span style={{ marginLeft: 'auto', fontSize: 19, fontWeight: 700, color: STATUS.warn, fontVariantNumeric: 'tabular-nums' }}>{money(real)}</span>
-                </div>
-                <div style={{ marginTop: 10, fontSize: 9.5, color: 'var(--pt-text-dim)', lineHeight: 1.8 }}>
-                  <div>tokens · {tok(b.totalTokens)}</div>
-                  <div style={{ color: 'var(--pt-text-mute)', fontSize: 9 }}>
-                    {tok(b.claudeTokens + b.codexTokens)} in plan · {tok(b.apiTokens)} api · {tok(b.localTokens)} local
-                  </div>
-                </div>
-              </div>
-            </Window>
+            <Widget key={b.month} cmd={`bill ${b.month}`} label={`${b.month} billing, ${b.plan}`} meta={current ? 'current' : 'previous'}>
+              <Kv keyWidth="11ch">
+                <KvRow k={<><ModeDot mode="subscription" /> plan</>} v={<span className={css.dim}>{b.plan.toLowerCase()} · flat</span>} r={money(b.planAmount)} />
+                <KvRow k={<><ModeDot mode="metered" /> openrouter</>} v={<span className={css.dim}>metered</span>} r={b.openRouterUsd != null ? money(b.openRouterUsd) : '—'} />
+              </Kv>
+              <div className={css.billed}><span>billed</span><Verdict>{money(real)}</Verdict></div>
+              <Kv keyWidth="7ch">
+                <KvRow k="tokens" v={<span className={css.dim}>{tok(b.claudeTokens + b.codexTokens)} plan · {tok(b.apiTokens)} api · {tok(b.localTokens)} local</span>} r={tok(b.totalTokens)} />
+              </Kv>
+              {b.openRouterUsd == null && <p className={css.hint}>openrouter keeps no per-month history for past months</p>}
+            </Widget>
           )
         })}
       </div>
@@ -992,68 +918,81 @@ function MonthlyBilling({ costs }: { costs: CostDashboard }) {
 
 /* ── Subscription tools: real usage against the one flat plan ───────── */
 
+/** Sum of the last `n` UTC calendar days of a `{date, tokens}` series. */
+function lastDays(daily: { date: string; tokens: number }[] | undefined, n: number, now: number | null): number {
+  const end = calendarEnd((daily ?? []).map(d => d.date), now)
+  if (end === null) return 0
+  const from = new Date(end - (n - 1) * 86_400_000).toISOString().slice(0, 10)
+  return (daily ?? []).filter(d => d.date >= from).reduce((sum, d) => sum + d.tokens, 0)
+}
+
+/** The launcher's `CLAUDE  3% this week` card. Only Codex logs a provider cap
+ *  snapshot, so Claude Code's verdict is honest 7-day token volume, not a percent. */
 function SubscriptionTools({ costs, now }: { costs: CostDashboard; now: number | null }) {
   const days = costs.dailyWindowDays ?? 30
   const claude = costs.claudeUsage
   const codex = costs.codexUsage
+  const limits = codex?.rateLimits
   const usage = [
     {
-      name: 'Claude Code',
+      name: 'CLAUDE',
       data: claude,
+      week: lastDays(claude?.daily, 7, now),
       windowTokens: (claude?.daily ?? []).reduce((sum, day) => sum + day.tokens, 0),
       sessions: claude?.sessionsCount ?? 0,
       lastActive: [...(claude?.daily ?? [])].reverse().find(day => day.tokens > 0)?.date ?? null,
       model: claude?.models?.[0]?.model,
-      tag: null,
+      tag: 'claude code · flat plan',
     },
     {
-      name: 'Codex',
+      name: 'CODEX',
       data: codex,
+      week: lastDays(codex?.daily, 7, now),
       windowTokens: (codex?.daily ?? []).reduce((sum, day) => sum + day.tokens, 0),
       sessions: codex?.sessionsCount ?? 0,
       lastActive: codex?.lastActivityAt,
       model: codex?.models?.[0]?.model,
-      tag: codex?.planType ? `via ${planLabel(codex.planType)}` : null,
+      tag: codex?.planType ? `codex cli · ${planLabel(codex.planType).toLowerCase()}` : 'codex cli',
     },
   ]
   const claudeTokens = usage[0].windowTokens
   const codexTokens = usage[1].windowTokens
   const delta = claudeTokens === 0 && codexTokens === 0
-    ? 'No recent workload logged'
+    ? 'no recent workload logged'
     : claudeTokens === codexTokens
-      ? 'Equal logged workload'
-      : `${usage[claudeTokens > codexTokens ? 0 : 1].name} is the heavier workload`
+      ? 'equal logged workload'
+      : `${usage[claudeTokens > codexTokens ? 0 : 1].name.toLowerCase()} is the heavier workload`
 
   return (
     <>
-      <SectionRule label="SUBSCRIPTION TOOLS — USE & KEEP" />
-      <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))' }}>
+      <Divider label="subscription tools · use & keep" />
+      <div className={css.grid}>
         {usage.map(tool => {
           const hasUsage = !!tool.data?.models?.length || tool.windowTokens > 0
+          const isCodex = tool.name === 'CODEX'
+          const capPct = isCodex && finite(limits?.weeklyUsedPercent) ? limits!.weeklyUsedPercent! : null
+          const capTone = capPct == null ? undefined : capPct >= CAP_TONE.crit ? 'crit' : capPct >= CAP_TONE.warn ? 'warn' : undefined
           return (
-            <Window key={tool.name} title={tool.name} meta="flat plan · usage logged locally">
-              <div style={{ padding: '14px 16px', fontFamily: 'var(--font-mono)', opacity: hasUsage || (tool.name === 'Codex' && codex?.rateLimits) ? 1 : 0.55 }}>
-                {tool.tag && <div style={{ display: 'inline-block', padding: '3px 7px', border: '1px solid var(--pt-border)', color: CATEGORICAL[3], fontSize: 8, letterSpacing: '0.12em', marginBottom: 9 }}>{tool.tag}</div>}
-                {hasUsage ? (
-                  <>
-                    <Stat value={tok(tool.windowTokens)} label={`${days}-DAY TOKENS`} size="hero" glow />
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px 18px', marginTop: 15, fontSize: 9.5, color: 'var(--pt-text-dim)', lineHeight: 1.55 }}>
-                      <div><span style={{ color: 'var(--pt-text-mute)', display: 'block', fontSize: 8, letterSpacing: '0.12em' }}>ALL-TIME TOKENS</span>{tok(tool.data?.totalTokens ?? 0)}</div>
-                      <div><span style={{ color: 'var(--pt-text-mute)', display: 'block', fontSize: 8, letterSpacing: '0.12em' }}>SESSIONS</span>{count(tool.sessions)}</div>
-                      <div><span style={{ color: 'var(--pt-text-mute)', display: 'block', fontSize: 8, letterSpacing: '0.12em' }}>LAST ACTIVE</span>{timeAgo(tool.lastActive, now)}</div>
-                      <div><span style={{ color: 'var(--pt-text-mute)', display: 'block', fontSize: 8, letterSpacing: '0.12em' }}>TOP MODEL</span><span style={{ overflowWrap: 'anywhere' }}>{tool.model ?? '—'}</span></div>
-                    </div>
-                  </>
-                ) : <div style={{ padding: '22px 0', fontSize: 10, color: 'var(--pt-text-mute)', letterSpacing: '0.12em' }}>— NO USAGE LOGGED —</div>}
-                {tool.name === 'Codex' && <WeeklyUsage limits={codex?.rateLimits} now={now} compact />}
-              </div>
-            </Window>
+            <section key={tool.name} className={`mc-widget ${css.widget}`} aria-label={`${tool.name} usage`}>
+              <div className={css.capHead}><h3 className={css.capTitle}>{tool.name}</h3><span className={css.dim}>{tool.tag}</span></div>
+              {capPct != null
+                ? <Verdict unit="this week" tone={capTone}>{`${capPct}%`}</Verdict>
+                : <Verdict unit="this week">{hasUsage ? tok(tool.week) : '—'}</Verdict>}
+              {isCodex && <WeeklyUsage limits={limits} now={now} />}
+              {hasUsage ? (
+                <Kv keyWidth="9ch" className={css.lines}>
+                  <KvRow k={`${days}d`} v={<span className={css.dim}>tokens</span>} r={tok(tool.windowTokens)} />
+                  <KvRow k="all-time" v={<span className={css.dim}>tokens</span>} r={tok(tool.data?.totalTokens ?? 0)} />
+                  <KvRow k="sessions" v="" r={count(tool.sessions)} />
+                  <KvRow k="last" v={<span className={css.dim}>active</span>} r={timeAgo(tool.lastActive, now)} />
+                  <KvRow k="model" v={<span title={tool.model}>{tool.model ?? '—'}</span>} r="" />
+                </Kv>
+              ) : <WRow g="idle" dim>no usage logged</WRow>}
+            </section>
           )
         })}
       </div>
-      <div style={{ padding: '9px 16px 12px', color: 'var(--pt-text-dim)', fontFamily: 'var(--font-mono)', fontSize: 9.5, borderBottom: '1px solid var(--pt-border-dim)' }}>
-        Claude Code: {tok(claudeTokens)} tokens · Codex: {tok(codexTokens)} · {delta}
-      </div>
+      <p className={css.hint}>claude code {tok(claudeTokens)} · codex {tok(codexTokens)} over {days}d · {delta}</p>
     </>
   )
 }
@@ -1063,14 +1002,10 @@ function FairUseGuard({ costs }: { costs: CostDashboard }) {
   const ceiling = billing?.fairUse?.codexTokens
   const burn = billing?.codexTokens
   if (!billing || typeof ceiling !== 'number' || !Number.isFinite(ceiling) || ceiling <= 0 || typeof burn !== 'number' || !Number.isFinite(burn) || burn < 0) return null
-  const ceilingValue = ceiling
-  const burnValue = burn
 
-  const ratio = burnValue / ceilingValue
-  const percent = ratio * 100
-  const tone = percent >= 90 ? 'var(--pt-error)' : percent >= 70 ? 'var(--pt-warn)' : CATEGORICAL[4]
-  const verdict = percent >= 90 ? 'THROTTLE RISK' : percent >= 70 ? 'WATCH' : 'COMFORT'
-  const daily = (costs.codexUsage?.daily ?? []).slice(-7)
+  const percent = burn / ceiling * 100
+  const tone = percent >= CAP_TONE.crit ? 'crit' : percent >= CAP_TONE.warn ? 'warn' : undefined
+  const verdict = tone === 'crit' ? 'throttle risk' : tone === 'warn' ? 'watch' : 'comfort'
   const burnDays = [...(costs.codexUsage?.daily ?? [])].sort((a, b) => a.date.localeCompare(b.date))
   const latestBurnDate = burnDays.filter(day => finite(Date.parse(`${day.date}T00:00:00Z`))).at(-1)?.date
   const burnByDate = new Map(burnDays.map(day => [day.date, day.tokens]))
@@ -1079,35 +1014,21 @@ function FairUseGuard({ costs }: { costs: CostDashboard }) {
     date.setUTCDate(date.getUTCDate() - 13 + index)
     return burnByDate.get(date.toISOString().slice(0, 10)) ?? 0
   }) : []
-  const maxDaily = Math.max(...daily.map(day => day.tokens), 1)
 
   return (
     <>
-      <SectionRule label="FAIR-USE GUARD" />
-      <div className="cp-fairuse" title={billing.fairUse.note}>
-        <div className="cp-fairuse-main">
-          <div className="cp-plan-band-head">
-            <span>CODEX MONTHLY BURN</span>
-            <span>{tok(burnValue)} of {tok(ceilingValue)} estimate · {fixed(percent, 0)}%{burn14.length > 0 && <span className="asciiviz-burn" title="Last 14 days through latest logged date · Codex tokens"><span className="asciiviz-caption">14D TOKENS </span><AsciiSpark data={burn14} width={14} /></span>}</span>
-          </div>
-          <div className="cp-plan-band-track" role="img" aria-label={`Codex burn is ${fixed(percent, 0)} percent of the estimated monthly ceiling`}>
-            <span style={{ width: `${Math.min(100, ratio * 100)}%`, background: tone }} />
-          </div>
-          <BurnTrendSparkline codexDaily={costs.codexUsage?.daily ?? []} windowDays={7} tone={tone} />
-          <div className="cp-fairuse-verdict" style={{ color: tone }}>{verdict} · {fixed(percent, 0)}% of estimated ceiling</div>
-          <div className="cp-plan-band-hint">estimate only · owner-adjustable in data/config.json → billing.fairUse.codexTokens</div>
-          {costs.codexUsage?.rateLimits && <div className="cp-plan-band-hint">weekly percent is provider-reported from Codex session rate_limits</div>}
-        </div>
-        <div className="cp-fairuse-trend" aria-label="Codex daily token cadence for the last 7 days">
-          <div className="cp-fairuse-trend-label">7-DAY CADENCE</div>
-          <div className="cp-fairuse-ticks">
-            {daily.map(day => (
-              <span key={day.date} title={`${day.date}: ${tok(day.tokens)} tokens`} style={{ height: `${Math.max(8, (day.tokens / maxDaily) * 100)}%`, background: tone }} />
-            ))}
-          </div>
-          <div className="cp-fairuse-trend-dates"><span>{daily[0]?.date.slice(5) ?? '—'}</span><span>{daily.at(-1)?.date.slice(5) ?? '—'}</span></div>
-        </div>
-      </div>
+      <Divider label="fair-use guard" />
+      <Widget cmd="codex --fair-use" label="Codex monthly burn against the estimated ceiling" meta={billing.month}>
+        <Verdict unit="of est. ceiling" tone={tone}>{`${fixed(percent, 0)}%`}</Verdict>
+        <Kv keyWidth="7ch" className={css.lines}>
+          <KvRow k="burn" v={<SegBar value={percent} autoTone={CAP_TONE} label={`Codex burn is ${fixed(percent, 0)} percent of the estimated monthly ceiling`} />} r={`${tok(burn)}/${tok(ceiling)}`} />
+          {burn14.length > 0 && <KvRow k="14d" v={<MiniHist values={burn14} label="Codex tokens per day, last 14 logged days" />} r={tok(burn14.at(-1) ?? 0)} />}
+          <BurnTrend codexDaily={costs.codexUsage?.daily ?? []} windowDays={7} />
+        </Kv>
+        <WRow g={tone === 'crit' ? 'err' : tone === 'warn' ? 'fail' : 'ok'} right={`${fixed(percent, 0)}%`}>{verdict}</WRow>
+        <p className={css.hint} title={billing.fairUse.note}>estimate only · owner-adjustable in data/config.json → billing.fairUse.codexTokens</p>
+        {costs.codexUsage?.rateLimits && <p className={css.hint}>weekly percent is provider-reported from codex session rate_limits</p>}
+      </Widget>
     </>
   )
 }
@@ -1118,6 +1039,7 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
   const { data } = useLiveData()
   const now = useClock()
   const costs = data?.costs ?? initialCosts
+  const localAi = useLocalAi(30_000)
 
   const view = useMemo(() => {
     if (!costs) return null
@@ -1195,23 +1117,24 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
   const or = costs.openRouterLive
   const nothing = !or && !costs.models?.length && !costs.claudeUsage && !costs.codexUsage && !costs.billing?.length && !costs.localCompute
   if (nothing) return <EmptyTerminal label="no billing data — set OPENROUTER_API_KEY in .env" />
+  const staleLogs = (costs.freshness?.staleDays ?? 0) > 3
 
   return (
-    <div className="cp-panel v4-group" style={{ minWidth: 0, overflowWrap: 'anywhere' }}>
-      <div className={`mc-kb-sync${(costs.freshness?.staleDays ?? 0) > 3 ? ' is-stale' : ''}`} role="status">
-        {(costs.freshness?.staleDays ?? 0) > 3 && 'STALE · '}
-        {costs.freshness?.lastLoggedAt ? `NEWEST LOG · ${utcTimestamp(costs.freshness.lastLoggedAt)}` : 'NEWEST LOG · unknown'}
-      </div>
-      <SectionRule label="WHAT IT COST" />
-      <div className="w2l-pair">
+    <div className={`cp-panel ${css.panel}`}>
+      <WRow g={staleLogs ? 'fail' : 'ok'} dim={!staleLogs} right={costs.freshness?.lastLoggedAt ? utcTimestamp(costs.freshness.lastLoggedAt) : 'unknown'}>
+        {staleLogs ? 'stale · newest log' : 'newest log'}
+      </WRow>
+      <Divider label="what it cost" />
+      <div className={css.top}>
         <ActualSpend costs={costs} />
+        <LocalAiTop lc={costs.localCompute} state={localAi} />
         <MeteredSpend costs={costs} />
       </div>
-      <MonthlyBilling costs={costs} />
       <SubscriptionTools costs={costs} now={now} />
       <FairUseGuard costs={costs} />
+      <MonthlyBilling costs={costs} />
 
-      <SectionRule label="WHAT IT DID" />
+      <Divider label="what it did" />
       <Activity costs={costs} modeOf={view.modeOf} now={now} />
       <ModeBreakdown costs={costs} />
       <SourceSplit costs={costs} />
@@ -1241,32 +1164,24 @@ export function CostsPanel({ initialCosts }: { initialCosts?: CostDashboard } = 
 
       <LocalAI costs={costs} now={now} />
 
-      <SectionRule label="BURN LANDSCAPE · LAST 14 DAYS" />
-      <Window title="DAILY BURN · BY BILLING MODE" meta="tokens processed per day">
+      <Divider label="burn landscape · 14d" />
+      <Widget cmd="costs --burn 14d" label="Daily burn by billing mode" meta="tokens / day">
         <BurnLandscape costs={costs} />
         <Note>
-          AXONOMETRIC PROJECTION — NO VANISHING POINT, SO A UNIT OF HEIGHT IS THE SAME NUMBER OF PIXELS FOR THE NEAREST
-          COLUMN AND THE FARTHEST. THE PERSPECTIVE RENDER THIS REPLACES FORESHORTENED, WHICH MADE CLOSER DAYS LOOK
-          BIGGER THAN IDENTICAL FAR ONES, AND IT CARRIED NO AXIS AT ALL. FLAT TILES ARE DAYS WITH NO LOGGED ACTIVITY.
+          STACKED BY BILLING MODE IN A FIXED ORDER; MODES SHARE A TOKEN AXIS HERE BUT ARE NEVER PRICED AGAINST EACH OTHER.
+          FLAT MARKERS ARE DAYS WITH NO LOGGED ACTIVITY.
         </Note>
-      </Window>
+      </Widget>
 
       {(costs.warnings?.length ?? 0) > 0 && (
-        <Window title="DATA CAVEATS" meta={`${costs.warnings.length}`}>
-          <div style={{ padding: '10px 16px 12px' }}>
-            {costs.warnings.map((w, i) => (
-              <div key={i} style={{ display: 'flex', gap: 9, padding: '5px 0', fontSize: 10, color: 'var(--pt-text-dim)', lineHeight: 1.6 }}>
-                <span style={{ color: STATUS.warn, flexShrink: 0 }}>⚠</span><span>{w}</span>
-              </div>
-            ))}
-            {costs.freshness?.lastLoggedAt && (
-              <div style={{ display: 'flex', gap: 9, padding: '5px 0', fontSize: 10, color: 'var(--pt-text-mute)' }}>
-                <span style={{ flexShrink: 0 }}>◷</span>
-                <span>newest parsed session {utcTimestamp(costs.freshness.lastLoggedAt)} · source {costs.source}</span>
-              </div>
-            )}
-          </div>
-        </Window>
+        <Widget cmd="costs --caveats" label="Data caveats" meta={`${costs.warnings.length}`}>
+          {costs.warnings.map((w, i) => (
+            <div key={i} className={css.warnRow}><Glyph g="fail" /><span>{w}</span></div>
+          ))}
+          {costs.freshness?.lastLoggedAt && (
+            <div className={css.warnRow}><Glyph g="idle" /><span className={css.dim}>newest parsed session {utcTimestamp(costs.freshness.lastLoggedAt)} · source {costs.source}</span></div>
+          )}
+        </Widget>
       )}
     </div>
   )

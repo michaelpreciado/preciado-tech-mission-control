@@ -1,37 +1,32 @@
+/* Vault documents — flat widget rows (group heads are <Divider>). */
 .mc-vault-panel { margin-top: 24px; }
 .mc-vault-path {
   padding: 10px 14px;
-  border-bottom: 1px dashed var(--pt-border-dim);
+  border-bottom: 1px solid var(--pt-border);
   color: var(--pt-text-dim);
-  font-size: 10px;
+  font-size: 12px;
   overflow-wrap: anywhere;
 }
-.mc-vault-groups { padding: 14px; display: grid; gap: 20px; }
+.mc-vault-groups { padding: 14px; display: grid; gap: 14px; }
 .mc-vault-group { min-width: 0; }
-.mc-vault-group-head {
-  display: flex; gap: 10px; align-items: center;
-  margin: 0 0 8px; color: var(--pt-neon);
-  font-size: 10px; letter-spacing: .16em; text-transform: uppercase;
-}
-.mc-vault-group-head span { color: var(--pt-text-mute); font-size: 9px; }
 .mc-vault-list {
   list-style: none; margin: 0; padding: 0;
   display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 8px;
 }
 .mc-vault-doc {
   display: flex; flex-direction: column; gap: 6px; height: 100%; padding: 10px 12px;
-  border: 1px solid var(--pt-border-dim); border-radius: var(--pt-r-md);
-  background: var(--pt-bg, var(--pt-launcher-bg, #07080b)); text-decoration: none; overflow-wrap: anywhere;
-  transition: border-color .2s ease, box-shadow .2s ease;
+  border: 1px solid var(--pt-border); border-radius: var(--pt-radius-row, 10px);
+  background: var(--pt-surface-2); text-decoration: none; overflow-wrap: anywhere;
+  transition: border-color .12s ease;
 }
-.mc-vault-doc:hover, .mc-vault-doc:focus-visible { border-color: var(--pt-neon, var(--pt-launcher-accent, #9db4ec)); box-shadow: var(--pt-glow-sm); }
-.mc-vault-doc:focus-visible { outline: 2px solid var(--pt-neon, var(--pt-launcher-accent, #9db4ec)); outline-offset: 2px; }
+.mc-vault-doc:hover, .mc-vault-doc:focus-visible { border-color: var(--pt-border-strong); box-shadow: none; }
+.mc-vault-doc:focus-visible { outline: 2px solid var(--pt-neon); outline-offset: 2px; }
 .mc-vault-doc-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 12px; }
-.mc-vault-updated { font-size: 9px; color: var(--pt-text-dim); }
-.mc-vault-folder { font-size: 10px; color: var(--pt-text-dim); }
-.mc-vault-file { font-size: 9px; color: var(--pt-text-mute); }
+.mc-vault-updated { font-size: 12px; color: var(--pt-text-dim); }
+.mc-vault-folder { font-size: 12px; color: var(--pt-text-dim); }
+.mc-vault-file { font-size: 12px; color: var(--pt-text-mute); }
 .mc-vault-client { display: flex; align-items: center; gap: 8px; }
-@media (max-width: 600px) {
+@media (max-width: 520px) {
   .mc-vault-panel .mc-window-head { flex-wrap: wrap; }
   .mc-vault-panel .mc-window-title { flex: 1 0 auto; white-space: nowrap; }
   .mc-vault-panel .mc-window-meta { flex-basis: 100%; }

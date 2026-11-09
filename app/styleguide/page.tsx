@@ -1,9 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { Button, Card, CardHead, Chip, Field, IconButton, Input, Row, Select, Segmented, Sheet, Stat, TextArea } from '@/components/ui'
+import { Button, Card, CardHead, Chip, Divider, Field, Glyph, IconButton, Input, Kv, KvRow, Prompt, Row, Select, Segmented, Sheet, Stat, TextArea, Verdict, WRow, type GlyphName } from '@/components/ui'
 import { PageHeader } from '@/components/PageHeader'
-import { OMALAUNCHER, OMALAUNCHER_SEMANTIC, OMARCHY, OMARCHY_SEMANTIC } from '@/lib/tokens'
+import { SegBar } from '@/components/charts/SegBar'
+import { MiniHist } from '@/components/charts/MiniHist'
+import { OMALAUNCHER, OMALAUNCHER_SEMANTIC, OMARCHY, OMARCHY_SEMANTIC, WIDGET, WIDGET_SEMANTIC } from '@/lib/tokens'
 import styles from './styleguide.module.css'
 
 function Specimen({ name, children }: { name: string; children: React.ReactNode }) {
@@ -186,67 +188,136 @@ function ThemeCompare() {
   )
 }
 
-const glassConcepts = [
-  { id: 'frost', letter: 'A', name: 'Frosted Deck', idea: 'A physical pane. Generous frost, a broad top reflection, soft depth.', detail: '18px blur · substantial frost', winner: false },
-  { id: 'edge', letter: 'B', name: 'Edge Light', idea: 'A lit instrument. Dark transparent body, precise rim, a quiet bloom.', detail: '12px blur · illuminated edge', winner: true },
-  { id: 'liquid', letter: 'C', name: 'Liquid Fill', idea: 'A fluid capsule. Directional dodger tint slides beneath the light.', detail: '8px blur · shifting tint', winner: false },
-] as const
+const GLYPHS: ReadonlyArray<[GlyphName, string]> = [
+  ['run', 'running'], ['idle', 'idle / unknown'], ['fail', 'failed · stopped (amber)'], ['err', 'error · down (red)'],
+  ['retry', 'retrying · stale'], ['up', 'up'], ['down', 'down'], ['ok', 'done · ok'], ['live', 'live (the one cyan)'], ['todo', 'next / todo'],
+]
+const HIST_14D = [2, 0, 4, 3, 6, 1, 0, 5, 7, 3, 2, 8, 4, 3]
+const WIDGET_SWATCHES: ReadonlyArray<[string, string]> = [
+  ['bg', WIDGET.bg], ['card', WIDGET.card], ['card2', WIDGET.card2], ['line', WIDGET.line], ['lineStrong', WIDGET.lineStrong],
+  ['accent', WIDGET.accent], ['accentBright', WIDGET.accentBright], ['cyan', WIDGET.cyan], ['segOff', WIDGET.segOff],
+  ['text', WIDGET.text], ['text2', WIDGET.text2], ['text3', WIDGET.text3],
+  ['warn', WIDGET_SEMANTIC.warn.hex], ['error', WIDGET_SEMANTIC.error.hex], ['ok', WIDGET_SEMANTIC.ok.hex],
+]
 
-function GlassMatrix({ size, context }: { size: 'sm' | 'md'; context: string }) {
-  const [on, setOn] = useState(true)
-  const [segment, setSegment] = useState('all')
-  const [notice, setNotice] = useState('Try a control')
-  const sizeClass = size === 'sm' ? 'ob-btn-sm' : ''
+/** The widget contract (docs/polish-plan-2026-11-09.md §1.5), rendered. */
+function Widgets() {
   return (
-    <div className={styles.glassMatrix} aria-label={`${context} ${size} states`}>
-      <h5 className={styles.matrixLabel}>{size} / states</h5>
-      <div className={styles.glassControls}>
-        {(['primary', 'ghost', 'danger', 'confirm'] as const).map(variant => (
-          <Button key={variant} variant={variant} className={sizeClass} onClick={() => setNotice(`${variant} preview`)}>{variant}</Button>
-        ))}
-        <Button variant="ghost" className={sizeClass} active={on} onClick={() => setOn(!on)}>{on ? '✓ Active / on' : 'Active / off'}</Button>
-        <Button variant="primary" className={sizeClass} loading>Loading</Button>
-        <Button variant="ghost" className={sizeClass} disabled>Disabled</Button>
-        <div className={styles.iconSample}>
-          <IconButton aria-label={`${context} ${size}: add item`} onClick={() => setNotice('Icon action preview')}>+</IconButton>
-          <span>Icon</span>
-        </div>
-      </div>
-      <Segmented size={size} options={[{ value: 'all', label: 'All' }, { value: 'live', label: 'Live' }]} value={segment} onChange={setSegment} />
-      <output className={styles.previewNotice} aria-live="polite">{notice}</output>
-    </div>
-  )
-}
-
-function GlassConcepts() {
-  return (
-    <section id="button-glass" className={styles.section}>
-      <div className={styles.glassIntro}>
-        <span className={styles.specimenName}>MATERIAL STUDY / 01</span>
-        <h2 className={styles.glassTitle}>Commands that catch the light.</h2>
-        <p>Three glass materials. One dodger accent. Compare the full state matrix on a panel and directly over the ambient rain.</p>
-      </div>
-      <div className={styles.conceptGrid}>
-        {glassConcepts.map(concept => (
-          <article key={concept.id} className={`${styles.concept} ${styles[concept.id]}`} aria-labelledby={`glass-${concept.id}`}>
-            <header className={styles.conceptHead}>
-              <span className={styles.conceptIndex}>{concept.letter} / {concept.winner ? 'Installed winner' : 'Concept'}</span>
-              <h3 id={`glass-${concept.id}`}>{concept.name}</h3>
-              <p>{concept.idea}</p>
-              <span className={styles.conceptDetail}>{concept.detail}</span>
-            </header>
-            {(['panel', 'rain'] as const).map(surface => (
-              <div key={surface} className={surface === 'panel' ? styles.panelStage : styles.rainStage}>
-                <h4 className={styles.surfaceLabel}>{surface === 'panel' ? '01 / On a panel' : '02 / Over ambient rain'}</h4>
-                {(['sm', 'md'] as const).map(size => <GlassMatrix key={size} size={size} context={`${concept.name}, ${surface}`} />)}
-                <Button variant="ghost" href="#button-glass" className={styles.wideGlassLink}>All conversations ›</Button>
-              </div>
-            ))}
-          </article>
+    <Section title="Widgets">
+      <p className={styles.note}>The launcher-widget primitives every route builds from. Cards are <code>.mc-widget</code>; headers are <code>&lt;Prompt&gt;</code>; section breaks are <code>&lt;Divider&gt;</code>; the one sans numeral per card is <code>&lt;Verdict&gt;</code>; charts are <code>&lt;SegBar&gt;</code> and <code>&lt;MiniHist&gt;</code>; state is a <code>&lt;Glyph&gt;</code>, never an LED. Flat: no shadow, gradient, blur or glow.</p>
+      <div className={styles.swatchGrid}>
+        {WIDGET_SWATCHES.map(([name, hex]) => (
+          <div key={name} className={styles.swatch}>
+            <span className={styles.swatchChip} style={{ background: hex }} />
+            <span className={styles.swatchMeta}>{name}<br />{hex}</span>
+          </div>
         ))}
       </div>
-      <p className={styles.glassVerdict}><strong>B · Edge Light is installed.</strong> Production buttons use the glass fill, gradient and rim shown above. Red and green are reserved for danger and confirmation. Touch retains the gradient and rim without blur; reduced motion removes transitions.</p>
-    </section>
+      <div className={styles.widgetGrid}>
+        <Specimen name="composition · desk:~$ kanban">
+          <section className="mc-widget">
+            <Prompt host="desk" cmd="kanban" />
+            <Verdict unit="open">4</Verdict>
+            <div className={styles.glyphCounts}><Glyph g="run" />0 <Glyph g="fail" />3 <Glyph g="idle" />1</div>
+            <Kv>
+              <KvRow k="done" v="3 today" r="67 wk" />
+              <KvRow k="streak" v="10d" r="best 31" />
+            </Kv>
+            <div className={styles.histRow}><span>14d</span><MiniHist values={HIST_14D} label="completions per day, last 14 days" /></div>
+            <Divider label="needs you 2" />
+            <WRow g="fail" right="2d">AEGIS (product) review the onboarding flow copy</WRow>
+            <WRow g="err" right="5d">scout gateway down since tuesday</WRow>
+            <Prompt host="desk" foot meta="↻ 15s" />
+          </section>
+        </Specimen>
+        <Specimen name="composition · friday:~$ top">
+          <section className="mc-widget">
+            <Prompt host="friday" cmd="top" />
+            <div className={styles.meterRow}><span>cpu</span><SegBar value={44} autoTone label="cpu" /><span>44% 64°</span></div>
+            <div className={styles.meterRow}><span>mem</span><SegBar value={86} autoTone label="memory" /><span>86% 40G</span></div>
+            <div className={styles.meterRow}><span>disk</span><SegBar value={96} autoTone label="disk" /><span>96% 119G</span></div>
+            <div className={styles.meterRow}><span>gpu</span><SegBar value={64} tone="cyan" label="gpu" /><span>64% 67°</span></div>
+            <Divider label="top" />
+            <WRow g="run" right="5.0%">strata</WRow>
+            <WRow g="idle" right="0.4%" dim>ollama</WRow>
+            <Prompt host="friday" foot meta="up 10d 20h" />
+          </section>
+        </Specimen>
+        <Specimen name="composition · CLAUDE weekly card">
+          <section className="mc-widget">
+            <div className={styles.cardKicker}>CLAUDE</div>
+            <Verdict unit="this week">3%</Verdict>
+            <Kv keyWidth="8ch">
+              <KvRow k="session" v={<SegBar value={0} thin label="session" />} r="0%" />
+              <KvRow k="week" v={<SegBar value={3} thin label="week" />} r="3%" />
+            </Kv>
+            <div className={styles.dotsRow}><span>day</span><span className="mc-dots">{Array.from({ length: 24 }, (_, i) => <i key={i} className={i < 14 ? 'on' : undefined} />)}</span></div>
+          </section>
+        </Specimen>
+      </div>
+      <div className={styles.gridThree}>
+        <Specimen name="Prompt · desk / friday / phone">
+          <div className={styles.stackCol}>
+            <Prompt host="desk" cmd="costs" />
+            <Prompt host="friday" cmd="chat jarvis" meta="↻ 29s" />
+            <Prompt host="phone" cmd="agent top" />
+          </div>
+        </Specimen>
+        <Specimen name="Divider · as div / as h2">
+          <div className={styles.stackCol}>
+            <Divider label="tasks 3/4" />
+            <Divider as="h3" label="engines 1/3" />
+          </div>
+        </Specimen>
+        <Specimen name="Verdict · plain / warn / crit">
+          <div className={styles.stackCol}>
+            <Verdict unit="this month">$412</Verdict>
+            <Verdict tone="warn" unit="mem">86%</Verdict>
+            <Verdict tone="crit">71°</Verdict>
+          </div>
+        </Specimen>
+        <Specimen name="SegBar · accent / warn / crit / cyan / thin">
+          <div className={styles.stackCol}>
+            <SegBar value={44} />
+            <SegBar value={86} tone="warn" />
+            <SegBar value={97} tone="crit" />
+            <SegBar value={64} tone="cyan" />
+            <SegBar value={30} thin />
+          </div>
+        </Specimen>
+        <Specimen name="MiniHist · 14d / 24h">
+          <div className={styles.stackCol}>
+            <MiniHist values={HIST_14D} />
+            <MiniHist values={[0, 0, 0, 0, 0, 0, 1, 2, 3, 2, 4, 6, 5, 3, 2, 4, 1, 0, 0, 0, 0, 0, 0, 0]} days={24} />
+          </div>
+        </Specimen>
+        <Specimen name="Glyph · the set">
+          <div className={styles.stackCol}>
+            {GLYPHS.map(([g, label]) => <div key={g} className={styles.glyphRow}><Glyph g={g} /> <code>{g}</code> {label}</div>)}
+          </div>
+        </Specimen>
+        <Specimen name=".mc-dots · day / week">
+          <div className={styles.stackCol}>
+            <span className="mc-dots">{Array.from({ length: 24 }, (_, i) => <i key={i} className={i < 15 ? 'on' : undefined} />)}</span>
+            <span className="mc-dots">{Array.from({ length: 7 }, (_, i) => <i key={i} className={i < 1 ? 'on' : undefined} />)}</span>
+          </div>
+        </Specimen>
+        <Specimen name="Kv · KvRow">
+          <Kv>
+            <KvRow k="tokens" v="11.9M" />
+            <KvRow k="saved" v="$50.25" r="+$0.66" />
+            <KvRow k="reqs" v="14,898" r="+225" />
+          </Kv>
+        </Specimen>
+        <Specimen name="WRow · plain / dim / link">
+          <div className={styles.stackCol}>
+            <WRow g="ok" right="12m">nightly backup finished</WRow>
+            <WRow g="idle" right="3h" dim>forge idle</WRow>
+            <WRow g="run" right="›" href="#primitives">open the board</WRow>
+          </div>
+        </Specimen>
+      </div>
+    </Section>
   )
 }
 
@@ -256,17 +327,18 @@ export default function StyleGuide() {
     <div className={styles.page}>
       <PageHeader
         eyebrow="~/styleguide · DECK-VOCABULARY"
-        title="STYLEGUIDE"
-        subtitle="OmniBridge tokens and shared component vocabulary"
+        title="styleguide"
+        command="styleguide"
+        subtitle="Widget tokens and shared component vocabulary"
         actions={<Button variant="ghost" href="#primitives">Components</Button>}
       />
 
-      <p className={styles.intro}>The living contract for the one Mission Control visual language. Variant names sit beside each specimen so a contributor can choose the shared primitive before writing new UI.</p>
+      <p className={styles.intro}>The living contract for the one Mission Control visual language: the launcher widgets. Variant names sit beside each specimen so a contributor can choose the shared primitive before writing new UI.</p>
 
       <div id="primitives" className={styles.content}>
+        <Widgets />
         <LauncherPalette />
         <ThemeCompare />
-        <GlassConcepts />
         <Section title="Card / CardHead">
           <div className={styles.gridThree}>
             <Specimen name="Card · default">
@@ -326,7 +398,7 @@ export default function StyleGuide() {
 
         <Section title="IconButton">
           <div className={styles.gridThree}>
-            <Specimen name="IconButton · required aria-label"><IconButton aria-label="Open menu">☰</IconButton></Specimen>
+            <Specimen name="IconButton · required aria-label"><IconButton aria-label="Open menu">≡</IconButton></Specimen>
             <Specimen name="IconButton · close"><IconButton aria-label="Close panel">×</IconButton></Specimen>
             <Specimen name="IconButton · disabled"><IconButton aria-label="Unavailable action" disabled>⋯</IconButton></Specimen>
           </div>

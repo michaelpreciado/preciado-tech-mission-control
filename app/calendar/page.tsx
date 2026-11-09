@@ -9,7 +9,7 @@ const TickTickCalendar = dynamic(() => import('@/components/TickTickCalendar').t
 export default function CalendarPage() {
   return (
     <>
-      <PageHeader eyebrow="~/calendar · WEEK-STATE" title="CALENDAR" subtitle="TickTick week and scheduled work" />
+      <PageHeader title="CALENDAR" subtitle="TickTick week and scheduled work" />
       <TickTickCalendar />
     </>
   )

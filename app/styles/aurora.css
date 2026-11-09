@@ -1,78 +1,47 @@
-/* AURORA tokens (--aur-*): near-black ink, Blue Matrix glass, mint / honey / coral status.
-   Phase A re-points the semantic layer at --pt-mx-* and the dodger accent; the periwinkle
-   primitives below are kept only as named references and are no longer consumed.
-   Source: agentic-os/concepts/aurora/tokens.css. Additive and namespaced: no --mbg-* or
-   --pt-* token is read or written here. Component CSS in components/aurora resolves
-   every colour through this layer. Imported after matrix-blue.css. */
+/* AURORA layer (--aur-*): the home route's names for the shared tokens.
+   Every colour is an alias onto the token block (lib/tokens.ts); the friday
+   block pins the flat widget values and the Launcher palette re-declares its
+   own. Component CSS in components/aurora resolves through this layer. */
 :root {
-  /* primitive */
-  --aur-ink-0: #07080b;
-  --aur-ink-1: #0b0d12;
-  --aur-ink-2: #10131b;
-  --aur-ink-3: #161a25;
-  --aur-ink-4: #1e2331;
-  --aur-peri-2: #dfe6f9;
-  --aur-peri-3: #c3d1f4;
-  --aur-peri-5: #9db4ec;
-  --aur-peri-7: #5d71a8;
-  --aur-fog-9: #eceef5;
-  --aur-fog-7: #b4bacb;
-  --aur-fog-5: #8d93a9;
-  --aur-fog-4: #777d93;
-  --aur-mint-5: #86d4b4;
-  --aur-honey-5: #e8c27e;
-  --aur-coral-5: #f08c84;
-
-  /* semantic */
+  --aur-ink-0: var(--pt-bg);
   --aur-bg: var(--aur-ink-0);
-  --aur-surface: var(--pt-mx-glass, rgb(10 12 14 / .72));
-  --aur-surface-raised: var(--pt-mx-glass-hi, rgb(13 16 20 / .8));
-  --aur-surface-hover: rgb(255 255 255 / .045);
-  --aur-line-subtle: var(--pt-mx-line-subtle, rgb(255 255 255 / .06));
-  --aur-line: var(--pt-mx-line, rgb(255 255 255 / .10));
-  --aur-line-strong: var(--pt-mx-line-strong, rgb(255 255 255 / .18));
-  --aur-text: var(--pt-mx-ink-head, #f2f2f2);
-  --aur-text-2: var(--pt-mx-ink, #e5e7eb);
-  --aur-text-3: var(--pt-mx-ink-2, #94a3b8);
-  --aur-text-4: var(--pt-mx-ink-meta, #718096);
-  --aur-accent: var(--pt-dodger, #1e90ff);
-  --aur-accent-strong: #7cc0ff;
-  --aur-accent-deep: #0b5fb8;
-  --aur-accent-ink: #03101d;
-  --aur-accent-wash: rgb(30 144 255 / .07);
-  --aur-accent-glow: rgb(30 144 255 / .5);
-  --aur-ok: var(--aur-mint-5);
-  --aur-warn: var(--aur-honey-5);
-  --aur-error: var(--aur-coral-5);
-  --aur-error-wash: rgb(240 140 132 / .09);
-  --aur-stale: var(--aur-fog-5);
-  --aur-bloom-1: rgb(30 144 255 / .09);
-  --aur-bloom-2: rgb(0 229 255 / .03);
-  --aur-glass-bg: rgb(11 13 18 / .66);
-  --aur-glass-blur: 18px;
-  --aur-glass-border: rgb(255 255 255 / .06);
-  --aur-highlight: inset 0 1px 0 rgb(255 255 255 / .035);
-  --aur-fill-faint: rgb(255 255 255 / .025);
-  --aur-now: #bfe1ff;
+  --aur-surface: var(--pt-card-bg);
+  --aur-surface-hover: var(--pt-surface-2);
+  --aur-line-subtle: var(--pt-border-dim);
+  --aur-line: var(--pt-border);
+  --aur-line-strong: var(--pt-border-strong);
+  --aur-text: var(--pt-text-high);
+  --aur-text-2: var(--pt-text);
+  --aur-text-3: var(--pt-text-dim);
+  --aur-text-4: var(--pt-text-mute);
+  --aur-accent: var(--pt-dodger);
+  --aur-accent-strong: var(--pt-neon-bright);
+  --aur-accent-wash: var(--pt-neon-wash);
+  --aur-accent-glow: transparent;
+  --aur-ok: var(--pt-ok);
+  --aur-warn: var(--pt-warn);
+  --aur-error: var(--pt-error);
+  --aur-error-wash: color-mix(in srgb, var(--pt-error) 9%, transparent);
+  --aur-bloom-1: transparent;
+  --aur-bloom-2: transparent;
+  --aur-highlight: none;
+  --aur-fill-faint: var(--pt-neon-wash);
+  --aur-now: var(--pt-text-high);
 
   /* scale */
-  --aur-radius-sm: 8px;
-  --aur-radius-md: 12px;
-  --aur-radius-lg: 16px;
+  --aur-radius-sm: var(--pt-radius-row, 10px);
+  --aur-radius-md: var(--pt-radius-card, 16px);
+  --aur-radius-lg: var(--pt-radius-card, 16px);
   --aur-radius-full: 999px;
-  --aur-space-1: 4px;
   --aur-space-2: 8px;
   --aur-space-3: 12px;
   --aur-space-4: 16px;
   --aur-space-5: 24px;
   --aur-space-6: 32px;
-  --aur-space-7: 48px;
   --aur-fs-xs: 12px;
   --aur-fs-sm: 13px;
-  --aur-fs-md: 15px;
-  --aur-fs-lg: 18px;
   --aur-fs-hero: 52px;
-  --aur-font-ui: var(--mbg-font-sans, 'Instrument Sans'), system-ui, sans-serif;
-  --aur-font-data: var(--mbg-font-mono, 'JetBrains Mono'), ui-monospace, monospace;
+  --aur-font-ui: var(--pt-font-mono);
+  --aur-font-data: var(--pt-font-mono);
   --aur-ease: cubic-bezier(.2, .7, .2, 1);
 }

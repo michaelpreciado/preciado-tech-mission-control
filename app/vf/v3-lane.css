@@ -37,25 +37,22 @@
   background: var(--mc-line);
 }
 .mc-main .v3-kicker .jp {
-  font-family: var(--mc-font-jp), var(--pt-font-sans);
+  font-family: var(--pt-font-mono);
   font-size: 13px;
   line-height: 1.5;
   letter-spacing: 0;
   text-transform: none;
   color: var(--mc-neon);
-  text-shadow: 0 0 12px rgba(var(--mc-neon-rgb), 0.32);
 }
 
 /* ── Glass wash on the lane's primary panels ──────────────────────────
    Layer the periwinkle glass tint over the existing surface and move the
-   hairline to --mc-glass-line. Tint only — no backdrop-filter: `.mc-main`
+   hairline to --mc-glass-line. Tint only — no backdrop blur: `.mc-main`
    scrolls over the fixed rain canvas, so a blur here would break the 120hz
    contract (§5). */
-.mc-main .mc-sub-panel,
 .mc-main .mc-mem-toolbar {
   border: 1px solid var(--mc-glass-line);
   background:
-    linear-gradient(var(--mc-glass), var(--mc-glass)),
     var(--mc-panel);
   border-radius: var(--pt-r-md);
 }
@@ -65,8 +62,6 @@
 .mc-main .mc-content-grid .mc-pipe-card {
   border-color: var(--mc-glass-line);
   background:
-    radial-gradient(120% 120% at 100% 0%, rgba(var(--mc-neon-rgb), 0.10), transparent 55%),
-    linear-gradient(var(--mc-glass), var(--mc-glass)),
     var(--mc-panel);
 }
 .mc-main .mc-content-grid .mc-pipe-name { color: var(--mc-ink); }
@@ -75,10 +70,6 @@
 /* Team roster: keep working rows reading against the new glass base. The
    base rule already tints via --shift-accent; this just seats the row on
    the cool panel so idle rows recede instead of floating on pure black. */
-.mc-main .mc-sub-list .mc-shift-row {
-  background: linear-gradient(var(--mc-glass), var(--mc-glass)), var(--mc-bg-tint);
-  border-color: var(--mc-glass-line);
-}
 
 /* ── Setup: accent-swatch grid + save bar ─────────────────────────────
    The custom-accent well and the sticky action bar carried magenta-era
@@ -86,32 +77,13 @@
 .mc-main .mc-setup-group {
   border-color: var(--mc-glass-line);
   background:
-    linear-gradient(var(--mc-glass), var(--mc-glass)),
     var(--mc-panel);
 }
 .mc-main .mc-setup-actions.sticky {
   border-top: 1px solid var(--mc-glass-line);
-  background: linear-gradient(var(--mc-glass), var(--mc-glass)), var(--mc-bg-2);
+  background: var(--mc-bg-2);
 }
 
 /* ── Styleguide: JP specimen ──────────────────────────────────────────
    The styleguide is the design source of truth (§6) — it now carries a
    Noto Sans JP specimen next to the mono/sans roles. */
-.sg .sg-jp {
-  font-family: var(--mc-font-jp), var(--pt-font-sans);
-  font-size: 22px;
-  line-height: 1.7;
-  letter-spacing: 0;
-  color: var(--mc-neon);
-  text-shadow: 0 0 14px rgba(var(--mc-neon-rgb), 0.3);
-}
-.sg .sg-jp small {
-  display: block;
-  margin-top: 4px;
-  font-family: var(--pt-font-mono);
-  font-size: 10px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--pt-text-mute);
-  text-shadow: none;
-}
