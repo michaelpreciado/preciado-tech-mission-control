@@ -4,12 +4,10 @@
   flex-direction: column;
   min-width: 0;
   border: 1px solid var(--pt-card-border);
-  border-radius: var(--pt-r-lg);
+  border-radius: var(--pt-radius-card, var(--pt-r-lg));
   background: var(--pt-card-bg);
   color: var(--pt-text);
   overflow: hidden;
-  box-shadow: var(--pt-card-rim, none);
-  backdrop-filter: blur(12px);
 }
 
 /* Section-level cards skip style and layout while off-screen. They already clip

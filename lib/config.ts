@@ -16,7 +16,7 @@
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { LAUNCHER_ACCENT } from './theme'
+import { FRIDAY_ACCENT } from './theme'
 
 export interface FridayPaths {
   /** Agent session stores (one dir per agent, e.g. OpenClaw layout). */
@@ -305,7 +305,7 @@ function buildConfig(): FridayConfig {
       defaultPlan: file.billing?.defaultPlan ?? { plan: 'ChatGPT Plus', amount: 20 },
     },
     appearance: {
-      accentColor: str(env.NEXT_PUBLIC_ACCENT_COLOR, str(file.appearance?.accentColor, LAUNCHER_ACCENT)),
+      accentColor: str(env.NEXT_PUBLIC_ACCENT_COLOR, str(file.appearance?.accentColor, FRIDAY_ACCENT)),
       motion: file.appearance?.motion === 'reduced' || file.appearance?.motion === 'off' ? file.appearance.motion : 'full',
       density: file.appearance?.density === 'expanded' ? 'expanded' : 'compact',
       hiddenTabs: Array.isArray(file.appearance?.hiddenTabs) ? file.appearance!.hiddenTabs!.filter((t): t is string => typeof t === 'string') : [],

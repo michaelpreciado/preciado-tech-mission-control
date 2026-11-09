@@ -5,20 +5,22 @@
  * hex in /setup recolors the whole dashboard.
  */
 
-import { OMARCHY_ACCENT, OMALAUNCHER } from './tokens'
+import { OMARCHY_ACCENT, OMALAUNCHER, WIDGET } from './tokens'
 
+/* :root (non-friday) accent. */
 export const DEFAULT_ACCENT = '#9db4ec'
+/* The friday theme's own accent — the launcher widget blue. Like
+   DEFAULT_ACCENT it is already in the stylesheet, so it emits no override. */
+export const FRIDAY_ACCENT = WIDGET.accent.toLowerCase()
 export const LAUNCHER_ACCENT = OMALAUNCHER.accent
 
 export const ACCENT_PRESETS = [
-  { name: 'Launcher (phone)', hex: LAUNCHER_ACCENT },
-  { name: 'Periwinkle (PT)', hex: '#9db4ec' },
+  { name: 'Widget (default)', hex: FRIDAY_ACCENT },
+  { name: 'Launcher slate', hex: LAUNCHER_ACCENT },
   { name: 'Omarchy (PT)', hex: OMARCHY_ACCENT },
-  { name: 'Neon pink', hex: '#ff10f0' },
-  { name: 'Dodger blue', hex: '#1e90ff' },
+  { name: 'Periwinkle', hex: '#9db4ec' },
   { name: 'Matrix green', hex: '#39ff14' },
   { name: 'Amber CRT', hex: '#ffb000' },
-  { name: 'Dodger', hex: '#1e90ff' },
   { name: 'Blood orange', hex: '#ff4d00' },
 ] as const
 
@@ -57,7 +59,7 @@ const BLACK: [number, number, number] = [0, 0, 0]
  */
 export function buildAccentCss(accent: string): string {
   const hex = accent.toLowerCase()
-  if (!isHexColor(hex) || hex === DEFAULT_ACCENT || paletteFor(hex)) return ''
+  if (!isHexColor(hex) || hex === DEFAULT_ACCENT || hex === FRIDAY_ACCENT || paletteFor(hex)) return ''
   const rgb = hexToRgb(hex)
   const bright = mix(rgb, WHITE, 0.45)
   const deep = mix(rgb, BLACK, 0.3)

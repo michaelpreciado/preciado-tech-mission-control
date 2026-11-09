@@ -67,7 +67,7 @@ export const viewport: Viewport = {
   // (100dvh chrome stays put) instead of reflowing the whole layout —
   // the single biggest Android scroll-jank fix for a 100dvh app shell.
   interactiveWidget: 'resizes-content',
-  themeColor: '#16222b',
+  themeColor: '#000000',
   colorScheme: 'dark',
 }
 

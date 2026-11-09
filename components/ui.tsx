@@ -376,6 +376,121 @@ export function Badge({ children, tone = 'blue' }: { children: React.ReactNode; 
   return <span className="mc-task-tag" data-tone={tone}>{children}</span>
 }
 
+/* ── Widget primitives (docs/polish-plan-2026-11-09.md §1.5) ─────────────
+   The launcher-widget vocabulary. CSS is the `.mc-*` contract in globals.css
+   (`.mc-widget`, `.mc-prompt`, `.mc-divider`, `.mc-verdict`, `.mc-glyph`,
+   `.mc-kv`, `.mc-wrow`); charts are components/charts/SegBar + MiniHist.
+   Every route builds its cards from these instead of a local recipe. */
+
+export type PromptHost = 'desk' | 'friday' | 'phone'
+type HeadingTag = 'div' | 'h1' | 'h2' | 'h3' | 'p'
+
+/** `desk:~$ kanban` — card header (or, with `foot`, the footer status line). */
+export function Prompt({ host = 'desk', cmd, foot = false, meta, as: Tag = 'div', className = '', id }: {
+  host?: PromptHost | string
+  cmd?: React.ReactNode
+  /** Footer variant: tighter top margin, meta pushed right. */
+  foot?: boolean
+  /** Right-aligned muted text, e.g. `↻ 29s · up 10d 20h`. */
+  meta?: React.ReactNode
+  as?: HeadingTag
+  className?: string
+  id?: string
+}) {
+  return (
+    <Tag id={id} className={['mc-prompt', foot ? 'mc-prompt--foot' : '', className].filter(Boolean).join(' ')}>
+      <span className="mc-prompt-path"><b>{host}</b>:~$</span>
+      {cmd != null && cmd !== '' ? <span className="mc-prompt-cmd">{cmd}</span> : null}
+      {meta != null && meta !== '' ? <span className="meta">{meta}</span> : null}
+    </Tag>
+  )
+}
+
+/** `-- needs you 2 ---------` — ASCII section break inside or between widgets. */
+export function Divider({ label, as: Tag = 'div', className = '', id }: {
+  label?: React.ReactNode
+  /** Render as a heading when the divider titles a section (lanes, bands). */
+  as?: HeadingTag
+  className?: string
+  id?: string
+}) {
+  const separator = Tag === 'div' ? { role: 'separator' as const, 'aria-label': typeof label === 'string' ? label : undefined } : {}
+  return (
+    <Tag id={id} className={['mc-divider', className].filter(Boolean).join(' ')} {...separator}>
+      {label != null && label !== '' ? <span className="mc-divider-label">{label}</span> : null}
+    </Tag>
+  )
+}
+
+/** The one sans numeral per card: `<Verdict unit="this week">3%</Verdict>`. */
+export function Verdict({ children, unit, tone, as: Tag = 'div', className = '' }: {
+  children: React.ReactNode
+  unit?: React.ReactNode
+  tone?: 'warn' | 'crit' | 'ok'
+  as?: HeadingTag
+  className?: string
+}) {
+  return (
+    <Tag className={['mc-verdict', className].filter(Boolean).join(' ')} data-tone={tone}>
+      {children}{unit != null && unit !== '' ? <small>{unit}</small> : null}
+    </Tag>
+  )
+}
+
+export type GlyphName = 'run' | 'idle' | 'fail' | 'err' | 'retry' | 'up' | 'down' | 'ok' | 'live' | 'todo'
+
+/** Status glyph `▶ · × ↻ ↑ ↓ >` — replaces LEDs. Decorative unless `label` is set. */
+export function Glyph({ g, label, className = '' }: { g: GlyphName; label?: string; className?: string }) {
+  return label
+    ? <i className={['mc-glyph', className].filter(Boolean).join(' ')} data-g={g} role="img" aria-label={label} />
+    : <i className={['mc-glyph', className].filter(Boolean).join(' ')} data-g={g} aria-hidden="true" />
+}
+
+/** Aligned key/value block. Children are <KvRow>s; `keyWidth` sets column 1. */
+export function Kv({ children, keyWidth, className = '' }: { children: React.ReactNode; keyWidth?: string; className?: string }) {
+  return (
+    <div className={['mc-kv', className].filter(Boolean).join(' ')} style={keyWidth ? { '--kv-k': keyWidth } as React.CSSProperties : undefined}>
+      {children}
+    </div>
+  )
+}
+
+/** `done  3 today  67 wk` — one row of a <Kv>, or standalone (it is its own grid). */
+export function KvRow({ k, v, r, className = '' }: { k: React.ReactNode; v?: React.ReactNode; r?: React.ReactNode; className?: string }) {
+  return (
+    <div className={['mc-kv-row', className].filter(Boolean).join(' ')}>
+      <span>{k}</span>
+      <span>{v}</span>
+      <span>{r}</span>
+    </div>
+  )
+}
+
+/** `× AEGIS (product)…  2d` — glyph + ellipsised title + right meta. */
+export function WRow({ g, children, right, dim = false, href, onClick, title, className = '' }: {
+  g?: GlyphName
+  children: React.ReactNode
+  right?: React.ReactNode
+  dim?: boolean
+  href?: string
+  onClick?: () => void
+  /** Native tooltip, typically the untruncated title. */
+  title?: string
+  className?: string
+}) {
+  const cls = ['mc-wrow', dim ? 'dim' : '', href || onClick ? 'is-action' : '', className].filter(Boolean).join(' ')
+  const body = (
+    <>
+      {g ? <Glyph g={g} /> : <span aria-hidden="true" />}
+      <span className="t">{children}</span>
+      <span className="r">{right}</span>
+    </>
+  )
+  if (href) return <a className={cls} href={href} title={title}>{body}</a>
+  if (onClick) return <button type="button" className={cls} onClick={onClick} title={title}>{body}</button>
+  return <div className={cls} title={title}>{body}</div>
+}
+
 /* ── Foundation primitives ────────────────────────────────────────────────
    These are the component-owned surfaces and controls for new work. The
    legacy exports above intentionally keep their existing class contracts. */

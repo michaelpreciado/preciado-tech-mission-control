@@ -61,9 +61,34 @@ export const MX_NEON_BRIGHT = '#7cc0ff'
 export const MX_NEON_BRIGHT_RGB = '124,192,255'
 export const MX_NEON_DEEP = '#0b5fb8'
 
+/* Widget palette — measured from the 2026-11-09 launcher captures
+   (docs/widget-theme-reference.md). The friday theme IS this look: pure black
+   page, flat navy cards, one slate hairline, dodger-blue ink. No glow, no
+   gradient, no blur. Cyan is ONE highlight per card, never structure. */
+export const WIDGET = {
+  bg: '#000000', bgSoft: '#050505',
+  card: '#0A0F1A', card2: '#111827',          // card, nested/raised row
+  line: '#1E293B', lineDim: '#152033', lineStrong: '#334155',
+  accent: '#3B82F6', accentBright: '#60A5FA', accentDeep: '#1D4ED8',
+  cyan: '#00A3FF',                             // ONE highlight per card, never structure
+  text: '#FFFFFF', text2: '#94A3B8', text3: '#64748B', textSoft: '#CBD5E1',
+  segOff: '#111C33',                           // unfilled chart segment
+  iconBg: '#13273F',                           // circular icon wells
+} as const
+export const WIDGET_RGB = { accent: '59,130,246', accentBright: '96,165,250', card: '10,15,26', line: '30,41,59', cyan: '0,163,255', text: '255,255,255' } as const
+export const WIDGET_SEMANTIC = {
+  ok:    { hex: '#22C55E', ink: '#4ADE80' },   // "all clear" only
+  warn:  { hex: '#F59E0B', ink: '#FBBF24' },   // high usage (mem 86%, disk 87%)
+  error: { hex: '#EF4444', ink: '#F87171' },
+  info:  { hex: '#3B82F6', ink: '#60A5FA' },
+} as const
+export const WIDGET_RADIUS = { card: '16px', row: '10px', btn: '10px', input: '10px', pill: '999px', sm: '4px' } as const
+
 /* ── Type roles ───────────────────────────────────────────────────── */
 export const FONT = {
   display: 'var(--pt-font-sans)',
+  /* Sans is reserved for verdict numerals ("3% this week", "4", "71°"). */
+  verdict: 'var(--pt-font-sans)',
   /* --mbg-font-* are the next/font variables set on <html> in app/layout.tsx;
      the literal family names never match a self-hosted next/font face. */
   mono: 'var(--mbg-font-mono), "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace',
@@ -79,6 +104,7 @@ export const TYPE_SCALE = {
   xs:      '0.78125rem',
   '2xs':   '0.71875rem',
   kicker:  '0.75rem',
+  verdict: 'clamp(28px, 4vw, 44px)',
 } as const
 
 export const LINE_HEIGHT = { tight: 1.08, snug: 1.2, body: 1.65, ui: 1.5 } as const
@@ -100,8 +126,8 @@ export const BORDER = { dim: 0.15, base: 0.35, strong: 0.7, rule: 0.22 } as cons
 
 /* ── Surfaces — PT cinematic near-black ramp. */
 export const SURFACE = {
-  bg:         '#07080b',
-  bgSoft:     '#0b0d12',
+  bg:         '#000000',
+  bgSoft:     '#050505',
   surface:    'rgba(16,19,24,0.82)',
   surface2:   'rgba(16,19,24,0.9)',
   terminal:   'rgba(14,17,23,0.78)',
@@ -255,6 +281,12 @@ ${Object.entries(MATRIX).map(([name, value]) => `  --pt-mx-${name}: ${value};`).
   --mc-chart-quiet: rgba(var(--pt-dodger-rgb),0.5);
   --mc-chart-empty: rgba(255,255,255,0.08);
   --mc-chart-glow: 0 0 10px rgba(var(--pt-dodger-rgb),0.5);
+
+  /* widget primitives (.mc-segbar / .mc-hist / .mc-glyph) — palette-relative
+     fallbacks; the friday block pins them to the WIDGET values. */
+  --mc-seg-on: var(--mc-chart-emph); --mc-seg-off: var(--mc-chart-empty);
+  --mc-seg-warn: var(--pt-warn); --mc-seg-crit: var(--pt-error); --mc-seg-cyan: var(--pt-mx-cyan);
+  --pt-fs-verdict: ${TYPE_SCALE.verdict};
 
   /* status (reserved meaning, never categorical) */
   --mc-ok: ${SEMANTIC.ok.hex}; --mc-warn: ${SEMANTIC.warn.hex}; --mc-crit: ${SEMANTIC.error.hex};
@@ -421,38 +453,100 @@ export function buildDensityCss(): string {
 `
 }
 
-/** Emit the FRIDAY theme override block (accent-consistent CRT emphasis). */
+/** Emit the FRIDAY theme block — the launcher widget look (§1.1 of
+ * docs/polish-plan-2026-11-09.md). Every effect token resolves to none /
+ * transparent so the legacy rule blocks that still read them paint flat. The
+ * Launcher/Omarchy palettes ride data-palette at higher specificity and
+ * re-declare what they need; a custom /setup accent still overrides the accent. */
 export function buildFridayThemeCss(): string {
-  /* Mission Control's accent is dodger blue (NEON_DEFAULT). Periwinkle
-     (ACCENT_DEFAULT) is the client-site brand and stays the :root fallback for
-     non-friday themes only. A custom /setup accent still overrides this block. */
+  const w = WIDGET
+  const r = WIDGET_RGB
+  const s = WIDGET_SEMANTIC
+  const rad = WIDGET_RADIUS
   return `html[data-theme="friday"] {
-  --pt-neon-rgb: ${NEON_RGB};
-  --pt-glow-rgb: ${NEON_RGB};
-  --pt-neon-bright-rgb: ${MX_NEON_BRIGHT_RGB};
-  --pt-text-rgb: 244,247,251;
-  --pt-bg-tint: #0a0d16;
-  --pt-text: #f4f7fb;
-  --pt-text-high: #ffffff;
-  --pt-neon: ${NEON_DEFAULT};
-  --pt-neon-bright: ${MX_NEON_BRIGHT};
-  --pt-neon-deep: ${MX_NEON_DEEP};
-  --pt-neon-glow: rgba(var(--pt-glow-rgb),0.6);
-  --pt-neon-glow-soft: rgba(var(--pt-glow-rgb),0.2);
-  --pt-neon-wash: rgba(var(--pt-neon-rgb),0.08);
-  /* Hairlines are neutral, three tiers (MATRIX line-*): accent never paints structure. */
-  --pt-border: ${MATRIX['line']};
-  --pt-border-strong: ${MATRIX['line-strong']};
-  --pt-border-dim: ${MATRIX['line-subtle']};
-  --pt-rule: ${MATRIX['line-subtle']};
-  --pt-card-border: ${MATRIX['line']};
-  --pt-bg: #07080b;
-  --pt-bg-soft: #0b0d12;
-  --pt-bg-terminal: rgba(14,17,23,0.96);
-  --pt-glow-sm: 0 0 6px rgba(var(--pt-glow-rgb),0.55);
-  --pt-glow-md: 0 0 14px rgba(var(--pt-glow-rgb),0.5), 0 0 2px rgba(var(--pt-glow-rgb),0.85);
-  --pt-glow-text: 0 0 6px rgba(var(--pt-neon-bright-rgb),0.6), 0 0 14px rgba(var(--pt-glow-rgb),0.45);
-  --pt-scanline: repeating-linear-gradient(to bottom, rgba(0,0,0,.22) 0 1px, transparent 1px 3px);
+  color-scheme: dark;
+  /* accent */
+  --pt-neon: ${w.accent}; --pt-neon-rgb: ${r.accent}; --pt-neon-bright: ${w.accentBright}; --pt-neon-bright-rgb: ${r.accentBright};
+  --pt-neon-deep: ${w.accentDeep}; --pt-action: ${w.accent}; --pt-action-rgb: ${r.accent};
+  --pt-dodger: ${w.accent}; --pt-dodger-rgb: ${r.accent}; --pt-glow-rgb: ${r.accent};
+  --pt-neon-glow: transparent; --pt-neon-glow-soft: transparent; --pt-neon-wash: rgba(${r.accent},0.08);
+  /* surfaces */
+  --pt-bg: ${w.bg}; --pt-bg-soft: ${w.bgSoft}; --pt-bg-tint: ${w.bg};
+  --pt-surface: ${w.card}; --pt-surface-2: ${w.card2}; --pt-card-bg: ${w.card};
+  --pt-bg-terminal: ${w.card}; --pt-bg-terminal-solid: ${w.card};
+  --pt-bg-gradient: none;
+  /* text */
+  --pt-text: ${w.text}; --pt-text-high: ${w.text}; --pt-text-rgb: ${r.text};
+  --pt-text-dim: ${w.text2}; --pt-text-mute: ${w.text3};
+  /* lines — slate paints structure, accent never does */
+  --pt-border: ${w.line}; --pt-border-strong: ${w.lineStrong}; --pt-border-dim: ${w.lineDim}; --pt-rule: ${w.line};
+  --pt-card-border: ${w.line}; --pt-card-rim: none;
+  /* effects — all off */
+  --pt-glow-sm: none; --pt-glow-md: none; --pt-glow-lg: none; --pt-glow-text: none; --pt-glow-live: none;
+  --pt-shadow-window: none; --pt-scanline: none; --pt-scanline-opacity: 0;
+  /* radii */
+  --pt-r-sm: ${rad.sm}; --pt-r-md: ${rad.row}; --pt-r-lg: ${rad.card}; --pt-r-pill: ${rad.pill};
+  --pt-radius-card: ${rad.card}; --pt-radius-row: ${rad.row}; --pt-radius-btn: ${rad.btn}; --pt-radius-input: ${rad.input}; --pt-radius-pill: ${rad.pill};
+  --ob-radius-card: ${rad.card}; --ob-radius-control: ${rad.btn};
+  /* semantic */
+  --mc-ok: ${s.ok.hex}; --mc-warn: ${s.warn.hex}; --mc-crit: ${s.error.hex};
+  --pt-ok: ${s.ok.hex}; --pt-ok-ink: ${s.ok.ink}; --pt-warn: ${s.warn.hex}; --pt-warn-ink: ${s.warn.ink};
+  --pt-error: ${s.error.hex}; --pt-error-ink: ${s.error.ink}; --pt-info: ${s.info.hex}; --pt-info-ink: ${s.info.ink};
+  --pt-tl-red: ${s.error.hex}; --pt-tl-yellow: ${s.warn.hex}; --pt-tl-green: ${s.ok.hex};
+  /* mc-* / mp-* aliases */
+  --mc-bg: ${w.bg}; --mc-bg-2: ${w.bgSoft}; --mc-surface: ${w.card}; --mc-panel: ${w.card}; --mc-surface-2: ${w.card2};
+  --mc-ink: ${w.text}; --mc-ink-dim: ${w.textSoft}; --mc-ink-mute: ${w.text2}; --mc-ink-faint: ${w.text3};
+  --mc-line: ${w.line}; --mc-line-2: ${w.lineStrong}; --mc-neon: ${w.accent}; --mc-neon-bright: ${w.accentBright}; --mc-neon-2: ${w.accent};
+  --mc-neon-deep: ${w.accentDeep}; --mc-neon-rgb: ${r.accent}; --mc-bg-tint: ${w.bg}; --mc-glass: ${w.card}; --mc-glass-line: ${w.line};
+  --mp-bg: ${w.bg}; --mp-raised: ${w.bgSoft}; --mp-card: ${w.card}; --mp-ink: ${w.text}; --mp-ink-dim: ${w.textSoft};
+  --mp-ink-mute: ${w.text2}; --mp-ink-faint: ${w.text3}; --mp-line: ${w.line}; --mp-line-2: ${w.lineStrong};
+  --mp-accent: ${w.accent}; --mp-accent-rgb: ${r.accent};
+  /* chart language — var()-relative so the opt-in palettes keep their own hue */
+  --mc-chart-grid: ${w.lineDim}; --mc-chart-axis: var(--pt-text-mute); --mc-chart-ink: var(--pt-text-dim);
+  --mc-chart-emph: var(--pt-dodger); --mc-chart-quiet: var(--pt-neon-deep); --mc-chart-empty: ${w.segOff}; --mc-chart-glow: none;
+  /* glass vocabulary (--pt-mx-*) collapses to flat */
+  --pt-mx-void: ${w.bg}; --pt-mx-graphite: ${w.bg}; --pt-mx-carbon: ${w.bgSoft};
+  --pt-mx-cyan: ${w.cyan}; --pt-mx-sky: ${w.accent}; --pt-mx-cyan-deep: ${w.lineDim};
+  --pt-mx-glass: ${w.card}; --pt-mx-glass-hi: ${w.card2}; --pt-mx-glass-chrome: ${w.bg};
+  --pt-mx-glass-sheen: none; --pt-mx-glass-edge: none; --pt-mx-glass-rim: none;
+  --pt-mx-glass-shadow: none; --pt-mx-glass-shadow-hi: none; --pt-mx-glass-reflect: transparent;
+  --pt-mx-line-subtle: ${w.lineDim}; --pt-mx-line: ${w.line}; --pt-mx-line-strong: ${w.lineStrong};
+  --pt-mx-ink-head: ${w.text}; --pt-mx-ink: ${w.text}; --pt-mx-ink-2: ${w.text2}; --pt-mx-ink-meta: ${w.text3};
+  --pt-mx-head-glow: none; --pt-mx-grid-line: transparent; --pt-mx-neural-line: transparent;
+  /* matrix-blue.css (--mbg-*) and aurora.css (--aur-*) layers */
+  --mbg-void: ${w.bg}; --mbg-deck: ${w.card}; --mbg-deck-2: ${w.card2}; --mbg-rule: ${w.line}; --mbg-rule-strong: ${w.lineStrong};
+  --mbg-ink: ${w.text}; --mbg-ink-2: ${w.text2}; --mbg-ink-3: ${w.text3}; --mbg-dodger-ink: ${w.accentBright};
+  --mbg-amber: ${s.warn.hex}; --mbg-red: ${s.error.hex}; --mbg-green: ${s.ok.hex}; --mbg-cyan: ${w.cyan};
+  --mbg-edge: ${w.line}; --mbg-edge-hi: ${w.lineStrong}; --mbg-sheen: none; --mbg-inset: none;
+  --mbg-glass-1: ${w.card}; --mbg-glass-1-hover: ${w.card2}; --mbg-glass-2: ${w.card}; --mbg-glass-3: ${w.card}; --mbg-solid-3: ${w.card};
+  --aur-ink-0: ${w.bg}; --aur-ink-1: ${w.bgSoft}; --aur-ink-2: ${w.card}; --aur-ink-3: ${w.card2}; --aur-ink-4: ${w.lineDim};
+  --aur-bg: ${w.bg}; --aur-surface-hover: ${w.card2}; --aur-accent-strong: ${w.accentBright}; --aur-accent-deep: ${w.accentDeep};
+  --aur-accent-ink: ${w.bg}; --aur-accent-wash: rgba(${r.accent},0.08); --aur-accent-glow: transparent;
+  --aur-ok: ${s.ok.hex}; --aur-warn: ${s.warn.hex}; --aur-error: ${s.error.hex}; --aur-error-wash: rgba(239,68,68,0.10); --aur-stale: ${w.text3};
+  --aur-bloom-1: transparent; --aur-bloom-2: transparent; --aur-glass-bg: ${w.card}; --aur-glass-border: ${w.line};
+  --aur-highlight: none; --aur-fill-faint: rgba(${r.accent},0.06); --aur-now: ${w.text};
+  --aur-radius-sm: ${rad.row}; --aur-radius-md: ${rad.card}; --aur-radius-lg: ${rad.card};
+  /* globals.css --ob-* / --glass-* / --vg-* */
+  --ob-bg-0: ${w.bg}; --ob-bg-1: ${w.bgSoft}; --ob-glass: ${w.card}; --ob-border: ${w.line}; --ob-glow: none;
+  --ob-surface-highlight: none; --ob-page-ambience: none; --ob-text: ${w.text}; --ob-text-2: ${w.textSoft}; --ob-text-3: ${w.text2}; --ob-text-4: ${w.text3};
+  --glass-1-fill: ${w.bg}; --glass-1-rim: ${w.line}; --glass-1-shadow: none; --glass-1-sheen: none; --glass-1-blur: none;
+  --glass-2-fill: ${w.card}; --glass-2-rim: ${w.line}; --glass-2-shadow: none; --glass-2-sheen: none; --glass-2-blur: none;
+  --glass-3-fill: ${w.card}; --glass-3-rim: ${w.lineStrong}; --glass-3-shadow: none; --glass-3-sheen: none; --glass-3-blur: none; --glass-3-scrim-blur: none;
+  --vg-electric-glow: transparent; --vg-violet-glow: transparent;
+  --vg-ok-glow: transparent; --vg-warn-glow: transparent; --vg-danger-glow: transparent; --vg-info-glow: transparent; --vg-money-glow: transparent;
+  /* buttons: flat */
+  --pt-btn-glass-fill: ${w.card}; --pt-btn-glass-fill-hover: ${w.card2}; --pt-btn-glass-fill-disabled: ${w.bgSoft};
+  --pt-btn-glass-neutral-top: transparent; --pt-btn-glass-neutral-bottom: transparent;
+  --pt-btn-glass-primary-top: ${w.accent}; --pt-btn-glass-primary-bottom: ${w.accent};
+  --pt-btn-glass-ink: ${w.text}; --pt-btn-glass-ink-disabled: ${w.text3};
+  --pt-btn-glass-line-subtle: ${w.lineDim}; --pt-btn-glass-line-base: ${w.line}; --pt-btn-glass-line-strong: ${w.lineStrong};
+  --pt-btn-glass-rim: none; --pt-btn-glass-rim-lit: none; --pt-btn-glass-shadow: none; --pt-btn-glass-bloom: none;
+  --pt-btn-glass-press-shadow: none; --pt-btn-glass-blur: none; --pt-btn-glass-focus: ${w.accent};
+  /* compat alias for the undefined var still read by CostsPanel (Lane B removes the usages) */
+  --font-mono: var(--pt-font-mono);
+  /* type */
+  --pt-fs-verdict: ${TYPE_SCALE.verdict};
+  --pt-ls-kicker: 0.08em;   /* widgets are lowercase mono; kickers are quiet */
   font-feature-settings: "ss01","zero";
 }
 `

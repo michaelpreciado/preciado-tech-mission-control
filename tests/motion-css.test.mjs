@@ -141,7 +141,7 @@ test('rain and accent tokens are unchanged', () => {
   assert.match(tokens, /NEON_DEFAULT = '#1e90ff'/)
   assert.match(tokens, /ACCENT_DEFAULT = '#9db4ec'/)
   assert.match(tokens, /ACTION_DEFAULT = '#75b9ff'/)
-  assert.match(tokens, /bg:\s+'#07080b'/)
+  assert.match(tokens, /bg:\s+'#000000'/)
 })
 
 test('containment is applied by exact owners, not class-substring matching', () => {

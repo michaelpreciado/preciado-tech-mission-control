@@ -258,8 +258,8 @@ html[data-theme="friday"] .mc-main::after {
   mix-blend-mode: screen;
 }
 /* Heading + value glow. Headings are white ink (Blue Matrix Glass); values keep the bright accent. */
-html[data-theme="friday"] h1,
-html[data-theme="friday"] h2 { color: var(--pt-mx-ink-head); }
+:where(html[data-theme="friday"]) h1,
+:where(html[data-theme="friday"]) h2 { color: var(--pt-mx-ink-head); }
 html[data-theme="friday"] .mc-stat-val,
 html[data-theme="friday"] .mc-cal-title,
 html[data-theme="friday"] .mc-visual-head .mc-vh-title {
@@ -9894,3 +9894,182 @@ html[data-theme="friday"] .mc-main::-webkit-scrollbar-thumb { background: rgba(2
   html[data-theme="friday"] body [data-glass][data-glass-interactive] { transition: none; }
   html[data-theme="friday"] body [data-glass][data-glass-interactive]:hover { transform: none; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   WIDGET PRIMITIVES — docs/polish-plan-2026-11-09.md §1.5
+   The launcher-widget vocabulary every route builds from. React wrappers:
+   components/ui.tsx (Prompt, Divider, Verdict, Glyph, Kv, KvRow, WRow) and
+   components/charts (SegBar, MiniHist). Values come from the token block
+   (lib/tokens.ts) so the opt-in palettes reskin them too. Flat by contract:
+   no shadow, gradient, blur or glow on any of these.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* card:  <section class="mc-widget"> */
+.mc-widget {
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--pt-card-border);
+  border-radius: var(--pt-radius-card, var(--pt-r-lg));
+  background: var(--pt-card-bg);
+  color: var(--pt-text-dim);
+  font: 400 13px/1.5 var(--pt-font-mono);
+}
+.mc-widget--tight { padding: 10px 12px; }
+
+/* prompt header / footer:  desk:~$ kanban                       ↻ 29s */
+.mc-prompt {
+  display: flex;
+  align-items: baseline;
+  gap: 1ch;
+  min-width: 0;
+  margin: 0 0 8px;
+  color: var(--pt-neon);
+  font: 400 13px/1.5 var(--pt-font-mono);
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+}
+.mc-prompt-path { flex: none; }
+.mc-prompt-path b { font-weight: 400; }
+.mc-prompt-cmd { min-width: 0; overflow: hidden; color: var(--pt-neon-bright); text-overflow: ellipsis; }
+.mc-prompt .meta { flex: none; margin-left: auto; color: var(--pt-text-mute); }
+.mc-prompt--foot { margin: 10px 0 0; }
+
+/* ascii divider:  -- tasks 3/4 ------------------------------ */
+.mc-divider {
+  display: flex;
+  align-items: baseline;
+  min-width: 0;
+  margin: 10px 0 6px;
+  overflow: hidden;
+  color: var(--pt-border-strong);
+  font: 400 13px/1.5 var(--pt-font-mono);
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+}
+.mc-divider::before { content: "-- "; flex: none; white-space: pre; }
+.mc-divider-label { flex: none; color: var(--pt-text-mute); }
+.mc-divider-label::after { content: " "; white-space: pre; }
+.mc-divider::after {
+  content: "--------------------------------------------------------------------------------------------------------";
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* verdict numeral — the ONLY sans on a card:  3% this week */
+.mc-verdict {
+  margin: 0;
+  color: var(--pt-text-high);
+  font-family: var(--pt-font-sans);
+  font-size: var(--pt-fs-verdict);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+.mc-verdict small {
+  margin-left: .6ch;
+  color: var(--pt-text-dim);
+  font: 400 13px/1 var(--pt-font-mono);
+  letter-spacing: 0;
+  vertical-align: middle;
+}
+.mc-verdict[data-tone="warn"] { color: var(--pt-warn-ink); }
+.mc-verdict[data-tone="crit"] { color: var(--pt-error-ink); }
+.mc-verdict[data-tone="ok"] { color: var(--pt-ok-ink); }
+
+/* key/value rows:  done   3 today   67 wk */
+.mc-kv,
+.mc-kv-row {
+  display: grid;
+  grid-template-columns: var(--kv-k, 7ch) minmax(0, 1fr) auto;
+  gap: 0 1ch;
+  min-width: 0;
+  color: var(--pt-text-dim);
+  font-family: var(--pt-font-mono);
+  line-height: 1.7;
+}
+.mc-kv > .mc-kv-row { display: contents; }
+.mc-kv > :not(.mc-kv-row):first-child,
+.mc-kv-row > :first-child { color: var(--pt-text-mute); }
+.mc-kv > :not(.mc-kv-row):last-child,
+.mc-kv-row > :last-child { color: var(--pt-text-high); text-align: right; font-variant-numeric: tabular-nums; }
+.mc-kv-row > * { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* segmented bar:  <div class="mc-segbar" style="--n:20"><i class="on"></i>…</div> */
+.mc-segbar {
+  display: grid;
+  grid-template-columns: repeat(var(--n, 20), minmax(0, 1fr));
+  gap: 2px;
+  min-width: 0;
+  height: 12px;
+}
+.mc-segbar > i { border-radius: 1px; background: var(--mc-seg-off); }
+.mc-segbar > i.on { background: var(--mc-seg-on); }
+.mc-segbar[data-tone="warn"] > i.on { background: var(--mc-seg-warn); }
+.mc-segbar[data-tone="crit"] > i.on { background: var(--mc-seg-crit); }
+.mc-segbar[data-tone="cyan"] > i.on { background: var(--mc-seg-cyan); }
+.mc-segbar--thin { height: 4px; }
+
+/* mini histogram:  <div class="mc-hist" style="--n:14"><i style="--v:.3"></i>…</div> */
+.mc-hist {
+  display: grid;
+  grid-template-columns: repeat(var(--n, 14), minmax(0, 1fr));
+  align-items: end;
+  gap: 2px;
+  min-width: 0;
+  height: 22px;
+}
+.mc-hist > i { height: max(2px, calc(var(--v, 0) * 100%)); border-radius: 1px 1px 0 0; background: var(--mc-seg-on); }
+.mc-hist > i[data-zero] { height: 2px; background: var(--mc-seg-off); }
+
+/* dot progress (day / week / month / year rows) */
+.mc-dots { display: flex; flex-wrap: wrap; gap: 3px; }
+.mc-dots > i { width: 5px; height: 5px; border-radius: 50%; background: var(--pt-border); }
+.mc-dots > i.on { background: var(--pt-text-high); }
+
+/* status glyph:  <i class="mc-glyph" data-g="run|idle|fail|err|retry|up|down|ok|live|todo"></i> */
+.mc-glyph {
+  display: inline-block;
+  min-width: 1.5ch;
+  font-family: var(--pt-font-mono);
+  font-style: normal;
+  line-height: 1;
+  text-align: center;
+}
+.mc-glyph::before { content: "·"; color: var(--pt-text-mute); }
+.mc-glyph[data-g="run"]::before   { content: "▶"; color: var(--pt-neon); }
+.mc-glyph[data-g="idle"]::before  { content: "·"; color: var(--pt-text-mute); }
+.mc-glyph[data-g="fail"]::before  { content: "×"; color: var(--pt-warn); }
+.mc-glyph[data-g="err"]::before   { content: "×"; color: var(--pt-error); }
+.mc-glyph[data-g="retry"]::before { content: "↻"; color: var(--pt-neon); }
+.mc-glyph[data-g="up"]::before    { content: "↑"; color: var(--pt-neon); }
+.mc-glyph[data-g="down"]::before  { content: "↓"; color: var(--pt-neon); }
+.mc-glyph[data-g="ok"]::before    { content: ">"; color: var(--pt-neon); }
+.mc-glyph[data-g="live"]::before  { content: "●"; color: var(--mc-seg-cyan); }
+.mc-glyph[data-g="todo"]::before  { content: "○"; color: var(--pt-text-dim); }
+
+/* list row inside a widget:  ×  AEGIS (product)…   2d */
+.mc-wrow {
+  display: grid;
+  grid-template-columns: 1.5ch minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0 1ch;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--pt-text-high);
+  font: 400 13px/1.7 var(--pt-font-mono);
+  text-align: left;
+  text-decoration: none;
+}
+.mc-wrow .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mc-wrow .r { color: var(--pt-neon); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mc-wrow.dim { color: var(--pt-text-dim); }
+.mc-wrow.is-action { cursor: pointer; border-radius: var(--pt-r-sm); }
+.mc-wrow.is-action:hover .t { color: var(--pt-neon-bright); }
+.mc-wrow.is-action:focus-visible { outline: 2px solid var(--pt-neon); outline-offset: 2px; }

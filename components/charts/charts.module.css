@@ -22,7 +22,7 @@
 }
 .bar > span { display: block; min-height: 1px; opacity: .72; }
 .zero { height: 2px; background: var(--mc-chart-empty); border-radius: 1px; }
-.emph { background: var(--mc-chart-emph); box-shadow: var(--mc-chart-glow); }
+.emph { background: var(--mc-chart-emph); }
 .emph > span { opacity: 1; }
 
 .axis { display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; line-height: 1; color: var(--mc-chart-axis); }
