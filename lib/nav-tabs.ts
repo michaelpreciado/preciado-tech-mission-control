@@ -31,8 +31,6 @@ export const NAV: NavSection[] = [
     { id: '/chat', label: 'Chat', icon: 'chat' },
   ]},
   { section: 'Operations', items: [
-    { id: '/projects', label: 'Clients', icon: 'projects' },
-    { id: '/content-creation', label: 'Content Creation', icon: 'content' },
     { id: '/calendar', label: 'Calendar', icon: 'calendar' },
   ]},
   { section: 'Insight', items: [
