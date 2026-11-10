@@ -67,8 +67,22 @@ for (const [W, H] of WIDTHS) {
       const ctrls = [...document.querySelectorAll('a[href], button, [role="button"], [role="tab"], input:not([type=hidden]), select, textarea, summary')]
         .filter(el => visible(el) && !el.closest('[aria-hidden="true"], [inert]'))
         .filter(el => { const b = el.getBoundingClientRect(); return b.bottom > 0 && b.top < vh && b.right > 0 && b.left < vw })
-        // Content scrolled under the opaque fixed tab bar is occluded, not adjacent to it.
-        .filter(el => { const bar = document.querySelector('[data-mobile-nav]'); if (!bar || bar.contains(el)) return true; const top = bar.getBoundingClientRect().top; return top >= vh || el.getBoundingClientRect().bottom <= top + 0.5 })
+        // Occlusion filter. Content scrolled under the opaque fixed tab bar is not
+        // adjacent to it — and neither is content clipped by the shell's ≤820px
+        // scroll-pane inset (app/styles/fold.css insets `.mc-main` by the bar height
+        // + 8px, so the pane's visible bottom edge always sits ≥8px above the bar top
+        // and content can never occupy the <8px band). A control cut off by that edge
+        // is occluded by the shell, not a target flush against the bar.
+        .filter(el => {
+          const bar = document.querySelector('[data-mobile-nav]')
+          if (!bar || !bar.offsetHeight || bar.contains(el)) return true
+          const barTop = bar.getBoundingClientRect().top
+          if (barTop >= vh) return true
+          const b = el.getBoundingClientRect()
+          if (b.bottom > barTop + 0.5) return false        // dips under the opaque bar
+          const pane = document.querySelector('.mc-main')
+          return !pane || b.bottom <= pane.getBoundingClientRect().bottom + 0.5
+        })
         .filter(el => {
           if (el.tagName !== 'A') return true
           const p = el.parentElement

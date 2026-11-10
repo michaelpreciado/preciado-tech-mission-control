@@ -34,7 +34,22 @@
   html body .mc-shell .mc-main {
     width: 100%;
     margin-left: 0;
-    padding-bottom: calc(var(--mbg-tabbar-h) + 28px + env(safe-area-inset-bottom, 0px));
+    /* HC-1 (mobile gap<8 audit class): the tab bar is `position: fixed` and
+       overlays the pane, so a content control could scroll to sit flush against
+       the bar links (2–3px, a real mis-tap risk). Inset the scrollport by the
+       bar footprint (60px + 1px border = 61px) plus a 10px buffer (+ safe area),
+       so the pane's visible bottom edge sits ~11px above the bar top and content
+       can never occupy the <8px band. The bar is opaque on the page background,
+       so the ~11px strip is invisible; the last row only needs its own breathing
+       room, which is the small padding below. */
+    height: auto;
+    margin-bottom: calc(var(--mbg-tabbar-h) + 12px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  }
+  html body .mc-shell.is-home .mc-main {
+    height: auto;
+    margin-bottom: calc(var(--mbg-tabbar-h) + 12px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   }
 }
 

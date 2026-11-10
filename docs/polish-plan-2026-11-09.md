@@ -628,3 +628,26 @@ Preconditions: `npm test` green and the in-flight cleanup committed. All lanes w
 ### 8.5 Hotspot rule
 
 `app/globals.css` is still touched by every lane. After Lane D it is closed to new writes: all round-2 additions go into route/module CSS. If a diff to `globals.css` shows up on any card other than D, flag it on the card before merging.
+
+### 8.6 HC-1 — mobile `gap<8` shell class closed (card `t_fdc990e1`)
+
+**Decision: option 1 (shell fix + audit exemption), implemented.** Lane F's residual `gap<8` class was a property of the fixed `MobileChrome` tab bar overlaying the scrolling `.mc-main` pane, not of any route's markup: a content control that happened to rest 2–3px above the bar was scored as a <8px tap gap against every bar link because the audit's occlusion filter only dropped content whose box dipped *below* the bar top.
+
+- **Shell fix** — `app/styles/fold.css`, `@media (max-width: 820px)`: `.mc-main` now reserves the bar footprint plus a buffer via `margin-bottom: calc(var(--mbg-tabbar-h) + 12px + env(safe-area-inset-bottom))` (bar = 60px + 1px border = 61px), so the pane's visible bottom edge sits ~11px above the bar top and content **can never occupy the <8px band**. Bottom padding drops from 88px to `calc(20px + env(safe-area-inset-bottom))` because the inset now clears the bar (the last row still rests ~31px above the bar, matching the previous ~27px rhythm). Applies to every route, home included.
+- **Audit change** — `scripts/audit-mobile-matrix.mjs`: the occlusion filter now also drops a control whose box is clipped by the pane's bottom edge (`b.bottom > .mc-main bottom`), and guards on `bar.offsetHeight` so a `display:none` bar (desktop widths) is a no-op instead of dropping every control. Rationale: content clipped by the shell inset is occluded by the shell, exactly like content under the bar — it is not a target flush against the bar.
+
+**Result** (rebuilt `.next`, service restarted, `node scripts/audit-mobile-matrix.mjs --only 360,390,414,430`):
+
+| scope | before | after |
+|---|---|---|
+| four Lane F routes (`/memory`, `/kanban`, `/crew`, `/styleguide`) × 4 widths, `gap<8` | 15 | **0** |
+| all 18 routes × 4 widths, `gap<8` | 66 | 31 |
+| `overflow` / `tap<44` / `text<12px` / `nav-cover` | 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 |
+
+The bar-adjacency class is **closed** (0) on all four Lane F routes, and the shell fix also cleared the same band on `/setup` (9), `/deliverables` (5) and `/content-creation` (1).
+
+**Residual 31 pairs — waived, not shell adjacency.** Every remaining pair is content ↔ content:
+- `/chat` session/bot list rows (2–4px vertical gaps between dense list buttons) — 29 pairs across the four widths; owned by Lane E's `/chat` widget-head route, out of scope here.
+- `/` and `/login` boot-overlay run-status chips (`15:47 · run failed ↔ 16:47 · run failed`, 7px) — 1 pair each at 360 only; a tight timeline strip in the shared boot legend, pre-existing at baseline.
+
+Neither is a property of the fixed bar or the scroll pane, so neither is closed by this decision; both are recorded as known route-content pairs. `gap<8` for the covered class therefore reads **0 on the four Lane F routes** per the task's acceptance.
