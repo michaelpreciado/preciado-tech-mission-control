@@ -26,7 +26,7 @@
     padding-right: max(var(--mc-gutter), env(safe-area-inset-right));
   }
   html body .ob-sidebar { transition: none; }
-  html[data-theme='friday'] body .mc-shell .mc-main:not(:has(.ob-home)) { --mc-gutter: 18px; }
+  html[data-theme='friday'] body .mc-shell .mc-main { --mc-gutter: 18px; }
 }
 
 /* ── Phones and small tablets: full width, clear of the tab bar ── */
@@ -44,17 +44,17 @@
 
 /* ── Wide desktop / 4K: readable column, sidebar unchanged ── */
 @media (min-width: 1900px) {
-  html[data-theme='friday'] body .mc-shell .mc-main:not(:has(.ob-home)) {
+  html[data-theme='friday'] body .mc-shell .mc-main {
     --mc-gutter: max(14px, calc((100vw - var(--mc-rail) - var(--mc-readable-max)) / 2));
   }
-  html body .mc-shell:has(.ob-sidebar--collapsed) .mc-main:not(:has(.ob-home)) {
+  html body .mc-shell:has(.ob-sidebar--collapsed) .mc-main {
     --mc-gutter: max(14px, calc((100vw - var(--mc-fold-rail) - var(--mc-readable-max)) / 2));
   }
 }
 
 /* ── Progressive enhancement: keep content off the hinge (book posture) ── */
 @media (horizontal-viewport-segments: 2) and (min-width: 821px) and (max-width: 1400px) {
-  html body .mc-shell .mc-main > *:not(.ob-home) {
+  html body .mc-shell .mc-main > * {
     max-width: calc(env(viewport-segment-right 0 0, 100vw) - var(--mc-fold-rail) - 2 * var(--mc-gutter));
   }
 }

@@ -321,7 +321,7 @@ export function ContentCreationBoard() {
               aria-label="Filter by project"
             >
               <option value="all">project: all</option>
-              {projects.map(p => <option key={p} value={p}>{p}</option>)}
+              {projects.map(p => <option key={p} value={p}>{p.length > 28 ? `${p.slice(0, 27)}…` : p}</option>)}
             </select>
             <select
               className="mc-content-select"

@@ -2,12 +2,7 @@
 
 /* Cross-domain view primitives. Kept dependency-free on purpose: every page
    pulls this, so anything heavy belongs in the domain file that needs it. */
-import { Button, Glyph } from '../ui'
-
-/** Agent status as a widget glyph: `▶` active, amber `×` attention, `·` otherwise. LEDs are gone. */
-export function StatusDot({ status }: { status?: string }) {
-  return <Glyph g={status === 'active' ? 'run' : status === 'attention' ? 'fail' : 'idle'} label={statusLabel(status).toLowerCase()} />
-}
+import { Button } from '../ui'
 
 export function statusLabel(s?: string) {
   if (s === 'active') return 'ACTIVE'

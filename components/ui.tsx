@@ -98,45 +98,6 @@ export const Button = React.forwardRef<HTMLButtonElement | HTMLAnchorElement, Bu
   },
 )
 
-export function SectionHead({ label, pre, post }: { label: string; pre?: React.ReactNode; post?: React.ReactNode }) {
-  return (
-    <div className="mc-ascii-head">
-      {pre ? <span>{pre}</span> : null}
-      <span className="rule" />
-      <span className="label">{label}</span>
-      <span className="rule" />
-      {post ? <span>{post}</span> : null}
-    </div>
-  )
-}
-
-/** Adds inert corner marks to a DOM surface or Window without a layout wrapper. */
-export function TFrame({ children }: {
-  children: React.ReactElement<{ className?: string; children?: React.ReactNode; frameCorners?: React.ReactNode }>
-}) {
-  const className = [children.props.className, 'tframe-surface'].filter(Boolean).join(' ')
-  const corners = ['tl', 'tr', 'bl', 'br'].map(corner => (
-    <span key={`tframe-${corner}`} className={`tframe-tick tframe-${corner}`} aria-hidden="true" />
-  ))
-  // Window keeps decorations outside its scroll body when floated into a portal.
-  if (children.type === Window) return React.cloneElement(children, { className, frameCorners: corners })
-  return React.cloneElement(children, { className }, children.props.children, ...corners)
-}
-
-export function SectionRule({ label, index, post, id }: {
-  label: string; index?: number; post?: React.ReactNode; id?: string
-}) {
-  return <div className="srule-section">
-    <div className="srule-line">
-      <span className="srule-stroke srule-lead" aria-hidden="true" />
-      <h2 className="srule-label" id={id}>{label}</h2>
-      <span className="srule-stroke" aria-hidden="true" />
-      {index != null && <span className="srule-index" aria-hidden="true">[{String(index).padStart(2, '0')}]</span>}
-    </div>
-    {post && <div className="srule-meta">{post}</div>}
-  </div>
-}
-
 /* ── Floating window support ──────────────────────────────
    Every panel can pop out into a draggable, resizable window layered over
    the deck (desktop only). Floats portal to <body> because the themed
@@ -357,11 +318,6 @@ export function EmptyTerminal({ label }: { label: string }) {
       <div style={{ fontSize: 12, color: 'var(--pt-text-mute)' }}>{label.toLowerCase()}</div>
     </div>
   )
-}
-
-/* Legacy aliases for backward compat */
-export function SectionTitle({ title, right }: { title: string; right?: React.ReactNode }) {
-  return <SectionHead label={title.toUpperCase()} post={right} />
 }
 
 export function Badge({ children, tone = 'blue' }: { children: React.ReactNode; tone?: string }) {

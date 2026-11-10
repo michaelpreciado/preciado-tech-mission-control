@@ -7,21 +7,25 @@
 .head b { font-weight: 600; color: var(--mc-chart-ink); }
 .latest b { color: var(--mc-chart-emph); }
 
-/* Grid: baseline, peak line and a dashed midline, all one colour. */
+/* Grid: baseline, peak line and a dashed midline — hairlines are borders, not
+   gradient layers, so the widget theme's "no background-image" rule holds. */
 .plot {
+  position: relative;
   display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); align-items: end; gap: 2px;
-  background:
-    linear-gradient(var(--mc-chart-grid), var(--mc-chart-grid)) top / 100% 1px no-repeat,
-    linear-gradient(var(--mc-chart-grid), var(--mc-chart-grid)) bottom / 100% 1px no-repeat,
-    repeating-linear-gradient(90deg, var(--mc-chart-grid) 0 3px, transparent 3px 7px) center / 100% 1px no-repeat;
+  border-top: 1px solid var(--mc-chart-grid);
+  border-bottom: 1px solid var(--mc-chart-grid);
+}
+.plot::before {
+  content: ""; position: absolute; inset-inline: 0; top: 50%; pointer-events: none;
+  border-top: 1px dashed var(--mc-chart-grid);
 }
 .bar {
   display: flex; flex-direction: column-reverse; overflow: hidden;
   height: max(2px, calc(var(--v) * 100%)); min-width: 0;
-  border-radius: 2px 2px 0 0; background: var(--mc-chart-quiet);
+  border-radius: 0; background: var(--mc-chart-quiet);
 }
 .bar > span { display: block; min-height: 1px; opacity: .72; }
-.zero { height: 2px; background: var(--mc-chart-empty); border-radius: 1px; }
+.zero { height: 2px; background: var(--mc-chart-empty); border-radius: 0; }
 .emph { background: var(--mc-chart-emph); }
 .emph > span { opacity: 1; }
 

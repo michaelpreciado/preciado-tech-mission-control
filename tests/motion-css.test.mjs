@@ -83,7 +83,7 @@ test('hidden-until-animated elements have data-motion reduced and off fallbacks'
       for (const mode of ['reduced', 'off']) if (new RegExp(`\\[data-motion=["']${mode}["']\\]`).test(sel)) fallbacks[mode].push(sel)
     }
   }
-  assert.ok(stranded.length >= 8, `scanner found the launch/boot rules (${stranded.length})`)
+  assert.ok(stranded.length >= 1, `no hidden-until-animated base found (${stranded.length})`)
   for (const { base } of stranded) {
     for (const mode of ['reduced', 'off']) {
       assert.ok(fallbacks[mode].some(f => selectorMatches(f, base)), `${base} lacks a data-motion='${mode}' fallback`)
@@ -94,25 +94,13 @@ test('hidden-until-animated elements have data-motion reduced and off fallbacks'
 test("hidden-until-animated elements reach their visible end state under OS prefers-reduced-motion", () => {
   assert.match(strip(read('components/MotionVisibility.css')), /@media \(prefers-reduced-motion: reduce\) \{[^}]*animation: none !important;/, 'OS blanket animation kill is present')
   const stranded = strandedBases()
-  assert.ok(stranded.length >= 8, `scanner found the launch/boot rules (${stranded.length})`)
+  assert.ok(stranded.length >= 1, `no hidden-until-animated base found (${stranded.length})`)
   const os = allCss.flatMap(f => osReducedMotionRules(strip(read(f))))
   for (const { base, needs } of stranded) {
     const matching = os.filter(r => selectorMatches(r.sel, base))
     for (const { prop, end } of needs) {
       assert.ok(matching.some(r => end.test(r.body)), `${base} is not forced to a visible ${prop} end state under prefers-reduced-motion: reduce`)
     }
-  }
-})
-
-test('launch film fallback forces the visible end state', () => {
-  for (const mode of ['reduced', 'off']) {
-    const block = strip(globals).match(new RegExp(`html\\[data-motion='${mode}'\\] :is\\(([^)]+)\\)`))
-    assert.ok(block, mode)
-    for (const cls of ['.launch-letter', '.launch-sub', '.launch-meta', '.launch-data', '.launch-final', '.launch-chart-dot', '.launch-chart-line', '.launch-seam']) {
-      assert.ok(block[1].includes(cls), `${mode} ${cls}`)
-    }
-    assert.match(strip(globals), new RegExp(`html\\[data-motion='${mode}'\\] \\.launch-chart-line[^{]*\\{ stroke-dashoffset: 0; \\}`))
-    assert.match(strip(globals), new RegExp(`html\\[data-motion='${mode}'\\] \\.boot-draw-path[^{]*\\{ animation: none; stroke-dashoffset: 0; \\}`))
   }
 })
 
@@ -262,45 +250,4 @@ test('nothing in the app depends on transitionend / animationend events', () => 
   }
   for (const dir of ['app', 'components', 'lib', 'public']) walk(dir)
   assert.deepEqual(found, [])
-})
-
-// ---- launch film layout: the data row must wrap inside the film, not spill out of the viewport ----
-const globalsRules = rules(strip(globals))
-const ownRules = sel => globalsRules.filter(r => r.sel.split(',').map(s => s.trim()).includes(sel))
-// the layout rule, not the reduced-motion end-state overrides that also name the same class
-const baseRule = sel => {
-  const base = ownRules(sel).filter(r => /(?:^|[;\s])(?:display|width)\s*:/.test(r.body))
-  assert.equal(base.length, 1, `${sel} has exactly one layout rule`)
-  return base[0]
-}
-const declaration = (body, prop) => (body.match(new RegExp(`(?:^|[;\\s])${prop}\\s*:\\s*([^;]+)`)) || [])[1]?.trim()
-
-test('launch data row wraps within the film container', () => {
-  const { body } = baseRule('.launch-data')
-  assert.equal(declaration(body, 'flex-wrap'), 'wrap')
-  assert.equal(declaration(body, 'max-width'), '100%')
-  assert.match(declaration(body, 'row-gap') ?? '', /^\d+px$/)
-  assert.ok(body.indexOf('row-gap') > body.indexOf('gap: clamp'), 'row-gap must follow the gap shorthand or it is overwritten')
-})
-
-test('launch chart is bounded by the space it has', () => {
-  assert.equal(declaration(baseRule('.launch-chart').body, 'max-width'), '100%')
-})
-
-test('launch layout fix keeps original full-mode styling and does not clip or hide', () => {
-  const row = baseRule('.launch-data')
-  assert.equal(declaration(row.body, 'display'), 'flex')
-  assert.equal(declaration(row.body, 'align-items'), 'flex-end')
-  assert.equal(declaration(row.body, 'justify-content'), 'center')
-  assert.equal(declaration(row.body, 'gap'), 'clamp(16px, 4vw, 34px)')
-  assert.match(declaration(row.body, 'animation'), /^launch-fade 700ms ease 2400ms both$/)
-  const chart = baseRule('.launch-chart')
-  assert.equal(declaration(chart.body, 'width'), 'min(320px, 68vw)')
-  assert.equal(declaration(chart.body, 'height'), '64px')
-  assert.equal(declaration(chart.body, 'overflow'), 'visible')
-  for (const sel of ['.launch-film', '.launch-data', '.launch-stat', '.launch-chart']) {
-    for (const r of ownRules(sel)) {
-      assert.doesNotMatch(r.body, /overflow(?:-x)?\s*:\s*(?:hidden|clip)|display\s*:\s*none|visibility\s*:\s*hidden|clip-path/, `${sel} must not hide or clip overflow`)
-    }
-  }
 })

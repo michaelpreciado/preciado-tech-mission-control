@@ -4,7 +4,12 @@
    tokens with enough specificity to win. Green is "all clear" only, so the studio actions
    take the primary accent. Mono, no glow / gradient / 1.5px neon borders. */
 .content { display: grid; gap: 12px; min-width: 0; font-family: var(--pt-font-mono); }
-.nav { display: flex; flex-wrap: wrap; gap: 8px; }
+.nav { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+/* grid items + toolbar selects must shrink below their min-content: the project
+   filter's option labels are full idea strings (95+ chars) and native <select>
+   text is unbreakable, so min-width:auto pinned the .mc-main track to 496px. */
+:global(.mc-main) .content > section { min-width: 0; }
+:global(.mc-main) .content :global(.mc-content-select) { min-width: 0; }
 .nav a { display: inline-flex; align-items: center; min-height: 44px; }
 
 :global(.mc-main) .content :global(.mc-pipe-card),

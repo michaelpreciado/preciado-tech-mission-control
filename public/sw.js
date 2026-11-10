@@ -34,7 +34,7 @@ self.addEventListener('fetch', (event) => {
 
   const { pathname } = url
   const isNavigation = req.mode === 'navigate'
-  const isStaticAsset = pathname.startsWith('/_next/static/') || /\.(?:png|jpg|svg|webp|ico|woff2?|css|js)$/.test(pathname) && pathname !== '/rain.js'
+  const isStaticAsset = pathname.startsWith('/_next/static/') || /\.(?:png|jpg|svg|webp|ico|woff2?|css|js)$/.test(pathname)
 
   if (isNavigation) {
     // Network-first: return the live shell; fall back to the cached app on failure.

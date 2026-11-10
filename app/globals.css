@@ -153,23 +153,6 @@ html[data-theme="friday"] .mc-window-title .mc-win-tag { color: var(--pt-neon-br
 
 /* Stats — segmented LCD plates */
 /* Section header — Vault-Tec angle brackets */
-html[data-theme="friday"] .mc-ascii-head {
-  font-size: var(--vg-fs-min);
-  letter-spacing: 0.32em;
-  padding: 6px 0;
-  border-top: 1px solid var(--pt-border);
-  border-bottom: 1px solid var(--pt-border);
-  margin: 26px 0 14px;
-  color: var(--pt-text);
-}
-html[data-theme="friday"] .mc-ascii-head .rule { border-top: none; }
-html[data-theme="friday"] .mc-ascii-head .label {
-  /* --pt-neon-bright on --pt-neon-deep measured 3.14:1 — below the 4.5:1 that
-     11px text needs. --pt-text-high on the same fill is 5.48:1. */
-  color: var(--pt-text-high);
-  padding: 0 12px;
-  background: var(--pt-neon-deep);
-}
 
 /* Bars — segmented Pip-Boy progress */
 
@@ -525,37 +508,10 @@ body {
 
 /* ── LEDs (retired) ─────────────────────────────────────
    Kept only as a flat 6px dot for callers not yet on .mc-glyph. No pulse. */
-.mc-led {
-  display: inline-block;
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: var(--pt-neon);
-  flex-shrink: 0;
-}
-.mc-led.amber { background: var(--pt-warn); }
-.mc-led.green { background: var(--pt-ok); }
-.mc-led.red { background: var(--pt-error); }
-.mc-led.blue { background: var(--pt-info); }
-.mc-led.dim { opacity: 0.45; }
 
 /* ── Tab strip ────────────────────────────────────────── */
 
 /* ── ASCII section header ─────────────────────────────── */
-.mc-ascii-head {
-  margin: 26px 0 14px;
-  display: flex; align-items: center; gap: 14px;
-  font-size: var(--vg-fs-min); letter-spacing: 0.24em;
-  color: var(--pt-text-mute);
-  text-transform: uppercase;
-}
-.mc-ascii-head .rule {
-  flex: 1;
-  border-top: 1px solid var(--pt-border-dim);
-}
-.mc-ascii-head .rule::before, .mc-ascii-head .rule::after { content: none; }
-.mc-ascii-head .label {
-  color: var(--pt-text);
-}
 
 /* ── Terminal window panels ───────────────────────────── */
 .mc-window {
@@ -714,28 +670,6 @@ h1 {
 /* ── REMOVED: Old 700px mobile breakpoint (replaced by 820px mobile-first block below) ── */
 
 /* ── Viz: sparkline, donut, heatmap, hbar, gauge ──────── */
-.mc-sparkline { width: 100%; height: 28px; display: block; margin-top: 6px; }
-.mc-sparkline-line { fill: none; stroke: var(--pt-neon-bright); stroke-width: 1.4; }
-.mc-sparkline-fill { fill: var(--pt-neon-bright); opacity: 0.12; }
-.mc-sparkline-dot  { fill: var(--pt-neon-bright); }
-.mc-sparkline.neg .mc-sparkline-line { stroke: var(--vg-danger-fg); }
-.mc-sparkline.neg .mc-sparkline-fill { fill: var(--vg-danger-fg); }
-.mc-sparkline.neg .mc-sparkline-dot  { fill: var(--vg-danger-fg); }
-
-.mc-donut-wrap { position: relative; }
-.mc-donut-wrap svg { width: 100%; height: 100%; }
-.mc-donut-track { stroke: var(--pt-border-dim); fill: none; }
-.mc-donut-center {
-  position: absolute; inset: 0; display: grid; place-content: center; text-align: center;
-}
-.mc-donut-center .lbl { font-size: var(--vg-fs-min); letter-spacing: 0.22em; color: var(--pt-text-mute); }
-.mc-donut-center .val { font-size: 22px; font-weight: 700; color: var(--pt-text-high); }
-.mc-donut-legend { display: flex; flex-direction: column; gap: 6px; font-size: var(--vg-fs-min); }
-.mc-donut-legend .row { display: grid; grid-template-columns: 10px 1fr auto; align-items: center; gap: 10px; padding: 4px 0; border-bottom: 1px dashed var(--pt-border-dim); }
-.mc-donut-legend .row:last-child { border-bottom: none; }
-.mc-donut-legend .sw { width: 10px; height: 10px; border-radius: 1px; }
-.mc-donut-legend .name { color: var(--pt-text); letter-spacing: 0.08em; }
-.mc-donut-legend .pct { color: var(--pt-neon-bright); font-weight: 700; }
 
 .mc-heatmap { display: flex; gap: 3px; padding: 14px; flex-wrap: nowrap; overflow-x: auto; }
 .mc-heatmap .col { display: flex; flex-direction: column; gap: 3px; flex: 0 0 auto; }
@@ -770,21 +704,6 @@ h1 {
 .mc-gh-month-labels span { position: absolute; top: 0; }
 .mc-window-meta { margin-left: auto; font-size: var(--vg-fs-min); letter-spacing: 0.2em; color: var(--pt-text-mute); display: flex; gap: 8px; }
 
-.mc-hbar { display: flex; flex-direction: column; gap: 4px; padding: 10px 14px; border-bottom: 1px dashed var(--pt-border-dim); }
-.mc-hbar:last-child { border-bottom: none; }
-.mc-hbar .head { display: flex; align-items: baseline; gap: 8px; font-size: var(--vg-fs-min); }
-.mc-hbar .lbl { color: var(--pt-text-high); letter-spacing: 0.06em; flex: 0 0 auto; min-width: 110px; }
-.mc-hbar .sub { color: var(--pt-text-mute); font-size: var(--vg-fs-min); letter-spacing: 0.18em; }
-.mc-hbar .val { margin-left: auto; color: var(--pt-neon-bright); font-variant-numeric: tabular-nums; }
-.mc-hbar .track { height: 6px; background: rgba(255,255,255,0.04); border: 1px solid var(--pt-border-dim); border-radius: 1px; overflow: hidden; }
-.mc-hbar .fill {
-  display: block; height: 100%; width: 100%;
-  transform-origin: left;
-  background: var(--pt-neon-bright);
-  animation: hbar-grow 1s var(--pt-ease, ease-out) both;
-}
-@keyframes hbar-grow { from { transform: scaleX(0); } }
-
 .mc-gauge { position: relative; display: inline-block; }
 .mc-gauge svg { width: 100%; height: 100%; }
 .mc-gauge-track { fill: none; stroke: var(--pt-border-dim); stroke-width: 6; }
@@ -805,13 +724,6 @@ h1 {
 /* ── Mobile & tablet ───────────────────────────────────── */
 
 /* ── Tablet: 820px–1200px ── */
-@media (max-width: 1200px) {
-  /* No .mc-agent-grid rule here: the ≤1400 block already gives it 2 columns,
-     and repeating it after the ≤980 block made the 1-column rule unreachable
-     between 821–980px purely through source order. */
-  /* cost token breakdown: simplify labels */
-  .mc-hbar .lbl { min-width: 90px; }
-}
 
 /* ── Phablet: 820px–980px ── */
 /* ── Mobile: ≤820px — sidebar hidden, mobile nav active ── */
@@ -830,7 +742,6 @@ h1 {
   /* Tabs */
 
   /* Section heads */
-  .mc-ascii-head { flex-wrap: wrap; gap: 4px; font-size: var(--vg-fs-min); }
   /* Phone window head: dots + title share row one, meta takes its own row below.
      The title used to sit beside an unshrinkable meta and, with overflow-wrap:
      anywhere, broke "CLAUDE CODE" into a column of two-letter fragments. */
@@ -851,9 +762,6 @@ h1 {
   .mc-heatmap .cell { width: 10px; height: 10px; }
 
   /* HBars */
-  .mc-hbar { padding: 8px 10px; }
-  .mc-hbar .head { flex-wrap: wrap; }
-  .mc-hbar .lbl { min-width: 70px; font-size: var(--vg-fs-min); }
 
   /* Cost rows */
 
@@ -959,11 +867,6 @@ button,
 }
 
 /* ── Battery: Reduce animation opacity on low-end devices ── */
-@media (max-width: 520px) {
-  .mc-led {
-    animation: none;
-  }
-}
 
 /* HMK-T3 · mobile home cockpit + accessibility pass. Keep the mobile header
    to a brand row and one compact, scrollable chip row; the chip strip is
@@ -1021,12 +924,6 @@ a:focus-visible,
 }
 
 /* ── Data-saver mode: disable animations ───────────────── */
-@media (save-data: on) {
-  .mc-led {
-    animation: none !important;
-    opacity: 0.5;
-  }
-}
 
 /* ── Skeleton loading pulse ──────────────────────────────── */
 @keyframes skeleton-pulse {
@@ -1259,19 +1156,11 @@ a:focus-visible,
    3. Long unbroken strings (URLs, aggregate titles) wrap within the card
       instead of forcing horizontal overflow that clips mid-token. */
 
-.mc-health-body::-webkit-scrollbar,
-.mc-window-float-body::-webkit-scrollbar,
-.mc-modal::-webkit-scrollbar { width: 8px; height: 8px; }
-.mc-health-body::-webkit-scrollbar-track,
-.mc-window-float-body::-webkit-scrollbar-track,
-.mc-modal::-webkit-scrollbar-track { background: transparent; }
-.mc-health-body::-webkit-scrollbar-thumb,
-.mc-window-float-body::-webkit-scrollbar-thumb,
-.mc-modal::-webkit-scrollbar-thumb { background: var(--pt-border); border: 2px solid rgba(0,0,0,0.25); }
+.mc-window-float-body::-webkit-scrollbar, .mc-modal::-webkit-scrollbar { width: 8px; height: 8px; }
+.mc-window-float-body::-webkit-scrollbar-track, .mc-modal::-webkit-scrollbar-track { background: transparent; }
+.mc-window-float-body::-webkit-scrollbar-thumb, .mc-modal::-webkit-scrollbar-thumb { background: var(--pt-border); border: 2px solid rgba(0,0,0,0.25); }
 .mc-modal::-webkit-scrollbar-thumb:hover { background: var(--pt-neon-deep); }
-.mc-health-body,
-.mc-window-float-body,
-.mc-modal { scrollbar-width: thin; scrollbar-color: var(--pt-border) transparent; }
+.mc-window-float-body, .mc-modal { scrollbar-width: thin; scrollbar-color: var(--pt-border) transparent; }
 
 /* Independent column scroll — head stays pinned, cards scroll in-body. */
 
@@ -1321,7 +1210,7 @@ html[data-theme="friday"] .mc-pipe-name { color: var(--pt-neon-bright); }
 .mc-empty-desc { margin: 0; max-width: 420px; font-size: var(--vg-fs-min); line-height: 1.65; color: var(--pt-text-dim); }
 .mc-empty-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 10px; }
 /* Action buttons render via <Button> — see the "Button primitive (.mc-btn)"
-   section above (near .mc-led). */
+   section above. */
 
 /* ── Needs-you action feed ────────────────────────────── */
 .mc-feed {
@@ -1364,17 +1253,6 @@ html[data-theme="friday"] .mc-pipe-name { color: var(--pt-neon-bright); }
 .mc-feed-arrow { margin-left: auto; color: var(--pt-neon); font-family: var(--pt-font-mono); opacity: 0.55; }
 
 /* ── System health ────────────────────────────────────── */
-.mc-health { margin-bottom: 16px; }
-.mc-health-body { padding: 8px 0; }
-.mc-health-row {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 14px;
-  border-bottom: 1px dashed var(--pt-border-dim);
-  font-size: var(--vg-fs-min);
-}
-.mc-health-row:last-child { border-bottom: none; }
-.mc-health-name { color: var(--pt-text-high); letter-spacing: 0.04em; min-width: 200px; }
-.mc-health-detail { color: var(--pt-text-dim); font-size: var(--vg-fs-min); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ── Hermes kanban list + drawer ──────────────────────── */
 
@@ -1438,22 +1316,13 @@ html[data-theme="friday"] .mc-pipe-name { color: var(--pt-neon-bright); }
 /* Fold-width compact (520-660px, the user's fold portrait): dense ops-slip
    cards, no real-horizontal-scroll risk, full-bleed create modal. This is
    purely the compact layer — it must NOT touch the desktop grid. */
-@media (max-width: 520px) {
-  /* Force the meta row (assignee + relative time) to one quiet line:
-     nowrap + ellipsis so it clips instead of double-stacking or overflowing
-     the right edge at ~590px. */
-  /* Create modal goes full-bleed on the fold (was capped at 520px). */
-}
 
 /* Below 520 (very compact): hide the column glyph to free label width. */
 
 /* Reduced motion: keep the board calm when the user asks for it. */
 
 @media (max-width: 820px) {
-  .mc-health-name { min-width: 0; }
-  .mc-health-row { flex-wrap: wrap; }
   /* nowrap + ellipsis made service detail unreadable on a phone */
-  .mc-health-detail { white-space: normal; overflow: visible; }
 
   /* Inline links that act as navigation, plus the week stepper, are all well
      under the 44px minimum on a phone. Pad the hit area rather than the text
@@ -1473,7 +1342,6 @@ html[data-theme="friday"] .mc-feed { border-radius: var(--pt-radius-btn, 0); }
   color: var(--pt-text-dim);
   text-transform: uppercase;
 }
-.mc-gh-live .mc-led { width: 7px; height: 7px; }
 .mc-gh-stats {
   display: flex; align-items: stretch; gap: 10px; flex-wrap: wrap;
   margin-bottom: 16px;
@@ -1507,65 +1375,9 @@ html[data-theme="friday"] .mc-feed { border-radius: var(--pt-radius-btn, 0); }
   border-radius: var(--pt-r-md);
 }
 .mc-gh-profile:hover { border-color: var(--pt-border); text-decoration: underline; }
+@media (max-width: 820px)  { .mc-gh-profile { width: 100%; justify-content: center; padding: 10px; } }
 
-.mc-repo-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 18px;
-}
-.mc-repo-card {
-  border: 1px solid var(--pt-border-dim);
-  border-radius: var(--pt-r-md);
-  background: rgba(var(--pt-launcher-deep-rgb, var(--pt-card-rgb)), 0.7);
-  padding: 12px 14px;
-  text-decoration: none;
-  display: flex; flex-direction: column; gap: 6px;
-  transition: border-color 0.2s ease, transform 0.2s ease;
-}
-.mc-repo-card:hover {
-  border-color: var(--pt-border);
-  transform: translateY(-1px);
-}
-.mc-repo-head { display: flex; align-items: baseline; gap: 8px; }
-.mc-repo-name {
-  font-size: var(--vg-fs-min); font-weight: 700;
-  color: var(--pt-neon-bright);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.mc-repo-private {
-  margin-left: auto;
-  font-size: var(--vg-fs-min); letter-spacing: 0.18em;
-  padding: 1px 6px;
-  border: 1px solid var(--vg-warn-border);
-  border-radius: var(--pt-r-sm);
-  color: var(--pt-warn);
-  flex-shrink: 0;
-}
-.mc-repo-desc {
-  font-size: var(--vg-fs-min); color: var(--pt-text-dim);
-  line-height: 1.5;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.mc-repo-meta {
-  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-  font-size: var(--vg-fs-min); color: var(--pt-text-dim);
-  margin-top: auto;
-}
-.mc-repo-lang { display: flex; align-items: center; gap: 5px; }
-.mc-repo-lang .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-.mc-repo-meta .when { margin-left: auto; color: var(--pt-text-mute); font-size: var(--vg-fs-min); letter-spacing: 0.1em; text-transform: uppercase; }
-
-@media (max-width: 1200px) { .mc-repo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 820px)  { .mc-repo-grid { grid-template-columns: 1fr; } .mc-gh-profile { width: 100%; justify-content: center; padding: 10px; } }
-
-html[data-theme="friday"] .mc-gh-stat,
-html[data-theme="friday"] .mc-repo-card,
-html[data-theme="friday"] .mc-gh-profile,
-html[data-theme="friday"] .mc-repo-private { border-radius: var(--pt-radius-row, 0); }
+html[data-theme="friday"] .mc-gh-stat, html[data-theme="friday"] .mc-gh-profile { border-radius: var(--pt-radius-row, 0); }
 
 /* ── Agent office v2: one desk per live channel ───────────
    Occupancy and animation are driven entirely by /api/agent-activity —
@@ -1663,20 +1475,6 @@ html[data-theme="friday"] .mc-repo-private { border-radius: var(--pt-radius-row,
 }
 
 /* ── Section head: refined, airier, with a soft active marker ────────── */
-.mc-ascii-head {
-  margin: 30px 0 16px;
-  gap: 16px;
-}
-.mc-ascii-head .label {
-  color: var(--pt-neon-bright);
-  letter-spacing: 0.26em;
-  font-weight: 600;
-  padding: 0 2px;
-}
-.mc-ascii-head .rule {
-  border-top: 1px solid var(--pt-border-dim);
-  height: 1px;
-}
 
 /* ── Tabs: sleeker active pill ───────────────────────────────────────── */
 
@@ -1695,7 +1493,7 @@ html[data-theme="friday"] .mc-repo-private { border-radius: var(--pt-radius-row,
 
 /* ── Buttons: unified focus + press feedback ─────────────────────────── */
 /* .mc-btn declares its own transition/:active (MOTION-token driven) —
-   see the Button primitive section near .mc-led. */
+   see the Button primitive section. */
 .mc-win-float-btn {
   transition: transform 120ms var(--pt-ease), border-color 200ms var(--pt-ease), background 200ms var(--pt-ease);
 }
@@ -1751,7 +1549,6 @@ html[data-theme="friday"] .mc-repo-private { border-radius: var(--pt-radius-row,
 /* ── Reduced motion: kill decorative sweep/scan animations ───────────── */
 @media (prefers-reduced-motion: reduce) {
   .mc-main > * { animation: none !important; }
-  .cp-plan-band-track span { animation: none !important; transition: none !important; }
 }
 /* Same freeze, driven by the in-app motion setting (Setup → UI CUSTOMIZATION)
    — a union with prefers-reduced-motion above, per DESIGN-SPEC §5. Ambient
@@ -1804,7 +1601,6 @@ html[data-theme="friday"] .mc-repo-private { border-radius: var(--pt-radius-row,
   display: flex; align-items: center; gap: 8px;
   min-height: 20px;
 }
-.mc-tile-head .mc-led { flex-shrink: 0; }
 .mc-tile-status {
   font-size: var(--vg-fs-min); letter-spacing: 0.16em;
   color: var(--pt-neon-bright);
@@ -1912,54 +1708,13 @@ html[data-theme="friday"] .mc-repo-private { border-radius: var(--pt-radius-row,
    alignment and number rendering cannot drift between sections. Numeric
    cells are tabular so digits line up column-wise, which is the whole
    point of putting these in a table rather than in stat rows. */
-.cp-tablewrap {
-  /* Wide tables scroll inside their own box; the page body must never
-     scroll horizontally (see the 375px overflow audit). */
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-.cp-table {
-  width: 100%; border-collapse: collapse;
-  font-family: var(--pt-font-mono); font-size: var(--vg-fs-min);
-  font-variant-numeric: tabular-nums;
-}
-.cp-table th {
-  padding: 9px 14px 7px;
-  font-size: var(--vg-fs-min); font-weight: 600; letter-spacing: 0.2em;
-  color: var(--pt-text-mute); text-transform: uppercase;
-  border-bottom: 1px solid var(--pt-border);
-  white-space: nowrap;
-}
-.cp-table td {
-  padding: 8px 14px;
-  color: var(--pt-text-dim);
-  border-bottom: 1px dashed var(--pt-border-dim);
-  white-space: nowrap;
-}
-.cp-table tbody tr:last-child td { border-bottom: none; }
-.cp-table tbody tr { transition: background 140ms var(--pt-ease); }
-.cp-table tbody tr:hover { background: rgba(255,255,255,0.035); }
 /* The name column takes the slack, but never below legibility. `max-width: 0`
    here (the usual ellipsis trick) let it collapse to nothing once the other
    columns needed room, so on a phone every row showed a provider label and no
    model name. A min-width plus a min-width on the table itself makes the table
    SCROLL instead of squeezing — the wrapper is already an overflow-x box. */
-.cp-table { min-width: 560px; }
-.cp-table td:first-child,
-.cp-table th:first-child { width: 99%; min-width: 190px; }
 
 /* Inline proportion bar inside a numeric cell. */
-.cp-bar {
-  display: inline-block; flex: 1 1 auto;
-  min-width: 40px; max-width: 92px; height: 4px;
-  border-radius: 3px; overflow: hidden;
-  background: rgba(var(--pt-launcher-deep-rgb, var(--pt-bg-rgb)), 0.85);
-  border: 1px solid var(--pt-border-dim);
-}
-.cp-bar > span {
-  display: block; height: 100%; border-radius: 0 3px 3px 0;
-  transition: opacity 180ms ease;
-}
 
 /* Compact model-burn chart. Rows stay comparable on one shared scale, while
    the viewport caps the page height when a provider contributes many models. */
@@ -1997,11 +1752,6 @@ html[data-theme="friday"] .mc-repo-private { border-radius: var(--pt-radius-row,
 .cp-model-chart-model { min-width: 0; color: var(--pt-text-high); overflow-wrap: anywhere; }
 .cp-model-chart-name .cp-cellprov { flex-shrink: 0; }
 .cp-model-chart-barline { display: flex; align-items: center; gap: 9px; margin-top: 7px; }
-.cp-model-chart-track {
-  flex: 1; min-width: 40px; height: 6px; overflow: hidden;
-  background: rgba(var(--pt-launcher-deep-rgb, var(--pt-bg-rgb)), 0.85); border: 1px solid var(--pt-border-dim);
-}
-.cp-model-chart-track span { display: block; height: 100%; min-width: 2px; transition: opacity 180ms ease; }
 .cp-model-chart-barline strong {
   min-width: 48px; color: var(--pt-text); font-size: var(--vg-fs-min); font-weight: 600; text-align: right;
 }
@@ -2016,36 +1766,6 @@ html[data-theme="friday"] .mc-repo-private { border-radius: var(--pt-radius-row,
   .cp-model-chart-row { grid-template-columns: 1fr; gap: 5px; padding: 10px 0 11px; }
   .cp-model-chart-stats { justify-content: flex-start; padding-left: 14px; }
   .cp-model-chart-group-head { gap: 8px; font-size: var(--vg-fs-min); }
-}
-
-.cp-stat { min-width: 0; }
-
-.cp-fairuse {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 150px;
-  gap: 22px;
-  padding: 14px 16px 15px;
-  border: 1px solid var(--pt-border);
-  background: rgba(0,0,0,0.16);
-  font-family: var(--pt-font-mono);
-}
-.cp-fairuse-main { min-width: 0; }
-.cp-plan-band-head { display: flex; justify-content: space-between; gap: 12px; color: var(--pt-text-mute); font-size: var(--vg-fs-min); letter-spacing: 0.12em; }
-.cp-plan-band-track { height: 10px; margin-top: 10px; overflow: hidden; border: 1px solid var(--pt-border-dim); background: rgba(var(--pt-launcher-deep-rgb, var(--pt-bg-rgb)), 0.85); }
-.cp-plan-band-track > span { display: block; height: 100%; transition: opacity 180ms ease; }
-.cp-plan-band-sparkline { padding: 4px 0 2px; }
-.cp-plan-band-sparkline svg { display: block; width: 100%; height: 44px; }
-.cp-fairuse-verdict { margin-top: 12px; font-size: var(--vg-fs-min); font-weight: 700; letter-spacing: 0.12em; }
-.cp-plan-band-hint { margin-top: 8px; color: var(--pt-text-mute); font-size: var(--vg-fs-min); letter-spacing: 0.06em; }
-.cp-fairuse-trend { display: flex; min-width: 0; flex-direction: column; justify-content: end; }
-.cp-fairuse-trend-label { color: var(--pt-text-mute); font-size: var(--vg-fs-min); letter-spacing: 0.14em; }
-.cp-fairuse-ticks { display: flex; align-items: end; gap: 5px; height: 48px; margin-top: 8px; }
-.cp-fairuse-ticks > span { flex: 1; min-height: 4px; opacity: 0.85; }
-.cp-fairuse-trend-dates { display: flex; justify-content: space-between; margin-top: 5px; color: var(--pt-text-mute); font-size: var(--vg-fs-min); }
-
-@media (max-width: 520px) {
-  .cp-fairuse { grid-template-columns: 1fr; gap: 15px; }
-  .cp-fairuse-trend { max-width: 220px; }
 }
 
 /* ── Isometric burn landscape ─────────────────────────────────────────
@@ -2121,9 +1841,6 @@ html[data-theme="friday"] .mc-repo-private { border-radius: var(--pt-radius-row,
 .cp-note { padding: 8px 16px 11px; font-size: var(--vg-fs-min); line-height: 1.7; color: var(--pt-text-mute); letter-spacing: .04em; border-top: 1px solid var(--pt-border-dim); }
 .cp-note-more { display: none; }
 /* Stat rows (CostsPanel <Stat>) pair up on phones instead of stacking one per row. */
-@media (max-width: 520px) {
-  .cp-panel .mc-window > div:has(> .cp-stat) { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px !important; }
-}
 @media (max-width: 820px) {
   .cp-note { padding-bottom: 2px; }
   .cp-note:not(.is-open) .cp-note-body { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
@@ -2142,12 +1859,7 @@ html[data-theme="friday"] .mc-repo-private { border-radius: var(--pt-radius-row,
 .cp-cellprov { color: var(--pt-text-mute); font-size: var(--vg-fs-min); letter-spacing: 0.06em; flex-shrink: 0; }
 
 @media (max-width: 820px) {
-  .cp-table { font-size: var(--vg-fs-min); min-width: 480px; }
-  .cp-table th, .cp-table td { padding: 7px 10px; }
-  .cp-table td:first-child,
-  .cp-table th:first-child { min-width: 150px; }
   /* The bar is decoration; on a phone the number is what matters. */
-  .cp-bar { display: none; }
   .cp-cellnote { display: none; }
 }
 
@@ -2158,10 +1870,6 @@ html[data-theme="friday"] .mc-repo-private { border-radius: var(--pt-radius-row,
    ══════════════════════════════════════════════════════════════════════ */
 
 /* ── Live status tiles (tappable, deep link to their page) ───────────── */
-@media (max-width: 520px) {
-  /* Status data arrives after the shell; hold the measured grid footprint so
-     the sections below do not jump when the skeleton becomes live tiles. */
-}
 /* J1: no standing will-change — the track is static unless .is-flowing marquees it. */
 /* Per-copy padding (not sibling margin) so the two copies are equidistant and
    translateX(-50%) is exactly one full cycle → seamless. */
@@ -2174,13 +1882,6 @@ html[data-theme="friday"] .mc-repo-private { border-radius: var(--pt-radius-row,
   outline-offset: 2px;
 }
 
-.cp-plan-band { padding: 13px 16px 15px; border-bottom: 1px solid var(--pt-border-dim); font-family: var(--pt-font-mono); }
-.cp-plan-band-head { display: flex; justify-content: space-between; gap: 12px; color: var(--pt-text-dim); font-size: var(--vg-fs-min); letter-spacing: .1em; flex-wrap: wrap; }
-.cp-plan-band-head span:last-child { color: var(--pt-text-high); font-variant-numeric: tabular-nums; letter-spacing: .03em; }
-.cp-plan-band-track { height: 7px; margin: 9px 0 6px; overflow: hidden; background: var(--pt-border-dim); border-radius: 99px; }
-.cp-plan-band-track span { display: block; height: 100%; border-radius: inherit; transition: opacity 180ms ease; }
-.cp-plan-band-hint { color: var(--pt-text-mute); font-size: var(--vg-fs-min); letter-spacing: .05em; }
-
 /* ── Live agent pulse strip ──────────────────────────────────────────── */
 
 /* ── Quick-launch grid ───────────────────────────────────────────────── */
@@ -2191,218 +1892,27 @@ html[data-theme="friday"] .mc-repo-private { border-radius: var(--pt-radius-row,
    phosphor scope traces. Every color comes from the band helper in
    RigHud.tsx (accent → warn → error), so "hot" reads the same everywhere.
    ══════════════════════════════════════════════════════════════════════ */
-.mc-rig {
-  display: grid;
-  gap: 12px;
-  font-family: var(--pt-font-mono);
-}
 
 /* ── identity bar ── */
-.mc-rig-head {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-  border: 1px solid var(--pt-border-dim);
-  border-radius: var(--pt-r-md);
-  padding: 7px 12px;
-  background: var(--pt-surface);
-  font-size: var(--vg-fs-min); letter-spacing: 0.14em; text-transform: uppercase;
-}
-.mc-rig-host { color: var(--pt-neon-bright); font-weight: 700; letter-spacing: 0.2em; }
-.mc-rig-spec { color: var(--pt-text-dim); }
-.mc-rig-spec::before { content: '· '; color: var(--pt-text-mute); }
-.mc-rig-stamp { margin-left: auto; color: var(--pt-text-mute); letter-spacing: 0.18em; }
 
 /* ── dial row ── */
-.mc-rig-dials {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
-  gap: 10px;
-}
-.mc-rig-dial {
-  position: relative;
-  display: flex; flex-direction: column; align-items: center;
-  padding: 10px 8px 12px;
-  border: 1px solid var(--pt-border-dim);
-  border-radius: var(--pt-r-md);
-  background:
-    var(--pt-surface);
-  overflow: hidden;
-  transition: border-color .2s var(--pt-ease), transform .2s var(--pt-ease);
-}
-.mc-rig-dial:hover {
-  transform: translateY(-2px);
-  border-color: rgba(var(--pt-neon-rgb),0.5);
-}
-.mc-rig-dial-face { position: relative; width: 100%; max-width: 132px; }
-.mc-rig-dial-svg { width: 100%; height: auto; display: block; }
 /* The value overlays the dial's hub — HTML rather than <text> so long
    readouts ("512G") wrap and ellipsis normally instead of overflowing. */
-.mc-rig-dial-core { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
-.mc-rig-dial-value {
-  font-size: 24px; font-weight: 700; line-height: 1;
-  font-variant-numeric: tabular-nums;
-  max-width: 78%; text-align: center;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.mc-rig-dial-value i { font-style: normal; font-size: var(--vg-fs-min); opacity: 0.7; margin-left: 1px; }
-.mc-rig-dial-arc { transition: d .5s var(--pt-ease), stroke .3s linear; }
-.mc-rig-dial-label {
-  margin-top: 4px;
-  font-size: var(--vg-fs-min); font-weight: 700; letter-spacing: 0.22em;
-  color: var(--pt-text-dim); text-transform: uppercase;
-}
-.mc-rig-dial-sub {
-  margin-top: 2px; font-size: var(--vg-fs-min); color: var(--pt-text-mute);
-  text-align: center; letter-spacing: 0.04em;
-  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
 
 /* ── shared block chrome (die / vram / scope / links) ── */
-.mc-rig-block {
-  min-width: 0;
-  border: 1px solid var(--pt-border-dim);
-  border-radius: var(--pt-r-md);
-  padding: 10px 12px 12px;
-  background: var(--pt-surface);
-}
-.mc-rig-block-head {
-  display: flex; align-items: baseline; gap: 8px;
-  font-size: var(--vg-fs-min); font-weight: 700; letter-spacing: 0.22em;
-  color: var(--pt-text-dim); text-transform: uppercase;
-  margin-bottom: 9px;
-}
-.mc-rig-block-meta { margin-left: auto; color: var(--pt-text-mute); font-weight: 400; letter-spacing: 0.14em; }
-.mc-rig-none { font-size: var(--vg-fs-min); color: var(--pt-text-mute); letter-spacing: 0.06em; padding: 4px 0; }
-.mc-rig-offline {
-  border: 1px solid var(--pt-error);
-  border-radius: var(--pt-r-md);
-  padding: 12px 14px;
-  font-family: var(--pt-font-mono); font-size: var(--vg-fs-min); letter-spacing: 0.14em;
-  color: var(--pt-error-ink);
-  background: rgba(255,95,87,0.06);
-}
-
-.mc-rig-silicon { display: grid; grid-template-columns: 1.35fr 1fr; gap: 12px; }
 
 /* ── core die — one cell per hardware thread ── */
-.mc-rig-die { display: grid; gap: 3px; }
-.mc-rig-die-cell {
-  position: relative;
-  display: block;
-  height: 26px;
-  border: 1px solid var(--pt-border);
-  border-radius: 2px;
-  overflow: hidden;
-  transition: background .35s linear, border-color .35s linear;
-}
 /* Inner bar gives each cell a readable magnitude, not just a tint. */
-.mc-rig-die-cell i {
-  position: absolute; left: 0; right: 0; bottom: 0;
-  display: block; opacity: 0.9;
-  transition: opacity 180ms ease;
-}
 
 /* ── VRAM + volume bars ── */
-.mc-rig-vram { display: grid; gap: 7px; }
-.mc-rig-vram-row, .mc-rig-mount {
-  display: grid; grid-template-columns: minmax(0,1fr) 2fr auto auto; gap: 8px;
-  align-items: center; font-size: var(--vg-fs-min); color: var(--pt-text-dim);
-}
-.mc-rig-mount { grid-template-columns: minmax(0,1fr) 2fr auto; margin-bottom: 7px; }
-.mc-rig-vram-name, .mc-rig-mount-name {
-  color: var(--pt-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.mc-rig-vram-track {
-  height: 6px; border-radius: 999px; overflow: hidden;
-  background: rgba(var(--pt-neon-rgb),0.13);
-  border: 1px solid var(--pt-border);
-}
-.mc-rig-vram-track i {
-  display: block; height: 100%; border-radius: 999px;
-  transition: opacity 180ms ease;
-}
-.mc-rig-vram-val, .mc-rig-mount-val { font-variant-numeric: tabular-nums; color: var(--pt-text); }
-.mc-rig-vram-fan { color: var(--pt-text-mute); }
 
 /* ── oscilloscope ── */
-.mc-rig-scope {
-  border: 1px solid var(--pt-border-dim);
-  border-radius: var(--pt-r-md);
-  padding: 10px 12px 8px;
-  background:
-    var(--pt-surface);
-}
-.mc-rig-trace {
-  display: grid;
-  grid-template-columns: 44px minmax(0,1fr) 70px;
-  align-items: center; gap: 10px;
-  padding: 2px 0;
-}
-.mc-rig-trace-label {
-  font-size: var(--vg-fs-min); font-weight: 700; letter-spacing: 0.18em;
-  color: var(--pt-text-dim);
-}
-.mc-rig-trace-svg {
-  width: 100%; height: 40px; display: block;
-  /* Stretched horizontally by preserveAspectRatio="none" — non-scaling-stroke
-     on the path keeps the line 1.4px regardless of the x-scale. */
-  overflow: visible;
-}
-.mc-rig-trace-readout {
-  font-size: var(--vg-fs-min); font-variant-numeric: tabular-nums; text-align: right;
-}
 
 /* ── vitals strip ── */
-.mc-rig-vitals {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
-  gap: 8px;
-}
-.mc-rig-vital {
-  display: flex; flex-direction: column; gap: 3px;
-  padding: 8px 10px;
-  border: 1px solid var(--pt-border-dim);
-  border-radius: var(--pt-r-sm);
-  background: var(--pt-surface-2);
-}
-.mc-rig-vital-label { font-size: var(--vg-fs-min); letter-spacing: 0.2em; color: var(--pt-text-mute); text-transform: uppercase; }
-.mc-rig-vital-value { font-size: 13px; color: var(--pt-text-high); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 /* ── network + volumes ── */
-.mc-rig-links { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.mc-rig-link {
-  display: grid; grid-template-columns: minmax(0,1fr) auto auto minmax(0,auto); gap: 10px;
-  align-items: center; font-size: var(--vg-fs-min); color: var(--pt-text-dim);
-  padding: 3px 0;
-}
-.mc-rig-link-name { color: var(--pt-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mc-rig-link-rate { font-variant-numeric: tabular-nums; color: var(--pt-text); }
-.mc-rig-link-total { color: var(--pt-text-mute); text-align: right; }
 
 /* ── responsive ── */
-@media (max-width: 980px) {
-  .mc-rig-silicon, .mc-rig-links { grid-template-columns: 1fr; }
-}
-@media (max-width: 520px) {
-  /* The CPU model and kernel string wrap the identity bar onto three lines on
-     a phone — they're reference detail, not glanceable state. */
-  .mc-rig-spec.is-long { display: none; }
-  .mc-rig-dials { grid-template-columns: repeat(2, minmax(0,1fr)); }
-  /* Five dials in a 2-up grid orphans the last one — let it span so the row
-     reads as deliberate rather than a gap. */
-  .mc-rig-dial:last-child:nth-child(odd) { grid-column: span 2; }
-  .mc-rig-dial-sub { font-size: var(--vg-fs-min); }
-  .mc-rig-trace { grid-template-columns: 36px minmax(0,1fr) 60px; gap: 7px; }
-  .mc-rig-trace-svg { height: 30px; }
-  .mc-rig-die-cell { height: 20px; }
-  .mc-rig-vram-row { grid-template-columns: minmax(0,1fr) 1.4fr auto; }
-  .mc-rig-vram-fan { display: none; }
-  .mc-rig-link { grid-template-columns: minmax(0,1fr) auto auto; }
-  .mc-rig-link-total { display: none; }
-}
-@media (min-width: 2560px) {
-  .mc-rig-dial-value { font-size: 28px; }
-  .mc-rig-trace-svg { height: 48px; }
-}
 
 /* 3D burn landscape (Costs tab). */
 
@@ -2516,30 +2026,11 @@ html[data-theme="friday"] .mc-repo-private { border-radius: var(--pt-radius-row,
 
 /* busiest */
 
-@media (max-width: 980px) {
-  /* Intel is opened explicitly on mobile, so it must survive the rule that
-     hides an empty thread pane in the stacked layout. */
-}
-
 /* ── Responsive: stacked panes on phone/tablet ── */
-@media (max-width: 980px) {
-  /* Thread replaces the list on mobile when open; back button appears. */
-  /* Both panes share one grid cell here, so the empty thread pane sat DIRECTLY
-     ON TOP of the list — later in DOM order, therefore above it — and
-     swallowed every tap. The list rendered fine underneath and looked
-     perfectly normal, which is why this survived a mobile pass: a synthetic
-     .click() on a row bypasses hit-testing and "worked", while a real finger
-     hit .cc-threadpane and did nothing.
-     Hiding only its children (as the two rules below still do, for the
-     >900px case where the panes sit side by side) left the box itself
-     hit-testable. When there is nothing to show, the pane must not exist. */
-}
 /* 601-700px: Pixel Fold inner display (and similar widths) — two-column RAIL
    mode instead of the phone stacked/back-button swap (rule above ends at the
    same 700px, this range is what a Fold actually renders). The list rail
    stays visible beside the open thread: that IS the hub experience. */
-@media (min-width: 521px) and (max-width: 820px) { /* no thread open: rail owns the row */
-}
 
 /* ═══════════════════════════════════════════════════════════
    GLOBAL 120fps RENDERING LAYER (added 2026-08-05)
@@ -2851,9 +2342,6 @@ html[data-theme="friday"] .mc-repo-private { border-radius: var(--pt-radius-row,
    instead of the old flat edge. Purely additive on the base rule. */
 /* Glowing section labels — the ascii-section heading gets a neon
    halo so the page hierarchy reads at a glance. */
-.mc-ascii-head .label {
-  color: var(--pt-text-high);
-}
 
 /* Gradient-text hero numerals — the status-tile lead value steps
    up from the flat tone gradient with a richer 3-stop gradient +
@@ -2900,27 +2388,16 @@ html[data-motion="off"] .mc-window, html[data-motion="off"] .mc-window:hover {
    cap the widest component grids so cards don't stretch into cinema. */
 @media (min-width: 1600px) {
   .mc-tile-grid--tri { grid-template-columns: repeat(3, minmax(0, 360px)); justify-content: start; }
-  .mc-rig-dials { grid-template-columns: repeat(5, minmax(0, 220px)); }
 }
 
 /* Accessibility hardening: never let a row of controls overflow off-screen
    on any width (Fold cover 280px is the floor — ensure zero h-scroll). */
-@media (max-width: 520px) {
-  .mc-rig-dials { grid-template-columns: repeat(2, minmax(0,1fr)); }
-}
 
 /* Live LEDs breathe gently — alive, not flashing. */
-.mc-led {
-  animation: mc-led-breathe 3.2s ease-in-out infinite;
-}
-.mc-led.green { animation-delay: .2s; }
 
 /* The scope's leading dot is the "we are live" tell — it breathes while
    samples land, so a frozen HUD is visibly frozen. Opacity, not filter:
-   .mc-rig-trace-head already owns `filter` for its glow. */
-.mc-rig-trace-head {
-  animation: mc-rig-blip 2.4s ease-in-out infinite;
-}
+   glow removed in the widget-theme pass. */
 
 /* NEEDS-YOU rows get a soft sheen sweep so the eye knows it's the live strip. */
 .mc-feed {
@@ -2938,29 +2415,14 @@ html[data-motion="off"] .mc-window, html[data-motion="off"] .mc-window:hover {
 }
 
 /* Nav item active rail glows/pulses — a signal of where you are. */
-
-@keyframes mc-led-breathe {
-  0%, 100% { opacity: 1; }
-  50% { opacity: .55; }
-}
-@keyframes mc-rig-blip {
-  0%, 100% { opacity: 1; }
-  50% { opacity: .45; }
-}
 @keyframes mc-feed-sweep {
   0% { transform: translateX(0%); }
   60%, 100% { transform: translateX(550%); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mc-led,
-.mc-rig-trace-head,
-.mc-feed::after {
+  .mc-feed::after {
     animation: none !important;
-  }
-  .mc-rig-dial:hover { transform: none; }
-  .mc-rig-dial-arc, .mc-rig-die-cell, .mc-rig-die-cell i, .mc-rig-vram-track i {
-    transition: none !important;
   }
 }
 
@@ -3166,16 +2628,6 @@ html[data-motion="off"] .mc-window, html[data-motion="off"] .mc-window:hover {
 }
 
 /* OmniBridge's home-only orb canvas layers. */
-body:has(.ob-home) { background: var(--ob-bg-0); }
-body:has(.ob-home) .mc-main { overflow-y: auto; padding: 0; background: transparent; }
-.ob-neural-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-.ob-orb-readout { position: absolute; inset: 0; z-index: 4; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 2px; pointer-events: none; text-align: center; }
-.ob-orb-readout strong { color: var(--ob-peak); font-size: 26px; font-weight: 500; }
-.ob-orb-readout small { color: var(--ob-text-3); font-size: var(--vg-fs-min); letter-spacing: .3em; }
-.ob-orb-readout em { margin-top: 64px; color: var(--ob-brand); font-size: var(--vg-fs-min); font-style: normal; letter-spacing: .12em; }
-@media (prefers-reduced-motion: reduce) {
-  .ob-neural-canvas { opacity: .88; }
-}
 
 /* ══════════════════════════════════════════════════════════════════════════
    TEAM · SHIFT ROSTER — single clean agent + task view
@@ -3195,9 +2647,6 @@ body:has(.ob-home) .mc-main { overflow-y: auto; padding: 0; background: transpar
 /* Working rows pop (they carry the accent hue); idle/offline recede. */
 
 /* ── Fold / compact viewport (≤ 660px — Pixel Fold cover & smaller) ─────── */
-@media (max-width: 520px) {
-  /* tap target floor: even though the whole row is tappable, guarantee height */
-}
 
 /* ══════════════════════════════════════════════════════════════════════════
    BOTS · Hermes profile roster (2026-09-02) — coordinator CSS for the
@@ -3420,54 +2869,11 @@ body {
 
 /* KanbanBoard — "SYNC · 12s ago" first child of .mc-kb-meta.
    Matches the source-dot row: tiny, tracked, dim. Stale = warn ink + weight. */
-.mc-kb-sync {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 4px;
-  flex: 0 0 auto;
-  white-space: nowrap;
-  font-size: var(--vg-fs-min);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--pt-text-dim);
-}
-.mc-kb-sync.is-stale {
-  color: var(--pt-warn-ink);
-  font-weight: 600;
-}
 
 /* GithubPanel — "· synced 2m ago" appended to the contributions Window meta.
    Continues the .mc-gh-live meta line, dim/secondary. */
-.mc-gh-sync {
-  display: inline-flex;
-  align-items: baseline;
-  font-size: var(--vg-fs-min);
-  letter-spacing: 0.16em;
-  color: var(--pt-text-dim);
-}
-.mc-gh-sync.is-stale {
-  color: var(--pt-warn-ink);
-  font-weight: 600;
-}
 
 /* SystemHealthPanel — "· 12s ago" after the .mc-tcol-count chip. */
-.mc-hl-sync {
-  display: inline-flex;
-  align-items: baseline;
-  flex: 0 0 auto;
-  white-space: nowrap;
-  font-size: var(--vg-fs-min);
-  letter-spacing: 0.1em;
-  color: var(--pt-text-dim);
-}
-.mc-hl-sync.is-stale {
-  color: var(--pt-warn-ink);
-  font-weight: 600;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .mc-kb-sync, .mc-gh-sync, .mc-hl-sync { transition: none; }
-}
 
 /* ═══════════════════════════════════════════════════════════════════════
    JARVIS HUD · STAGE 1 — core AR-HUD language (Home command deck)
@@ -3756,41 +3162,24 @@ html[data-motion="off"] .mc-studio-cursor { animation: none; }
     margin-inline: auto;
   }
 }
-.mc-main:has(.mc-home-title) .mc-feed,
-.mc-main:has(.mc-home-title) .mc-rig {
+.mc-main:has(.mc-home-title) .mc-feed {
   border: 1px solid var(--pt-card-border);
   background: var(--pt-card-bg);
   border-radius: 10px;
 }
 
 /* Desktop rhythm and pulse hierarchy. */
-@media (min-width: 821px) {
-  .mc-main:has(.mc-home-title) .mc-ascii-head { margin-block: 32px 0; }
-  .mc-main:has(.mc-home-title) .mc-ascii-head + * { margin-top: 12px; }
-}
 
 /* List pattern: values lead on the right and contextual copy recedes. */
-.mc-main:has(.mc-home-title) .mc-feed-row,
-.mc-main:has(.mc-home-title) .mc-rig-vram-row,
-.mc-main:has(.mc-home-title) .mc-rig-mount,
-.mc-main:has(.mc-home-title) .mc-rig-link {
+.mc-main:has(.mc-home-title) .mc-feed-row {
   border-bottom: 1px solid rgba(var(--pt-launcher-accent-rgb, var(--pt-neon-rgb)), 0.08);
 }
-.mc-main:has(.mc-home-title) .mc-rig-link:last-child { border-bottom: none; }
-.mc-main:has(.mc-home-title) .mc-feed-arrow,
-.mc-main:has(.mc-home-title) .mc-rig-vram-val,
-.mc-main:has(.mc-home-title) .mc-rig-mount-val,
-.mc-main:has(.mc-home-title) .mc-rig-link-rate,
-.mc-main:has(.mc-home-title) .mc-rig-link-total { margin-left: auto; text-align: right; color: var(--pt-text-high); }
-.mc-main:has(.mc-home-title) .mc-rig-vram-fan,
-.mc-main:has(.mc-home-title) .mc-rig-link-total { color: var(--pt-text-dim); }
+.mc-main:has(.mc-home-title) .mc-feed-arrow { margin-left: auto; text-align: right; color: var(--pt-text-high); }
 
 /* Touch rhythm: the first fold is cockpit → needs-you → system pulse. */
 @media (max-width: 820px) {
   .mc-main:has(.mc-home-title) { padding-top: 12px; }
   .mc-main:has(.mc-home-title) .mc-feed { margin-bottom: 12px; }
-  .mc-main:has(.mc-home-title) .mc-ascii-head { margin-block: 12px 0; }
-  .mc-main:has(.mc-home-title) .mc-ascii-head + * { margin-top: 8px; }
   .mc-main:has(.mc-home-title) .mc-window-ghost-note { display: none; }
   .mc-main:has(.mc-home-title) .mc-feed-row,
 .mc-main:has(.mc-home-title) .mc-commit { min-height: 44px; }
@@ -3941,34 +3330,6 @@ body:has([role="dialog"], dialog[open]) .boot-overlay { visibility: hidden; }
 .asciiviz-repo { margin-top: 5px; white-space: nowrap; }
 .asciiviz-repo-name { display: inline-block; width: 24ch; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
 /* W2-K: additive terminal ticks; the host retains its glass border/layout. */
-.tframe-surface { position: relative; }
-.tframe-surface.cp-stat { padding: 12px; }
-.tframe-surface > .tframe-tick {
-  position: absolute;
-  box-sizing: border-box;
-  width: 6px;
-  height: 6px;
-  border: 0 solid var(--pt-neon-bright);
-  opacity: .55;
-  pointer-events: none;
-  user-select: none;
-  z-index: 2;
-  transition: opacity 150ms ease;
-}
-.tframe-surface:hover > .tframe-tick,
-.tframe-surface:focus-within > .tframe-tick { opacity: .85; }
-.srule-section { width: 100%; min-width: 0; margin-block: 16px 12px; }
-.srule-line { display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0; font-family: var(--pt-font-mono, monospace); }
-.srule-stroke { flex: 1 1 0; min-width: 0; height: 1px; background: rgba(var(--pt-launcher-accent-rgb, var(--pt-neon-rgb)), .30); }
-.srule-lead { flex: 0 1 24px; }
-.srule-label { flex: 0 1 auto; min-width: 0; margin: 0; padding: 3px 6px; background: var(--pt-surface); color: var(--vg-eyebrow); font: 500 var(--vg-fs-min)/1.5 var(--pt-font-mono, monospace); letter-spacing: .12em; text-transform: uppercase; overflow-wrap: anywhere; }
-.srule-index { flex: 0 0 auto; margin-left: auto; color: var(--vg-eyebrow); font-size: var(--vg-fs-min); }
-.srule-meta { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 6px; font: var(--vg-fs-min)/1.5 var(--pt-font-mono, monospace); color: var(--pt-text-dim); }
-.srule-home-header { flex-wrap: wrap; border-bottom: 0; }
-.srule-home-header > .srule-section:first-child { display: block; flex-basis: 100%; margin: 0; }
-@media (prefers-reduced-motion: reduce) {
-  .tframe-surface > .tframe-tick { transition: none; }
-}
 
 /* OmniBridge wordmark override comes last so the legacy cyberpunk artwork
    rules cannot reintroduce the old slanted/portrait treatment on Home. */
@@ -4107,14 +3468,13 @@ html { scrollbar-width: thin; scrollbar-color: rgba(var(--pt-dodger-rgb), .3) rg
 }
 
 /* K4: shared J1 chrome wins over legacy route skins, without changing layout. */
-html body, html body:has(.ob-home) { background: var(--pt-bg); background-image: none; }
 html body .mc-main::after, html body .mc-main .v4-scanline { display: none; }
 html body :is(button, input, select, textarea) { font-family: var(--pt-font-mono); }
 html body :is(button, .mc-btn, .mc-tab, .mc-nav-item) { text-transform: none; letter-spacing: 0; }
 html body .mc-btn::before,
 html body .mc-btn-primary::after { content: none; }
 @media (max-width: 520px) {
-  html[data-theme='friday'] body .mc-main:not(:has(.ob-home)) { --mc-gutter: 14px; padding-inline: var(--mc-gutter); }
+  html[data-theme='friday'] body .mc-main { --mc-gutter: 14px; padding-inline: var(--mc-gutter); }
   .mc-setup-group,
 .mc-pipe-card { padding: 14px; }
 }
@@ -4205,95 +3565,11 @@ html body .mc-main .mc-window::before { content: none; }
 html[data-motion='reduced'] .boot-draw-path, html[data-motion='off'] .boot-draw-path { animation: none; stroke-dashoffset: 0; }
 
 /* ── V3 · LAUNCH FILM — the cinematic (global boot, replayable) ───────── */
-.launch-film {
-  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  width: min(680px, 92vw); text-align: center;
-  font-family: var(--pt-font-mono, ui-monospace, monospace); color: #cfe0ff;
-}
-.launch-seam {
-  position: absolute; top: 50%; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(var(--pt-neon-rgb), 0.55), transparent);
-  transform: scaleX(0); transform-origin: center;
-  animation: launch-seam 900ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-@keyframes launch-seam { to { transform: scaleX(1); } }
-.launch-mark { margin: 0 auto 18px; }
-.launch-ring {
-  position: absolute; top: 50%; left: 50%; width: 240px; height: 240px; margin: -120px 0 0 -120px;
-  border: 1px solid rgba(var(--pt-neon-rgb), 0.35); border-radius: 50%; opacity: 0;
-  animation: launch-ring 1600ms cubic-bezier(0.2, 0.8, 0.2, 1) 150ms both;
-}
-@keyframes launch-ring {
-  0% { opacity: 0; transform: scale(0.55); }
-  45% { opacity: 0.7; }
-  100% { opacity: 0; transform: scale(1.5); }
-}
-.launch-word { margin: 0 0 24px; }
-.launch-brand {
-  display: flex; justify-content: center; flex-wrap: wrap;
-  font-size: clamp(26px, 6.4vw, 52px); font-weight: 700; letter-spacing: 0.1em; line-height: 1.05;
-}
-.launch-letter {
-  display: inline-block; opacity: 0; translate: 0 0.4em;
-  animation: launch-letter 620ms cubic-bezier(0.2, 0.8, 0.2, 1) calc(650ms + var(--i, 0) * 45ms) both;
-}
-.launch-letter.is-space { width: 0.45em; }
-@keyframes launch-letter { to { opacity: 1; translate: 0 0; } }
-.launch-sub {
-  margin-top: 10px; font-size: clamp(9px, 1.9vw, 12px); letter-spacing: 0.44em; text-indent: 0.44em;
-  color: rgb(var(--pt-neon-rgb));
-  opacity: 0; animation: launch-fade 700ms ease 1600ms both;
-}
-.launch-meta {
-  margin-top: 10px; font-size: var(--vg-fs-min); letter-spacing: 0.22em; color: var(--pt-text-dim);
-  opacity: 0; animation: launch-fade 700ms ease 1950ms both;
-}
-.launch-data {
-  display: flex; align-items: flex-end; justify-content: center; gap: clamp(16px, 4vw, 34px);
-  flex-wrap: wrap; row-gap: 12px; max-width: 100%;
-  margin: 0 0 20px; opacity: 0; animation: launch-fade 700ms ease 2400ms both;
-}
-.launch-stat { display: flex; flex-direction: column; gap: 4px; }
-.launch-stat b {
-  font-size: clamp(17px, 3.2vw, 28px); font-weight: 600; color: #fff;
-  font-variant-numeric: tabular-nums; text-shadow: 0 0 18px rgba(var(--pt-glow-rgb), 0.45);
-}
-.launch-stat span { font-size: var(--vg-fs-min); letter-spacing: 0.2em; color: var(--pt-text-dim); }
-.launch-chart { width: min(320px, 68vw); max-width: 100%; height: 64px; overflow: visible; }
-.launch-chart-line {
-  fill: none; stroke: rgb(var(--pt-neon-rgb)); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
-  stroke-dasharray: 1; stroke-dashoffset: 1;
-  animation: launch-draw 1200ms cubic-bezier(0.3, 0.7, 0.2, 1) 2900ms both;
-}
-@keyframes launch-draw { to { stroke-dashoffset: 0; } }
-.launch-chart-dot { fill: rgb(var(--pt-neon-rgb)); opacity: 0; animation: launch-dot 400ms ease 4000ms both; }
-@keyframes launch-dot { from { opacity: 0; } to { opacity: 1; } }
-.launch-final {
-  font-size: var(--vg-fs-min); letter-spacing: 0.34em; color: rgb(var(--pt-neon-rgb));
-  opacity: 0; animation: launch-fade 600ms ease 4450ms both;
-}
-@keyframes launch-fade { from { opacity: 0; translate: 0 6px; } to { opacity: 1; translate: 0 0; } }
 
 /* scroll-driven reveals — Home cards rise as they enter (CSS-only, no JS/DOM changes) */
 
 /* Static end state for the launch film. The blanket `animation: none` for data-motion reduced/off
    (MotionVisibility.css) would otherwise strand these elements at their opacity:0 / undrawn start. */
-@media (prefers-reduced-motion: reduce) {
-  .launch-ring { display: none; }
-  .launch-seam, .launch-letter, .launch-sub, .launch-meta, .launch-data,
-  .launch-chart-line, .launch-chart-dot, .launch-final {
-    animation: none; opacity: 1; translate: none; transform: none;
-  }
-  .launch-seam { transform: scaleX(1); }
-  .launch-chart-line { stroke-dashoffset: 0; }
-}
-html[data-motion='reduced'] .launch-ring, html[data-motion='off'] .launch-ring { display: none; }
-html[data-motion='reduced'] :is(.launch-seam, .launch-letter, .launch-sub, .launch-meta, .launch-data, .launch-chart-line, .launch-chart-dot, .launch-final),
-html[data-motion='off'] :is(.launch-seam, .launch-letter, .launch-sub, .launch-meta, .launch-data, .launch-chart-line, .launch-chart-dot, .launch-final) {
-  animation: none; opacity: 1; translate: none; transform: none;
-}
-html[data-motion='reduced'] .launch-seam, html[data-motion='off'] .launch-seam { transform: scaleX(1); }
-html[data-motion='reduced'] .launch-chart-line, html[data-motion='off'] .launch-chart-line { stroke-dashoffset: 0; }
 
 /* ── Shared button material (was Lane D Edge Light; flat since 2026-11-09) ──
    Fill, ink and hairline come from --pt-btn-glass-* (lib/tokens.ts); in the
