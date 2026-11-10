@@ -34,7 +34,9 @@
   line-height: var(--chat-lh-body);
 }
 
-/* ── shell: sidebar + thread ─────────────────────────────────────────── */
+/* ── head widget + shell: sidebar + thread ───────────────────────────── */
+.chatHead { flex: 0 0 auto; }
+
 .shell {
   display: grid;
   grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);

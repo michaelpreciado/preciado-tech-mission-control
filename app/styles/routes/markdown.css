@@ -1,0 +1,46 @@
+/* shared — rendered markdown blocks. Owner: components/Markdown.tsx */
+
+.cc-md-p { margin: 0; white-space: pre-wrap; line-height: 1.62; }
+.cc-md-h {
+  margin: 4px 0 0; font-family: var(--pt-font-mono);
+  font-size: var(--vg-fs-min); letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--pt-neon-bright);
+}
+.cc-md-link { color: var(--pt-neon-bright); text-decoration: underline; text-underline-offset: 2px; }
+.cc-md-link:hover { color: var(--pt-neon-bright); }
+.cc-md-code {
+  font-family: var(--pt-font-mono); font-size: var(--vg-fs-min);
+  background: rgba(var(--pt-neon-rgb),0.10);
+  border: 1px solid var(--pt-border-dim); border-radius: 4px;
+  padding: 1px 5px; word-break: break-word;
+}
+.cc-md-list { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 3px; }
+.cc-md-list li { line-height: 1.55; }
+.cc-md-list li::marker { content: '> '; color: var(--pt-neon); font-family: var(--pt-font-mono); }
+.cc-md-quote {
+  margin: 0; padding: 4px 0 4px 12px;
+  border-left: 2px solid var(--pt-border);
+  color: var(--pt-text-dim); font-style: italic;
+}
+.cc-md-hr { border: none; border-top: 1px solid var(--pt-border-dim); margin: 4px 0; }
+.cc-md-fence {
+  border: 1px solid var(--pt-border-dim); border-radius: 8px; overflow: hidden;
+  background: rgba(0,0,0,0.4);
+}
+.cc-md-fence-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 4px 10px; border-bottom: 1px solid var(--pt-border-dim);
+  background: rgba(var(--pt-neon-rgb),0.05);
+  font-family: var(--pt-font-mono); font-size: var(--vg-fs-min); letter-spacing: 0.14em;
+  color: var(--pt-text-mute); text-transform: uppercase;
+}
+.cc-md-copy {
+  background: none; border: none; color: var(--pt-text-mute);
+  font-family: inherit; font-size: var(--vg-fs-min); letter-spacing: 0.14em; cursor: pointer;
+}
+.cc-md-copy:hover { color: var(--pt-neon-bright); }
+.cc-md-pre {
+  margin: 0; padding: 9px 11px; overflow-x: auto;
+  font-family: var(--pt-font-mono); font-size: var(--vg-fs-min); line-height: 1.55;
+  color: var(--pt-text); white-space: pre;
+}

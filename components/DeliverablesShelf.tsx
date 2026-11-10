@@ -6,7 +6,7 @@ import type { Deliverable, DeliverablesIndex, DeliverableContent } from '@/lib/p
 import { compatibleDeliverables, deliverablesDisplay, contentPath, matchingContent } from '@/lib/pt/deliverables-display.mjs'
 import { obsidianLink } from '@/lib/vault-links'
 import { THEME_CSS_VARIABLES } from '@/lib/pt/theme'
-import { Prompt } from './ui'
+import { Glyph, Kv, KvRow, Prompt, Verdict } from './ui'
 import './deliverables.css'
 
 export function DeliverablesShelf() {
@@ -60,8 +60,22 @@ export function DeliverablesShelf() {
     setSelected(row.id)
     window.history.replaceState(null, '', row.webPath)
   }
+  const verified = rows.filter(row => row.reviewState === 'verified').length
+  const awaiting = rows.filter(row => row.reviewState === 'awaiting-verification').length
+  const ready = rows.filter(row => row.available).length
   return <main className="pt-deliverables" style={THEME_CSS_VARIABLES as CSSProperties}>
-    <header><Prompt host="desk" cmd="deliverables" as="p" className="pt-eyebrow" /><div className="mc-verdict">{view.count ?? '—'}<small>artifacts</small></div><p className="pt-lede">Reports, client notes, and review evidence.</p></header>
+    <header className="pt-head-widget">
+      <div className="mc-widget">
+        <Prompt host="friday" cmd="deliverables" />
+        <Verdict>{view.count ?? null}<small>artifacts</small></Verdict>
+        <Kv>
+          <KvRow k="verif" v={view.count === null ? null : verified} r={verified > 0 ? <Glyph g="ok" /> : null} />
+          <KvRow k="await" v={view.count === null ? null : awaiting} />
+          <KvRow k="avail" v={view.count === null ? null : ready} r={ready > 0 ? <Glyph g="up" /> : null} />
+        </Kv>
+      </div>
+      <p className="pt-lede">Reports, client notes, and review evidence.</p>
+    </header>
     <div className="pt-shelf-tools"><p role="status">{view.count ?? '—'} items · {view.lastKnown ? 'last known · ' : ''}{view.label}{!view.complete ? ' · partial coverage' : ''}</p><label>Find an artifact<input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Title, client, or state" /></label></div>
     {error && <p role="alert">{error === 'access_denied' ? 'Sign in to view deliverables.' : 'Refresh failed. Displayed rows are last known.'}</p>}
     <div className="pt-shelf-layout"><section aria-label="Artifacts" className="pt-shelf-list">

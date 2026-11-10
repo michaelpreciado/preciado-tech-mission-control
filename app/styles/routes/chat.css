@@ -1,0 +1,47 @@
+/* /chat — chat shell. Owner: components/ChatShell.tsx */
+
+.mc-chat-bar {
+  display: flex; align-items: center; gap: 10px;
+  border: 1px solid var(--pt-border-dim); border-radius: var(--pt-r-md);
+  padding: 8px 12px; font-size: var(--vg-fs-min); color: var(--pt-text-dim);
+}
+.mc-chat-agent { flex: 1; letter-spacing: 0.06em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mc-chat-log { display: flex; flex-direction: column; gap: 10px; min-height: 200px; }
+.mc-chat-empty { color: var(--pt-text-mute); font-size: var(--vg-fs-min); padding: 24px 12px; text-align: center; line-height: 1.7; }
+.mc-chat-msg {
+  border: 1px solid var(--pt-border-dim); border-radius: var(--pt-r-md);
+  padding: 10px 14px; max-width: 92%;
+  background: rgba(var(--pt-neon-rgb), 0.03);
+}
+.mc-chat-msg-head {
+  display: flex; justify-content: space-between; gap: 16px;
+  font-size: var(--vg-fs-min); letter-spacing: 0.14em; color: var(--pt-text-mute); margin-bottom: 6px;
+}
+.mc-chat-msg-body { font-size: var(--vg-fs-min); line-height: 1.65; white-space: pre-wrap; word-break: break-word; }
+.mc-chat-thinking { color: var(--pt-text-dim); }
+.mc-chat-input {
+  display: flex; gap: 10px; align-items: flex-end;
+  position: sticky; bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  background: rgba(var(--pt-neon-rgb), 0.04);
+  border: 1px solid var(--pt-border-dim); border-radius: var(--pt-r-md); padding: 10px;
+}
+.mc-chat-input textarea {
+  flex: 1; resize: none; background: rgba(0,0,0,0.45); color: var(--pt-text-high);
+  border: 1px solid var(--pt-border-dim); border-radius: 8px;
+  padding: 9px 10px; font-family: var(--pt-font-mono); font-size: var(--vg-fs-min); line-height: 1.5;
+}
+.mc-chat-input textarea:focus { outline: none; border-color: var(--pt-neon); }
+
+@media (min-width: 981px) {
+.mc-chat-input { bottom: 12px; }
+}
+
+@media (pointer: coarse) {
+.mc-chat-input textarea {
+    font-size: 16px;
+  }
+}
+
+@media (min-width: 821px) {
+.mc-chat-input { bottom: 12px; }
+}

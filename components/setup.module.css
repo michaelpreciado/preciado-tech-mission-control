@@ -1,6 +1,7 @@
 /* /setup — flat widget groups, mono inputs, 1px accent border on focus.
    No shadow, blur, glow or gradient; the accent swatches keep their identity colours. */
 .setup { display: flex; flex-direction: column; gap: 16px; max-width: 760px; font-family: var(--pt-font-mono); }
+.widgetHead { max-width: 760px; margin-bottom: 4px; }
 .intro { padding: 14px 16px; border: 1px solid var(--pt-border); border-radius: var(--pt-radius-card, 16px); background: var(--pt-card-bg); color: var(--pt-text); font-size: 13px; line-height: 1.6; }
 .intro code { color: var(--pt-neon-bright); }
 .group { display: flex; flex-direction: column; gap: 12px; padding: 14px 16px; border: 1px solid var(--pt-card-border); border-radius: var(--pt-radius-card, 16px); background: var(--pt-card-bg); box-shadow: none; }

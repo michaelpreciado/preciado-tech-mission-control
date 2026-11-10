@@ -8,6 +8,8 @@
 .page { padding-bottom: calc(var(--pt-s-20) + var(--pt-s-8) + env(safe-area-inset-bottom)); }
 .workspace, .boardMain, .detail { display: grid; gap: var(--pt-s-5); align-items: start; }
 .boardMain, .revenueDock { min-width: 0; }
+.boardHead { grid-column: 1 / -1; min-width: 0; }
+.boardHead .mc-widget { margin: 0; }
 .toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--pt-s-3); color: var(--pt-text-dim); font-size: var(--pt-fs-xs); }
 .metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--pt-s-5); padding: var(--pt-s-5); }
 .stages { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--pt-s-4); align-items: start; }

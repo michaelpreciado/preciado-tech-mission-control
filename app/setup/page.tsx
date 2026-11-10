@@ -8,7 +8,7 @@ import { PageHeader } from '@/components/PageHeader'
  * Bring-your-own keys: nothing here ever leaves this machine.
  */
 import { useEffect, useState } from 'react'
-import { Button } from '@/components/ui'
+import { Button, Kv, KvRow, Glyph, Prompt, Verdict } from '@/components/ui'
 import { ACCENT_PRESETS, DEFAULT_ACCENT } from '@/lib/theme'
 import { NAV_TABS, PINNED_TAB_IDS } from '@/lib/nav-tabs'
 import { apiFetch } from '@/lib/api-base'
@@ -238,9 +238,24 @@ export default function SetupPage() {
     }
   }
 
+  /** Real head facts derived from loaded config (all empty-while-loading). */
+  const keysSetCount = cfg ? (Number(Boolean(cfg.keysSet.openrouterApiKey)) + Number(Boolean(cfg.keysSet.ticktickToken))) : null
+  const servicesCount = cfg ? Object.values(cfg.services).filter(v => v && v.trim() !== '').length : null
+  const pathsCount = cfg ? Object.values(cfg.paths).filter(v => v && v.trim() !== '').length : null
+  const accent = cfg ? cfg.appearance.accentColor : null
+
   return (
     <>
       <PageHeader title="SETUP" subtitle="Configure identity, integrations, and interface behavior" />
+      <div className={`mc-widget ${styles.widgetHead}`}>
+        <Prompt host="friday" cmd="setup" />
+        <Verdict>{cfg ? pathsCount! : null}<small>paths set</small></Verdict>
+        <Kv>
+          <KvRow k="services" v={servicesCount ?? null} />
+          <KvRow k="api keys" v={keysSetCount ?? null} r={cfg && configured ? <Glyph g="ok" /> : null} />
+          <KvRow k="accent" v={accent ?? null} />
+        </Kv>
+      </div>
       <div className={styles.setup}>
         <div className={styles.intro}>
           <p><strong>Local-first, bring-your-own-keys.</strong> Everything below is written to

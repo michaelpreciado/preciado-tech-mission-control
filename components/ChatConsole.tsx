@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { Button, Card, Field, Glyph, IconButton, Input, Prompt, Row, Segmented, Select, TextArea } from './ui'
+import { Button, Card, Field, Glyph, IconButton, Input, Kv, KvRow, Prompt, Row, Segmented, Select, TextArea, Verdict } from './ui'
 import { Markdown } from './Markdown'
 import { BotsPanel, ago } from './views/BotsPanel'
 import { ChatContinuityFooter } from './ChatContinuityFooter'
@@ -542,7 +542,17 @@ export default function ChatConsole() {
     : mode === 'codex' ? { tone: 'idle', text: <span><Glyph g="ok" /> codex handoff · the task is sent with a brief from this conversation</span>, meta: 'Enter sends' }
     : { tone: 'idle', text: <span>Enter sends · Shift+Enter newline</span> }
 
-  return <div ref={root} className={styles.shell} data-stage={stage}>
+  return <>
+    <div className={`mc-widget ${styles.chatHead}`}>
+      <Prompt host="friday" cmd="chat" />
+      <Verdict>{index ? index.conversations.length : null}<small>sessions</small></Verdict>
+      <Kv>
+        <KvRow k="bots" v={agents.length} r={agents.some(a => a.enabled && a.available) ? <Glyph g="run" /> : null} />
+        <KvRow k="profiles" v={index ? index.profiles.length : null} />
+        <KvRow k="devices" v={index ? index.devices.length : null} />
+      </Kv>
+    </div>
+    <div ref={root} className={styles.shell} data-stage={stage}>
     <LiveChatMirror onActivity={refresh} />
     <Card className={`${styles.sidebar} ${sidebarExpanded ? styles.sidebarExpanded : ''}`}>
       <nav className={styles.sidebarTabs} aria-label="Chat navigation" role="tablist">
@@ -648,4 +658,5 @@ export default function ChatConsole() {
       </> : <div className={styles.emptyThread}><h2>Choose a conversation</h2><p>Select a bot to pick up where you left off.</p><Button variant="primary" onClick={newChat}>New chat</Button></div>}
     </Card>
   </div>
+  </>
 }

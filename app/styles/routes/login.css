@@ -1,0 +1,81 @@
+/* /login — login form. Owner: app/login */
+
+.mc-login-card {
+  width: 100%;
+  max-width: 340px;
+  background: var(--ob-glass);
+  border: 1px solid var(--ob-border);
+  border-radius: var(--ob-radius-card);
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px; }
+.mc-login-brand {
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.08em;
+  color: var(--pt-neon);
+}
+.mc-login-kicker {
+  font-size: var(--vg-fs-min);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--pt-muted, rgba(255, 255, 255, 0.5));
+  margin-bottom: 6px;
+}
+.mc-login-label {
+  font-size: var(--vg-fs-min);
+  color: var(--pt-muted, rgba(255, 255, 255, 0.6));
+  margin-top: 4px;
+}
+.mc-login-input {
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--pt-line, rgba(255, 255, 255, 0.14));
+  color: inherit;
+  font: inherit;
+  font-size: 15px;
+}
+.mc-login-input:focus {
+  outline: none;
+  border-color: var(--pt-action);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pt-action) 25%, transparent);
+}
+.mc-login-btn {
+  margin-top: 8px;
+  padding: 11px 14px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: var(--pt-action);
+  color: var(--pt-launcher-bg, var(--pt-bg));
+  font-weight: 600;
+  cursor: pointer;
+}
+.mc-login-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.mc-login-btn-ghost {
+  background: transparent;
+  border-color: var(--pt-line, rgba(255, 255, 255, 0.14));
+  color: var(--pt-muted, rgba(255, 255, 255, 0.7));
+}
+.mc-login-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mc-login-error {
+  color: var(--vg-danger-fg);
+  font-size: 13px;
+}
+.mc-login-muted {
+  color: var(--pt-muted, rgba(255, 255, 255, 0.55));
+  font-size: 13px;
+}
+html:root :is(.mc-drawer, .mc-login-card, .cmdp, .mc-modal) {
+  background-color: var(--glass-3-fill);
+  border-color: var(--glass-3-rim);
+}

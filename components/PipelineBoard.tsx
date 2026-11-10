@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { RadarRecord } from '@/lib/pt/pipeline'
-import { Button, Card, CardHead, Chip, Divider, Prompt, Row, Segmented, Sheet, Stat, fmtDate } from './ui'
+import { Button, Card, CardHead, Chip, Divider, Glyph, Kv, KvRow, Prompt, Row, Segmented, Sheet, Stat, Verdict, fmtDate } from './ui'
 import { ClientDocsLink } from './VaultDocuments'
 import { apiUrl } from '@/lib/api-base'
 import { ClientSummary, previewUrl, RevenuePipeline, STAGES } from './RevenuePipeline'
@@ -37,6 +37,18 @@ export function PipelineBoard() {
   const visible = new Set(data?.display.recordIds ?? [])
   const clientRow = (record: RadarRecord) => <Row key={record.id} title={record.businessName} sub={<ClientSummary record={record} />} onClick={() => setSelectedId(record.id)} aria-label={`Open ${record.businessName} details`} aria-haspopup="dialog" />
   return <div className={styles.workspace}>
+    <div className={styles.boardHead}>
+      <div className="mc-widget">
+        <Prompt host="friday" cmd="pipeline" />
+        <Verdict>{data ? data.recordCount : '—'}<small>records</small></Verdict>
+        <Kv>
+          <KvRow k="active" v={data ? data.activeCount : '—'} />
+          <KvRow k="attn" v={data ? data.attentionCount : '—'} r={data?.attentionCount ? <Glyph g="fail" /> : null} />
+          <KvRow k="blocked" v={data ? data.blockedCount : '—'} />
+        </Kv>
+        <Prompt host="friday" foot meta={<><Glyph g="run" />{data ? data.activeCount : '—'} live · <Glyph g="retry" />{data ? data.pendingDecisionCount : '—'} decide</>} />
+      </div>
+    </div>
     <div className={styles.boardMain}>
       {error && <p className={styles.error} role="alert">{error}{data ? ' · showing last snapshot' : ''}</p>}
       <div className={styles.toolbar}>

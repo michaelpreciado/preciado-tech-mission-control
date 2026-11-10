@@ -1,0 +1,84 @@
+/* /setup — setup wizard. Owner: app/setup */
+
+.mc-setup-intro {
+  border: 1px solid var(--pt-border-dim); border-radius: var(--pt-r-md);
+  padding: 14px 16px; font-size: var(--vg-fs-min); line-height: 1.6; color: var(--pt-text);
+  background: rgba(var(--pt-launcher-deep-rgb, var(--pt-card-rgb)), 0.5);
+}
+.mc-setup-intro code { color: var(--pt-neon); }
+.mc-setup-group {
+  border: 1px solid var(--ob-border); border-radius: var(--ob-radius-card);
+  padding: 14px 16px; background: var(--ob-glass);
+  display: flex; flex-direction: column; gap: 12px; }
+.mc-setup-group-head {
+  font-size: var(--vg-fs-min); letter-spacing: 0.18em; color: var(--pt-neon);
+}
+.mc-setup-group-head span {
+  margin-left: 10px; letter-spacing: 0.04em; text-transform: none;
+  color: var(--pt-text-dim); font-size: var(--vg-fs-min);
+}
+.mc-setup-field { display: flex; flex-direction: column; gap: 4px; }
+.mc-setup-field span { font-size: var(--vg-fs-min); letter-spacing: 0.08em; text-transform: uppercase; color: var(--pt-text-dim); }
+.mc-setup-field span .is-set { color: var(--pt-neon); }
+.mc-setup-field input {
+  background: rgba(0,0,0,0.45); color: var(--pt-text-high);
+  border: 1px solid var(--pt-border-dim); border-radius: 8px;
+  padding: 9px 10px; font-family: var(--pt-font-mono); font-size: var(--vg-fs-min);
+  min-height: 40px;
+}
+.mc-setup-field input:focus { outline: none; border-color: var(--pt-neon); }
+.mc-setup-field em { font-style: normal; font-size: var(--vg-fs-min); color: var(--pt-text-mute); }
+.mc-setup-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+.mc-setup-actions.sticky {
+  position: sticky; bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  background: rgba(var(--pt-launcher-deep-rgb, var(--pt-card-rgb)), 0.92); border: 1px solid var(--pt-border-dim);
+  border-radius: var(--pt-r-md); padding: 10px 14px;
+}
+.mc-setup-hint { font-size: var(--vg-fs-min); color: var(--pt-text-mute); }
+.mc-setup-flash {
+  border-radius: var(--pt-r-md); padding: 10px 14px; font-size: var(--vg-fs-min);
+  border: 1px solid var(--pt-border-dim);
+}
+.mc-setup-flash.ok { color: var(--vg-ok-fg); border-color: var(--vg-ok-border); }
+.mc-setup-flash.err { color: var(--vg-warn-fg); border-color: var(--vg-warn-border); }
+.mc-setup-loading { color: var(--pt-text-dim); font-size: var(--vg-fs-min); padding: 18px; }
+.mc-setup-swatches { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 4px 0; }
+.mc-setup-swatches input[type="color"] {
+  width: 44px; height: 30px; padding: 0 2px; background: transparent;
+  border: 1px dashed var(--pt-border-dim); border-radius: 8px; cursor: pointer;
+}
+.mc-setup-tablist { display: flex; flex-direction: column; gap: 10px; }
+.mc-setup-tabsection { border: 1px solid var(--pt-border-dim); border-radius: var(--pt-r-sm); overflow: hidden; }
+.mc-setup-tabsection-head {
+  font-size: var(--vg-fs-min); letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--pt-text-mute); padding: 6px 10px; background: rgba(0,0,0,0.3);
+}
+.mc-setup-tabrow {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 7px 10px; border-top: 1px solid var(--pt-border-dim);
+}
+.mc-setup-tabrow-label {
+  font-family: var(--pt-font-mono); font-size: var(--vg-fs-min); color: var(--pt-text-high);
+}
+.mc-setup-tabrow-label em { font-style: normal; color: var(--pt-text-mute); font-size: var(--vg-fs-min); }
+.mc-setup-tabrow-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.mc-setup-tabrow-actions .mc-btn { min-width: 34px; padding-left: 8px; padding-right: 8px; }
+.mc-setup-tabrow[draggable="true"] { cursor: grab; }
+.mc-setup-tabrow.setup-tabrow--dragging { opacity: 0.45; }
+
+@media (min-width: 981px) {
+.mc-setup-actions.sticky { bottom: 12px; }
+}
+
+@media (pointer: coarse) {
+.mc-setup-tabrow-actions .mc-btn { min-width: 44px; min-height: 44px; }
+}
+
+@media (min-width: 821px) {
+.mc-setup-actions.sticky { bottom: 12px; }
+}
+
+@media (max-width: 520px) {
+.mc-setup-actions.sticky { position: static; }
+.mc-setup-group { padding: 14px; }
+}
