@@ -556,3 +556,75 @@ Recap: the audit is complete and the plan above is final. It was not written to 
 - /api/local-ai reports only RUNNING containers → no "stopped" engine lines; honest list = running engines + proxy loaded model.
 - Do NOT change `CATEGORICAL` in lib/chart-colors.ts (memory graph + crew accents use it). Switch `STATUS` to CSS tokens; swap colors locally in BurnLandscape.tsx. STATUS as CSS var can't feed glow() (no current code does).
 - flight-strip: add `completionStats(tasks, now)` → { doneToday, doneWeek, streak, best, daily[14] }, local calendar days, timezone-agnostic test. First edit on re-run.
+
+## 8. Post-merge inspection — pass 2 (2026-11-09, Fable 5.2, card `t_d2e0d27f`)
+
+**Method.** 28 live captures (14 routes × 1440×900 / 412×915) from `http://127.0.0.1:4176` at HEAD `c201516`; a `.mc-widget` DOM census at both widths; `scripts/audit-mobile-matrix.mjs --only 390,414` (36 page loads, 4 checks each); visual review of both contact sheets against the launcher-widget reference in `docs/screenshots/`.
+
+**Snapshot caveat.** While this inspection ran, a cleanup pass was already in flight in the working tree (8 files, −802 lines: `globals.css` 4831 → 4107, `.ob-*` 34 → 28, dead primitives dropped from `components/ui.tsx`, `public/rain.js` deleted). Everything below is verified at `c201516`; re-check each item before starting a lane so nobody re-does landed work.
+
+### 8.1 Widget census — who actually has the theme
+
+| route | `.mc-widget` total / visible @1440 | @412 | verdict |
+|---|---|---|---|
+| `/system` | 6 / 6 | 6 / 6 | ✅ done (Lane B) |
+| `/costs` | 19 / 19 | 19 / 19 | ✅ done (Lane B) |
+| `/crew` `/bots` | 2 / 2 | 2 / 2 | ✅ done (Lane C) |
+| `/kanban` | 2 / 1 | 2 / 1 | ✅ board head present; 1 hidden variant (intentional responsive twin — not a defect) |
+| `/chat` | 0 / 0 | 0 / 0 | ❌ no widget treatment |
+| `/pipeline` | 0 / 0 | 0 / 0 | ❌ no widget treatment |
+| `/setup` | 0 / 0 | 0 / 0 | ❌ no widget treatment |
+| `/deliverables` | 0 / 0 | 0 / 0 | ❌ no widget treatment |
+
+Correction to the handoff: the earlier "9 widgets at 1440 on `/deliverables`" was counting legacy `.mc-window` cards, which the merge removed. In current source and DOM these four routes have **zero** widget surfaces at either width. `/chat`, `/pipeline`, `/setup`, `/deliverables` are also the four places where a prompt-line header (`friday:~$ …`) would do the most work, since each is a list/board with no chrome.
+
+### 8.2 Remaining defects, ranked
+
+| # | severity | route / scope | finding |
+|---|---|---|---|
+| P1 | high (theme gap) | `/chat` `/pipeline` `/setup` `/deliverables` | no `.mc-widget` head, no prompt line, no Verdict/Kv summary — these read as un-themed pages inside a themed shell |
+| P2 | high (touch) | `/memory` @390/414 | **3 controls < 44px**, **9 tap-gaps < 8px**, and `mc-mem-edge*` / `g` SVG children report as overflowing their box. Graph labels are effectively untappable on phone |
+| P3 | med | `/kanban` @414 | 4 tap-gaps < 8px in the widget head (glyph counters sit tight); desktop clean |
+| P4 | med | `/crew` `/bots` @390/414 | `Roster-module__…__rowTask` text box overflows its row (clipped, no page scroll) — task text needs truncation/`min-width:0` |
+| P5 | low | `/styleguide` both widths | 3 text groups < 12px (`CODE` samples) + `CODE` vertical overflow. Doc-only route; fix by widening the sample column, not by shrinking type |
+| P6 | med (structure) | `app/globals.css` | still 4107 lines after the prune; route-owned rules (`.cp-*`, `.cc-md-*`, `.mc-rig-*`, `.mc-mem-*`, `.mc-gh-*`, `.mc-setup-*`) still live in the global sheet. This is the single biggest merge hotspot in the repo |
+| P7 | decision | `/costs` charts | the only `linear-gradient` in the app is `charts.module.css` `.plot` grid hairlines. **Decision: keep.** They are single-colour 1px rules, not decorative gradients; the audit's gradient check is a proxy and this is a false positive. Do not re-open |
+| P8 | blocker (data) | `/calendar` | empty state because TickTick is not configured in this environment. Not a UI defect; needs one configured-state capture before visual sign-off |
+
+### 8.3 Lane assignments — round 2 (disjoint file sets)
+
+Preconditions: `npm test` green and the in-flight cleanup committed. All lanes work from `main`, no worktrees touching `app/globals.css` except Lane D.
+
+**Lane D — route CSS extraction (serial, single writer on `globals.css`) — model `claude-sonnet-5-5`**
+- Owns: `app/globals.css` + any existing/new `*.module.css` under `app/**` and `components/**`.
+- Move remaining route-owned blocks out of `globals.css` into the route's module CSS; delete rules with zero callers. Target: `globals.css` ≤ 2,000 lines.
+- No component/TSX edits after the first hour; if a rule needs a new class name, coordinate with Lane E via comment instead of editing their files.
+- Gate: `npm run build` (only when no `next start` is serving `.next` — otherwise `npm run typecheck` + `vitest`) and grep for orphan selectors = 0.
+
+**Lane E — widget heads for the four uncovered routes — model `claude-opus-5-5`**
+- Owns: `app/chat/**`, `app/pipeline/**`, `app/setup/**`, `app/deliverables/**`, `components/DeliverablesShelf.tsx`, `components/PipelineBoard.tsx`, `components/VaultDocuments.tsx`, `components/ChatConsole.tsx`, and their module CSS.
+- One `.mc-widget` head per route: prompt line (`friday:~$ chat`), one-line Verdict, 2–3 `Kv` facts from real data, glyph counts. Reuse Lane A primitives only; **no new CSS in `globals.css`**.
+- Must render at 1440 and 412 with 0 overflow and 0 tap<44 on the new chrome.
+- Blocks: none (starts after D's commit to avoid the global sheet).
+
+**Lane F — mobile interaction polish — model `claude-sonnet-5-5`**
+- Owns: `components/views/MemoryPage*` + memory module CSS, `components/KanbanBoard.tsx` (gap fix only), `components/crew/Roster.module.css`, `app/styleguide/**`.
+- Fix P2 (44×44 hit areas, ≥8px gaps, `min-width:0` on edge labels), P3, P4, P5.
+- Disjoint from E's files → runs in parallel with E once D has landed.
+- Gate: `audit-mobile-matrix.mjs --only 360,390,414,430` → `tap<44=0`, `gap<8=0`, `overflow=0`.
+
+**Lane G — verification and evidence (serial, after D+E+F) — model `claude-sonnet-5-5`**
+- Re-run full matrix (360/390/414/430 + 1440/412), refresh `docs/live-audit-2026-11-09.json` with a `pass: 2` field, regenerate both contact sheets into `docs/screenshots/`, write `artifacts/2026-11-09/polish-verification.md`.
+- Sign-off requires: P1–P5 closed or explicitly deferred with a reason, `globals.css` line target met, `npm test` green, served bundle rebuilt **and service restarted** (the `next start` runs from `.next`, so a build without a restart ships stale JS).
+
+### 8.4 Do not redo (landed or in flight)
+
+- Glyph-for-emoji swap on `/content-creation` (`c201516`); old emoji variant absent from the served bundle.
+- Lane A theme tokens/shell/home, Lane B data widgets, Lane C chat/crew/calendar work (merged in `dbe8684`).
+- Dead-primitive removal in `components/ui.tsx`, `public/rain.js` deletion, `.ob-*` prune — in flight in the working tree at inspection time.
+- `/kanban`'s second, non-visible `.mc-widget` is a responsive twin, not a bug.
+- `/costs` grid gradients — decided, keep (P7).
+
+### 8.5 Hotspot rule
+
+`app/globals.css` is still touched by every lane. After Lane D it is closed to new writes: all round-2 additions go into route/module CSS. If a diff to `globals.css` shows up on any card other than D, flag it on the card before merging.
