@@ -12,3 +12,15 @@
 .memory :global(.mc-mem-legend-item), .memory :global(.mc-mem-recent-label) { text-transform: lowercase; letter-spacing: 0; }
 .memory :global(.mc-mem-open) { border-color: var(--pt-border); border-radius: var(--pt-radius-btn, 10px); }
 .memory :global(.mc-mem-search) { font-family: var(--pt-font-mono); }
+/* Tap spacing: adjacent controls need >= 8px of clearance (mobile audit floor).
+   The chip row, the note results list and the recently-updated list all
+   shipped at 4-6px. */
+.memory :global(.mc-mem-tags),
+.memory :global(.w2l-memory-results),
+.memory :global(.mc-mem-recent) { gap: 8px; }
+/* Fold-cover widths: the graph is a passive overview (MemoryGraph.tsx drops the
+   node hit targets), so the note list is the tap surface. */
+@media (max-width: 980px) {
+  .memory :global(.mc-mem-node) { cursor: default; }
+  .memory :global(.mc-mem-node:hover .mc-mem-node-shape) { stroke: var(--pt-bg); stroke-width: 1; }
+}

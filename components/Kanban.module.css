@@ -33,7 +33,9 @@
 .laneToggle { display: flex; width: 100%; align-items: center; gap: 1ch; min-height: 44px; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .laneToggle:focus-visible { outline: 2px solid var(--pt-neon); outline-offset: 2px; border-radius: var(--pt-r-sm); }
 .chevron { flex: none; color: var(--pt-neon); }
-.laneBody { display: grid; gap: 4px; min-width: 0; min-height: 32px; border-radius: var(--pt-radius-row, 10px); }
+/* 8px floor between adjacent tap targets: the lane toggle and the first card,
+   and card-to-card inside the lane. */
+.laneBody { display: grid; gap: 8px; margin-top: 8px; min-width: 0; min-height: 32px; border-radius: var(--pt-radius-row, 10px); }
 .laneBody[hidden] { display: none; }
 /* Task rows: a 10px-radius row with a 2px status rail. Rail colour is semantic
    only — red for blocked/failed, accent for running; review stays neutral. */

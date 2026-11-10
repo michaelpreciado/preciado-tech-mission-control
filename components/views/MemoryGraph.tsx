@@ -16,6 +16,26 @@ import { MEMORY_GRAPH_WIDTH as WIDTH, MEMORY_GRAPH_HEIGHT as HEIGHT, settleMemor
 const POLL_MS = 180_000
 const MAX_CHIPS = 24
 
+/** Below this width the 900-unit viewBox is scaled to ~0.36, so an r=5 note
+ * node renders ~3px on screen — far under the 44px tap floor, and enlarging the
+ * hit circles to 44px would overlap the collide-force spacing and mis-tap. So
+ * under this width the graph is a passive overview and the note list above it
+ * (`w2l-memory-results`, which the stylesheet reveals at the same breakpoint) is
+ * the tap surface. Above it the nodes stay interactive. */
+const GRAPH_TAP_MIN_WIDTH = 980
+
+function useGraphTappable() {
+  const [tappable, setTappable] = useState(true)
+  useEffect(() => {
+    const mq = window.matchMedia(`(min-width: ${GRAPH_TAP_MIN_WIDTH + 1}px)`)
+    const sync = () => setTappable(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
+  return tappable
+}
+
 type SimNode = MemoryGraphNode & SimulationNodeDatum
 type SimLink = { source: SimNode | string; target: SimNode | string; kind: 'link' | 'tag' }
 
@@ -76,6 +96,7 @@ function useMemoryLayout(nodes: MemoryGraphNode[], edges: LayoutEdge[], enabled:
 export function MemoryGraphView() {
   const { elements3d } = useUiSettings()
   const graphEnabled = elements3d.memoryGraph
+  const graphTappable = useGraphTappable()
   const [data, setData] = useState<MemoryGraphData | null>(null)
   const [loadError, setLoadError] = useState(false)
   const [showAll, setShowAll] = useState(false)
@@ -290,33 +311,29 @@ export function MemoryGraphView() {
                   const isTag = n.kind === 'tag'
                   const r = isTag ? 5 + Math.min(9, (n.noteCount ?? 1) / 3) : 5
                   const fill = isTag ? 'var(--pt-neon)' : folderColor(n.folder)
-                  // The visible dot (r=5..14 viewBox units) is far too small to
-                  // tap once the 900-wide viewBox is scaled down at fold-cover
-                  // width (~386px CSS, but the actual .mc-mem-svg-wrap render
-                  // width after Window/gutter/panel padding measures ~282px,
-                  // ~0.31x scale) — an r=5 note node renders at ~3px on
-                  // screen. An invisible, larger hit-area circle (still
-                  // bounded relative to the collide-force spacing so dense
-                  // clusters don't fully swallow their neighbors) expands the
-                  // tappable zone to ~13px on screen without changing the
-                  // visual design. A true 44px target isn't reachable in this
-                  // viewBox without either shrinking the world to match the
-                  // viewport (which would break desktop density) or adding
-                  // pinch-zoom — out of scope for this pass.
+                  // The visible dot is r=5..14 viewBox units; the invisible hit
+                  // circle widens the tappable zone to ~42px on screen at full
+                  // scale without changing the visual design — it stays inside
+                  // the collide-force spacing so dense clusters don't swallow
+                  // their neighbours. Where the graph is scaled below the tap
+                  // floor (graphTappable === false) the nodes are a passive
+                  // overview and the note list is the control surface, so the
+                  // hit circle and the handlers are dropped entirely.
                   const hitR = r + 16
+                  const toggle = () => setSelectedId(cur => cur === n.id ? null : n.id)
                   return (
                     <g
                       key={n.id}
                       transform={`translate(${n.x},${n.y})`}
                       className={`mc-mem-node ${n.id === selectedId ? 'is-selected' : ''}`}
                       opacity={dim ? 0.16 : 1}
-                      onClick={() => setSelectedId(cur => cur === n.id ? null : n.id)}
-                      role="button"
-                      tabIndex={0}
+                      onClick={graphTappable ? toggle : undefined}
+                      role={graphTappable ? 'button' : 'img'}
+                      tabIndex={graphTappable ? 0 : undefined}
                       aria-label={n.title}
-                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedId(cur => cur === n.id ? null : n.id) } }}
+                      onKeyDown={graphTappable ? e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle() } } : undefined}
                     >
-                      <circle r={hitR} fill="transparent" style={{ pointerEvents: 'all' }} className="mc-mem-node-hit" />
+                      <circle r={hitR} fill="transparent" style={{ pointerEvents: graphTappable ? 'all' : 'none' }} className="mc-mem-node-hit" />
                       {isTag ? (
                         <rect x={-r} y={-r} width={r * 2} height={r * 2} transform="rotate(45)" fill={fill} className="mc-mem-node-shape" />
                       ) : (
@@ -363,7 +380,7 @@ export function MemoryGraphView() {
               </>
             ) : (
               <div className="mc-mem-detail-empty">
-                <div>click a node to preview its excerpt</div>
+                <div>{graphTappable ? 'click a node to preview its excerpt' : 'tap a note above to preview its excerpt'}</div>
                 {recentNotes.length > 0 && (
                   <div className="mc-mem-recent">
                     <div className="mc-mem-recent-label">recently updated</div>

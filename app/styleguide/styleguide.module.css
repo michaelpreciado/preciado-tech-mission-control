@@ -31,6 +31,9 @@
 .stack { display: flex; flex-wrap: wrap; align-items: center; gap: var(--pt-s-3); }
 .rules { display: grid; gap: var(--pt-s-3); max-width: 900px; margin: 0; padding-left: var(--pt-s-6); color: var(--pt-text); font-family: var(--pt-font-mono); font-size: var(--pt-fs-body); line-height: var(--pt-lh-body); }
 .rules code { color: var(--pt-info-ink); font-family: var(--pt-font-mono); font-size: var(--pt-fs-sm); }
+/* Long unbreakable samples (file paths, selectors) must wrap, not push the
+   prose past the column edge. */
+.note code, .intro code, .rules code, .glyphRow code { overflow-wrap: anywhere; }
 
 @media (max-width: 820px) {
   .gridThree,
@@ -74,14 +77,14 @@
 .themePanel { min-width: 0; background: var(--pt-bg); color: var(--pt-text); border: 1px solid var(--pt-card-border); border-radius: var(--pt-r-lg); }
 .themePanelInner { display: flex; flex-direction: column; gap: var(--pt-s-4); padding: var(--pt-s-4); }
 .themeTitle { margin: 0; color: var(--pt-text-high); font: 600 var(--pt-fs-sm)/var(--pt-lh-ui) var(--pt-font-mono); letter-spacing: var(--pt-ls-prompt); }
-.swatchGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--pt-s-2); }
+.swatchGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: var(--pt-s-2); }
 .swatch { display: flex; align-items: center; gap: var(--pt-s-2); min-width: 0; }
 .swatchChip { flex: none; width: 36px; height: 36px; border-radius: var(--pt-r-sm); border: 1px solid var(--pt-card-border); }
-.swatchMeta { color: var(--pt-text-dim); font: 400 var(--pt-fs-2xs)/1.35 var(--pt-font-mono); overflow-wrap: anywhere; }
+.swatchMeta { color: var(--pt-text-dim); font: 400 var(--pt-fs-xs)/1.35 var(--pt-font-mono); overflow-wrap: anywhere; }
 .themeLive { display: flex; flex-direction: column; gap: var(--pt-s-3); }
-.liveLabel { color: var(--pt-text-dim); font: 400 var(--pt-fs-2xs)/var(--pt-lh-ui) var(--pt-font-mono); }
+.liveLabel { color: var(--pt-text-dim); font: 400 var(--pt-fs-xs)/var(--pt-lh-ui) var(--pt-font-mono); }
 .liveRow { display: flex; flex-wrap: wrap; gap: var(--pt-s-2); align-items: center; }
-.liveSwatch { padding: var(--pt-s-2) var(--pt-s-3); border: 1px solid var(--pt-card-border); border-radius: var(--pt-r-sm); color: var(--pt-text); font: 400 var(--pt-fs-2xs)/1 var(--pt-font-mono); }
+.liveSwatch { padding: var(--pt-s-2) var(--pt-s-3); border: 1px solid var(--pt-card-border); border-radius: var(--pt-r-sm); color: var(--pt-text); font: 400 var(--pt-fs-xs)/1 var(--pt-font-mono); }
 
 @media (max-width: 820px) {
   .themeGrid { grid-template-columns: minmax(0, 1fr); }

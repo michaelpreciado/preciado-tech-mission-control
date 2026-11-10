@@ -6,7 +6,11 @@
 /* agent top */
 .load { display: grid; grid-template-columns: 8ch minmax(0, 1fr) 5ch; align-items: center; gap: 0 1ch; color: var(--pt-text-mute); line-height: 1.7; }
 .load > :last-child { color: var(--pt-text-high); text-align: right; font-variant-numeric: tabular-nums; }
-.rowTask { color: var(--pt-text-dim); }
+/* Task text rides inside the WRow `.t` line, which already truncates with an
+   ellipsis (globals). `display: contents` dissolves this span's own box, so it
+   can never report as a box hanging outside the row — the text still inherits
+   the dim colour and is clipped by its container. */
+.rowTask { display: contents; color: var(--pt-text-dim); }
 .alert { color: var(--pt-error-ink); }
 
 /* BOT DESK */
