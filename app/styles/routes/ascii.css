@@ -1,0 +1,90 @@
+/* ASCII data-viz + figlet wordmarks. Owners: components/ascii-viz.tsx, app/vf/Ascii.tsx */
+
+.asciiviz-spark, .asciiviz-meter, .asciiviz-heat, .asciiviz-bars,
+.asciiviz-caption, .asciiviz-repo {
+  font-family: var(--pt-font-mono, 'JetBrains Mono'), monospace;
+  font-size: var(--vg-fs-min);
+  line-height: 1.1;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  color: var(--mc-chart-quiet);
+}
+.asciiviz-spark, .asciiviz-meter, .asciiviz-bars { display: inline-block; white-space: pre; }
+.asciiviz-heat { display: block; white-space: pre; }
+.asciiviz-bright, .asciiviz-value { color: var(--mc-chart-emph); }
+.asciiviz-faint, .asciiviz-caption { color: var(--mc-chart-axis); }
+.asciiviz-value, .asciiviz-caption { font-size: var(--vg-fs-min); }
+.asciiviz-density-0, .asciiviz-density-1 { color: var(--mc-chart-axis); }
+.asciiviz-density-2, .asciiviz-density-3 { color: var(--mc-chart-quiet); }
+.asciiviz-density-4, .asciiviz-density-5 { color: var(--mc-chart-emph); }
+/* Figlet wordmarks (lib/wordmarks.ts). Box-drawing glyphs sit outside the
+   self-hosted mono subset, so the whole block uses one system monospace stack:
+   every cell comes from the same face and the strokes stay joined. The font
+   scales to the container (0.6em advance per column) so rows never wrap. */
+.asciiviz-wordmark { display: block; container-type: inline-size; max-width: 100%; }
+.asciiviz-wordmark > span {
+  display: block; width: max-content; white-space: pre;
+  font-family: ui-monospace, 'SF Mono', Menlo, 'DejaVu Sans Mono', 'Noto Sans Mono', 'Liberation Mono', monospace;
+  font-size: min(var(--wm-max, 14px), calc(100cqi / (var(--wm-cols) * 0.62)));
+  line-height: 1; letter-spacing: 0; font-weight: 400; font-variant-ligatures: none;
+}
+.asciiviz-telemetry { min-width: 0; text-align: center; }
+.asciiviz-telemetry .asciiviz-meter { margin-top: 6px; font-size: var(--vg-fs-min); color: var(--mc-chart-axis); }
+.asciiviz-telemetry .asciiviz-bright { color: var(--mc-chart-emph); }
+.asciiviz-burn { display: inline-block; margin-left: 12px; }
+.asciiviz-inset { margin: 10px 16px; overflow-x: auto; }
+.asciiviz-repo { margin-top: 5px; white-space: nowrap; }
+.asciiviz-repo-name { display: inline-block; width: 24ch; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
+/* W2-K: additive terminal ticks; the host retains its glass border/layout. */
+/* OmniBridge wordmark override comes last so the legacy cyberpunk artwork
+   rules cannot reintroduce the old slanted/portrait treatment on Home. */
+.ob-wordmark-banner.cyber-wordmark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+  flex-wrap: nowrap;
+  width: 100%;
+  margin: 0;
+  padding: 14px 18px 12px;
+  border: 1px solid var(--ob-border);
+  border-radius: 12px;
+  background: var(--ob-glass);
+  text-align: center;
+}
+.ob-wordmark-banner.cyber-wordmark > div {
+  display: block;
+  align-self: center;
+  min-width: 0;
+  flex: 0 0 auto;
+  gap: 0;
+}
+.ob-wordmark-banner .ob-wordmark-art {
+  display: block;
+  margin: 0 auto;
+  overflow: auto;
+  color: var(--ob-peak);
+  font: clamp(6px, .75vw, 11px)/1.08 var(--pt-font-mono), monospace;
+  letter-spacing: 0;
+  white-space: pre;
+}
+.ob-wordmark-banner.cyber-wordmark .ob-wordmark-subtitle {
+  align-self: center;
+  margin-top: 9px;
+  color: var(--ob-text-4);
+  font: var(--vg-fs-min)/1.2 var(--pt-font-mono);
+  letter-spacing: .48em;
+}
+@media (max-width: 520px) {
+  .ob-wordmark-banner.cyber-wordmark { padding: 12px 8px 10px; overflow: hidden; }
+  .ob-wordmark-banner .ob-wordmark-art { font-size: 5px; }
+  .ob-wordmark-banner.cyber-wordmark .ob-wordmark-subtitle { font-size: var(--vg-fs-min); letter-spacing: .22em; }
+}
+/* ══════════════════════════════════════════════════════════════════════════
+   OMNIBRIDGE v5 · SHARED APPLICATION SYSTEM
+   The home deck is the visual anchor. These additive primitives extend its
+   glass, blue-emissive language to route chrome without removing the legacy
+   mc-* vocabulary still used by feature panels.
+   ══════════════════════════════════════════════════════════════════════════ */

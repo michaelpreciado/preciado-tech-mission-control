@@ -1,0 +1,205 @@
+/* Command palette (⌘K / Ctrl-K). Owner: components/CommandPalette.tsx */
+
+@media (pointer: coarse) {
+  .cmdp-input {
+    font-size: 16px;
+  }
+}
+/* ═══════════════════════════════════════════════════════════
+   P0 · MOBILE NAV RESTRUCTURE — 5 primaries + More sheet
+   (coordinator-owned 2026-08-05)
+   Collapses the 13-tab side-scroll bar to 5 primaries; the other 8
+   routes live in a glass bottom-sheet behind a ⋯ "More" tab. */
+/* ── More bottom sheet ── */
+/* ── More sheet: search row → command palette ──
+   The sidebar "Jump to…" trigger is display:none ≤820px, and Ctrl+K / `/`
+   need a keyboard — so mobile has no way into the palette without this.
+   Full-width, styled like a search field; mirrors .mc-cmdp-trigger tokens.
+   Purely additive. */
+/* Coarse pointers: drop the sheet blur (same battery rationale as the bar). */
+/* ── Motion layer: sliding active-tab pill + sheet stagger ── */
+/* ═══════════════════════════════════════════════════════════
+   P1 · HOME — quiet presence strip
+   (coordinator CSS for the `mc-home-presence-row` wrapper Claude
+   added to HomeDeck.tsx: keeps the clock as a quiet status line
+   between ActionFeed and SYSTEM PULSE, not a hero.) */
+/* ═══════════════════════════════════════════════════════════
+   P2 · HOME — hero status tile (visual hierarchy)
+   (coordinator CSS for the `is-hero` modifier + `mc-home-tile-hero`
+   wrapper Claude added to HomeDeck.tsx StatusTiles. The single most
+   urgent tile renders full-width with a bigger lead value so the thing
+   that needs Michael dominates the equal-weight row.) */
+/* tone-err hero gets a stronger urgency ring than the default tile pulse */
+/* ═══════════════════════════════════════════════════════════
+   TICKTICK — agenda/list view (coordinator CSS for Claude's
+   Grid ⇄ Agenda toggle in TickTickCalendar.tsx). Matches the
+   existing .mc-week-* design tokens. */
+/* ═══════════════════════════════════════════════════════════
+   STYLEGUIDE (sg-*) — design-system specimen wall. Renders every
+   token + component variant from lib/tokens.ts. Data-free, static.
+   ═══════════════════════════════════════════════════════════ */
+.cmdp-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: min(14vh, 120px);
+  font-family: var(--pt-font-mono);
+}
+.cmdp-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+}
+.cmdp {
+  position: relative;
+  width: min(560px, calc(100vw - 32px));
+  background: var(--pt-card-bg);
+  border: 1px solid var(--pt-card-border);
+  border-radius: var(--pt-radius-card, var(--pt-r-lg));
+  overflow: hidden;
+  animation: cmdp-in 160ms var(--pt-ease);
+}
+.cmdp-inputrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  margin: 10px;
+  padding: 0 16px;
+  border: 1px solid var(--pt-border);
+  border-radius: var(--pt-r-pill);
+  background: var(--pt-bg);
+}
+.cmdp-inputrow:focus-within { border-color: var(--pt-neon); }
+.cmdp-prompt {
+  font-family: var(--pt-font-mono);
+  font-size: 13px;
+  color: var(--pt-neon-bright);
+  white-space: nowrap;
+}
+.cmdp-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--pt-text-high);
+  font-size: 14px;
+  font-family: inherit;
+  caret-color: var(--pt-neon);
+}
+.cmdp-input::placeholder { color: var(--pt-text-mute); }
+.cmdp-kbd {
+  font-family: var(--pt-font-mono);
+  font-size: var(--vg-fs-min);
+  letter-spacing: 0.12em;
+  color: var(--pt-text-dim);
+  border: 1px solid var(--pt-border-dim);
+  border-radius: var(--pt-r-sm);
+  padding: 2px 6px;
+  text-transform: lowercase;
+}
+.cmdp-list {
+  max-height: min(52vh, 400px);
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  padding: 6px;
+}
+.cmdp-group {
+  font-family: var(--pt-font-mono);
+  font-size: var(--vg-fs-min);
+  letter-spacing: 0;
+  text-transform: lowercase;
+  color: var(--pt-text-mute);
+  padding: 10px 10px 4px;
+}
+.cmdp-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--pt-r-md);
+  cursor: pointer;
+}
+.cmdp-item.is-active {
+  background: var(--pt-surface-2);
+  color: var(--pt-neon-bright);
+}
+.cmdp-ic {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px; height: 22px;
+  color: var(--pt-neon-bright);
+}
+.cmdp-item.is-active .cmdp-ic { color: var(--pt-text-high); }
+.cmdp-label {
+  font-size: 13px;
+  color: var(--pt-text-high);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cmdp-sub {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-family: var(--pt-font-mono);
+  font-size: var(--vg-fs-min);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--pt-text-mute);
+}
+.cmdp-empty {
+  padding: 22px;
+  text-align: center;
+  font-family: var(--pt-font-mono);
+  font-size: var(--vg-fs-min);
+  letter-spacing: 0.18em;
+  color: var(--pt-text-mute);
+}
+.cmdp-foot {
+  display: flex;
+  gap: 16px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--pt-border-dim);
+  font-family: var(--pt-font-mono);
+  font-size: var(--vg-fs-min);
+  letter-spacing: 0.12em;
+  text-transform: lowercase;
+  color: var(--pt-text-dim);
+}
+/* ── visible ⌘K trigger in the sidebar ──
+   Renders through <Button variant="ghost" className="mc-cmdp-trigger">, so
+   this layer only overrides what makes it a sidebar row instead of a
+   mono/uppercase pill: full-width layout, sentence-case label, and its own
+   glass hover (kept distinct from the generic .mc-btn hover, including
+   under the always-on friday theme, since a nav-adjacent row reads better
+   translucent than as a solid filled pill). */
+/* Let the label shrink inside the flex row instead of wrapping outside it. */
+/* ═══════════════════════════════════════════════════════════
+   DEPTH & HIERARCHY pass — ambient aurora, layered window
+   shadows, gradient hero numerals, glowing section labels.
+   (coordinator Jarvis owns globals.css; purely additive.)
+   ═══════════════════════════════════════════════════════════ */
+.cmdp-input { min-width: 0; }
+.cmdp-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 4px; }
+.cmdp-reason { color: var(--pt-text-mute); font-size: 12px; overflow-wrap: anywhere; }
+.cmdp-status { padding: 6px 16px; font-size: 12px; color: var(--pt-text-mute); }
+.cmdp-item { min-height: 44px; }
+.cmdp-item[aria-disabled='true'] { cursor: not-allowed; }
+.cmdp-item[aria-disabled='true'] .cmdp-ic { color: var(--pt-text-mute); }
+.cmdp-item .cmdp-sub { flex-shrink: 1; text-align: right; overflow-wrap: anywhere; }
+.cmdp-kbd:focus-visible { outline: 2px solid var(--pt-neon); }
+html[data-motion='reduced'] .cmdp, html[data-motion='off'] .cmdp { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .cmdp, .cmdp * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+/* ══════════════════════════════════════════════════════════════════════
+   [data-glass] — the legacy opt-in surface (Card and Window carry it).
+   Since 2026-11-09 it is the flat widget card: card fill, one slate
+   hairline, no sheen, edge light, pointer reflection, lift or blur.
+   ══════════════════════════════════════════════════════════════════════ */
+/* Glass surface — opt in with [data-glass] (Card and Window carry it). */

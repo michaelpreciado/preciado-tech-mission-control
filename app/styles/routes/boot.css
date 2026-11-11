@@ -1,0 +1,78 @@
+/* Boot sequence, fault console, designed boot/loading. Owners: app/loading.tsx, components/BootSequence.tsx */
+
+.boot-loading, .boot-fault-screen, .boot-overlay {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 60vh; padding: 24px 12px;
+  font-family: var(--pt-font-mono), monospace; color: var(--pt-neon-bright);
+}
+.boot-overlay {
+  position: fixed; inset: 0; z-index: 150; min-height: 0;
+  background: var(--pt-launcher-bg, var(--pt-bg)); opacity: 1; transition: opacity 300ms ease;
+  flex-direction: column;
+}
+.boot-overlay.boot-leaving { opacity: 0; pointer-events: none; }
+.boot-console { font-size: clamp(10px, 2.6vw, 14px); line-height: 1.9; letter-spacing: 0; }
+.boot-console .cyber-terminal-art { color: var(--pt-neon-bright); opacity: .45; margin: 0 0 20px; }
+.boot-eyebrow, .boot-footer, .boot-skip { color: var(--pt-neon-bright); opacity: .42; font-size: .8em; }
+.boot-eyebrow { margin-bottom: 18px; letter-spacing: .12em; }
+.boot-readout { border-left: 1px solid color-mix(in srgb, var(--pt-neon-bright) 19%, transparent); padding-left: 18px; }
+.boot-row { display: flex; height: 1.9em; }
+.boot-line {
+  display: inline-block; white-space: pre; overflow: hidden; width: calc(var(--boot-chars) * 1ch); max-width: 100%;
+  animation: boot-type 170ms steps(var(--boot-chars), end) var(--boot-delay) both,
+    boot-land 170ms linear var(--boot-delay) both;
+}
+.boot-cursor { opacity: 0; animation: boot-blink 85ms steps(1, end) var(--boot-delay) 2; }
+.boot-footer { margin-top: 22px; }
+.boot-skip { margin-top: 34px; font-size: var(--vg-fs-min); letter-spacing: .12em; }
+.boot-fault-panel { max-width: 100%; }
+.boot-frame {
+  margin: 0 0 24px; color: color-mix(in srgb, var(--pt-neon-bright) 33%, transparent); line-height: 1.7;
+  font-size: clamp(9px, 2vw, 15px); letter-spacing: 0; white-space: pre;
+}
+.boot-fault-status { color: var(--pt-neon-bright); animation: boot-flicker 240ms steps(2, end) 2; }
+.boot-error-word { color: var(--pt-error); }
+.boot-fault-details { max-width: 46ch; font-size: 13px; }
+.boot-fault-details p { color: color-mix(in srgb, var(--pt-neon-bright) 67%, transparent); }
+.boot-reference { overflow-wrap: anywhere; }
+.boot-action { display: inline-block; padding: 12px 0; color: var(--pt-neon-bright); background: transparent; border: 0; font: inherit; cursor: pointer; text-decoration: none; }
+.boot-action:focus-visible { outline: 1px solid var(--pt-neon-bright); outline-offset: 5px; }
+.boot-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) {
+  .boot-line, .boot-cursor, .boot-fault-status { animation: none; }
+  .boot-line { opacity: .78; }
+  .boot-overlay { display: none; transition: none; }
+}
+html[data-motion='reduced'] .boot-line, html[data-motion='off'] .boot-line { opacity: .78; }
+/* Dialogs can live inside the shell's own stacking context. Yield the
+   decorative overlay entirely while one is open, including native dialogs. */
+body:has([role="dialog"], dialog[open]) .boot-overlay { visibility: hidden; }
+/* W2-J · text-only data visualization. Inked from the shared chart tokens
+   (--mc-chart-*, lib/tokens.ts) so glyph charts and SVG/HTML charts read as one
+   language: quiet series, one emphasis, the axis ink for captions. */
+.boot-draw { display: block; width: 140px; height: 44px; margin: 0 0 10px; color: var(--pt-neon); opacity: 0.9; }
+.boot-draw-path {
+  fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round;
+  stroke-dasharray: 220; stroke-dashoffset: 220;
+  animation: boot-draw-in 0.9s ease-out forwards;
+}
+.boot-draw-path:nth-child(2) { animation-delay: 0.12s; }
+.boot-draw-path:nth-child(3), .boot-draw-path:nth-child(4) { animation-delay: 0.3s; }
+@media (prefers-reduced-motion: reduce) {
+  .boot-draw-path { animation: none; stroke-dashoffset: 0; }
+}
+html[data-motion='reduced'] .boot-draw-path, html[data-motion='off'] .boot-draw-path { animation: none; stroke-dashoffset: 0; }
+/* ── V3 · LAUNCH FILM — the cinematic (global boot, replayable) ───────── */
+/* scroll-driven reveals — Home cards rise as they enter (CSS-only, no JS/DOM changes) */
+/* Static end state for the launch film. The blanket `animation: none` for data-motion reduced/off
+   (MotionVisibility.css) would otherwise strand these elements at their opacity:0 / undrawn start. */
+/* ── Shared button material (was Lane D Edge Light; flat since 2026-11-09) ──
+   Fill, ink and hairline come from --pt-btn-glass-* (lib/tokens.ts); in the
+   friday theme those are the flat widget values. Primary is solid accent.
+   Material only: no height, padding, font, radius or layout declarations.
+   The toolbar arm of :is() matches the strongest legacy Friday recipe.
+   Old gray declarations remain intact under the additive gate, but this
+   final layer owns their computed material, including native legacy actions.
+   --glass-* are local recipe inputs; all values originate in lib/tokens.ts. */
+/* Primary: the one solid accent control on a card (black ink on the accent). */
+/* Borderless primitives get an inset hairline without changing their boxes. */

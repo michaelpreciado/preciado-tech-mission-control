@@ -453,3 +453,32 @@ html[data-motion="off"] .mc-studio-cursor { animation: none; }
 @media (hover: none), (pointer: coarse) {
 .mc-pipe-card:hover { transform: none; }
 }
+
+.mc-studio {
+  font-family: var(--pt-font-mono);
+}
+.mc-studio {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 20px;
+  align-items: start; }
+.mc-prompt-out {
+  max-width: 100%;
+  max-height: 70vh;
+  margin: 0;
+  overflow: auto;
+  color: var(--pt-text);
+  font-family: var(--pt-font-mono);
+  font-size: var(--vg-fs-min);
+  line-height: 1.55;
+  white-space: pre;
+}
+@media (max-width: 1200px) {
+  .mc-studio { grid-template-columns: minmax(0, 1fr); }
+}
+/* ══════════════════════════════════════════════════════════════════════
+   HMK UX reference pass — shared Blue Matrix Glass home contract
+   ══════════════════════════════════════════════════════════════════════ */
+/* The home deck is the readable column; the shell and 3D core remain free to
+   use the available pane width. :has() keeps this scoped without changing
+   the layout contract of the other routes. */

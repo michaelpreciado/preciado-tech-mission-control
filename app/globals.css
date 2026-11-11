@@ -320,12 +320,6 @@ body {
 /* ── Chat ─────────────────────────────────────────────── */
 
 /* ── Setup page ───────────────────────────────────────── */
-.mc-setup { display: flex; flex-direction: column; gap: 16px; max-width: 760px; }
-.mc-swatch {
-  width: 30px; height: 30px; border-radius: 8px; cursor: pointer;
-  border: 2px solid transparent; padding: 0;
-  min-height: 30px !important; /* opt out of the global 44px touch rule */
-}
 .mc-swatch.is-active { border-color: var(--pt-text-high); }
 
 /* Setup → UI CUSTOMIZATION tab visibility/reorder list. */
@@ -383,20 +377,14 @@ body {
 .mc-btn[aria-disabled="true"] { opacity: 0.45; cursor: default; pointer-events: none; }
 
 /* Primary — the one obvious next step (save, complete, send, create). */
-.mc-btn-primary { background-color: var(--pt-btn-glass-fill); color: var(--pt-btn-glass-ink); border-color: var(--pt-btn-glass-line-base); }
-.mc-btn-primary:hover { background-color: var(--pt-btn-glass-fill-hover); border-color: var(--pt-btn-glass-line-strong); }
 
 /* Ghost — default. Secondary actions, refresh, toggles. */
 .mc-btn-ghost.is-on { color: var(--pt-neon-bright); border-color: var(--pt-btn-glass-line-strong); }
 
 /* Confirm — an affirming inline action that isn't the page's primary CTA
    (e.g. unblock). Green, same intensity language as GLOW.sm. */
-.mc-btn-confirm { color: var(--pt-btn-glass-ink-confirm); border-color: var(--pt-btn-glass-line-base); }
-.mc-btn-confirm:hover { color: var(--pt-btn-glass-ink-confirm); border-color: var(--pt-btn-glass-line-strong); }
 
 /* Danger — destructive/irreversible. Red is always semantic, never decorative. */
-.mc-btn-danger { color: var(--pt-btn-glass-ink-danger); border-color: var(--pt-btn-glass-line-base); }
-.mc-btn-danger:hover { color: var(--pt-btn-glass-ink-danger); border-color: var(--pt-btn-glass-line-strong); }
 
 /* Loading — inline spinner, carried forward from .mc-refresh-btn.spin svg. */
 .mc-btn-spinner { display: inline-flex; line-height: 1; }
@@ -440,26 +428,6 @@ body {
 .mc-window-meta { font-size: var(--vg-fs-min); color: var(--pt-text-dim); letter-spacing: 0.12em; }
 
 /* ── Task card ────────────────────────────────────────── */
-.mc-tcol-head {
-  display: flex; align-items: center; gap: 8px;
-  padding: 12px 14px;
-  font-size: var(--vg-fs-min); letter-spacing: 0.2em; text-transform: uppercase;
-  color: var(--pt-text);
-  border-bottom: 1px solid var(--pt-border-dim);
-  position: sticky; top: var(--mc-header-h, 0px);
-  /* Opaque: at 0.85 alpha the cards scrolling underneath showed through and
-     the pinned head read as a broken overlay sitting mid-card. */
-  background: var(--pt-bg-terminal-solid);
-  z-index: 10;
-}
-.mc-tcol-head .mc-tcol-count {
-  margin-left: auto;
-  padding: 2px 8px;
-  border: 1px solid var(--pt-border-dim);
-  border-radius: var(--pt-r-pill);
-  font-size: var(--vg-fs-min); letter-spacing: 0.1em;
-  color: var(--pt-text-dim);
-}
 .mc-tcol-head.alert .mc-tcol-glyph,
 .mc-tcol-head.alert { color: var(--pt-warn); }
 .mc-tcol-head.alert .mc-tcol-count { border-color: var(--vg-warn-border); color: var(--pt-warn); }
@@ -550,13 +518,6 @@ h1 {
 
 /* ── Viz: sparkline, donut, heatmap, hbar, gauge ──────── */
 .mc-window-meta { margin-left: auto; font-size: var(--vg-fs-min); letter-spacing: 0.2em; color: var(--pt-text-mute); display: flex; gap: 8px; }
-
-.mc-gauge { position: relative; display: inline-block; }
-.mc-gauge svg { width: 100%; height: 100%; }
-.mc-gauge-track { fill: none; stroke: var(--pt-border-dim); stroke-width: 6; }
-.mc-gauge-fill  { fill: none; stroke: var(--pt-neon-bright); stroke-width: 6; stroke-linecap: round; }
-.mc-gauge-val   { position: absolute; inset: 0; display: grid; place-content: center; font-size: 14px; font-weight: 700; color: var(--pt-text-high); }
-.mc-gauge-lbl   { position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%); width: max-content; max-width: 120px; text-align: center; font-size: var(--vg-fs-min); letter-spacing: 0.2em; color: var(--pt-text-mute); }
 
 /* ── Terminal tree ───────────────────────────────────── */
 
@@ -714,11 +675,6 @@ button,
 
 /* Home/mobile interactive surfaces share the accent focus ring, including
    links that do not use the Button primitive. */
-:where(.mc-home-tile, .mc-home-agent, .mc-tcol-head-link, .mc-task-link,
-       .mc-mobile-item, .mc-more-cell, .mc-more-search):focus-visible {
-  outline: 2px solid var(--pt-neon-bright);
-  outline-offset: 2px;
-}
 
 /* Bottom-nav inactive items must remain legible; active items retain the
    existing accent-backed pill and gain the accent text glow. */
@@ -1133,11 +1089,6 @@ a:focus-visible,
 /* ══════════════════════════════════════════════════════════════════════
    COSTS / cross-panel wrapper + generic viz grid (added post-delegation)
    ══════════════════════════════════════════════════════════════════════ */
-.mc-viz-grid {
-  display: grid; gap: 16px;
-  /* Below the fold on every viewport; skip its chart subtree until it nears view. */
-  content-visibility: auto; contain-intrinsic-size: auto 600px; overflow-clip-margin: 32px;
-}
 
 /* ── Costs tables ─────────────────────────────────────────────────────
    One table style for every model list on the costs view so column
@@ -1334,79 +1285,6 @@ a:focus-visible,
 /* iOS Safari force-zooms into any input/textarea whose computed font-size is
    below 16px on focus. Bump the composer + command-palette fields to 16px on
    coarse pointers only — fine-pointer (desktop) sizes above are untouched. */
-@media (pointer: coarse) {
-  .cmdp-input {
-    font-size: 16px;
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════
-   P0 · MOBILE NAV RESTRUCTURE — 5 primaries + More sheet
-   (coordinator-owned 2026-08-05)
-   Collapses the 13-tab side-scroll bar to 5 primaries; the other 8
-   routes live in a glass bottom-sheet behind a ⋯ "More" tab. */
-
-/* ── More bottom sheet ── */
-
-/* ── More sheet: search row → command palette ──
-   The sidebar "Jump to…" trigger is display:none ≤820px, and Ctrl+K / `/`
-   need a keyboard — so mobile has no way into the palette without this.
-   Full-width, styled like a search field; mirrors .mc-cmdp-trigger tokens.
-   Purely additive. */
-
-/* Coarse pointers: drop the sheet blur (same battery rationale as the bar). */
-
-/* ── Motion layer: sliding active-tab pill + sheet stagger ── */
-
-/* ═══════════════════════════════════════════════════════════
-   P1 · HOME — quiet presence strip
-   (coordinator CSS for the `mc-home-presence-row` wrapper Claude
-   added to HomeDeck.tsx: keeps the clock as a quiet status line
-   between ActionFeed and SYSTEM PULSE, not a hero.) */
-
-/* ═══════════════════════════════════════════════════════════
-   P2 · HOME — hero status tile (visual hierarchy)
-   (coordinator CSS for the `is-hero` modifier + `mc-home-tile-hero`
-   wrapper Claude added to HomeDeck.tsx StatusTiles. The single most
-   urgent tile renders full-width with a bigger lead value so the thing
-   that needs Michael dominates the equal-weight row.) */
-/* tone-err hero gets a stronger urgency ring than the default tile pulse */
-
-/* ═══════════════════════════════════════════════════════════
-   TICKTICK — agenda/list view (coordinator CSS for Claude's
-   Grid ⇄ Agenda toggle in TickTickCalendar.tsx). Matches the
-   existing .mc-week-* design tokens. */
-
-/* ═══════════════════════════════════════════════════════════
-   STYLEGUIDE (sg-*) — design-system specimen wall. Renders every
-   token + component variant from lib/tokens.ts. Data-free, static.
-   ═══════════════════════════════════════════════════════════ */
-.sg {
-  display: flex; flex-direction: column; gap: 26px;
-  padding-bottom: 48px;
-}
-
-/* ── grids ── */
-
-/* ── swatches ── */
-
-/* ── token rows ── */
-
-/* ── type role specimens ── */
-
-/* ── stacks & variant cards ── */
-
-/* ── spacing scale ── */
-
-/* ── radius ── */
-
-/* ── elevations ── */
-
-/* ═══════════════════════════════════════════════════════════
-   SELF-IMPROVE PASS (2026-08-09) — live data-viz.
-   Adds inline sparklines to Home status tiles so metrics read
-   as live series, not static numbers.
-   ═══════════════════════════════════════════════════════════ */
 .mc-spark {
   display: block;
   width: 100%;
@@ -1417,159 +1295,11 @@ a:focus-visible,
    COMMAND PALETTE (cmdp-*) — ⌘K / Ctrl-K fuzzy finder.
    Global overlay: backdrop dims the app, glass panel centers.
    ═══════════════════════════════════════════════════════════ */
-.cmdp-layer {
-  position: fixed;
-  inset: 0;
-  z-index: 300;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: min(14vh, 120px);
-  font-family: var(--pt-font-mono);
-}
-.cmdp-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-}
-.cmdp {
-  position: relative;
-  width: min(560px, calc(100vw - 32px));
-  background: var(--pt-card-bg);
-  border: 1px solid var(--pt-card-border);
-  border-radius: var(--pt-radius-card, var(--pt-r-lg));
-  overflow: hidden;
-  animation: cmdp-in 160ms var(--pt-ease);
-}
 @keyframes cmdp-in {
   from { opacity: 0; transform: translateY(-8px) scale(0.99); }
   to   { opacity: 1; transform: none; }
 }
 /* The launcher's `claude ▾ open an app or ask claude…` pill. */
-.cmdp-inputrow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: 48px;
-  margin: 10px;
-  padding: 0 16px;
-  border: 1px solid var(--pt-border);
-  border-radius: var(--pt-r-pill);
-  background: var(--pt-bg);
-}
-.cmdp-inputrow:focus-within { border-color: var(--pt-neon); }
-.cmdp-prompt {
-  font-family: var(--pt-font-mono);
-  font-size: 13px;
-  color: var(--pt-neon-bright);
-  white-space: nowrap;
-}
-.cmdp-input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: var(--pt-text-high);
-  font-size: 14px;
-  font-family: inherit;
-  caret-color: var(--pt-neon);
-}
-.cmdp-input::placeholder { color: var(--pt-text-mute); }
-.cmdp-kbd {
-  font-family: var(--pt-font-mono);
-  font-size: var(--vg-fs-min);
-  letter-spacing: 0.12em;
-  color: var(--pt-text-dim);
-  border: 1px solid var(--pt-border-dim);
-  border-radius: var(--pt-r-sm);
-  padding: 2px 6px;
-  text-transform: lowercase;
-}
-.cmdp-list {
-  max-height: min(52vh, 400px);
-  overflow-y: auto;
-  overscroll-behavior-y: contain;
-  padding: 6px;
-}
-.cmdp-group {
-  font-family: var(--pt-font-mono);
-  font-size: var(--vg-fs-min);
-  letter-spacing: 0;
-  text-transform: lowercase;
-  color: var(--pt-text-mute);
-  padding: 10px 10px 4px;
-}
-.cmdp-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  border-radius: var(--pt-r-md);
-  cursor: pointer;
-}
-.cmdp-item.is-active {
-  background: var(--pt-surface-2);
-  color: var(--pt-neon-bright);
-}
-.cmdp-ic {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px; height: 22px;
-  color: var(--pt-neon-bright);
-}
-.cmdp-item.is-active .cmdp-ic { color: var(--pt-text-high); }
-.cmdp-label {
-  font-size: 13px;
-  color: var(--pt-text-high);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.cmdp-sub {
-  margin-left: auto;
-  flex-shrink: 0;
-  font-family: var(--pt-font-mono);
-  font-size: var(--vg-fs-min);
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--pt-text-mute);
-}
-.cmdp-empty {
-  padding: 22px;
-  text-align: center;
-  font-family: var(--pt-font-mono);
-  font-size: var(--vg-fs-min);
-  letter-spacing: 0.18em;
-  color: var(--pt-text-mute);
-}
-.cmdp-foot {
-  display: flex;
-  gap: 16px;
-  padding: 8px 16px;
-  border-top: 1px solid var(--pt-border-dim);
-  font-family: var(--pt-font-mono);
-  font-size: var(--vg-fs-min);
-  letter-spacing: 0.12em;
-  text-transform: lowercase;
-  color: var(--pt-text-dim);
-}
-
-/* ── visible ⌘K trigger in the sidebar ──
-   Renders through <Button variant="ghost" className="mc-cmdp-trigger">, so
-   this layer only overrides what makes it a sidebar row instead of a
-   mono/uppercase pill: full-width layout, sentence-case label, and its own
-   glass hover (kept distinct from the generic .mc-btn hover, including
-   under the always-on friday theme, since a nav-adjacent row reads better
-   translucent than as a solid filled pill). */
-/* Let the label shrink inside the flex row instead of wrapping outside it. */
-
-/* ═══════════════════════════════════════════════════════════
-   DEPTH & HIERARCHY pass — ambient aurora, layered window
-   shadows, gradient hero numerals, glowing section labels.
-   (coordinator Jarvis owns globals.css; purely additive.)
-   ═══════════════════════════════════════════════════════════ */
 .mc-shell { isolation: isolate; }
 /* Periwinkle radial wash — faint accent at top-center. */
 .mc-shell::before {
@@ -1718,42 +1448,8 @@ html[data-motion="off"] .mc-window, html[data-motion="off"] .mc-window:hover {
 /* ── CORE-NAV · semantic Home control + optional navigation heartbeat ───
    The Link owns layout, pointer, focus, and current-page semantics. The
    WebGL/static visual is a child and never participates in input geometry. */
-.mc-core-orb {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  flex: none;
-  border-radius: 50%;
-  pointer-events: none;
-  isolation: isolate;
-  background: transparent;
-  transition: background 3s ease;
-}
-.mc-core-orb-mark {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  color: var(--pt-neon-bright);
-  opacity: 0.19;
-  mix-blend-mode: screen;
-}
-.mc-core-orb[data-orb-state="hot"] {
-  background: transparent;
-  transition-duration: 1.5s;
-}
-.mc-core-orb[data-orb-state="hot"] .mc-core-orb-mark { color: var(--pt-error); }
-.mc-core-orb-mobile { display: block; }
-@media (prefers-reduced-motion: reduce) {
-  .mc-core-orb { transition: none; }
-}
 
 /* ── CORE-ORB · global navigation heartbeat visual ─────────────────── */
-.mc-core-orb {
-  /* Keep visual-only interaction guarantees explicit at the final cascade. */
-  pointer-events: none;
-}
 
 /* OmniBridge's home-only orb canvas layers. */
 
@@ -1870,14 +1566,6 @@ body {
 /* Kanban DnD (desktop only) */
 
 /* Setup tab-list native drag reorder (↑/↓ buttons kept as fallback) */
-.setup-tabrow-grip {
-  cursor: grab;
-  color: var(--pt-text-mute);
-  font-size: var(--vg-fs-min);
-  line-height: 1;
-  padding-right: 4px;
-  user-select: none;
-}
 
 /* ============================================================
    Failure surfaces: loading / error / 404 (token-backed only)
@@ -1947,38 +1635,7 @@ body {
 /* Motion safety — freeze every new animation under OS + in-app settings. */
 
 /* ── Content command: production studio + signal feed ───── */
-.mc-studio {
-  font-family: var(--pt-font-mono);
-}
-.mc-studio {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
-  gap: 20px;
-  align-items: start; }
-.mc-prompt-out {
-  max-width: 100%;
-  max-height: 70vh;
-  margin: 0;
-  overflow: auto;
-  color: var(--pt-text);
-  font-family: var(--pt-font-mono);
-  font-size: var(--vg-fs-min);
-  line-height: 1.55;
-  white-space: pre;
-}
 @keyframes mc-studio-blink { 50% { opacity: 0; } }
-
-@media (max-width: 1200px) {
-  .mc-studio { grid-template-columns: minmax(0, 1fr); }
-}
-
-/* ══════════════════════════════════════════════════════════════════════
-   HMK UX reference pass — shared Blue Matrix Glass home contract
-   ══════════════════════════════════════════════════════════════════════ */
-
-/* The home deck is the readable column; the shell and 3D core remain free to
-   use the available pane width. :has() keeps this scoped without changing
-   the layout contract of the other routes. */
 @media (min-width: 821px) {
   .mc-main:has(.mc-home-title) > * {
     width: 100%;
@@ -2035,150 +1692,10 @@ body {
 }
 
 /* W2-I: finite POST and shared fault console. */
-.boot-loading, .boot-fault-screen, .boot-overlay {
-  display: flex; align-items: center; justify-content: center;
-  min-height: 60vh; padding: 24px 12px;
-  font-family: var(--pt-font-mono), monospace; color: var(--pt-neon-bright);
-}
-.boot-overlay {
-  position: fixed; inset: 0; z-index: 150; min-height: 0;
-  background: var(--pt-launcher-bg, var(--pt-bg)); opacity: 1; transition: opacity 300ms ease;
-  flex-direction: column;
-}
-.boot-overlay.boot-leaving { opacity: 0; pointer-events: none; }
-.boot-console { font-size: clamp(10px, 2.6vw, 14px); line-height: 1.9; letter-spacing: 0; }
-.boot-console .cyber-terminal-art { color: var(--pt-neon-bright); opacity: .45; margin: 0 0 20px; }
-.boot-eyebrow, .boot-footer, .boot-skip { color: var(--pt-neon-bright); opacity: .42; font-size: .8em; }
-.boot-eyebrow { margin-bottom: 18px; letter-spacing: .12em; }
-.boot-readout { border-left: 1px solid color-mix(in srgb, var(--pt-neon-bright) 19%, transparent); padding-left: 18px; }
-.boot-row { display: flex; height: 1.9em; }
-.boot-line {
-  display: inline-block; white-space: pre; overflow: hidden; width: calc(var(--boot-chars) * 1ch); max-width: 100%;
-  animation: boot-type 170ms steps(var(--boot-chars), end) var(--boot-delay) both,
-    boot-land 170ms linear var(--boot-delay) both;
-}
-.boot-cursor { opacity: 0; animation: boot-blink 85ms steps(1, end) var(--boot-delay) 2; }
-.boot-footer { margin-top: 22px; }
-.boot-skip { margin-top: 34px; font-size: var(--vg-fs-min); letter-spacing: .12em; }
-.boot-fault-panel { max-width: 100%; }
-.boot-frame {
-  margin: 0 0 24px; color: color-mix(in srgb, var(--pt-neon-bright) 33%, transparent); line-height: 1.7;
-  font-size: clamp(9px, 2vw, 15px); letter-spacing: 0; white-space: pre;
-}
-.boot-fault-status { color: var(--pt-neon-bright); animation: boot-flicker 240ms steps(2, end) 2; }
-.boot-error-word { color: var(--pt-error); }
-.boot-fault-details { max-width: 46ch; font-size: 13px; }
-.boot-fault-details p { color: color-mix(in srgb, var(--pt-neon-bright) 67%, transparent); }
-.boot-reference { overflow-wrap: anywhere; }
-.boot-action { display: inline-block; padding: 12px 0; color: var(--pt-neon-bright); background: transparent; border: 0; font: inherit; cursor: pointer; text-decoration: none; }
-.boot-action:focus-visible { outline: 1px solid var(--pt-neon-bright); outline-offset: 5px; }
-.boot-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @keyframes boot-type { from { width: 0; } }
 @keyframes boot-land { from { opacity: .16; } to { opacity: .78; } }
 @keyframes boot-blink { 0%, 100% { opacity: 0; } 50% { opacity: .9; } }
 @keyframes boot-flicker { 0%, 100% { opacity: 1; } 50% { opacity: .72; } }
-@media (prefers-reduced-motion: reduce) {
-  .boot-line, .boot-cursor, .boot-fault-status { animation: none; }
-  .boot-line { opacity: .78; }
-  .boot-overlay { display: none; transition: none; }
-}
-html[data-motion='reduced'] .boot-line, html[data-motion='off'] .boot-line { opacity: .78; }
-/* Dialogs can live inside the shell's own stacking context. Yield the
-   decorative overlay entirely while one is open, including native dialogs. */
-body:has([role="dialog"], dialog[open]) .boot-overlay { visibility: hidden; }
-/* W2-J · text-only data visualization. Inked from the shared chart tokens
-   (--mc-chart-*, lib/tokens.ts) so glyph charts and SVG/HTML charts read as one
-   language: quiet series, one emphasis, the axis ink for captions. */
-.asciiviz-spark, .asciiviz-meter, .asciiviz-heat, .asciiviz-bars,
-.asciiviz-caption, .asciiviz-repo {
-  font-family: var(--pt-font-mono, 'JetBrains Mono'), monospace;
-  font-size: var(--vg-fs-min);
-  line-height: 1.1;
-  font-weight: 400;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0;
-  color: var(--mc-chart-quiet);
-}
-.asciiviz-spark, .asciiviz-meter, .asciiviz-bars { display: inline-block; white-space: pre; }
-.asciiviz-heat { display: block; white-space: pre; }
-.asciiviz-bright, .asciiviz-value { color: var(--mc-chart-emph); }
-.asciiviz-faint, .asciiviz-caption { color: var(--mc-chart-axis); }
-.asciiviz-value, .asciiviz-caption { font-size: var(--vg-fs-min); }
-.asciiviz-density-0, .asciiviz-density-1 { color: var(--mc-chart-axis); }
-.asciiviz-density-2, .asciiviz-density-3 { color: var(--mc-chart-quiet); }
-.asciiviz-density-4, .asciiviz-density-5 { color: var(--mc-chart-emph); }
-/* Figlet wordmarks (lib/wordmarks.ts). Box-drawing glyphs sit outside the
-   self-hosted mono subset, so the whole block uses one system monospace stack:
-   every cell comes from the same face and the strokes stay joined. The font
-   scales to the container (0.6em advance per column) so rows never wrap. */
-.asciiviz-wordmark { display: block; container-type: inline-size; max-width: 100%; }
-.asciiviz-wordmark > span {
-  display: block; width: max-content; white-space: pre;
-  font-family: ui-monospace, 'SF Mono', Menlo, 'DejaVu Sans Mono', 'Noto Sans Mono', 'Liberation Mono', monospace;
-  font-size: min(var(--wm-max, 14px), calc(100cqi / (var(--wm-cols) * 0.62)));
-  line-height: 1; letter-spacing: 0; font-weight: 400; font-variant-ligatures: none;
-}
-.asciiviz-telemetry { min-width: 0; text-align: center; }
-.asciiviz-telemetry .asciiviz-meter { margin-top: 6px; font-size: var(--vg-fs-min); color: var(--mc-chart-axis); }
-.asciiviz-telemetry .asciiviz-bright { color: var(--mc-chart-emph); }
-.asciiviz-burn { display: inline-block; margin-left: 12px; }
-.asciiviz-inset { margin: 10px 16px; overflow-x: auto; }
-.asciiviz-repo { margin-top: 5px; white-space: nowrap; }
-.asciiviz-repo-name { display: inline-block; width: 24ch; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
-/* W2-K: additive terminal ticks; the host retains its glass border/layout. */
-
-/* OmniBridge wordmark override comes last so the legacy cyberpunk artwork
-   rules cannot reintroduce the old slanted/portrait treatment on Home. */
-.ob-wordmark-banner.cyber-wordmark {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 0;
-  flex-wrap: nowrap;
-  width: 100%;
-  margin: 0;
-  padding: 14px 18px 12px;
-  border: 1px solid var(--ob-border);
-  border-radius: 12px;
-  background: var(--ob-glass);
-  text-align: center;
-}
-.ob-wordmark-banner.cyber-wordmark > div {
-  display: block;
-  align-self: center;
-  min-width: 0;
-  flex: 0 0 auto;
-  gap: 0;
-}
-.ob-wordmark-banner .ob-wordmark-art {
-  display: block;
-  margin: 0 auto;
-  overflow: auto;
-  color: var(--ob-peak);
-  font: clamp(6px, .75vw, 11px)/1.08 var(--pt-font-mono), monospace;
-  letter-spacing: 0;
-  white-space: pre;
-}
-.ob-wordmark-banner.cyber-wordmark .ob-wordmark-subtitle {
-  align-self: center;
-  margin-top: 9px;
-  color: var(--ob-text-4);
-  font: var(--vg-fs-min)/1.2 var(--pt-font-mono);
-  letter-spacing: .48em;
-}
-@media (max-width: 520px) {
-  .ob-wordmark-banner.cyber-wordmark { padding: 12px 8px 10px; overflow: hidden; }
-  .ob-wordmark-banner .ob-wordmark-art { font-size: 5px; }
-  .ob-wordmark-banner.cyber-wordmark .ob-wordmark-subtitle { font-size: var(--vg-fs-min); letter-spacing: .22em; }
-}
-
-/* ══════════════════════════════════════════════════════════════════════════
-   OMNIBRIDGE v5 · SHARED APPLICATION SYSTEM
-   The home deck is the visual anchor. These additive primitives extend its
-   glass, blue-emissive language to route chrome without removing the legacy
-   mc-* vocabulary still used by feature panels.
-   ══════════════════════════════════════════════════════════════════════════ */
 :root {
   --ob-radius-card: 12px;
 }
@@ -2286,14 +1803,6 @@ html body .mc-main .mc-window::before { content: none; }
 }
 
 /* ── V2 · DESIGNED BOOT — the bridge mark draws itself ────────────────── */
-.boot-draw { display: block; width: 140px; height: 44px; margin: 0 0 10px; color: var(--pt-neon); opacity: 0.9; }
-.boot-draw-path {
-  fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round;
-  stroke-dasharray: 220; stroke-dashoffset: 220;
-  animation: boot-draw-in 0.9s ease-out forwards;
-}
-.boot-draw-path:nth-child(2) { animation-delay: 0.12s; }
-.boot-draw-path:nth-child(3), .boot-draw-path:nth-child(4) { animation-delay: 0.3s; }
 @keyframes boot-draw-in { to { stroke-dashoffset: 0; } }
 
 /* ── V2 · empty states get a quiet entrance ───────────────────────────── */
@@ -2302,30 +1811,8 @@ html body .mc-main .mc-window::before { content: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .mc-skel-line { animation: none; background-position: 0 0; }
-  .boot-draw-path { animation: none; stroke-dashoffset: 0; }
   .mc-empty { animation: none; }
 }
-html[data-motion='reduced'] .boot-draw-path, html[data-motion='off'] .boot-draw-path { animation: none; stroke-dashoffset: 0; }
-
-/* ── V3 · LAUNCH FILM — the cinematic (global boot, replayable) ───────── */
-
-/* scroll-driven reveals — Home cards rise as they enter (CSS-only, no JS/DOM changes) */
-
-/* Static end state for the launch film. The blanket `animation: none` for data-motion reduced/off
-   (MotionVisibility.css) would otherwise strand these elements at their opacity:0 / undrawn start. */
-
-/* ── Shared button material (was Lane D Edge Light; flat since 2026-11-09) ──
-   Fill, ink and hairline come from --pt-btn-glass-* (lib/tokens.ts); in the
-   friday theme those are the flat widget values. Primary is solid accent.
-   Material only: no height, padding, font, radius or layout declarations.
-   The toolbar arm of :is() matches the strongest legacy Friday recipe.
-   Old gray declarations remain intact under the additive gate, but this
-   final layer owns their computed material, including native legacy actions.
-   --glass-* are local recipe inputs; all values originate in lib/tokens.ts. */
-
-/* Primary: the one solid accent control on a card (black ink on the accent). */
-
-/* Borderless primitives get an inset hairline without changing their boxes. */
 html:root body :is(button[class*="iconButton"], [class*="segmented"] > button[role="radio"]) {
   outline: 1px solid var(--pt-btn-glass-line-subtle);
   outline-offset: -1px;
@@ -2360,36 +1847,12 @@ html:root body :is(button[class*="iconButton"], [class*="segmented"] > button[ro
    scroll but its pills regain horizontal breathing room. Selectors are
    scoped through `html body` so they outrank both the base `.mc-btn` and the
    CHAT console's `.console .mc-btn` module rule. */
-@media (max-width: 820px) {
-  html body :is(.mc-main, .mc-side) [class*="segmented"] > button[role="radio"] {
-    min-height: 40px;
-    padding: 8px 14px;
-  }
-  html body .mc-main [class*="chip"] {
-    min-height: 32px;
-    padding: 6px 14px;
-  }
-}
-
-/* ══════════════════════════════════════════════════════════════════════
-   VG glass tiers, legibility, header compaction (final layer)
-   ══════════════════════════════════════════════════════════════════════ */
-
-/* Secondary text that clears WCAG AA 4.5:1 on the glass tiers. */
-
-/* Tier 2 (cards): route the shared card material through the tier tokens. */
-
-/* Tier 1 (chrome). */
 html:root :is(.mc-cockpit, .mc-bridge, [class*="bridgeStrip"]) {
   background-color: var(--glass-1-fill);
 }
 html:root :is(.mc-bridge, [class*="bridgeStrip"]) { border-color: var(--glass-1-rim); }
 
 /* Tier 3 (overlays). */
-
-input::placeholder, textarea::placeholder { color: var(--vg-text-mute); opacity: 1; }
-
-/* Headers: strip + brand bar + page hero read as one compact stack. */
 .mc-main { padding-top: 12px; }
 html:root [class*="bridgeStrip"] { margin-bottom: 8px; padding: 4px 10px; min-height: 0; }
 html:root :is([class$="__pageHeader"], [class*="__pageHeader "]) {
@@ -2436,237 +1899,3 @@ html:root body *::before, html:root body *::after {
 .mc-hud3d { contain: layout paint; }
 
 /* Lane 03: readable disabled catalog rows and explicit motion opt-out. */
-.cmdp-input { min-width: 0; }
-.cmdp-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 4px; }
-.cmdp-reason { color: var(--pt-text-mute); font-size: 12px; overflow-wrap: anywhere; }
-.cmdp-status { padding: 6px 16px; font-size: 12px; color: var(--pt-text-mute); }
-.cmdp-item { min-height: 44px; }
-.cmdp-item[aria-disabled='true'] { cursor: not-allowed; }
-.cmdp-item[aria-disabled='true'] .cmdp-ic { color: var(--pt-text-mute); }
-.cmdp-item .cmdp-sub { flex-shrink: 1; text-align: right; overflow-wrap: anywhere; }
-.cmdp-kbd:focus-visible { outline: 2px solid var(--pt-neon); }
-html[data-motion='reduced'] .cmdp, html[data-motion='off'] .cmdp { animation: none; }
-@media (prefers-reduced-motion: reduce) {
-  .cmdp, .cmdp * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
-}
-
-/* ══════════════════════════════════════════════════════════════════════
-   [data-glass] — the legacy opt-in surface (Card and Window carry it).
-   Since 2026-11-09 it is the flat widget card: card fill, one slate
-   hairline, no sheen, edge light, pointer reflection, lift or blur.
-   ══════════════════════════════════════════════════════════════════════ */
-
-/* Glass surface — opt in with [data-glass] (Card and Window carry it). */
-html[data-theme="friday"] body [data-glass] {
-  background: var(--pt-card-bg);
-  border: 1px solid var(--pt-card-border);
-}
-/* Sunken wells read as recessed terminal panes, not floating glass. */
-html[data-theme="friday"] body [data-glass][data-glass="sunken"] {
-  background: var(--pt-bg-soft);
-  border-color: var(--pt-border-dim);
-}
-
-/* Interactive glass takes the strong hairline. No lift, no shadow. */
-html[data-theme="friday"] body [data-glass][data-glass-interactive] {
-  transition: border-color var(--pt-dur-micro) var(--pt-ease);
-}
-html[data-theme="friday"] body [data-glass][data-glass-interactive]:is(:hover, :focus-within) {
-  border-color: var(--pt-border-strong);
-}
-
-/* Terminal language: the `>` bullet as a recurring motif for glass card titles. */
-html[data-theme="friday"] body [data-glass] > [data-glass-head] h2::before {
-  content: '>';
-  margin-right: .55em;
-  color: var(--pt-dodger);
-  font-family: var(--pt-font-mono);
-  font-weight: 500;
-}
-
-/* Selection and scrollbars belong to the system too. */
-html[data-theme="friday"] ::selection { background: rgba(var(--pt-dodger-rgb), .32); color: var(--pt-text-high); }
-html[data-theme][data-palette="omarchy"] ::selection { background: var(--pt-selection); color: var(--pt-text-high); }
-html[data-theme="friday"] .mc-main { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .12) transparent; }
-html[data-theme="friday"] .mc-main::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .12); }
-
-@media (prefers-reduced-motion: reduce) {
-  html[data-theme="friday"] body [data-glass][data-glass-interactive] { transition: none; }
-}
-
-/* ══════════════════════════════════════════════════════════════════════════
-   WIDGET PRIMITIVES — docs/polish-plan-2026-11-09.md §1.5
-   The launcher-widget vocabulary every route builds from. React wrappers:
-   components/ui.tsx (Prompt, Divider, Verdict, Glyph, Kv, KvRow, WRow) and
-   components/charts (SegBar, MiniHist). Values come from the token block
-   (lib/tokens.ts) so the opt-in palettes reskin them too. Flat by contract:
-   no shadow, gradient, blur or glow on any of these.
-   ══════════════════════════════════════════════════════════════════════════ */
-
-/* card:  <section class="mc-widget"> */
-.mc-widget {
-  min-width: 0;
-  padding: 14px 16px;
-  border: 1px solid var(--pt-card-border);
-  border-radius: var(--pt-radius-card, var(--pt-r-lg));
-  background: var(--pt-card-bg);
-  color: var(--pt-text-dim);
-  font: 400 13px/1.5 var(--pt-font-mono);
-}
-
-/* prompt header / footer:  desk:~$ kanban                       ↻ 29s */
-.mc-prompt {
-  display: flex;
-  align-items: baseline;
-  gap: 1ch;
-  min-width: 0;
-  margin: 0 0 8px;
-  color: var(--pt-neon);
-  font: 400 13px/1.5 var(--pt-font-mono);
-  letter-spacing: 0;
-  text-transform: none;
-  white-space: nowrap;
-}
-.mc-prompt-path { flex: none; }
-.mc-prompt-path b { font-weight: 400; }
-.mc-prompt-cmd { min-width: 0; overflow: hidden; color: var(--pt-neon-bright); text-overflow: ellipsis; }
-.mc-prompt .meta { flex: none; margin-left: auto; color: var(--pt-text-mute); }
-.mc-prompt--foot { margin: 10px 0 0; }
-
-/* ascii divider:  -- tasks 3/4 ------------------------------ */
-.mc-divider {
-  display: flex;
-  align-items: baseline;
-  min-width: 0;
-  width: 100%;
-  max-width: 100%;
-  margin: 10px 0 6px;
-  overflow: hidden;
-  color: var(--pt-border-strong);
-  font: 400 13px/1.5 var(--pt-font-mono);
-  letter-spacing: 0;
-  text-transform: none;
-  white-space: nowrap;
-}
-.mc-divider::before { content: "-- "; flex: none; white-space: pre; }
-.mc-divider-label { flex: none; color: var(--pt-text-mute); }
-.mc-divider-label::after { content: " "; white-space: pre; }
-.mc-divider::after {
-  content: "--------------------------------------------------------------------------------------------------------";
-  flex: 1 1 0;
-  min-width: 0;
-  overflow: hidden;
-}
-
-/* verdict numeral — the ONLY sans on a card:  3% this week */
-.mc-verdict {
-  margin: 0;
-  color: var(--pt-text-high);
-  font-family: var(--pt-font-mono);
-  font-size: var(--pt-fs-verdict);
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.05;
-  letter-spacing: -0.02em;
-}
-.mc-verdict small {
-  margin-left: .6ch;
-  color: var(--pt-text-dim);
-  font: 400 13px/1 var(--pt-font-mono);
-  letter-spacing: 0;
-  vertical-align: middle;
-}
-.mc-verdict[data-tone="warn"] { color: var(--pt-warn-ink); }
-.mc-verdict[data-tone="crit"] { color: var(--pt-error-ink); }
-.mc-verdict[data-tone="ok"] { color: var(--pt-ok-ink); }
-
-/* key/value rows:  done   3 today   67 wk */
-.mc-kv,
-.mc-kv-row {
-  display: grid;
-  grid-template-columns: var(--kv-k, 7ch) minmax(0, 1fr) auto;
-  gap: 0 1ch;
-  min-width: 0;
-  color: var(--pt-text-dim);
-  font-family: var(--pt-font-mono);
-  line-height: 1.7;
-}
-.mc-kv > .mc-kv-row { display: contents; }
-.mc-kv > :not(.mc-kv-row):first-child,
-.mc-kv-row > :first-child { color: var(--pt-text-mute); }
-.mc-kv > :not(.mc-kv-row):last-child,
-.mc-kv-row > :last-child { color: var(--pt-text-high); text-align: right; font-variant-numeric: tabular-nums; }
-.mc-kv-row > * { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-/* segmented bar:  <div class="mc-segbar" style="--n:20"><i class="on"></i>…</div> */
-.mc-segbar {
-  display: grid;
-  grid-template-columns: repeat(var(--n, 20), minmax(0, 1fr));
-  gap: 2px;
-  min-width: 0;
-  height: 12px;
-}
-.mc-segbar > i { border-radius: 1px; background: var(--mc-seg-off); }
-.mc-segbar > i.on { background: var(--mc-seg-on); }
-.mc-segbar[data-tone="warn"] > i.on { background: var(--mc-seg-warn); }
-.mc-segbar[data-tone="crit"] > i.on { background: var(--mc-seg-crit); }
-.mc-segbar[data-tone="cyan"] > i.on { background: var(--mc-seg-cyan); }
-.mc-segbar--thin { height: 4px; }
-
-/* mini histogram:  <div class="mc-hist" style="--n:14"><i style="--v:.3"></i>…</div> */
-.mc-hist {
-  display: grid;
-  grid-template-columns: repeat(var(--n, 14), minmax(0, 1fr));
-  align-items: end;
-  gap: 2px;
-  min-width: 0;
-  height: 22px;
-}
-.mc-hist > i { height: max(2px, calc(var(--v, 0) * 100%)); border-radius: 1px 1px 0 0; background: var(--mc-seg-on); }
-.mc-hist > i[data-zero] { height: 2px; background: var(--mc-seg-off); }
-
-/* dot progress (day / week / month / year rows) */
-
-/* status glyph:  <i class="mc-glyph" data-g="run|idle|fail|err|retry|up|down|ok|live|todo"></i> */
-.mc-glyph {
-  display: inline-block;
-  min-width: 1.5ch;
-  font-family: var(--pt-font-mono);
-  font-style: normal;
-  line-height: 1;
-  text-align: center;
-}
-.mc-glyph::before { content: "·"; color: var(--pt-text-mute); }
-.mc-glyph[data-g="run"]::before   { content: "▶"; color: var(--pt-neon); }
-.mc-glyph[data-g="idle"]::before  { content: "·"; color: var(--pt-text-mute); }
-.mc-glyph[data-g="fail"]::before  { content: "×"; color: var(--pt-warn); }
-.mc-glyph[data-g="err"]::before   { content: "×"; color: var(--pt-error); }
-.mc-glyph[data-g="retry"]::before { content: "↻"; color: var(--pt-neon); }
-.mc-glyph[data-g="up"]::before    { content: "↑"; color: var(--pt-neon); }
-.mc-glyph[data-g="down"]::before  { content: "↓"; color: var(--pt-neon); }
-.mc-glyph[data-g="ok"]::before    { content: ">"; color: var(--pt-neon); }
-.mc-glyph[data-g="live"]::before  { content: "●"; color: var(--mc-seg-cyan); }
-.mc-glyph[data-g="todo"]::before  { content: "○"; color: var(--pt-text-dim); }
-
-/* list row inside a widget:  ×  AEGIS (product)…   2d */
-.mc-wrow {
-  display: grid;
-  grid-template-columns: 1.5ch minmax(0, 1fr) auto;
-  align-items: baseline;
-  gap: 0 1ch;
-  width: 100%;
-  min-width: 0;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--pt-text-high);
-  font: 400 13px/1.7 var(--pt-font-mono);
-  text-align: left;
-  text-decoration: none;
-}
-.mc-wrow .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mc-wrow .r { color: var(--pt-neon); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.mc-wrow.dim { color: var(--pt-text-dim); }
-.mc-wrow.is-action { cursor: pointer; border-radius: var(--pt-r-sm); }
-.mc-wrow.is-action:hover .t { color: var(--pt-neon-bright); }
-.mc-wrow.is-action:focus-visible { outline: 2px solid var(--pt-neon); outline-offset: 2px; }

@@ -1,0 +1,19 @@
+/* /styleguide — design-system specimen wall. Owner: app/styleguide/page.tsx */
+
+.sg {
+  display: flex; flex-direction: column; gap: 26px;
+  padding-bottom: 48px;
+}
+/* ── grids ── */
+/* ── swatches ── */
+/* ── token rows ── */
+/* ── type role specimens ── */
+/* ── stacks & variant cards ── */
+/* ── spacing scale ── */
+/* ── radius ── */
+/* ── elevations ── */
+/* ═══════════════════════════════════════════════════════════
+   SELF-IMPROVE PASS (2026-08-09) — live data-viz.
+   Adds inline sparklines to Home status tiles so metrics read
+   as live series, not static numbers.
+   ═══════════════════════════════════════════════════════════ */

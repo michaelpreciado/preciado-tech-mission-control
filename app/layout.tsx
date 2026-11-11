@@ -1,12 +1,19 @@
 import type { Metadata, Viewport } from 'next'
 import Script from 'next/script'
 import './globals.css'
+/* Widget-primitive tail of the old global sheet (shared button material, phone
+   ergonomics, ui.tsx primitives). Split out 2026-11-10 (kanban t_196de98b) and
+   imported immediately after globals.css so its cascade position is unchanged. */
+import './styles/primitives.css'
 /* Route-owned sheets: split out of globals.css so each area's CSS lives with its
    owner and new routes no longer touch the global sheet (docs/polish-plan §8.3 D).
    Loaded right after globals.css, before the vf/w2l override lanes, which keeps
    the previous cascade position of these rules. */
+import './styles/routes/ascii.css'
+import './styles/routes/boot.css'
 import './styles/routes/buttons.css'
 import './styles/routes/chat.css'
+import './styles/routes/cmdp.css'
 import './styles/routes/content.css'
 import './styles/routes/costs.css'
 import './styles/routes/github.css'
@@ -15,6 +22,7 @@ import './styles/routes/login.css'
 import './styles/routes/markdown.css'
 import './styles/routes/memory.css'
 import './styles/routes/setup.css'
+import './styles/routes/styleguide.css'
 import './styles/fold.css'
 import './vf/v4-lane.css'
 import './vf/cyberpunk.css'
