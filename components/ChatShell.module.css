@@ -130,7 +130,7 @@
 .sidebar { display: flex; flex-direction: column; }
 .thread { display: flex; flex-direction: column; }
 
-.sidebarTabs { display: flex; flex: 0 0 auto; gap: 4px; padding: 8px; border-bottom: 1px solid var(--pt-border); }
+.sidebarTabs { display: flex; flex: 0 0 auto; gap: 10px; padding: 8px; border-bottom: 1px solid var(--pt-border); }
 .sidebarTab { display: inline-flex; flex: 1; align-items: center; justify-content: center; gap: 8px; padding: 8px 10px; font: 400 12px/1 var(--pt-font-mono); letter-spacing: .04em; }
 .sidebarTabIcon { color: var(--pt-neon); font-size: 14px; line-height: 1; }
 .sidebarTab[aria-pressed='true'] { border-color: var(--pt-neon); color: var(--pt-neon-bright); }
@@ -151,9 +151,10 @@
 .paneHead h2 { margin-top: 5px; }
 .sectionHead > button, .paneHead > button { flex-shrink: 0; }
 
-.botRow, .sessionRow { min-width: 0; padding: 0; border: 0; gap: var(--pt-s-1); }
-.botRow { margin: 2px 8px; }
-.sessionRow { margin: 2px 0; }
+/* ≥8px between stacked list buttons (mobile gap<8 floor); row ↔ ⋯ menu gets 10px. */
+.botRow, .sessionRow { min-width: 0; padding: 0; border: 0; gap: 10px; }
+.botRow { margin: 8px; }
+.sessionRow { margin: 8px 0; }
 .shell .allBots { display: flex; justify-content: space-between; width: 100%; background: transparent; text-align: left; }
 .shell .botIdentity,
 .shell .sessionButton {
